@@ -85,7 +85,8 @@ body {
 .spacer { flex: 1 1 auto; }
 .presetsel { font-family: var(--ff); font-size: .82rem; font-weight: 600; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; cursor: pointer; }
 .instrsel { max-width: 190px; }
-.instrsel.is-on { background: var(--brand); color: #fff; border-color: var(--brand); }
+.instrsel.is-on { background: var(--brand-100); border-color: var(--brand); color: var(--brand-text); font-weight: 700; }
+.instrsel option { background: var(--card); color: var(--ink); font-weight: 500; }
 .btn { font-family: var(--ff); font-size: .82rem; font-weight: 600; padding: 8px 12px; border-radius: 8px; cursor: pointer; border: 1px solid var(--line); background: var(--card); color: var(--ink); transition: border-color .12s, background .12s; }
 .btn:hover { border-color: var(--line-2); }
 .btn.is-on { background: var(--brand); border-color: var(--brand); color: #fff; }
@@ -196,6 +197,7 @@ body {
 .react-flow__handle-top.hdl:hover, .react-flow__handle-bottom.hdl:hover { transform: translate(-50%, 0) scale(2.3) !important; }
 .react-flow__handle-left.hdl:hover, .react-flow__handle-right.hdl:hover { transform: translate(0, -50%) scale(2.3) !important; }
 .react-flow__edge.selected .react-flow__edge-path { stroke: var(--brand) !important; stroke-width: 3 !important; }
+.react-flow__edge.edge-dim { opacity: .1; }
 .react-flow__attribution { display: none; }
 .react-flow__controls { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow-1); }
 .react-flow__controls-button { background: var(--card); border-bottom: 1px solid var(--line); color: var(--ink); }

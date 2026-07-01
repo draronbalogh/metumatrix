@@ -125,6 +125,45 @@ export default function CurriculumApp() {
     return () => window.removeEventListener('keydown', onKey);
   }, [undo, redo]);
 
+  // Elrendezés (node-pozíciók + kézi összekötések) átvétele egy másik verzióból az aktuálisba,
+  // tárgynév + félév + program alapján párosítva.
+  const copyLayout = (sourceVer: string) => {
+    if (!sourceVer || sourceVer === ver) return;
+    const cur = dataRef.current;
+    const norm = (s: string) => (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const idToKey: Record<string, string> = {};
+    const keyToTarget: Record<string, string> = {};
+    cur.cohorts.forEach((c, ci) => {
+      const semKey = `sem|${c.program}|${c.semester}`;
+      if (c.version === sourceVer) idToKey[`sem-${ci}`] = semKey;
+      if (c.version === ver) keyToTarget[semKey] = `sem-${ci}`;
+      c.courses.forEach((x, xi) => {
+        const key = `crs|${c.program}|${c.semester}|${norm(x.name)}`;
+        if (c.version === sourceVer) idToKey[`c-${ci}-${xi}`] = key;
+        if (c.version === ver) keyToTarget[key] = `c-${ci}-${xi}`;
+      });
+    });
+    const srcPos = cur.positions || {};
+    const positions = { ...srcPos };
+    let moved = 0;
+    Object.entries(idToKey).forEach(([srcId, key]) => {
+      const tgtId = keyToTarget[key];
+      if (tgtId && srcPos[srcId]) { positions[tgtId] = { ...srcPos[srcId] }; moved++; }
+    });
+    const edges = [...(cur.userEdges || [])];
+    let linked = 0;
+    (cur.userEdges || []).forEach((e) => {
+      const sk = idToKey[e.source], tk = idToKey[e.target];
+      if (!sk || !tk) return;
+      const ns = keyToTarget[sk], nt = keyToTarget[tk];
+      if (!ns || !nt) return;
+      const id = `u-${ns}.${e.sourceHandle || ''}-${nt}.${e.targetHandle || ''}`;
+      if (!edges.some((x) => x.id === id)) { edges.push({ ...e, id, source: ns, target: nt }); linked++; }
+    });
+    if (!moved && !linked) { alert('Ebből a verzióból nincs átvehető egyedi elrendezés/összekötés (a párosítható tárgyakhoz nincs mentett pozíció vagy kézi él).'); return; }
+    commit({ ...cur, positions, userEdges: edges });
+  };
+
   const updateCohort = (ci: number, fn: (c: Cohort) => Cohort) =>
     commit({ ...dataRef.current, cohorts: dataRef.current.cohorts.map((c, i) => (i === ci ? fn(c) : c)) });
   const saveCourse = (ref: Ref2, course: Course) =>
@@ -173,11 +212,19 @@ export default function CurriculumApp() {
     const cur = dataRef.current;
     commit({ ...cur, positions: { ...(cur.positions || {}), ...map } });
   }, [commit]);
+  const applyConnection = useCallback((e: UserEdge, positions: Record<string, { x: number; y: number }>) => {
+    const cur = dataRef.current;
+    commit({
+      ...cur,
+      userEdges: [...(cur.userEdges || []).filter((x) => x.id !== e.id), e],
+      positions: { ...(cur.positions || {}), ...positions },
+    });
+  }, [commit]);
   const resetPositions = useCallback(() => {
     const cur = dataRef.current;
     commit({ ...cur, positions: {} });
   }, [commit]);
-  const persist = useMemo<Persist>(() => ({ addEdge, deleteEdge, moveNode, savePositions, resetPositions }), [addEdge, deleteEdge, moveNode, savePositions, resetPositions]);
+  const persist = useMemo<Persist>(() => ({ addEdge, deleteEdge, moveNode, savePositions, applyConnection, resetPositions }), [addEdge, deleteEdge, moveNode, savePositions, applyConnection, resetPositions]);
 
   const filter = useMemo<Filter>(() => ({ q, spec, ctype, instr }), [q, spec, ctype, instr]);
   const vp = useMemo<View>(() => ({ ver, prog }), [ver, prog]);
@@ -234,6 +281,12 @@ export default function CurriculumApp() {
           <select className="presetsel" value={ver} onChange={(e) => setVer(e.target.value)} title="Tanterv-verzió">
             {versions.map((v) => <option key={v} value={v}>{v === 'régi (korábbi)' ? 'Régi (korábbi)' : v}</option>)}
           </select>
+          {view === 'map' && versions.length > 1 && (
+            <select className="presetsel" value="" onChange={(e) => { const v = e.target.value; e.target.value = ''; if (v) copyLayout(v); }} title="Elrendezés (node-pozíciók + kézi összekötések) átvétele egy másik verzióból az aktuálisba · Ctrl+Z visszavonja">
+              <option value="">⧉ Elrendezés innen…</option>
+              {versions.filter((v) => v !== ver).map((v) => <option key={v} value={v}>{v === 'régi (korábbi)' ? 'Régi' : v}</option>)}
+            </select>
+          )}
           <input className="search" placeholder="Keresés tárgyra, oktatóra…" value={q} onChange={(e) => setQ(e.target.value)} />
           <select className={`presetsel instrsel${instr ? ' is-on' : ''}`} value={instr} onChange={(e) => setInstr(e.target.value)} title="Szűrés oktatóra (mindkét nézetben)">
             <option value="">Minden oktató</option>

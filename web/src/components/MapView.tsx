@@ -18,6 +18,7 @@ export interface Persist {
   deleteEdge: (id: string) => void;
   moveNode: (id: string, pos: { x: number; y: number }) => void;
   savePositions: (map: Record<string, { x: number; y: number }>) => void;
+  applyConnection: (e: UserEdge, positions: Record<string, { x: number; y: number }>) => void;
   resetPositions: () => void;
 }
 
@@ -46,9 +47,14 @@ function Inner({ data, filter, handlers, persist, theme, view }: Props) {
     () => built.nodes.map((n) => (data.positions?.[n.id] ? { ...n, position: data.positions[n.id] } : n)),
     [built, data.positions],
   );
+  const filterActive = !!(filter.q || filter.spec || filter.ctype || filter.instr);
+  const hitIds = useMemo(() => new Set(built.nodes.filter((n) => n.data?.hit).map((n) => n.id)), [built]);
   const initEdges = useMemo<Edge[]>(
-    () => [...built.edges, ...(data.userEdges || []).map((e) => ({ ...e, ...userEdgeStyle }))],
-    [built, data.userEdges, userEdgeStyle],
+    () => [...built.edges, ...(data.userEdges || []).map((e) => {
+      const dim = filterActive && !(hitIds.has(e.source) && hitIds.has(e.target));
+      return { ...e, ...userEdgeStyle, className: dim ? 'edge-dim' : undefined };
+    })],
+    [built, data.userEdges, userEdgeStyle, filterActive, hitIds],
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initNodes);
@@ -64,8 +70,8 @@ function Inner({ data, filter, handlers, persist, theme, view }: Props) {
 
   const onConnect = useCallback((c: Connection) => {
     if (!c.source || !c.target) return;
-    persist.addEdge({ id: `u-${c.source}.${c.sourceHandle || ''}-${c.target}.${c.targetHandle || ''}`, source: c.source, target: c.target, sourceHandle: c.sourceHandle, targetHandle: c.targetHandle });
-    // a két összekötött node-ot rögtön rácsra igazítjuk, hogy az él tiszta legyen (ne kelljen külön „Igazítás")
+    const edge: UserEdge = { id: `u-${c.source}.${c.sourceHandle || ''}-${c.target}.${c.targetHandle || ''}`, source: c.source, target: c.target, sourceHandle: c.sourceHandle, targetHandle: c.targetHandle };
+    // a két összekötött node-ot rácsra igazítjuk, hogy az él tiszta legyen — az éllel EGYÜTT, egyetlen mentésben
     const defY: Record<string, number> = {};
     built.nodes.forEach((n) => { if (n.type === 'course') defY[n.id] = n.position.y; });
     const snap: Record<string, { x: number; y: number }> = {};
@@ -76,10 +82,8 @@ function Inner({ data, filter, handlers, persist, theme, view }: Props) {
         snap[id] = { x: COURSE_X0 + col * STEP_X, y: defY[id] ?? n.position.y };
       }
     });
-    if (Object.keys(snap).length) {
-      setNodes((nds) => nds.map((n) => (snap[n.id] ? { ...n, position: snap[n.id] } : n)));
-      persist.savePositions(snap);
-    }
+    if (Object.keys(snap).length) setNodes((nds) => nds.map((n) => (snap[n.id] ? { ...n, position: snap[n.id] } : n)));
+    persist.applyConnection(edge, snap);
   }, [persist, built, nodes, setNodes]);
   const onEdgesDelete = useCallback((eds: Edge[]) => {
     eds.forEach((e) => { if (e.id.startsWith('u-')) persist.deleteEdge(e.id); });

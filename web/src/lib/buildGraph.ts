@@ -61,6 +61,7 @@ export function buildGraph(data: Curriculum, filter: Filter, h: Handlers, view: 
   if (!visible.length) return { nodes, edges };
 
   const series: Record<string, { id: string; sem: number; num: number }[]> = {};
+  const hitIds = new Set<string>();
   let y = 0;
 
   visible.forEach(({ c, ci }) => {
@@ -85,6 +86,7 @@ export function buildGraph(data: Curriculum, filter: Filter, h: Handlers, view: 
     ordered.forEach(({ course, xi }, col) => {
       const id = `c-${ci}-${xi}`;
       const hit = filterActive && matches(course);
+      if (hit) hitIds.add(id);
       nodes.push({
         id, type: 'course',
         position: { x: COURSE_X0 + col * STEP_X, y: rowTop + CARD_TOP },
@@ -110,7 +112,8 @@ export function buildGraph(data: Curriculum, filter: Filter, h: Handlers, view: 
     arr.sort((a, b) => a.sem - b.sem || a.num - b.num);
     for (let i = 0; i < arr.length - 1; i++) {
       if (arr[i].sem !== arr[i + 1].sem && arr[i + 1].num === arr[i].num + 1) {
-        edges.push({ id: `b-${arr[i].id}-${arr[i + 1].id}`, source: arr[i].id, target: arr[i + 1].id, sourceHandle: 'sb', targetHandle: 'tt', ...buildEdge });
+        const dim = filterActive && !(hitIds.has(arr[i].id) && hitIds.has(arr[i + 1].id));
+        edges.push({ id: `b-${arr[i].id}-${arr[i + 1].id}`, source: arr[i].id, target: arr[i + 1].id, sourceHandle: 'sb', targetHandle: 'tt', className: dim ? 'edge-dim' : undefined, ...buildEdge });
       }
     }
   });

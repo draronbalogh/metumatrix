@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Course } from '@/data/curriculum';
+import { CATEGORIES, Course } from '@/data/curriculum';
 
 interface Props {
   course: Course;
@@ -32,6 +32,7 @@ const toDraft = (c: Course): Draft => ({
   requirement: c.requirement ?? '',
   software: (c.software ?? []).join(', '),
   keywords: (c.keywords ?? []).join(', '),
+  category: (c.category ?? []).join(', '),
   cel: c.cel ?? '',
   pdfUrl: c.pdfUrl ?? '',
   group: c.group == null ? '' : String(c.group),
@@ -77,6 +78,7 @@ export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete
       requirement: d.requirement.trim() || null,
       software: toList(d.software),
       keywords: toList(d.keywords),
+      category: toList(d.category),
       cel: d.cel.trim() || null,
       pdfUrl: d.pdfUrl.trim() || null,
       group: d.group === '' ? null : Number(d.group),
@@ -167,6 +169,19 @@ export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete
           <div className="field full">
             <label>Kulcsszavak (vesszővel)</label>
             <input value={d.keywords} onChange={(e) => set('keywords', e.target.value)} placeholder="pl. mozgógrafika, animáció, motion graphics" />
+          </div>
+          <div className="field full">
+            <label>Kategóriák</label>
+            <div className="cat-picker">
+              {CATEGORIES.map((k) => {
+                const sel = toList(d.category);
+                const on = sel.includes(k);
+                return (
+                  <button type="button" key={k} className={`chip${on ? ' is-on' : ''}`}
+                    onClick={() => set('category', (on ? sel.filter((s) => s !== k) : [...sel, k]).join(', '))}>{k}</button>
+                );
+              })}
+            </div>
           </div>
           <div className="field">
             <label>Előfeltétel</label>

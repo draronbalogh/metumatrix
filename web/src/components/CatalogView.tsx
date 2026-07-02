@@ -1,6 +1,6 @@
 'use client';
 
-import { Course, Curriculum, cohortTotals, semLabel, specShort, courseGroup, courseRank, GROUP_LABEL } from '@/data/curriculum';
+import { Course, Curriculum, catList, cohortTotals, semLabel, specShort, courseGroup, courseRank, GROUP_LABEL } from '@/data/curriculum';
 import type { Filter, View } from '@/lib/buildGraph';
 import { instrList } from '@/lib/buildGraph';
 import CourseCardStd from './CourseCardStd';
@@ -13,17 +13,19 @@ interface Props {
   onEdit: (ci: number, xi: number) => void;
   onAdd: (ci: number) => void;
   onInstructor: (name: string) => void;
+  onCategory: (cat: string) => void;
 }
 
-export default function CatalogView({ data, filter, view, onDetails, onEdit, onAdd, onInstructor }: Props) {
+export default function CatalogView({ data, filter, view, onDetails, onEdit, onAdd, onInstructor, onCategory }: Props) {
   const matches = (x: Course) => {
     if (filter.q) {
       const s = filter.q.toLowerCase();
-      if (!(x.name.toLowerCase().includes(s) || (x.specialization || '').toLowerCase().includes(s) || (x.instructors || '').toLowerCase().includes(s))) return false;
+      if (!(x.name.toLowerCase().includes(s) || (x.specialization || '').toLowerCase().includes(s) || (x.instructors || '').toLowerCase().includes(s) || catList(x).some((k) => k.includes(s)) || x.keywords.some((k) => k.toLowerCase().includes(s)) || x.software.some((k) => k.toLowerCase().includes(s)))) return false;
     }
     if (filter.spec && specShort(x.specialization) !== filter.spec) return false;
     if (filter.ctype && x.courseType !== filter.ctype) return false;
     if (filter.instr && !instrList(x).includes(filter.instr)) return false;
+    if (filter.cat && !catList(x).includes(filter.cat)) return false;
     return true;
   };
 
@@ -93,7 +95,7 @@ export default function CatalogView({ data, filter, view, onDetails, onEdit, onA
                   <div className={`cc-grp g${g}`}>{GROUP_LABEL[g]}</div>
                   <div className="cc-grid">
                     {items.map(({ x, xi }) => (
-                      <CourseCardStd key={xi} course={x} onDetails={() => onDetails(ci, xi)} onEdit={() => onEdit(ci, xi)} />
+                      <CourseCardStd key={xi} course={x} onDetails={() => onDetails(ci, xi)} onEdit={() => onEdit(ci, xi)} onCategory={onCategory} />
                     ))}
                   </div>
                 </div>

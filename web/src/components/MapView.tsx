@@ -47,7 +47,7 @@ function Inner({ data, filter, handlers, persist, theme, view }: Props) {
     () => built.nodes.map((n) => (data.positions?.[n.id] ? { ...n, position: data.positions[n.id] } : n)),
     [built, data.positions],
   );
-  const filterActive = !!(filter.q || filter.spec || filter.ctype || filter.instr);
+  const filterActive = !!(filter.q || filter.spec || filter.ctype || filter.instr || filter.cat);
   const hitIds = useMemo(() => new Set(built.nodes.filter((n) => n.data?.hit).map((n) => n.id)), [built]);
   const initEdges = useMemo<Edge[]>(
     () => [...built.edges, ...(data.userEdges || []).map((e) => {

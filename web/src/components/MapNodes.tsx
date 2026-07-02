@@ -2,7 +2,7 @@
 
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
-import { Course, specShort, groupClass } from '@/data/curriculum';
+import { Course, catList, specShort, groupClass } from '@/data/curriculum';
 
 interface CourseData {
   course: Course;
@@ -12,6 +12,7 @@ interface CourseData {
   hit?: boolean;
   onEdit: (ci: number, xi: number) => void;
   onDetails: (ci: number, xi: number) => void;
+  onCategory: (cat: string) => void;
 }
 
 export const CourseNode = memo(function CourseNode({ data }: { data: CourseData }) {
@@ -39,6 +40,14 @@ export const CourseNode = memo(function CourseNode({ data }: { data: CourseData 
         <span className="cn-kr">{x.credits ?? '–'} kr</span>
         {x.specialization && <span className="cn-spec">{specShort(x.specialization)}</span>}
       </div>
+      {catList(x).length > 0 && (
+        <div className="cn-cats">
+          {catList(x).map((k) => (
+            <button key={k} className="cn-cat nodrag" title={`Szűrés kategóriára: ${k}`}
+              onClick={(e) => { e.stopPropagation(); data.onCategory(k); }}>{k}</button>
+          ))}
+        </div>
+      )}
       {x.description && <div className="cn-desc">{x.description.length > 140 ? x.description.slice(0, 140).trimEnd() + '…' : x.description}</div>}
       {x.keywords.length > 0 && (
         <div className="cn-kws">{x.keywords.slice(0, 4).map((k) => <span key={k} className="cn-kw">{k}</span>)}</div>

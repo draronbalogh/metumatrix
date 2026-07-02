@@ -19,10 +19,19 @@ export interface Course {
   requirement: string | null;
   software: string[];
   keywords: string[];
+  category?: string[];
   cel: string | null;
   pdfUrl: string | null;
   group: number | null;
 }
+
+// Fix kategória-taxonómia — az adatban CSAK ezek szerepelhetnek (szűrő + kártya-chipek erre épülnek)
+export const CATEGORIES = [
+  '2d', '3d', 'animáció', 'film/videó', 'fotó', 'hang', 'grafika/tipográfia', 'ux/interakció',
+  'web', 'fejlesztés', 'játék', 'installáció', 'ai', 'elmélet', 'diploma/portfólió', 'projekt',
+] as const;
+
+export const catList = (c: Course): string[] => c.category ?? [];
 
 export interface Cohort {
   version: string;
@@ -70,24 +79,30 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szacsvai Pál",
           "institute": "AMD",
           "note": null,
-          "description": "A hallgató a kurzus során a képernyő-specifikus grafikai tervezés alapelveivel, a képi közlés",
+          "description": "A hallgató a kurzus során a képernyő-specifikus grafikai tervezés alapelveivel, a képi közlés alapelemeivel (szín, forma, vonal, kompozíció, tipográfiai és rajzi struktúra) és ezek kreatív tervezési alkalmazásával ismerkedik meg. A félév gyakorlati feladatai az adatvizualizációtól a piktogramtervezésen és logóparafrázison át a bitmap és vektoros elemeket ötvöző hibrid grafikákig terjednek, Adobe Illustrator és Photoshop használatával. A megszerzett tudás megalapozza a későbbi félévek mozgógrafikai és 3D modellezési stúdiumait.",
           "felelos": "Kiss Melinda",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
             "Illustrator",
-            "Photoshop",
-            "Adobe"
+            "Photoshop"
           ],
           "keywords": [
             "grafikai tervezés",
             "illustrator",
             "photoshop",
             "képi közlés",
-            "digitális grafika"
+            "digitális grafika",
+            "vizuális kommunikáció",
+            "piktogram",
+            "kompozíció"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja a média design szakma műveléséhez elengedhetetlen képnyelvi és mozgóképnyelvi alapismeretek átadása, valamint a számítógépes képalkotás, képfeldolgozás és képszerkesztés alapelveinek ismertetése és gyakoroltatása az Adobe Illustrator és Photoshop programok használata útján.",
           "pdfUrl": "/tematikak/12306.pdf",
+          "category": [
+            "grafika/tipográfia",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -102,7 +117,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Poroszlai Eszter, Kunszt Gábor",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus bevezető részében bemutatásra kerül az Arduino fejlesztői környezet és ennek",
+          "description": "A kurzus bevezető részében a hallgatók megismerkednek az Arduino fejlesztői környezettel, valamint elektronikai és programozói alapismeretekkel, és bepillantást nyernek a folyamatalapú fizikai algoritmikus alkotás világába. A félév második felében műhelymunka keretében anyagkísérleteket és prototípusgyártást végeznek, majd saját koncepció alapján kisebb interaktív rendszereket készítenek. A technikai és művészeti modul párhuzamosan fut, a kinetikus előképektől az áramkörök esztétikájáig.",
           "felelos": "Sterk Barbara DLA",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -113,10 +128,17 @@ export const DEFAULT_DATA: Curriculum = {
             "interakciótervezés",
             "arduino",
             "fizikai computing",
-            "prototípus"
+            "prototípus",
+            "elektronika",
+            "interaktív installáció",
+            "programozás"
           ],
-          "cel": "A kurzus célja az interakciótervezés alapjainak elsajátítása eszközismereti (Arduino nyelv), fizikai alkotói (tervezői) és művészeti (esztétikai) szemlélet szempontjából. A hallgató a kurzus elvégzése eredményeképpen képes felismerni, elemezni, érteni, alkalmazni, valamint prezentálni az interakciót",
+          "cel": "A kurzus célja az interakciótervezés alapjainak elsajátítása eszközismereti (Arduino nyelv), fizikai alkotói (tervezői) és művészeti (esztétikai) szemlélet szempontjából. A hallgató a kurzus elvégzése eredményeképpen képes felismerni, elemezni, érteni, alkalmazni, valamint prezentálni az interakciótervezés alapjainak területét képező ismeretanyagot, technikai tudást és alkotói képességet.",
           "pdfUrl": "/tematikak/12308.pdf",
+          "category": [
+            "ux/interakció",
+            "installáció"
+          ],
           "group": null
         },
         {
@@ -131,14 +153,23 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "A tantárgy a kommunikáció alapfogalmaival, elméleteivel és modelljeivel ismerteti meg a hallgatókat előadás formájában. Az elméleti alapozó kurzus a média design képzés társadalomtudományi hátterét erősíti, és kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "kommunikáció",
+            "kommunikációelmélet",
+            "médiaelmélet",
+            "alapismeretek",
+            "előadás"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -153,19 +184,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Molnár Ágnes",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy a média design szak egyik alapozó főtantárgya, mely a hallgatók alkotó készségét és művészeti kreativitását hivatott fejleszteni és minden egyéb gyakorlati tudást igénylő média design tárgyat megalapozni.",
+          "description": "A média design szak alapozó főtantárgya, amely a hallgatók alkotókészségét és művészeti kreativitását fejleszti, és megalapoz minden további gyakorlati média design tárgyat. Az első félév ismeretanyaga a kompozíció, a perspektíva és térábrázolás, az anatómia (portréábrázolás), valamint a kreatív látásmód fejlesztése, szabadkézi rajzi és digitális technikák ötvözésével. A kreatív feladatok a színtantól a parafrázison át múzeumlátogatásig terjednek, a félév prezentációval és kipakolással zárul.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
-          "software": [],
+          "software": [
+            "Lightroom",
+            "Premiere Pro",
+            "After Effects"
+          ],
           "keywords": [
             "médiadesign",
             "alapozó",
             "kreativitás",
-            "tervezés"
+            "kompozíció",
+            "perspektíva",
+            "anatómia",
+            "szabadkézi rajz",
+            "térlátás"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja a média design szakma műveléséhez elengedhetetlen képnyelvi alapismeretek átadása és a területen való alkotói készségek kifejlesztése, valamint a manuális és számítógépes képalkotás alapelveinek, eljárásainak ismertetése és gyakoroltatása.",
           "pdfUrl": "/tematikak/12452.pdf",
+          "category": [
+            "2d",
+            "grafika/tipográfia"
+          ],
           "group": null
         },
         {
@@ -180,14 +223,23 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "A tantárgy a művészettörténet meghatározó korszakait és irányzatait tárgyalja társadalomtudományi kontextusba helyezve, előadás formájában. Az elméleti kurzus a hallgatók vizuális kultúrával kapcsolatos tájékozottságát és kritikai gondolkodását fejleszti, és kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "művészettörténet",
+            "társadalomtudomány",
+            "kultúrtörténet",
+            "elmélet",
+            "előadás"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -202,7 +254,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Balogh Áron",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, meghívott előadók prezentációi, mesterkurzusok, innovációs és technikai bemutató előadások, konferencia- és kiállításlátogatások, valamint közös projektek formájában. Fontos szempont a társterületek alapismereteinek és kompetenciáinak beemelése, a kreatív ipari szemlélet fejlesztése és a portfólióépítés. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -211,11 +263,15 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
-            "projektmunka",
-            "ba"
+            "mesterkurzus",
+            "portfólió",
+            "kiállítás"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/12722.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -230,7 +286,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Balogh Áron",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy célja a felhasználói élmény (user experience, UX) tervezés alapismereteinek,",
+          "description": "A tantárgy a felhasználói élmény (UX) tervezés alapismereteit, módszereit és folyamatait, valamint az ehhez használt szoftvereket (Miro, Figma) ismerteti meg a hallgatókkal. A Design Thinking keretrendszer mentén haladva a félév a feltáró kutatásoktól az interjúkészítésen, perszónákon és customer journey-n át az információs architektúráig, user flow-ig és a Figmában készülő UI-tervekig ível. A hallgatók egy szabadon választott témájú digitális alkalmazás tervezési folyamatán keresztül alapozzák meg digitális terméktervezői készségeiket.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -243,10 +299,16 @@ export const DEFAULT_DATA: Curriculum = {
             "figma",
             "miro",
             "felhasználói élmény",
-            "prototípus"
+            "prototípus",
+            "design thinking",
+            "perszóna",
+            "user flow"
           ],
           "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása alap szinten. A hallgató a kurzus elvégzése eredményeképpen képes alap szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a UX design területét k",
           "pdfUrl": "/tematikak/12741.pdf",
+          "category": [
+            "ux/interakció"
+          ],
           "group": null
         }
       ]
@@ -269,14 +331,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Előadás jellegű elméleti tantárgy, amely a művészettörténet korszakait és jelenségeit tágabb társadalomtudományi kontextusban tárgyalja. A kétféléves sorozat második részeként a hallgatók a műalkotásokat társadalmi, kulturális és történeti összefüggéseikben tanulják meg elemezni és értelmezni.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "művészettörténet",
+            "társadalomtudomány",
+            "elmélet",
+            "kultúrtörténet",
+            "vizuális kultúra",
+            "műelemzés"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -291,14 +363,23 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Bevezető előadás a filozófia és az esztétika alapkérdéseibe és fogalomrendszerébe. A tantárgy a filozófiai gondolkodás főbb irányzatainak és az esztétika alapproblémáinak áttekintésével elméleti alapot ad a hallgatók művészeti és tervezői tanulmányaihoz.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "filozófia",
+            "esztétika",
+            "elmélet",
+            "művészetfilozófia",
+            "gondolkodástörténet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -313,21 +394,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szacsvai Pál",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy célja a tipográfiai érzékenység kialakítása, fejlesztése és alkalmazásának",
+          "description": "A tantárgy a tipográfiai érzékenység kialakítását és a szöveges közlés megformálásának, kép és szöveg együttes elrendezésének technikáit tanítja. A hallgatók a betűtörténetet a római kapitálistól a modern betűtípusokig betűrajzi és kreatív gyakorlatokon keresztül dolgozzák fel, miközben InDesignban elsajátítják a számítógépes kiadványtervezés (DTP) alapjait a szedéstől a nyomdai előkészítésig. A félév során saját fonttervet és kiadványtervet készítenek, amelyek portfólióelemként is szolgálnak.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "InDesign"
+            "InDesign",
+            "Photoshop",
+            "Fontself"
           ],
           "keywords": [
             "tipográfia",
             "betűrajz",
             "indesign",
-            "betűtervezés"
+            "betűtervezés",
+            "betűtörténet",
+            "kiadványtervezés",
+            "dtp",
+            "fonttervezés"
           ],
           "cel": "A kurzus célja a tipográfia és betűrajz eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása alapszinten. A hallgató a kurzus elvégzése eredményeképpen képes alapszinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint ",
           "pdfUrl": "/tematikak/15053.pdf",
+          "category": [
+            "grafika/tipográfia",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -342,25 +433,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szűcs Levente",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy célja a média design szakma műveléséhez elengedhetetlen képnyelvi, fotógráfiai és mozgóképnyelvi alapismeretek átadása és a területen való alkotói készségek",
+          "description": "A tantárgy a média design szakma műveléséhez szükséges képnyelvi, fotográfiai és mozgóképnyelvi alapismereteket adja át. A hallgatók megismerik az expozíciót, a világítástechnikákat, a plánokat és kompozíciókat, a digitális képfeldolgozást Lightroomban, valamint a mozgóképkészítés alapjait a kameramozgásoktól a vágáson és színkezelésen át a hangig, Premiere Pro és After Effects használatával. A féléves feladat egy hívószóra készített fotósorozat és egy rövid kisfilm.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "Média design stúdiumok 1.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "After Effects",
-            "Premiere Pro",
             "Lightroom",
-            "Adobe"
+            "Premiere Pro",
+            "After Effects"
           ],
           "keywords": [
             "fotó",
-            "photoshop",
             "lightroom",
             "premiere pro",
+            "after effects",
+            "mozgókép",
+            "vágás",
+            "világítás",
             "médiatervezés"
           ],
           "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása alap szinten. A hallgató a kurzus elvégzése eredményeképpen képes alap szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezent",
           "pdfUrl": "/tematikak/15044.pdf",
+          "category": [
+            "fotó",
+            "film/videó"
+          ],
           "group": null
         },
         {
@@ -375,7 +472,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Poroszlai Eszter, Kunszt Gábor",
           "institute": "AMD",
           "note": null,
-          "description": null,
+          "description": "A tantárgy két modulban vezeti be a hallgatókat a fizikai interakciótervezés haladó gyakorlataiba. A technikai modulban Arduino-programozással, szenzorokkal (távolság-, fény-, érintésérzékelés) és aktuátorokkal (fények, szervók, motorok vezérlése) ismerkednek meg, a művészeti modul pedig inspirációgyűjtésen, fénykutatáson, anyagkísérleteken és áramkörtervezésen keresztül a fizikai interakció művészeti alkalmazásába vezet be. A félév végére a hallgatók önálló interaktív műalkotást terveznek, kiviteleznek és dokumentálnak.",
           "felelos": "Sterk Barbara DLA",
           "prerequisite": "Interakciótervezés 1.",
           "requirement": "gyakorlati jegy",
@@ -385,11 +482,18 @@ export const DEFAULT_DATA: Curriculum = {
           "keywords": [
             "interakciótervezés",
             "arduino",
-            "haladó",
-            "fizikai computing"
+            "fizikai computing",
+            "szenzorok",
+            "interaktív installáció",
+            "fényművészet",
+            "elektronika"
           ],
           "cel": "A kurzus célja az interakciótervezés alapjainak eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalma",
           "pdfUrl": "/tematikak/15034.pdf",
+          "category": [
+            "ux/interakció",
+            "installáció"
+          ],
           "group": null
         },
         {
@@ -404,7 +508,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kiss Lőrinc",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy célja a felhasználói élmény (user experience, UX) tervezés alapismereteinek,",
+          "description": "A tantárgy a felhasználói élmény (UX) tervezés módszereit, folyamatait és szoftvereit (Miro, Figma) tanítja a Design Thinking keretrendszer mentén, haladó szinten. A félév témái közé tartoznak a tervezési alapelvek, a usability heurisztikák, a platformspecifikus tervezés (reszponzív web, Android, iOS), az akadálymentesítés és a felhasználói tesztelés. A hallgatók egy szabadon választott digitális alkalmazás prototípusát tervezik meg Figmában, a kutatástól a perszónákon és user flow-n át a kész esettanulmányig.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "UX design stúdiumok 1.",
           "requirement": "gyakorlati jegy",
@@ -416,11 +520,17 @@ export const DEFAULT_DATA: Curriculum = {
             "ux design",
             "figma",
             "miro",
-            "haladó",
-            "prototípus"
+            "prototípus",
+            "design thinking",
+            "felhasználói tesztelés",
+            "akadálymentesítés",
+            "user flow"
           ],
           "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a UX design terület",
           "pdfUrl": "/tematikak/14761.pdf",
+          "category": [
+            "ux/interakció"
+          ],
           "group": null
         },
         {
@@ -435,7 +545,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Liszka Tamás",
           "institute": "AMD",
           "note": null,
-          "description": "A média design rendkívül szerteágazó, folyton alakulásban levő művészeti terület. A kurzus során megismerkedünk e művészeti ág szellemtörténeti előzményeivel, tudományos,",
+          "description": "Előadás jellegű tantárgy, amely a média design szellemtörténeti előzményeivel, tudományos, technikai és társművészeti környezetével ismerteti meg a hallgatókat. A félév témái között szerepel a kép, jel és szimbólum kérdése, a fénykép ontológiája, a képi kommunikáció, az ikonográfia, a bio-art, a játék- és hálózatelmélet, valamint az interaktivitás és a nonlineáris művészeti formák. Konkrét művek és alkotók vizsgálatán keresztül körvonalazódik a média design kortárs művészeti alapállása.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -443,10 +553,17 @@ export const DEFAULT_DATA: Curriculum = {
           "keywords": [
             "elmélet",
             "médiadesign",
-            "szakelmélet"
+            "szakelmélet",
+            "médiaelmélet",
+            "szemiotika",
+            "képelmélet",
+            "interaktivitás"
           ],
           "cel": "A kurzus célja a média design általános elméletének elsajátítása, ahhoz, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, el",
           "pdfUrl": "/tematikak/15047.pdf",
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -461,7 +578,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szacsvai Pál",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások és meghívott előadók által vezetett projektek formájában. A programok között szerepelnek szakmai prezentációk, mesterkurzusok, innovációs előadások, technikai bemutatók, konferencia- és kiállításlátogatások, valamint közös projektek kivitelezése. Fontos cél a társterületek alapismereteinek beemelése és a portfólióépítés.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -471,10 +588,15 @@ export const DEFAULT_DATA: Curriculum = {
             "workshop",
             "előadás",
             "projektmunka",
+            "mesterkurzus",
+            "portfólió",
             "ba"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/14760.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -497,14 +619,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a művészetelmélet alapfogalmaival, főbb irányzataival és a művészet értelmezésének kérdéseivel foglalkozik. A kurzus a média design gyakorlatához szükséges esztétikai és elméleti hátteret alapozza meg, támogatva a hallgatók kritikai és elemző gondolkodását.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "művészetelmélet",
+            "esztétika",
+            "művészettörténet",
+            "elmélet",
+            "vizuális kultúra",
+            "kortárs művészet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -519,14 +651,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely bevezetést nyújt a médiakultúra alapfogalmaiba, a média történeti alakulásába és társadalmi-kulturális szerepébe. A kurzus a média design szak elméleti megalapozását szolgálja, segítve a hallgatókat a médiajelenségek kritikai értelmezésében.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "médiakultúra",
+            "médiaelmélet",
+            "tömegkommunikáció",
+            "új média",
+            "elmélet",
+            "vizuális kultúra"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -541,23 +683,32 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kolosy Becse, Kaiser Péter",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy az After Effects 2025 környezetének és a kortárs motion design gyakorlatának",
+          "description": "A tantárgy az After Effects 2025 környezetének és a kortárs motion design gyakorlatának elsajátítására fókuszál, kiegészítve a mesterséges intelligencia alapú képi és videós tartalomgenerálás aktuális trendjeivel. A hallgatók megismerik a kompozíciós felépítést, a kulcskockás animációt, a maszkolási és áttűnési technikákat, a színkorrekciós és 3D layer-módszereket, valamint a professzionális renderelési folyamatot. A félév zárásaként elkészített branding spot integrálja a megszerzett elméleti és gyakorlati kompetenciákat.",
           "felelos": "Kiss Melinda",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
             "After Effects",
-            "Adobe"
+            "Adobe Firefly",
+            "Runway",
+            "Media Encoder"
           ],
           "keywords": [
             "mozgógrafika",
             "after effects",
-            "photoshop",
             "animáció",
-            "motion graphics"
+            "motion graphics",
+            "kulcskocka",
+            "kompozíció",
+            "ai",
+            "branding spot"
           ],
-          "cel": "A kurzus célja a mozgógrafika eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása alapszinten. A hallgató a kurzus elvégzése eredményeképpen képes alapszinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a mozgógrafika terület",
+          "cel": "A kurzus célja a mozgógrafika eszközismereti, alkotói és művészi elsajátítása alapszinten Adobe After Effects szoftverkörnyezetben, kiegészítve a generatív AI-alapú kreatív eszköztárral és a legújabb animációs és VFX-munkafolyamatokkal. A kurzus elvégzésekor a hallgatók képesek lesznek önállóan létrehozni mozgógrafikai alkotásokat.",
           "pdfUrl": "/tematikak/12458.pdf",
+          "category": [
+            "animáció",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -572,24 +723,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kováts Jázon",
           "institute": "AMD",
           "note": null,
-          "description": "A hallgató a kurzus során a hang felvételének alapelveivel, a hang editálásának",
+          "description": "A hallgató a kurzus során a hangfelvétel alapelveivel, a hang editálásának alapelemeivel, ezek kreatív tervezési alkalmazásával és a kortárs digitális rendszerekben betöltött szerepével ismerkedik meg. A tematika a hangtani alapfogalmaktól a mikrofonok és rögzítőeszközök használatán, a digitális hangszerkesztésen (EQ, zajszűrés, delay, reverb) át a MIDI/OSC alapú interaktív rendszerekig terjed. A megszerzett tudás megalapozza a későbbi félévek médiaanyagainak hangaláfestését.",
           "felelos": "Csáki László",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
             "Audition",
-            "Ableton",
-            "Adobe"
+            "Ableton Live",
+            "Max/MSP",
+            "PaulXStretch"
           ],
           "keywords": [
             "hangfelvétel",
-            "audition",
-            "ableton",
             "hangvágás",
-            "audio"
+            "hangdesign",
+            "audio",
+            "midi",
+            "osc",
+            "keverés",
+            "hangszerkesztés"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja a média design szakma műveléséhez elengedhetetlen, képet kísérő hangnyelvi alapismeretek átadása, valamint a számítógépes hangmegmunkálás, hangfeldolgozás és hangsáv-szerkesztés alapelveinek ismertetése és gyakoroltatása. A hallgató a kurzus elvégzésekor képes lesz képi anyagok alatti hangsáv szerkesztésére (zörejek, zajok, hangdesign).",
           "pdfUrl": "/tematikak/12457.pdf",
+          "category": [
+            "hang"
+          ],
           "group": null
         },
         {
@@ -604,7 +762,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pálfi Szabolcs",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét keretében a mintatantervben foglalt szakmai ismereteken túlmutató programok valósulnak meg: a szakmában aktívan dolgozó meghívott előadók prezentációi, mesterkurzusok, innovációs témájú előadások és workshopok, technikai bemutatók, konferencia- és kiállításlátogatások, valamint közös projektek kivitelezése. A tárgy a társterületi kompetenciák beemelését és a portfólióépítést támogatja.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -613,11 +771,15 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
+            "mesterkurzus",
             "projektmunka",
-            "ba"
+            "portfólió"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/12745.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -632,21 +794,32 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Balogh Áron",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus célja elsősorban a sztenderdizálódott online médiafelületeket leíró nyelvek",
+          "description": "A kurzus a sztenderdizálódott online médiafelületeket leíró nyelvek (HTML, CSS) alapjainak megismerésére és alkalmazására épül, a wireframing és prototípus-készítés (Figma, Penpot), a tipográfiai megoldások, az akadálymentesítés és a reszponzív design gyakorlati elsajátításával. A hallgatók a félév során önálló tervezési és fejlesztési projektfeladatot valósítanak meg, amelynek célja a template-jelleget meghaladó, egyedi, újszerű online médiatartalmak előállítása.",
           "felelos": "Mayer Éva",
           "prerequisite": "Média design stúdiumok 2.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Figma"
+            "HTML",
+            "CSS",
+            "Figma",
+            "Penpot"
           ],
           "keywords": [
-            "multimédia",
-            "figma",
-            "médiatervezés",
+            "webdesign",
+            "html",
+            "css",
+            "prototípus",
+            "wireframe",
+            "reszponzív",
+            "akadálymentesítés",
             "ui"
           ],
           "cel": "A kurzus célja a multimédia médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) v",
           "pdfUrl": "/tematikak/12460.pdf",
+          "category": [
+            "web",
+            "ux/interakció"
+          ],
           "group": null
         },
         {
@@ -661,21 +834,29 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Berkes Bálint",
           "institute": "AMD",
           "note": null,
-          "description": "A formák és anyagok vizuális megjelenésének és viselkedésének megismerése a térben,",
+          "description": "A kurzus a formák és anyagok térbeli vizuális megjelenésének és viselkedésének megismerésére, valamint azok szoftveres reprodukálására és szimulálására épül. A hallgatók elsajátítják a 3D szoftverek alapvető használatát a modellezés, textúrázás, világítás, UV mapping, kamerakezelés és renderelés területén, és megismerkednek a fotogrammetriával is. A féléves projektfeladat egy választott mindennapi tárgy teljes körű 3D modelljének elkészítése és koncepcióalapú képsorozattal való bemutatása.",
           "felelos": "Selján Márk Endre",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
+            "Blender",
             "Unreal Engine"
           ],
           "keywords": [
-            "unreal engine",
-            "multimédia",
             "3d",
-            "real-time"
+            "modellezés",
+            "textúrázás",
+            "renderelés",
+            "uv mapping",
+            "világítás",
+            "fotogrammetria",
+            "pbr"
           ],
           "cel": "A kurzus célja a média designon belül, a multimédia specifikus képalkotás eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) tudásának elsajátítása közép haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni,",
           "pdfUrl": "/tematikak/12454.pdf",
+          "category": [
+            "3d"
+          ],
           "group": null
         },
         {
@@ -690,7 +871,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kollár Dávid",
           "institute": "AMD",
           "note": "szab.váll. létszám: összesen:",
-          "description": "A kurzus a modern (digitális) technológiák pszichológiai hatásainak komplex kognitív",
+          "description": "A kurzus a modern digitális technológiák pszichológiai hatásainak komplex kognitív tudományos vizsgálatára összpontosít: hogyan formálják a kurrens technológiák az emberi viselkedést, érzelmeket és kognitív folyamatokat. A tematika kiterjed az okoseszközök, a közösségi média, a virtuális valóság, a videójátékok és a mesterséges intelligencia pszichológiai hatásaira, valamint a reziliencia kérdéskörére. A tárgy fogalmi és értelmezési kereteket ad az egyének és közösségek digitális technológiákhoz fűződő viszonyának megértéséhez.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -698,11 +879,17 @@ export const DEFAULT_DATA: Curriculum = {
           "keywords": [
             "pszichológia",
             "technológia",
-            "médiapszichológia",
+            "kognitív tudomány",
+            "közösségi média",
+            "virtuális valóság",
+            "mesterséges intelligencia",
             "elmélet"
           ],
-          "cel": "A kurzus célja a multimedia területén használt új technológia pszichológiai vonatkozásainak ismertetése, ahhoz, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményekép",
+          "cel": "A kurzus célja a multimédia területén használt új technológiák pszichológiai vonatkozásainak ismertetése, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa azokat egy szélesebb, interdiszciplináris keretben.",
           "pdfUrl": "/tematikak/12461.pdf",
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -717,19 +904,28 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pálfi Szabolcs, Kolosy Becse",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus során a hallgatók betekintést nyerhetnek a játékfejlesztés széles spektrumába - az",
+          "description": "A kurzus során a hallgatók betekintést nyernek a játékfejlesztés széles spektrumába, az analóg társasjátékoktól a digitális játékok komplex tervezési és gyártási folyamataiig. A félév első fele a társasjáték-tervezésre (prototípus, balanszírozás, mechanikák, finalizálás), második fele a digitális játékfejlesztés gyártási fázisaira (koncepció, prototípus, vertical slice, alfa, béta, gold master) fókuszál. A féléves feladat egy poháralátét méretű társasjáték megtervezése és prezentálható dokumentálása.",
           "felelos": "Appelshoffer Péter",
           "prerequisite": "Média design stúdiumok 2.",
           "requirement": "gyakorlati jegy",
-          "software": [],
+          "software": [
+            "Unity"
+          ],
           "keywords": [
-            "game art",
+            "game design",
             "játékfejlesztés",
-            "vizuális tervezés",
-            "game design"
+            "társasjáték",
+            "prototípus",
+            "játékmechanika",
+            "vertical slice",
+            "tesztelés"
           ],
           "cel": "A kurzus célja a játékfejlesztés eszközeinek, kreatív és technikai folyamatainak megismertetése a teljes gyártási folyamat mentén, a tervezői és vizuális, illetve az elméleti és gyakorlati feladatok összekapcsolásával. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, el",
           "pdfUrl": "/tematikak/13184.pdf",
+          "category": [
+            "játék",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -744,24 +940,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Gerő András",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus bevezeti a hallgatókat a játéktervezéshez kapcsolódó háromdimenziós",
+          "description": "A kurzus bevezeti a hallgatókat a játéktervezéshez kapcsolódó háromdimenziós környezetalkotás folyamatába, a Blender-alapú modellezéstől és textúrázástól az Unreal Engine-ben történő valós idejű megjelenítésig. A hallgatók elsajátítják a 3D modellezés és exportálás alapjait, majd saját játékkörnyezetet építenek, kitérve a világítás, az atmoszféra és a blueprint-alapú vizuális kódolás alapjaira. A félév zárásaként önálló environment-projektet fejeznek be és prezentálnak.",
           "felelos": "Selján Márk Endre",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Unreal Engine",
             "Blender",
+            "Unreal Engine",
             "Quixel"
           ],
           "keywords": [
+            "3d",
             "unreal engine",
             "blender",
-            "quixel",
             "játékkörnyezet",
-            "level design"
+            "environment",
+            "blueprint",
+            "level design",
+            "textúrázás"
           ],
-          "cel": "A kurzus célja, hogy a hallgatók gyakorlati példákon keresztül elsajátítsák a háromdimenziós játékkörnyezetek tervezésének és megvalósításának alapvető lépéseit, a Blenderben végzett modellezéstől és textúrázástól az Unreal Engine-ben történő valós idejű megjelenítésig. A félév végére a hallgató kép",
+          "cel": "A kurzus célja, hogy a hallgatók gyakorlati példákon keresztül elsajátítsák a háromdimenziós játékkörnyezetek tervezésének és megvalósításának alapvető lépéseit, a Blenderben végzett modellezéstől és textúrázástól az Unreal Engine-ben történő valós idejű megjelenítésig, koherens, prezentálható environment kialakításával.",
           "pdfUrl": "/tematikak/13153.pdf",
+          "category": [
+            "3d",
+            "játék"
+          ],
           "group": null
         },
         {
@@ -776,7 +979,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Liszka Tamás",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy a játék pszichológiai működésének, céljának és hatásainak vizsgálatára fókuszál,",
+          "description": "A tantárgy a játék pszichológiai működésének, céljának és hatásainak vizsgálatára fókuszál, különös tekintettel a pszichológiai összefüggések alkalmazására a játékélmény tudatos tervezésében. A tematika a játék fejlődéslélektani alapjaitól (Piaget, Vigotszkij) a motiváció és a flow elméletein át a csoportdinamikáig, a gamificationig és a UX designig terjed. A hallgatók képessé válnak a játékélmény pszichológiai szempontú elemzésére és formálására saját játéktervezői munkájukban.",
           "felelos": "Appelshoffer Péter",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -785,10 +988,17 @@ export const DEFAULT_DATA: Curriculum = {
             "játékpszichológia",
             "flow",
             "motiváció",
-            "kognitív pszichológia"
+            "kognitív pszichológia",
+            "gamification",
+            "csoportdinamika",
+            "ux"
           ],
           "cel": "A kurzus célja, hogy a hallgató megismerje a játékélményt alakító pszichológiai folyamatokat, a játék fejlődéslélektani, kognitív és szociálpszichológiai vonatkozásait, valamint a motiváció és a flow jelenségeit. A kurzus során a hallgatók megismerkednek a játékpszichológia fejlődéslélektani, kognit",
           "pdfUrl": "/tematikak/12853.pdf",
+          "category": [
+            "elmélet",
+            "játék"
+          ],
           "group": null
         }
       ]
@@ -811,14 +1021,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás a képalkotás alapkérdéseiről, amely a kép fogalmát, működését és a vizuális kultúrában betöltött szerepét vizsgálja. A kurzus a média design gyakorlati tárgyait megalapozó képelméleti és vizuális gondolkodási ismereteket közvetíti. A tárgy kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "képalkotás",
+            "képelmélet",
+            "vizuális kultúra",
+            "médiaelmélet",
+            "elmélet",
+            "előadás"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -833,7 +1053,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Liszka Tamás",
           "institute": "AMD",
           "note": null,
-          "description": "Az előadássorozat egyetlen kérdésre keres választ: hogyan készül egy jól játszható játék? A",
+          "description": "Az előadássorozat egyetlen kérdésre keres választ: hogyan készül egy jól játszható játék? A válaszhoz a filozófia, a pszichológia, a design, a matematika és a ludológia területein keresztül vezet az út, olyan témákat érintve, mint a játékmechanika, a jutalmazási rendszerek, a learning curve, az elbeszéléstechnika, az immerzió és az interakció. A hallgatók a félév végén saját fejlesztésű játékkoncepciót mutatnak be prezentáció keretében.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -842,10 +1062,18 @@ export const DEFAULT_DATA: Curriculum = {
             "játéktervezés",
             "game design",
             "elmélet",
-            "játékmechanika"
+            "játékmechanika",
+            "ludológia",
+            "narratíva",
+            "immerzió",
+            "játékelmélet"
           ],
-          "cel": "A kurzus célja a játéktervezés elméletének elsajátítása, ahhoz, hogy a hallgató játéktervezői, alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismer",
+          "cel": "A kurzus célja a játéktervezés elméletének elsajátítása, hogy a hallgató játéktervezői, alkotói és prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató képessé válik az elsajátított elméleti ismeretanyagot elemezni és játéktervezői gyakorlatában, szakmai együttműködéseiben és tágabb interdiszciplináris keretben alkalmazni.",
           "pdfUrl": "/tematikak/15031.pdf",
+          "category": [
+            "játék",
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -860,26 +1088,33 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Balogh Áron, Kolosy Becse",
           "institute": "AMD",
           "note": null,
-          "description": "----------- Multimédia specializáció (Madácsi Blanka) A tantárgy a Nuke interfészének, a projektstruktúrának és az alapvető node-ok (merge,",
+          "description": "Két specializációs ágon futó gyakorlati kurzus. A multimédia ágon a hallgatók a Nuke node-alapú compositing munkafolyamatát sajátítják el: rotoscoping, 2D/planar tracking, screen replacement, keying, valamint tűz- és muzzle flash-effektek élethű integrálása, a félév végén breakdown videóval. A játéktervezés ágon a játékfejlesztéshez szükséges 3D asset-gyártás áll fókuszban Blenderrel és Substance Painterrel: modellezés, UV-kiterítés, PBR textúrázás, riggelés és exportálás Unreal Engine-be.",
           "felelos": "Kiss Melinda",
           "prerequisite": "Mozgógrafika 1.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Substance Painter",
-            "Unreal Engine",
+            "Nuke",
             "Blender",
-            "Cursor",
-            "Nuke"
+            "Substance Painter",
+            "Unreal Engine"
           ],
           "keywords": [
             "vfx",
             "nuke",
             "compositing",
-            "substance painter",
-            "unreal engine"
+            "keying",
+            "tracking",
+            "rotoscoping",
+            "3d asset",
+            "substance painter"
           ],
-          "cel": "----------- Multimédia specializáció (Madácsi Blanka) A kurzus célja, hogy a hallgatók a félév végére magabiztosan kezeljék a NUKE szoftvert, és alkalmassá váljanak komplexebb junior compositor feladatok önálló elvégzésére. A hallgatók elsajátítják a node-alapú munkafolyamat logikáját, a professzion",
+          "cel": "A multimédia specializáción a cél, hogy a hallgatók magabiztosan kezeljék a Nuke szoftvert, és alkalmassá váljanak komplexebb junior compositor feladatok önálló elvégzésére. A játéktervezés specializáción a cél a játékfejlesztéshez szükséges 3D asset-gyártás technikai és művészeti folyamatainak elsajátítása Blender és Substance Painter segítségével.",
           "pdfUrl": "/tematikak/15049.pdf",
+          "category": [
+            "film/videó",
+            "3d",
+            "animáció"
+          ],
           "group": null
         },
         {
@@ -894,19 +1129,30 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kováts Jázon",
           "institute": "AMD",
           "note": null,
-          "description": "A Hang labor átfogó bevezetést nyújt a jelenkori média területén elterjedt hangzó technikák alapjaiba. Általános célunk, hogy a hangok szerkesztésén keresztül más művészeti ágakban is alkalmazható tudást és gyakorlatot sajátítsunk el, valam",
+          "description": "A Hang labor átfogó bevezetést nyújt a jelenkori média területén elterjedt hangzó technikák alapjaiba, a filmhang készítésének részleteire, a foley művészetre és az utómunka fázisaira fókuszálva. A hallgatók stúdiógyakorlatok keretében sajátítják el a hangstúdió eszközeinek kezelését, a mikrofonozási technikákat és a zörejezést, többek között speechless speech videók hangosításán keresztül. A félév önálló munkák zörejezésével és az elkészült alkotások prezentálásával zárul.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
-          "software": [],
+          "software": [
+            "Audition",
+            "Ableton Live",
+            "Max/MSP",
+            "PaulXStretch"
+          ],
           "keywords": [
             "filmhang",
             "foley",
             "utómunka",
-            "hangvágás"
+            "hangvágás",
+            "hangdesign",
+            "hangstúdió",
+            "zörejezés"
           ],
           "cel": "A hallgatók elméleti és gyakorlati síkon ismerkednek meg, a filmhang készítésének részleteivel, mind a foley művészettel , mind pedig az utómunka egyes fázisainak fontosabb kérdéseit tekintve át.",
           "pdfUrl": "/tematikak/15038.pdf",
+          "category": [
+            "hang"
+          ],
           "group": null
         },
         {
@@ -921,7 +1167,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Balogh Áron",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások és meghívott előadók által vezetett projektek formájában. A programok között szerepel a szakmában aktívan dolgozó előadók prezentációja, mesterkurzusok, innovációs és technikai bemutatók, konferencia- és kiállításlátogatás, valamint közös projektek kivitelezése. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -930,11 +1176,16 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
+            "mesterkurzus",
             "projektmunka",
+            "portfólió",
             "ba"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/15056.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -949,25 +1200,37 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Balogh Áron",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy során a hallgatók a hagyományos HTML oldalak építése felől elmozdulnak a",
+          "description": "A hallgatók a hagyományos HTML oldalak építése felől a modern, dinamikus webes alkalmazások irányába mozdulnak el: megismerik a Git alapú verziókezelést, a React és Next.js komponensalapú architektúráját, valamint a Tailwind CSS-alapú reszponzív stílusozást. Kiemelt szerepet kap az AI kódolási asszisztensek (Cursor, GitHub Copilot, Gemini, Claude) és az agent alapú fejlesztés hatékony használata a komponensgenerálásban és a hibakeresésben. A félév végére mindenki egy React Three Fiber 3D elemeket is tartalmazó, Vercelen publikált interaktív portfólió oldalt épít.",
           "felelos": "Kiss Melinda",
           "prerequisite": "Multimédia design 1.",
           "requirement": "gyakorlati jegy",
           "software": [
+            "React",
+            "Next.js",
+            "Tailwind CSS",
             "React Three Fiber",
-            "Tailwind",
-            "Cursor"
+            "Git",
+            "Cursor",
+            "GitHub Copilot",
+            "Vercel"
           ],
           "keywords": [
             "webfejlesztés",
-            "react three fiber",
+            "react",
+            "next.js",
             "tailwind",
-            "cursor",
+            "react three fiber",
             "ai kódolás",
+            "prompt engineering",
             "3d web"
           ],
-          "cel": "A kurzus célja a modern webfejlesztési technológiák és a mesterséges intelligencia asszisztált kódolás gyakorlati bemutatása. A hallgatók az alapvető statikus weblapkészítési tudásukat továbbfejlesztve megismerkednek a modern komponens alapú architektúrákkal, mint a React és a Next.js keretrendszere",
+          "cel": "A kurzus célja a modern webfejlesztési technológiák és a mesterséges intelligencia asszisztált kódolás gyakorlati bemutatása. A hallgatók a statikus weblapkészítési tudásukat továbbfejlesztve megismerik a komponensalapú architektúrákat (React, Next.js), a Tailwind CSS-t és a Web3D megoldásokat, és a félév végére önállóan felépítenek egy modern, interaktív portfólió oldalt.",
           "pdfUrl": "/tematikak/15050.pdf",
+          "category": [
+            "web",
+            "fejlesztés",
+            "ai"
+          ],
           "group": null
         },
         {
@@ -982,22 +1245,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Berkes Bálint",
           "institute": "AMD",
           "note": null,
-          "description": "3D terek immerzív rétegeinek mélyebb ismerete a mozgás beemelésével. Az alapvető",
+          "description": "A kurzus a 3D terek immerzív rétegeit mélyíti el a mozgás beemelésével: a hallgatók az első félévi Blender-alapok után a Cinema 4D-ben ismerkednek meg a motion design, a CGI és a VFX világával. A tematika az animálás 12 alaptörvényétől a Mograph rendszeren, a karaktercsontozáson és a Rokoko motion capture használatán át a fizikai, ruha- és részecskeszimulációkig terjed, a félév végén Unreal Engine-es valós idejű rendereléssel. Az egyéni projektfeladat egy folytatólagos animáció, amely a csoport közös történetébe illeszkedik.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "3D labor (Multimédia) 1.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Cinema4D",
-            "Blender"
+            "Cinema 4D",
+            "Rokoko",
+            "Unreal Engine"
           ],
           "keywords": [
             "cinema 4d",
-            "blender",
             "3d",
-            "multimédia"
+            "motion design",
+            "motion capture",
+            "szimuláció",
+            "mograph",
+            "unreal engine",
+            "animáció"
           ],
           "cel": "A kurzus célja a média designon belül, a multimédia specifikus képalkotás eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) tudásának elsajátítása közép haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni,",
           "pdfUrl": "/tematikak/15030.pdf",
+          "category": [
+            "3d",
+            "animáció"
+          ],
           "group": null
         },
         {
@@ -1012,19 +1284,28 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pápai Bence",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus a videojátékot mint interaktív médiumot vizsgálja, ahol a tartalom, a vizuális",
+          "description": "A kurzus a videojátékot mint interaktív médiumot vizsgálja, ahol a tartalom, a vizuális megjelenés és az interakció egységben határozzák meg az élményt, különös tekintettel a game art és a game design kapcsolatára. A félév a játékprototipizálásra épül: paper prototyping, core mechanics tesztelése, level design alapok, UI/UX wireframe-ek, playtesting és vertical slice készítése. A hallgatók a korábbi félév társasjáték-projektjét adaptálják digitális környezetbe, és egy játszható, placeholder assetekre épülő videójáték-prototípust készítenek.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "Game Art és Design 1.",
           "requirement": "gyakorlati jegy",
-          "software": [],
+          "software": [
+            "Unity"
+          ],
           "keywords": [
             "videojáték",
-            "interaktív médium",
             "game design",
-            "narratíva"
+            "game art",
+            "prototípus",
+            "playtesting",
+            "level design",
+            "játékmechanika"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja, hogy a hallgatók elmélyítsék ismereteiket a videojáték mint interaktív médium működéséről, és a vizuális, tartalmi és interakciós döntések összefüggéseit megértve olyan koncepciókat és struktúrákat alakítsanak ki, amelyek közvetlenül alkalmazhatók a játéktervezési és -fejlesztési folyamatokban.",
           "pdfUrl": "/tematikak/14800.pdf",
+          "category": [
+            "játék",
+            "ux/interakció"
+          ],
           "group": null
         },
         {
@@ -1039,22 +1320,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Gerő András",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus a valós idejű játékmotoros fejlesztés során alkalmazott objektumorientált és",
+          "description": "A kurzus a valós idejű játékmotoros fejlesztés objektumorientált és komponensalapú gondolkodását alkalmazza a gyakorlatban Unreal Engine környezetben. A hallgatók végigjárják a 3D workflow-t a level design blockouttól az UV-kon, textúrákon és material node-okon át a világításig, a post processig, a kamerakezelésig és a Level Sequence alapú renderelésig. A félév egy önálló projekttel zárul: hangulatos jelenet vagy dioráma készül professzionálisan komponált videórenderekkel.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "3D labor (Játéktervezés) 1.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Unreal Engine"
+            "Unreal Engine",
+            "Blender",
+            "Photoshop"
           ],
           "keywords": [
             "unreal engine",
             "real-time",
-            "oop",
+            "blueprint",
+            "level design",
+            "material",
+            "világítás",
             "játékmotor",
-            "blueprint"
+            "3d"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja a hallgatók bevezetése a 3D digitális tartalomkészítés gyakorlati alapjaiba valós idejű engine környezetben, hogy képesek legyenek egyszerű, működő real-time jelenetek és prototípusok létrehozására, és tudatosan kezeljék a 3D tartalom és az interaktív működés kapcsolatát a játékfejlesztési folyamaton belül.",
           "pdfUrl": "/tematikak/14786.pdf",
+          "category": [
+            "3d",
+            "játék"
+          ],
           "group": null
         }
       ]
@@ -1077,14 +1367,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely az ökológiai gondolkodás és a művészet kapcsolatát vizsgálja. A kurzus azt tárgyalja, hogyan reflektál a kortárs művészet a környezeti kérdésekre, a fenntarthatóságra, valamint az ember és a természet viszonyára.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "ökológia",
+            "fenntarthatóság",
+            "kortárs művészet",
+            "környezettudatosság",
+            "művészetelmélet",
+            "természet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -1099,14 +1399,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a kreatív ipari pályához szükséges gazdasági, menedzsment- és jogi alapismereteket adja át. A hallgatók megismerkednek a szakmai működésüket érintő gazdasági és jogi keretekkel, hogy tervezői munkájukat üzleti és jogi szempontból is tudatosan tudják végezni.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "gazdaság",
+            "menedzsment",
+            "jog",
+            "vállalkozás",
+            "kreatív ipar",
+            "szerzői jog"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -1121,14 +1431,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Molnár Ágnes",
           "institute": "AMD",
           "note": null,
-          "description": null,
+          "description": "Gyakorlati kurzus, amely a hallgatók prezentációs készségeit fejleszti. A hallgatók a szakmai munkák, koncepciók és portfóliók hatékony bemutatásának módszereit, valamint a vizuális és verbális előadásmód eszközeit gyakorolják.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "gyakorlati jegy",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "prezentáció",
+            "előadástechnika",
+            "kommunikáció",
+            "portfólió",
+            "bemutatás",
+            "vizuális kommunikáció"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -1143,7 +1463,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szacsvai Pál",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatanterven túlmutató szakmai tudást közvetít workshopok, előadások és meghívott vendégelőadók által vezetett projektek formájában. A programok között szerepelnek a szakmában aktívan dolgozó előadók prezentációi, mesterkurzusok, innovációs és technikai bemutató előadások, konferencia- és kiállításlátogatások, valamint közös projektek kivitelezése. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -1152,11 +1472,17 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
+            "mesterkurzus",
             "projektmunka",
+            "kreatív ipar",
+            "portfólió",
             "ba"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/12747.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -1171,7 +1497,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Berkes Bálint",
           "institute": "AMD",
           "note": null,
-          "description": "A formák és anyagok vizuális megjelenésének és viselkedésének megismerése a térben,",
+          "description": "A kurzus a formák és anyagok térbeli vizuális megjelenésének és viselkedésének megismerésére, valamint azok szoftveres reprodukálására és szimulálására épül. A hallgatók a Blenderben sajátítják el a 3D munkafolyamat alapjait: modellezés, textúrázás (UV mapping, shader setup), világítás, kamerakezelés és renderelés (PBR workflow). A félév során egy választott hétköznapi eszköz lemodellezésével és koncepció szerinti képsorozat készítésével egyéni portfólióelemet hoznak létre.",
           "felelos": "Mayer Éva",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -1179,13 +1505,20 @@ export const DEFAULT_DATA: Curriculum = {
             "Blender"
           ],
           "keywords": [
-            "képalkotás",
-            "blender",
             "3d",
+            "blender",
+            "modellezés",
+            "textúrázás",
+            "világítás",
+            "renderelés",
+            "képalkotás",
             "médiadesign"
           ],
-          "cel": "A kurzus célja a média design specifikus képalkotás eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása közép haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználn",
+          "cel": "A kurzus célja a média design specifikus képalkotás eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) elsajátítása középhaladó szinten. A hallgató a kurzus elvégzésével képes haladó szinten felismerni, elemezni, érteni, alkalmazni és prezentálni a média design specifikus képalkotás ismeretanyagát és technikai tudását.",
           "pdfUrl": "/tematikak/10460.pdf",
+          "category": [
+            "3d"
+          ],
           "group": null
         },
         {
@@ -1200,14 +1533,30 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kaiser Péter",
           "institute": "AMD",
           "note": null,
-          "description": null,
+          "description": "A Multimédia design tárgysorozat harmadik kurzusa, a multimédia specializáció gyakorlati törzstárgya. Az előző félévekben megszerzett webes és interaktív médiatervezési ismeretekre építve a hallgatók összetettebb digitális projekteken keresztül mélyítik el tervezői és kivitelezői tudásukat.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "gyakorlati jegy",
-          "software": [],
-          "keywords": [],
+          "software": [
+            "HTML",
+            "CSS",
+            "Figma",
+            "Penpot"
+          ],
+          "keywords": [
+            "multimédia",
+            "webdesign",
+            "webfejlesztés",
+            "interaktív média",
+            "digitális tervezés",
+            "portfólió"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "web",
+            "fejlesztés"
+          ],
           "group": null
         },
         {
@@ -1222,14 +1571,27 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pálfi Szabolcs, Kolosy Becse",
           "institute": "AMD",
           "note": null,
-          "description": null,
+          "description": "A Game Art és Design tárgysorozat harmadik kurzusa a játéktervezés specializáción. Az előző félévek koncepciótervezési és prototipizálási ismereteire építve a hallgatók a videojáték mint interaktív médium vizuális és tervezési rendszereivel foglalkoznak, és a game art, a játékmenet és az interakció összefüggéseit projektmunkában alkalmazzák a játékmotoros fejlesztés irányába továbblépve.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "gyakorlati jegy",
-          "software": [],
-          "keywords": [],
+          "software": [
+            "Unity"
+          ],
+          "keywords": [
+            "játéktervezés",
+            "game art",
+            "game design",
+            "játékfejlesztés",
+            "prototípus",
+            "játékmechanika"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "játék",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -1244,14 +1606,26 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Gerő András",
           "institute": "AMD",
           "note": null,
-          "description": null,
+          "description": "Gyakorlati laborkurzus a játéktervezés specializáció hallgatói számára. A magas heti óraszámú műhelymunka során a hallgatók a játékfejlesztés eszközeit és munkafolyamatait sajátítják el gyakorlati feladatokon keresztül, saját játékprojektek építésével.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "gyakorlati jegy",
-          "software": [],
-          "keywords": [],
+          "software": [
+            "Unity"
+          ],
+          "keywords": [
+            "játékfejlesztés",
+            "játékmotor",
+            "labor",
+            "prototípus",
+            "játéktervezés",
+            "gyakorlat"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "játék"
+          ],
           "group": null
         }
       ]
@@ -1274,24 +1648,33 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Berkes Bálint",
           "institute": "AMD",
           "note": null,
-          "description": "Ez a kurzus a fény médiumának kreatív és interdiszciplináris alkalmazására összpontosít,",
+          "description": "A kurzus a fény médiumának kreatív, interdiszciplináris alkalmazására összpontosít, különös tekintettel a vetítéses technikákra (projection mapping) és a generatív, valós idejű vizualizációra. A hallgatók TouchDesigner, Unreal Engine és Cinema 4D segítségével hang- és mozgásreaktív vizuálokat, interaktív installációkat készítenek, és megismerik a DMX, Art-Net, OSC és MIDI rendszereket. A félév során egy fiktív megrendelő számára csoportos vetítést terveznek a Budapesti Metropolitan Egyetem körépületére, amelyet kiállítás keretében mutatnak be.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
+            "TouchDesigner",
             "Unreal Engine",
-            "TouchDesigner"
+            "Cinema 4D",
+            "After Effects"
           ],
           "keywords": [
             "unreal engine",
             "touchdesigner",
-            "real-time",
+            "valós idejű",
             "vetítés",
             "interaktív",
-            "projektmunka"
+            "fénytérképezés",
+            "generatív vizualizáció",
+            "fényművészet"
           ],
-          "cel": "A kurzus célja, hogy a hallgatók valós munkaszituációkhoz hasonló környezetben sajátítsák el a vetítéses technikák alkalmazását, a kreatív döntéshozatalt és a csapatmunkát. Az órák során egy fiktív megrendelő igényei alapján kell vetítésterveket készíteniük egy valós helyszínre, amelynek paraméterei",
+          "cel": "A kurzus célja, hogy a hallgatók valós munkaszituációkhoz hasonló környezetben sajátítsák el a vetítéses technikák alkalmazását, a kreatív döntéshozatalt és a csapatmunkát. Egy fiktív megrendelő igényei alapján kell vetítésterveket készíteniük egy valós helyszínre, miközben rugalmasan alkalmazkodnak a fokozatosan megismert követelményekhez és technikai megkötésekhez.",
           "pdfUrl": "/tematikak/15040.pdf",
+          "category": [
+            "installáció",
+            "ux/interakció",
+            "3d"
+          ],
           "group": null
         },
         {
@@ -1306,7 +1689,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pálfi Szabolcs",
           "institute": "AMD",
           "note": null,
-          "description": "A videojátékok tervezésének gyakorlati megvalósításával az előző félévben megismert",
+          "description": "Az előző félév technikai ismereteire építve a kurzus a videojáték-tervezés strukturális és komplex folyamatát, valamint a kapcsolódó szakágakat vizsgálja egyéni és kifejezetten csoportos munkában. A hallgatók saját játékötletet fejlesztenek, amelyben a narratíva, a tér- és karaktertervezés gyakorlati alkalmazása kap hangsúlyt. A félév során esettanulmányokat és prezentációkat készítenek, meghívott előadó és stúdiólátogatás is szerepel a tananyagban, a tervezésmódszertan pedig a diplomára való felkészülést alapozza meg.",
           "felelos": "Molnár Ágnes Éva",
           "prerequisite": "Média design stúdiumok 5.",
           "requirement": "gyakorlati jegy",
@@ -1314,10 +1697,18 @@ export const DEFAULT_DATA: Curriculum = {
           "keywords": [
             "videojáték",
             "játéktervezés",
-            "médiadesign"
+            "médiadesign",
+            "narratíva",
+            "csoportmunka",
+            "prototípus",
+            "játékfejlesztés"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja a hallgatók bevezetése a számítógépes játékfejlesztés világába a játéktervezés elméleti alapjainak elsajátításán és gyakorlati hasznosításán keresztül: a játékfejlesztői workflow, a népszerűbb játékzsánerek, a fejlesztői eszközök és a tervezési folyamatok megismerése.",
           "pdfUrl": "/tematikak/15046.pdf",
+          "category": [
+            "játék",
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -1332,7 +1723,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szacsvai Pál",
           "institute": "AMD",
           "note": null,
-          "description": "Az Újmédia elméletének folyamatosan megújuló irodalmát követi, ismerteti és értelmezi a kurzus. A foglalkozások során a hallgatók aktív reflexióira építő eszmecsere folyik, mely az",
+          "description": "A kurzus az újmédia elméletének folyamatosan megújuló irodalmát követi, ismerteti és értelmezi. A foglalkozásokon a hallgatók aktív reflexióira építő eszmecsere folyik, amely az olvasott szövegekből inspirált elméleti perspektívából elemzi kritikailag a technológiai innováció fordulatait. A témák között szerepel a gépi kreativitás, a mesterségesen intelligens művészet, az algoritmus szerepe a művészetben és a digitális jövő kérdései.",
           "felelos": "Mayer Éva",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -1341,10 +1732,17 @@ export const DEFAULT_DATA: Curriculum = {
             "új média",
             "kritikai elmélet",
             "médiaelmélet",
+            "mesterséges intelligencia",
+            "algoritmus",
+            "gépi alkotás",
             "elmélet"
           ],
           "cel": "A kurzus célja, hogy a hallgatók megismerkedjenek az új médiumok kritikai elméletével, annak érdekében, hogy azt elméleti alapként és koncepcionális kiegészítésként alkalmazhassák médiatervezési tanulmányaik és gyakorlataik, valamint művészi munkájuk és prezentációs feladataik során.",
           "pdfUrl": "/tematikak/15054.pdf",
+          "category": [
+            "elmélet",
+            "ai"
+          ],
           "group": null
         },
         {
@@ -1359,7 +1757,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kollár Dávid",
           "institute": "AMD",
           "note": null,
-          "description": "A szakdolgozat vagy bármely tudományos íráshoz anyaggyűjtés, felépítése,",
+          "description": "A kurzus a szakdolgozat és általában a tudományos írásmű elkészítésének teljes folyamatát fedi le: anyaggyűjtés, forrásfeldolgozás, hivatkozási formák, a szöveg struktúrájának kialakítása és a tanulmány megírása. A hallgatók a félév során a saját szakdolgozati témájukhoz kapcsolódóan gyakorolják a forrásgyűjtést, a tartalomjegyzék-készítést és a kutatásmódszertant, szó esik a szakszövegírás és az AI viszonyáról is. Az értékelés az órai és otthoni feladatok, valamint a félév végi beadandó dolgozat alapján történik.",
           "felelos": "Mayer Éva",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -1368,10 +1766,17 @@ export const DEFAULT_DATA: Curriculum = {
             "szakdolgozat",
             "kutatás",
             "írás",
+            "forrásfeldolgozás",
+            "hivatkozás",
+            "kutatásmódszertan",
             "ba"
           ],
           "cel": "A kurzus célja a szakdolgozat készítéséhez szükséges elméleti és gyakorlati tudás és képességek elsajátítása, ahhoz, hogy a hallgató megfelelő színvonal írásművet legyen képes alkotni a BA tanulmányait lezáró időszakban. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, ",
           "pdfUrl": "/tematikak/15055.pdf",
+          "category": [
+            "diploma/portfólió",
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -1386,21 +1791,33 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Forgács Kristóf, Nikázy Gusztáv",
           "institute": "AMD",
           "note": null,
-          "description": "A BLOKK (Nikázy Gusztáv) A kurzus célja elsősorban az online médiafelületeket leíró, már megismert nyelveinek",
+          "description": "A kurzus a diplomamunka elkészítését támogatja két blokkban. Az egyik blokkban a hallgatók a diplomamunkához kapcsolódó önálló online médiaterméket terveznek és fejlesztenek: Figma/Penpot prototípust készítenek, majd dokumentum- és stílusleíró nyelvekkel működő prototípus szintjén valósítják meg, a hagyományos UX/UI keretek kitágításával. A másik blokk a diploma projektszerű kezelésére (ütemezés, mérföldkövek), a diplomaprezentáció gyakorlására, valamint a portfólió és showreel összeállítására készíti fel a végzős hallgatókat.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Figma"
+            "Figma",
+            "Penpot",
+            "HTML",
+            "CSS"
           ],
           "keywords": [
             "diploma",
             "figma",
             "portfólió",
-            "tervezés"
+            "showreel",
+            "prototípus",
+            "webdesign",
+            "projekttervezés",
+            "prezentáció"
           ],
           "cel": "A kurzus célja a diplomamunkához szükséges eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) ismeretek elsajátítása, kreatív készségek kifejlesztése, prezentációs és média tervezési tudás megszerzése. A hallgató a kurzus elvégzése eredményeképpen képes felismerni, elemez",
           "pdfUrl": "/tematikak/15036.pdf",
+          "category": [
+            "diploma/portfólió",
+            "web",
+            "ux/interakció"
+          ],
           "group": null
         },
         {
@@ -1415,7 +1832,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pálfi Szabolcs",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások és meghívott előadók által vezetett projektek formájában. A programok között a szakmában aktívan dolgozó előadók prezentációi, mesterkurzusok, innovációs és technikai bemutató előadások, konferencia- és kiállításlátogatások, valamint közös projektek kivitelezése szerepel. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -1424,11 +1841,16 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
+            "mesterkurzus",
             "projektmunka",
+            "portfólió",
             "ba"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/15058.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -1451,22 +1873,29 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kaiser Péter",
           "institute": "AMD",
           "note": null,
-          "description": "A 3D-s tervezés alapjainak megismertetése az Autodesk Maya szoftver segítségével.",
+          "description": "A kurzus a 3D-s tervezés alapjait ismerteti meg az Autodesk Maya szoftver segítségével, gyakorlati feladatokon keresztül. A hallgatók a virtuális térben létrehozott helyszínekkel dolgoznak: polygon modellezés, UV-zás és textúrázás, világítás, kameramozgatás, valamint Arnold renderelés, layer- és pass-alapú render (AOV-k). Emellett a virtuális tér szimulációs eszközeivel is megismerkednek: szilárd test, fény, folyadék, haj és ruha szimuláció, illetve egyszerűbb hierarchikus mozgó rendszerek. A félév végére egy 1280x720 méretű renderelt animáció készül el.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Maya"
+            "Maya",
+            "Arnold"
           ],
           "keywords": [
             "3d modellezés",
             "szimuláció",
             "maya",
             "textúrázás",
-            "render"
+            "render",
+            "világítás",
+            "arnold",
+            "uv"
           ],
           "cel": "A kurzus célja a 3D modellezés és szimuláció eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a",
           "pdfUrl": "/tematikak/12453.pdf",
+          "category": [
+            "3d"
+          ],
           "group": null
         },
         {
@@ -1481,23 +1910,32 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Varga Vajk, Polena Réka",
           "institute": "AMD",
           "note": null,
-          "description": "A szemeszter során a hallgatók egyszerű interaktív rendszerek tervezéséhez szükséges",
+          "description": "A szemeszter során a hallgatók egyszerű interaktív rendszerek tervezéséhez szükséges tudást sajátítanak el gyakorlati feladatokon keresztül: alapvető elektronikai ismereteket, mikrokontrollerekkel építhető interaktív architektúrákat, valamint a TouchDesigner szoftver és a Microsoft Kinect használatát és ezek kombinációit. Szó esik az audio-reaktív vizuálokról, a VJ-zés alapjairól, a DMX vezérlésről és az adatvizualizációról is. A félév végére a hallgatók saját multimédiás, interaktív installáció terveit készítik el és prezentálják.",
           "felelos": "Sterk Barbara DLA",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Touch Designer",
-            "TouchDesigner"
+            "TouchDesigner",
+            "Arduino",
+            "Kinect"
           ],
           "keywords": [
             "mikrokontroller",
             "elektronika",
             "touchdesigner",
-            "interaktív",
-            "arduino"
+            "interaktív installáció",
+            "arduino",
+            "kinect",
+            "vj-zés",
+            "adatvizualizáció"
           ],
           "cel": "A kurzus célja alapvető elektronikai ismeretek elsajátítása és a mikrokontrollerek használatának megértése és használatukkal kapcsolatos gyakorlati tudás elsajátítása, valamint ezek alkalmazása különböző ipari és képzőművészeti területen. A hallgató a kurzus elvégzése után képes haladó szinten létre",
           "pdfUrl": "/tematikak/12466.pdf",
+          "category": [
+            "ux/interakció",
+            "installáció",
+            "fejlesztés"
+          ],
           "group": null
         },
         {
@@ -1512,14 +1950,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a kortárs művészet elméleti kérdéseivel, irányzataival és diskurzusaival foglalkozik. A kurzus a média design mesterképzés elméleti megalapozását szolgálja, segítve a hallgatókat abban, hogy saját alkotói gyakorlatukat a kortárs művészet kontextusában értelmezzék. A tárgy kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "kortárs művészet",
+            "művészetelmélet",
+            "esztétika",
+            "kritikai gondolkodás",
+            "elmélet",
+            "műelemzés"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -1534,7 +1982,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kollár Dávid",
           "institute": "ELM",
           "note": "szab.váll. létszám: összesen",
-          "description": "A kurzus célja a kommunikációs rendszerek és vizuális nyelvek elméleti és gyakorlati",
+          "description": "Az előadás a kommunikációs rendszerek és vizuális nyelvek elméleti és gyakorlati dimenzióit vizsgálja kritikai módon, kortárs kommunikációtudományi, filozófiai és szociológiai perspektívákból. Témái között szerepel a nyelv előtti kommunikáció és humánetológia, a nonverbális kommunikáció, a vizuális kultúra és képfilozófia, a digitális kommunikáció és hálózatelméletek, a közösségi média algoritmusos kommunikációja, a filmnyelvi eszközök, valamint az AI és a poszthumán kommunikáció. A hallgatók képessé válnak médiadesign-munkájukat elméleti keretekben kontextualizálni.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -1543,10 +1991,16 @@ export const DEFAULT_DATA: Curriculum = {
             "vizuális nyelv",
             "kommunikáció",
             "elmélet",
-            "jelrendszer"
+            "jelrendszer",
+            "vizuális kultúra",
+            "médiaelmélet",
+            "hálózatelmélet"
           ],
           "cel": "A kurzus célja a kommunikációs rendszerek és vizuális nyelvek elméleti területének ismertetése, ahhoz, hogy a hallgató média designeri, alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése ered",
           "pdfUrl": "/tematikak/12468.pdf",
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -1561,14 +2015,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a médiakultúra jelenségeivel, a média és a kultúra kölcsönhatásaival foglalkozik a média design mesterképzés elméleti megalapozásaként. A tárgy segíti a hallgatókat abban, hogy a médiajelenségeket tágabb kulturális és társadalmi összefüggésekben értelmezzék. A kurzus kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "médiakultúra",
+            "médiaelmélet",
+            "kultúra",
+            "média",
+            "elmélet",
+            "társadalom"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -1583,22 +2047,32 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Gerő András, Kolosy Becse, Pálfi Szabolcs",
           "institute": "AMD",
           "note": null,
-          "description": "A modul (Németi Fanni) After Effects - Film főcím tervezés Az Adobe After Effects ismereteket bemutató kurzus egyik célja, hogy a féléven átívelő",
+          "description": "Két modulból álló gyakorlati kurzus. Az A modulban a hallgatók az Adobe After Effects ismereteiket mélyítik el egy féléven átívelő feladattal: egy szabadon választott filmhez alternatív főcímet terveznek, amelyhez képes forgatókönyvet és látványterveket készítenek, a képi alapanyagot Photoshopban vagy Illustratorban hozzák létre, majd After Effectsben animálják. A B modulban tervezésmódszertani gyakorlatok és művészeti kutatás (artistic research) után egy fiktív karakter social media oldalát alkotják meg, releváns és eredeti posztokkal.",
           "felelos": "Molnár Ágnes Éva",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
             "After Effects",
-            "Adobe"
+            "Photoshop",
+            "Illustrator"
           ],
           "keywords": [
             "médiatervezés",
             "after effects",
-            "haladó",
-            "tervezés"
+            "főcímtervezés",
+            "mozgógrafika",
+            "storyboard",
+            "social media",
+            "művészeti kutatás",
+            "tervezésmódszertan"
           ],
           "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint pre",
           "pdfUrl": "/tematikak/12773.pdf",
+          "category": [
+            "animáció",
+            "2d",
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -1613,7 +2087,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Balogh Áron",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások és meghívott előadók által vezetett projektek formájában. A programok között szerepel a szakmában aktívan dolgozó előadók prezentációja, mesterkurzusok, innovációs és technikai bemutató előadások, konferenciarészvétel, kiállításlátogatás és közös projektek kivitelezése. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -1622,11 +2096,16 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
-            "projektmunka",
-            "ma"
+            "mesterkurzus",
+            "konferencia",
+            "portfólió",
+            "mesterképzés"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/12744.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -1638,31 +2117,39 @@ export const DEFAULT_DATA: Curriculum = {
           "credits": 5,
           "active": null,
           "groups": "1",
-          "instructors": "Balogh Áron, Tóth Norbert",
+          "instructors": "Balogh Áron",
           "institute": "AMD",
           "note": "Balogh Áron (1x2) Tóth Norbert (1x2)",
-          "description": "A kurzus során a hallgatók megismerkednek a médiaművészet és médiadesign alapjaival,",
+          "description": "Felzárkóztató kurzus, amelynek során a hallgatók megismerkednek a médiaművészet és médiadesign alapjaival: képszerkesztéssel (Photoshop), vektorgrafikával (Illustrator), kézi rajzzal, fotózással, videóvágással és fényeléssel (Premiere Pro, After Effects), programozással (C# és Arduino), valamint 3D modellezéssel (Blender). A kurzus elméleti és gyakorlati készségeket egyaránt fejleszt, a feladatokból a hallgatók egyéni portfóliót építenek. Értékelése: megfelelt / nem felelt meg.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "After Effects",
-            "Premiere Pro",
-            "Illustrator",
             "Photoshop",
+            "Illustrator",
+            "Premiere Pro",
+            "After Effects",
             "Arduino",
-            "Blender"
+            "Blender",
+            "C#"
           ],
           "keywords": [
             "felzárkóztató",
-            "after effects",
-            "photoshop",
-            "arduino",
-            "blender",
-            "médiadesign"
+            "képszerkesztés",
+            "vektorgrafika",
+            "videóvágás",
+            "programozás",
+            "3d modellezés",
+            "fotózás",
+            "kézi rajz"
           ],
           "cel": "A tárgy célja, hogy a különböző szakokról érkező hallgatókat technikailag felzárkóztassa a médiadesign alapképzésének szintjére.",
           "pdfUrl": "/tematikak/12510.pdf",
+          "category": [
+            "2d",
+            "3d",
+            "fejlesztés"
+          ],
           "group": null
         }
       ]
@@ -1685,14 +2172,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a kritikai kultúrakutatás szemléletmódjába és fogalomkészletébe vezeti be a mesterszakos hallgatókat. A kurzus a kortárs kultúra és média jelenségeinek kritikai, társadalomtudományi elemzéséhez ad eszközöket, támogatva a hallgatók önálló alkotói és kutatói reflexióját.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "kritikai elmélet",
+            "kultúrakutatás",
+            "médiaelmélet",
+            "társadalomtudomány",
+            "kortárs kultúra",
+            "elemzés"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -1707,14 +2204,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a környezetpszichológia kortárs kérdésfeltevéseit tekinti át: az ember és az őt körülvevő fizikai, épített és mediatizált környezet kölcsönhatásait vizsgálja. A kurzus pszichológiai szempontokat ad a tervezői gondolkodáshoz, segítve a terek és környezetek emberközpontú értelmezését.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "környezetpszichológia",
+            "épített környezet",
+            "észlelés",
+            "pszichológia",
+            "tér",
+            "kortárs kérdések"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -1729,14 +2236,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
+          "description": "Gyakorlati kurzus, amelyben a hallgatók különböző művészeti ágak képviselőivel együttműködve, interdiszciplináris alkotói folyamatban dolgoznak. A tárgy a társművészeti területek szemléletének és munkamódszereinek integrálását gyakoroltatja közös projektmunka keretében.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "gyakorlati jegy",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "társművészetek",
+            "interdiszciplináris",
+            "együttműködés",
+            "alkotói gyakorlat",
+            "integrált projekt",
+            "média design"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -1751,25 +2268,33 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kolosy Becse, Madácsi Blanka",
           "institute": "AMD",
           "note": null,
-          "description": "A Blokk ------ Madácsi Blanka Maya és Substance Painter A tantárgyrész a videójáték-fejlesztéshez szükséges digitális assetek és animációk",
+          "description": "A kurzus a videójáték-fejlesztés teljes vizuális pipeline-ját fedi le két egymásra épülő blokkban: az egyikben a hallgatók Maya és Substance Painter használatával game-ready 3D asseteket, karaktereket és animációkat készítenek (modellezés, UV, PBR textúrázás, rigging, keyframe és Rokoko motion capture workflow), a másikban ezeket Unreal Engine-ben integrálják. A félév végére blueprint-alapú interakciókkal működő demo játékot és portfólióba illeszthető assetcsomagot hoznak létre.",
           "felelos": "Molnár Ágnes Éva",
           "prerequisite": "Médiatervezés 1.",
           "requirement": "gyakorlati jegy",
           "software": [
+            "Maya",
             "Substance Painter",
             "Unreal Engine",
-            "Maya"
+            "Rokoko"
           ],
           "keywords": [
-            "after effects",
-            "davinci",
-            "blender",
-            "substance painter",
+            "videójáték-fejlesztés",
+            "game asset",
             "unreal engine",
-            "compositing"
+            "substance painter",
+            "maya",
+            "motion capture",
+            "pbr",
+            "blueprint"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja, hogy a hallgatók mesterképzéshez illeszkedő, haladó szintű ismereteket szerezzenek a videójáték-fejlesztés teljes vizuális pipeline-járól, különös tekintettel a valós idejű megjelenítésre optimalizált 3D assetek, karakterek és animációk létrehozására, valamint azok játékmotorban történő alkalmazására.",
           "pdfUrl": "/tematikak/15048.pdf",
+          "category": [
+            "3d",
+            "játék",
+            "animáció"
+          ],
           "group": null
         },
         {
@@ -1784,24 +2309,32 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Tóth Gergő",
           "institute": "AMD",
           "note": null,
-          "description": "A félév során a hallgatók átfogó képet kapnak a game ready assetekről, és a különböző 3D",
+          "description": "A félév során a hallgatók a game-ready assetek készítését és a 3D szoftverek, valamint az Unreal Engine közötti átjárhatóságot tanulják: nCloth-, részecske- és folyadékszimulációkat exportálnak, növényzettel népesítenek be terepeket a MASH Network segítségével, és renderelési optimalizációs technikákat alkalmaznak (Arnold stand-in, AOV-k). A kurzus zárásaként élettel benépesített, szimulációkkal kiegészített játék intrót, cinematicot vagy cutscene-t készítenek, amelyet After Effectsben kompozitálnak és fényelnek.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "3D tervezés és szimuláció 1.",
           "requirement": "gyakorlati jegy",
           "software": [
+            "Maya",
+            "Arnold",
             "Unreal Engine",
             "After Effects"
           ],
           "keywords": [
-            "3d animáció",
-            "maya",
-            "mixamo",
-            "unreal engine",
-            "kulcsolás",
+            "game ready asset",
+            "szimuláció",
+            "mash network",
+            "arnold",
+            "render optimalizáció",
+            "kompozitálás",
+            "cinematic",
             "pbr"
           ],
-          "cel": "A modulok elvégzését követően a hallgató képes lesz PBR elvek mentén anyagokat készíteni, a játéktérben, 3D jelenetben terepeket modellezni, strukturálni, és a MASH Network segítségével ezeken nagyszámú objektumot elhelyezni. A hallgató képes lesz további a renderelési időt és erőforrás-használatot ",
+          "cel": "A modulok elvégzését követően a hallgató képes lesz PBR elvek mentén anyagokat készíteni, a játéktérben, 3D jelenetben terepeket modellezni, strukturálni, és a MASH Network segítségével ezeken nagyszámú objektumot elhelyezni, továbbá a renderelési időt és erőforrás-használatot optimalizálni és a render passzokat / layereket utómunkára alkalmas módon előállítani.",
           "pdfUrl": "/tematikak/15033.pdf",
+          "category": [
+            "3d",
+            "animáció"
+          ],
           "group": null
         },
         {
@@ -1816,23 +2349,30 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Varga Vajk, Polena Réka",
           "institute": "AMD",
           "note": null,
-          "description": "A szemeszter során a hallgatók összetett interaktív rendszerek tervezéséhez szükséges",
+          "description": "A szemeszter során a hallgatók összetett interaktív rendszerek tervezését sajátítják el gyakorlati feladatokon keresztül: elektronikai rendszerekkel és mikrokontrollerekkel, TouchDesigner szoftverrel, Microsoft Kinecttel és ezek kombinációival építenek interaktív architektúrákat. A tematika kitér az audioreaktív vizuálokra, a particle systemekre, a DMX/NDI/OSC/MIDI vezérlésre és a nyomtatott áramkörök készítésére is; a félév végén a hallgatók saját multimédiás interaktív installációt készítenek, és csoportosan audiovizuális alkotást terveznek a Magyar Zene Háza hangdómjába.",
           "felelos": "Sterk Barbara DLA",
           "prerequisite": "Interaktív rendszerek 1.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Touch Designer",
+            "TouchDesigner",
             "Kinect"
           ],
           "keywords": [
             "touchdesigner",
             "kinect",
-            "interaktív",
-            "motion tracking",
-            "haladó"
+            "interaktív installáció",
+            "mikrokontroller",
+            "adatvizualizáció",
+            "dmx",
+            "osc",
+            "audiovizuális"
           ],
           "cel": "A kurzus célja az interaktív rendszerek eszközismereti, alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni e",
           "pdfUrl": "/tematikak/15043.pdf",
+          "category": [
+            "ux/interakció",
+            "installáció"
+          ],
           "group": null
         },
         {
@@ -1847,7 +2387,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Balogh Áron",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, meghívott előadók prezentációi, mesterkurzusok, technikai bemutatók, konferencia- és kiállításlátogatások, valamint közös projektek formájában. A programok között szerepelnek Erasmus-beszámolók, BEST OF diplomaprezentációk és az OMDK intézményi forduló; a teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -1856,11 +2396,15 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
-            "projektmunka",
-            "ma"
+            "mesterkurzus",
+            "portfólió",
+            "szakmai program"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/15052.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -1875,28 +2419,36 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Balogh Áron",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus során a hallgatók megismerkednek a médiaművészet és médiadesign alapjaival,",
+          "description": "Felzárkóztató kurzus a nem média design alapszakról érkező hallgatóknak, amely a médiaművészet és médiadesign alapjait fedi le: képszerkesztés (Photoshop), vektorgrafika (Illustrator), kézi rajz, analóg és digitális fotográfia, videóvágás és fényelés (Premiere Pro), programozás (C# és Arduino), valamint 3D modellezés és animáció (Blender). A tematikában szerepel továbbá 3D mapping és fényfestés Resolume Arénával, illetve webdesign Figmával és HTML/CSS/JavaScript alapokkal; a hallgatók a feladatokból egyéni portfóliót építenek.",
           "felelos": "Kiss Melinda",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Premiere Pro",
-            "Illustrator",
             "Photoshop",
-            "Resolume",
+            "Illustrator",
+            "Premiere Pro",
+            "Blender",
+            "Resolume Arena",
             "Arduino",
-            "Blender"
+            "Figma"
           ],
           "keywords": [
+            "felzárkóztató",
             "médiaművészet",
-            "premiere pro",
-            "resolume",
-            "arduino",
-            "blender",
-            "felzárkóztató"
+            "képszerkesztés",
+            "videóvágás",
+            "3d modellezés",
+            "fényfestés",
+            "webdesign",
+            "programozás"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja olyan ismeretkörök átadása, amelyekre a nem média design alapszakot végző hallgatóknak korábban nem nyílt lehetőségük: alapszintű média design technikák, speciális szoftverek ismerete és a média design tervezés fő alaphelyzetei; a teljesítéssel a hallgató érti és alkalmazni tudja a szakterület alapfogalmait és fő elveit.",
           "pdfUrl": "/tematikak/15037.pdf",
+          "category": [
+            "projekt",
+            "2d",
+            "3d"
+          ],
           "group": null
         }
       ]
@@ -1919,14 +2471,23 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a kommunikáció alapfogalmaival és folyamataival foglalkozik a média design mesterképzés keretében. A kurzus a szakmai munkához szükséges kommunikációs ismeretek megalapozását szolgálja, kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "kommunikáció",
+            "elmélet",
+            "kommunikációelmélet",
+            "médiakommunikáció",
+            "prezentáció"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -1941,14 +2502,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a kreatív szakmai tevékenységhez kapcsolódó gazdasági és jogi alapismereteket tárgyalja a média design mesterképzésben. A kurzus a hallgatók piaci és jogi tájékozottságát alapozza meg, kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "gazdaság",
+            "jog",
+            "szerzői jog",
+            "vállalkozás",
+            "elmélet",
+            "kreatívipar"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -1963,24 +2534,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kováts Jázon",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus során a hallgatók betekintést nyerhetnek a multimédia környezetben alkalmazott audio lehetőségeibe. Az alapvető hang vágási, keverési módszerek mellett, hangdizájn módszerek és az interaktív",
+          "description": "A kurzus a multimédia környezetben alkalmazott audio lehetőségeibe vezet be haladó szinten: a hangvágás és keverés alapjaitól a hangfelvételi eszközparkon és a digitális hangszerkesztésen (EQ, zajszűrés, effektek) át a foley-ig. Kiemelt téma az interaktivitás: MIDI és Open Sound Control alapú rendszerek építése Ableton Live és Max környezetben. A félév során stúdió- és low budget eszközökkel egyaránt dolgoznak a hallgatók, és a diplomamunka-tervek hangi megoldásait is konzultálják.",
           "felelos": "Csáki László",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
             "Audition",
-            "Ableton",
-            "Adobe"
+            "Ableton Live",
+            "Max/MSP",
+            "PaulXStretch"
           ],
           "keywords": [
             "hangdesign",
             "audition",
             "ableton",
             "hangtervezés",
-            "audio"
+            "audio",
+            "midi",
+            "osc",
+            "foley"
           ],
-          "cel": "A kurzus célja a hangdesign eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezen",
+          "cel": "A kurzus célja a hangdesign eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus végére képes haladó szinten felismerni, elemezni, érteni, alkalmazni és prezentálni a hangdesign területét képező ismeretanyagot és technikai tudást.",
           "pdfUrl": "/tematikak/12513.pdf",
+          "category": [
+            "hang"
+          ],
           "group": null
         },
         {
@@ -1995,18 +2573,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Berkes Bálint, Pálfi Szabolcs, Forgács Kristóf",
           "institute": "AMD",
           "note": null,
-          "description": "A modul (Berkes Bálint): A szemeszter során a hallgatók megismerkednek a fény mint",
+          "description": "Két modulból álló gyakorlati kurzus. Az egyik modulban a hallgatók a fényt mint művészi eszközt ismerik meg: projection mapping, DMX-vezérelt lámpák és robotlámpák, LED-technológiák és valós idejű, Unreal Engine-nel összekötött fényinstallációk készítése a téma, a félév saját fényművészeti alkotással zárul. A másik modul a játéktervezés folyamatát dolgozza fel az ötlettől a tervezői dokumentumon (GDD) át a prototípusig, érintve a karakter-, level- és UI/UX-tervezést, animációt és optimalizációt.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "Médiatervezés 2.",
           "requirement": "gyakorlati jegy",
-          "software": [],
+          "software": [
+            "MadMapper",
+            "MadLight",
+            "Unreal Engine"
+          ],
           "keywords": [
             "médiatervezés",
-            "haladó",
+            "fényművészet",
+            "projection mapping",
+            "dmx",
+            "játéktervezés",
+            "prototípus",
+            "installáció",
             "projektmunka"
           ],
-          "cel": "A modul (Berkes Bálint):",
+          "cel": "A tantárgy célja egyrészt, hogy a hallgatók megismerjék a fény mint művészi eszköz alkalmazási lehetőségeit a multimédiás formákban, másrészt hogy elsajátítsák a játéktervezés alapelveit és folyamatait a játékmechanikáktól a prototípus-készítésen át az iterációig.",
           "pdfUrl": "/tematikak/12515.pdf",
+          "category": [
+            "installáció",
+            "játék"
+          ],
           "group": null
         },
         {
@@ -2021,19 +2612,29 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Varga Vajk, Forgács Kristóf",
           "institute": "AMD",
           "note": null,
-          "description": "A modul (Varga Vajk) A tantárgy célja, hogy a hallgatókat bevezesse a kísérleti médiaművészet világába, különös",
+          "description": "A kurzus a kísérleti médiaművészet világába vezet be, az új média technológiáira és az avantgárd művészeti mozgalmak hatásaira építve. Az egyik modulban a hallgatók a fényművészet és a luminokinetika alapjaival, kiállítástervezéssel és -építéssel, valamint interaktív installációk technológiai hátterével (haladó TouchDesigner) foglalkoznak, és saját projektet valósítanak meg. A másik modulban nagyvárosi kreatív ötlettervek kidolgozása és vizuális prezentációja a feladat, amelyek egyedi módon erősíthetik egy város arculatát és élményét.",
           "felelos": "Mayer Éva",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
-          "software": [],
+          "software": [
+            "TouchDesigner"
+          ],
           "keywords": [
             "médiaművészet",
             "kísérleti",
             "experimentális",
-            "képzőművészet"
+            "fényművészet",
+            "luminokinetika",
+            "installáció",
+            "touchdesigner",
+            "új média"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja a hagyományos média design és médiaművészeti területeken kívül eső kompetenciák felfedezése és gyakorlatba ültetése, a hallgatók bátorítása a határterületek vizsgálatára, kísérletek elvégzésére és az azokból való tanulságok levonására.",
           "pdfUrl": "/tematikak/12459.pdf",
+          "category": [
+            "installáció",
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -2048,7 +2649,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kollár Dávid",
           "institute": "ELM",
           "note": null,
-          "description": "A kurzus célja, hogy a hallgatók elsajátítsák a média elemzésének és értelmezésének kritikai",
+          "description": "A kurzus a média elemzésének és értelmezésének kritikai szemléletét adja át: a hallgatók megismerkednek a főbb médiaelméleti irányzatokkal, modellekkel és kulcsfogalmakkal. Szó esik a médiafogyasztási trendekről, a média és a nyilvánosság, illetve a hatalom viszonyáról, a médiareprezentációról, valamint a médiaszövegek szemiotikai és diskurzuselemzéséről. A félév végére a hallgatók képessé válnak a kortárs médiajelenségek és -platformok kontextusban való, kritikai elemzésére.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -2057,10 +2658,16 @@ export const DEFAULT_DATA: Curriculum = {
             "médiaelmélet",
             "analitikus",
             "médiakritika",
+            "elmélet",
+            "reprezentáció",
+            "szemiotika",
+            "nyilvánosság"
+          ],
+          "cel": "A kurzus célja, hogy a hallgatók megismerkedjenek az analitikus médiaelmélet alapjaival, és elsajátítsák azokat az elméleti kereteket és fogalmakat, amelyekkel képessé válnak a médiajelenségek mélyebb megértésére, valamint a médiatartalmak és -platformok kritikai elemzésére saját média designeri munkájukban is.",
+          "pdfUrl": "/tematikak/12512.pdf",
+          "category": [
             "elmélet"
           ],
-          "cel": "A kurzus célja, hogy a hallgatók megismerkedjenek az analitikus médiaelmélet alapjaival, és elsajátítsák azokat az elméleti kereteket és fogalmakat, melyek segítségével képessé válnak a média jelenségek mélyebb megértésére és kritikai elemzésére. Az órák során a résztvevők betekintést nyernek a legf",
-          "pdfUrl": "/tematikak/12512.pdf",
           "group": null
         },
         {
@@ -2075,7 +2682,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Molnár Ágnes",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, meghívott előadók prezentációi, mesterkurzusok, innovációs és technikai bemutató előadások, konferenciarészvétel, kiállításlátogatás és közös projektek formájában. Fontos szempont a társterületi alapismeretek és kompetenciák beemelése, valamint a portfólióépítés. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -2085,10 +2692,15 @@ export const DEFAULT_DATA: Curriculum = {
             "workshop",
             "előadás",
             "projektmunka",
-            "ma"
+            "ma",
+            "mesterkurzus",
+            "konferencia"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/12746.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -2111,14 +2723,28 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pápai Bence",
           "institute": "ELM",
           "note": "szab.váll. létszám: összesen",
-          "description": null,
-          "felelos": null,
-          "prerequisite": null,
+          "description": "A kurzus a digitális produkciók – elsősorban a játékfejlesztési workflow – vezetői oldalát mutatja be: projektmenedzsment-alapok, kockázatok és felelősségek, a piac szereplői és a szükséges szakembergárda. A hallgatók áttekintik a finanszírozási lehetőségeket (közösségi finanszírozás, kiadók, befektetők), a költségtervezést, valamint a marketing és PR szerepét. A félév során fiktív pitch csomagot állítanak össze koncepcióval, célpiaccal, csapatösszetétellel, költségvetéssel és ütemezéssel.",
+          "felelos": "Besenyei Zsuzsanna",
+          "prerequisite": "-",
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "keywords": [
+            "produkció",
+            "projektmenedzsment",
+            "játékfejlesztés",
+            "finanszírozás",
+            "kiadói rendszer",
+            "pitch",
+            "költségvetés",
+            "marketing"
+          ],
+          "cel": "A tantárgy célja, hogy a hallgatók megismerkedjenek a projektek és produkciók létrehozása során felmerülő alkotói, tervezői problémákkal és megoldási stratégiáikkal, ismerjék a produkcióhoz szükséges szakemberek szerepköreit és felelősségeit, és képesek legyenek egy produkció megtervezésére és teljes körű levezénylésére.",
+          "pdfUrl": "/tematikak/ext-produkcios-ismeretek.pdf",
+          "category": [
+            "játék",
+            "projekt",
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -2133,14 +2759,25 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pálfi Szabolcs, Forgács Kristóf, Madácsi Blanka, Varga Vajk, Kollár Dávid, Kováts Jázon",
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": null,
-          "prerequisite": null,
+          "description": "A záró félév kurzusa a diplomamunka elkészítését kíséri végig három blokkban: a hallgatók a diplomaprojekt szisztematikus, projektszerű felépítésével (ütemezés, mérföldkövek), a szakdolgozat megírásának módszertanával (kutatási kérdés, hivatkozás, szakirodalom-feldolgozás), valamint a portfólió és showreel összeállításával foglalkoznak. A félév során rendszeres konzultációk és hallgatói prezentációk kísérik a munkát, a teljesítés feltétele két központi konzultáción való bemutatás, amelyet oktatói bizottság értékel.",
+          "felelos": "Forgács Kristóf",
+          "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "keywords": [
+            "diplomamunka",
+            "szakdolgozat",
+            "portfólió",
+            "showreel",
+            "prezentáció",
+            "projektterv",
+            "kutatásmódszertan"
+          ],
+          "cel": "A kurzus célja a diplomamunkához szükséges eszközismereti, alkotói és művészi ismeretek elsajátítása haladó szinten, a kreatív készségek kifejlesztése és a prezentációs tudás megszerzése.",
+          "pdfUrl": "/tematikak/ext-diplomamunka-media-design.pdf",
+          "category": [
+            "diploma/portfólió"
+          ],
           "group": null
         },
         {
@@ -2155,7 +2792,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Forgács Kristóf",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató programokat kínál: meghívott szakemberek előadásait, mesterkurzusokat, innovációs és technikai workshopokat, konferencia- és kiállításlátogatásokat, valamint közös projektek kivitelezését. A programok között Erasmus-beszámoló, BEST OF diplomaprezentációk és az OMDK intézményi forduló is szerepel. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való elvégzése.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -2164,11 +2801,16 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
+            "mesterkurzus",
             "projektmunka",
+            "portfólió",
             "ma"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/15057.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -2191,24 +2833,30 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szacsvai Pál",
           "institute": "AMD",
           "note": null,
-          "description": "A hallgató a kurzus során a képernyő-specifikus grafikai tervezés alapelveivel, a képi közlés",
+          "description": "A kurzus a képernyő-specifikus grafikai tervezés alapelveivel és a képi közlés alapelemeivel (szín, forma, vonal, kompozíció, tipográfiai és rajzi struktúra) ismerteti meg a hallgatót, valamint ezek kreatív alkalmazásával a kortárs digitális kommunikációs rendszerekben. A számítógépes képalkotás, képfeldolgozás és képszerkesztés eljárásait az Adobe Illustrator és Photoshop programokon keresztül gyakorolják, adatvizualizációs, piktogram-, logó- és bannertervezési feladatokkal. A megszerzett tudás megalapozza a későbbi félévek mozgógrafikai és 3D modellezői stúdiumait.",
           "felelos": "Kiss Melinda",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
             "Illustrator",
-            "Photoshop",
-            "Adobe"
+            "Photoshop"
           ],
           "keywords": [
             "grafikai tervezés",
             "illustrator",
             "photoshop",
             "képi közlés",
-            "digitális grafika"
+            "digitális grafika",
+            "piktogram",
+            "vizuális kommunikáció",
+            "kompozíció"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja a média design szakma műveléséhez elengedhetetlen képnyelvi és mozgóképnyelvi alapismeretek átadása, valamint a számítógépes képalkotás, képfeldolgozás és képszerkesztés alapelveinek ismertetése és gyakoroltatása az Adobe Illustrator és Photoshop programok használata útján.",
           "pdfUrl": "/tematikak/12306.pdf",
+          "category": [
+            "grafika/tipográfia",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -2223,7 +2871,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kunszt Gábor",
           "institute": "AMD",
           "note": "Új oktató szervezése folyamatban",
-          "description": "A kurzus bevezető részében bemutatásra kerül az Arduino fejlesztői környezet és ennek",
+          "description": "A kurzus bevezető részében a hallgatók megismerkednek az Arduino fejlesztői környezettel, valamint elektronikai és programozói alapismeretekkel (digitális és analóg I/O, vezérlési szerkezetek, szervomotorok). Emellett bepillantást nyernek a folyamatalapú fizikai algoritmikus alkotás világába. A kurzus második felében műhelymunka során anyagkísérleteket és prototípusgyártást végeznek, és saját koncepció alapján kisebb interaktív rendszereket készítenek.",
           "felelos": "Sterk Barbara DLA",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -2233,11 +2881,18 @@ export const DEFAULT_DATA: Curriculum = {
           "keywords": [
             "interakciótervezés",
             "arduino",
-            "fizikai computing",
-            "prototípus"
+            "fizikai számítástechnika",
+            "prototípus",
+            "elektronika",
+            "interaktív installáció",
+            "algoritmikus alkotás"
           ],
-          "cel": "A kurzus célja az interakciótervezés alapjainak elsajátítása eszközismereti (Arduino nyelv), fizikai alkotói (tervezői) és művészeti (esztétikai) szemlélet szempontjából. A hallgató a kurzus elvégzése eredményeképpen képes felismerni, elemezni, érteni, alkalmazni, valamint prezentálni az interakciót",
+          "cel": "A kurzus célja az interakciótervezés alapjainak elsajátítása eszközismereti (Arduino nyelv), fizikai alkotói (tervezői) és művészeti (esztétikai) szemlélet szempontjából. A hallgató a kurzus elvégzése eredményeképpen képes felismerni, elemezni, érteni, alkalmazni, valamint prezentálni az interakciótervezés alapjait képező ismeretanyagot, technikai tudást és alkotói képességet.",
           "pdfUrl": "/tematikak/12308.pdf",
+          "category": [
+            "ux/interakció",
+            "installáció"
+          ],
           "group": null
         },
         {
@@ -2252,14 +2907,23 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti alapozó előadás, amely a kommunikáció alapfogalmaival, modelljeivel és folyamataival ismerteti meg a hallgatókat. A kurzus a média design képzés közös elméleti alapozásának része, és kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "kommunikáció",
+            "kommunikációelmélet",
+            "alapismeretek",
+            "médiaelmélet",
+            "elmélet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -2274,19 +2938,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Mayer Éva",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy a média design szak egyik alapozó főtantárgya, mely a hallgatók alkotó készségét és művészeti kreativitását hivatott fejleszteni és minden egyéb gyakorlati tudást igénylő média design tárgyat megalapozni.",
+          "description": "A média design szak alapozó főtantárgya, amely a hallgatók alkotó készségét és művészeti kreativitását fejleszti, és megalapoz minden további gyakorlati média design tárgyat. Az első félév ismeretanyaga a kompozíció, a perspektíva és térábrázolás, az anatómia (portréábrázolás), valamint a kreatív látásmód fejlesztése, szabadkézi rajzi és digitális technikák kombinálásával. A félév kreatív feladatokat (színkontraszt, parafrázis, kollázs) és múzeumlátogatást is tartalmaz.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
-          "software": [],
+          "software": [
+            "Lightroom",
+            "Premiere Pro",
+            "After Effects"
+          ],
           "keywords": [
             "médiadesign",
             "alapozó",
             "kreativitás",
-            "tervezés"
+            "kompozíció",
+            "perspektíva",
+            "anatómia",
+            "rajz",
+            "térlátás"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja a média design szakma műveléséhez elengedhetetlen képnyelvi alapismeretek átadása és az alkotói készségek kifejlesztése, valamint a manuális és számítógépes képalkotás alapelveinek, eljárásainak ismertetése és gyakoroltatása.",
           "pdfUrl": "/tematikak/12452.pdf",
+          "category": [
+            "2d",
+            "grafika/tipográfia"
+          ],
           "group": null
         },
         {
@@ -2301,14 +2977,23 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a művészettörténet korszakait és jelenségeit társadalomtudományi kontextusban tárgyalja. A kurzus a művészeti képzések közös elméleti alapozásának része, és kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "művészettörténet",
+            "társadalomtudomány",
+            "kultúrtörténet",
+            "vizuális kultúra",
+            "elmélet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -2323,7 +3008,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szacsvai Pál",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, meghívott előadók prezentációi, mesterkurzusok, innovációs és technikai bemutató előadások, konferencia- és kiállításlátogatások, valamint közös projektek formájában. Az első félévben a hallgatók megismerkednek a média design szakkal, az Erasmus pályázati rendszerrel és a METU művészeti szakjaival. Fontos szempont a társterületek alapismereteinek beemelése és a portfólióépítés.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -2333,10 +3018,15 @@ export const DEFAULT_DATA: Curriculum = {
             "workshop",
             "előadás",
             "projektmunka",
+            "mesterkurzus",
+            "portfólió",
             "ba"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/12722.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -2351,7 +3041,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kiss Lőrinc",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy célja a felhasználói élmény (user experience, UX) tervezés alapismereteinek,",
+          "description": "A tantárgy a felhasználói élmény (UX) tervezés alapismereteit, módszereit és folyamatait tanítja a Miro és Figma szoftverek használatával, a Design Thinking keretrendszer mentén. A hallgatók kutatási módszerekkel (interjúk, perszónák, customer journey), információs architektúrával és user flow-val, majd UI-tervezéssel foglalkoznak. A két féléves kurzus során egy szabadon választott digitális alkalmazás prototípusát tervezik meg Figmában, ami megalapozza a digitális terméktervezői készségeket.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -2364,10 +3054,16 @@ export const DEFAULT_DATA: Curriculum = {
             "figma",
             "miro",
             "felhasználói élmény",
-            "prototípus"
+            "prototípus",
+            "design thinking",
+            "perszóna",
+            "user flow"
           ],
           "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása alap szinten. A hallgató a kurzus elvégzése eredményeképpen képes alap szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a UX design területét k",
           "pdfUrl": "/tematikak/12741.pdf",
+          "category": [
+            "ux/interakció"
+          ],
           "group": null
         }
       ]
@@ -2390,14 +3086,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "A művészettörténet főbb korszakait és irányzatait társadalomtudományi kontextusban tárgyaló előadássorozat második féléve. A hallgatók a műalkotásokat a létrejöttüket meghatározó társadalmi, kulturális és gazdasági összefüggésekben vizsgálják, ezáltal fejlődik elemző és kritikai gondolkodásuk.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "művészettörténet",
+            "társadalomtudomány",
+            "elmélet",
+            "kultúrtörténet",
+            "műelemzés",
+            "kontextus"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -2412,14 +3118,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Bevezető előadás a filozófia és az esztétika alapfogalmaiba, főbb kérdésfelvetéseibe és gondolkodástörténeti hagyományába. A kurzus elméleti alapot ad a művészeti és tervezői gyakorlat reflektált, kritikai szemléletű megközelítéséhez.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "filozófia",
+            "esztétika",
+            "elmélet",
+            "gondolkodástörténet",
+            "műelemzés",
+            "bevezetés"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -2434,21 +3150,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szacsvai Pál",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy célja a tipográfiai érzékenység kialakítása, fejlesztése és alkalmazásának",
+          "description": "A tantárgy a tipográfiai érzékenység kialakítását és a szöveges közlés megformálásának, kép és szöveg együttes elrendezésének technikáit tanítja. A hallgatók betűtörténeti korszakokon (római kapitálistól a talp nélküli antikváig) haladva betűrajzi és kreatív betűtervezési gyakorlatokat végeznek, miközben elsajátítják a számítógépes kiadványtervezés (DTP) alapjait InDesignban. A félév végére saját fonttervet és kiadványtervet készítenek, a tervezett betűt Fontself segítségével fontállománnyá is alakítják.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "InDesign"
+            "InDesign",
+            "Photoshop",
+            "Fontself"
           ],
           "keywords": [
             "tipográfia",
             "betűrajz",
             "indesign",
-            "betűtervezés"
+            "betűtervezés",
+            "betűtörténet",
+            "kiadványtervezés",
+            "dtp",
+            "fonttervezés"
           ],
           "cel": "A kurzus célja a tipográfia és betűrajz eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása alapszinten. A hallgató a kurzus elvégzése eredményeképpen képes alapszinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint ",
           "pdfUrl": "/tematikak/15053.pdf",
+          "category": [
+            "grafika/tipográfia",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -2463,25 +3189,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szűcs Levente",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy célja a média design szakma műveléséhez elengedhetetlen képnyelvi, fotógráfiai és mozgóképnyelvi alapismeretek átadása és a területen való alkotói készségek",
+          "description": "A tantárgy a média design szakma műveléséhez szükséges képnyelvi, fotográfiai és mozgóképnyelvi alapismereteket adja át. A hallgatók a fotográfia alapjaitól (expozíció, világítás, plánok, kompozíció) a Lightroom-alapú képfeldolgozáson át a mozgóképkészítésig jutnak: kameramozgások, vágás, log rögzítés és színezés, hangi történetmesélés, valamint a Premiere Pro és After Effects közötti dynamic link használata is a tematika része. A féléves feladat egy hívószóra készített fotósorozat és egy rövid kisfilm.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "Média design stúdiumok 1.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "After Effects",
-            "Premiere Pro",
             "Lightroom",
-            "Adobe"
+            "Premiere Pro",
+            "After Effects"
           ],
           "keywords": [
             "fotó",
-            "photoshop",
+            "mozgókép",
             "lightroom",
             "premiere pro",
-            "médiatervezés"
+            "after effects",
+            "világítás",
+            "vágás",
+            "színkorrekció"
           ],
           "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása alap szinten. A hallgató a kurzus elvégzése eredményeképpen képes alap szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezent",
           "pdfUrl": "/tematikak/15044.pdf",
+          "category": [
+            "fotó",
+            "film/videó"
+          ],
           "group": null
         },
         {
@@ -2496,7 +3228,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Poroszlai Eszter, Kunszt Gábor",
           "institute": "AMD",
           "note": null,
-          "description": null,
+          "description": "A kurzus két modulban vezeti be a hallgatókat a fizikai interakciótervezés haladó gyakorlatába. A technikai modulban Arduino-alapú fizikai számítástechnikával, szenzorokkal (távolság-, fény-, érintésérzékelés) és aktuátorokkal (fények, szervók, motorok vezérlése) dolgoznak; a művészeti modul inspirációgyűjtésen, fénykutatáson, anyagkísérleten és tárgytervezésen keresztül a luminokinetika és az interaktív fényművek világába kalauzol. A félév végére a hallgatók csoportmunkában interaktív műalkotást terveznek, kiviteleznek és dokumentálnak.",
           "felelos": "Sterk Barbara DLA",
           "prerequisite": "Interakciótervezés 1.",
           "requirement": "gyakorlati jegy",
@@ -2506,11 +3238,18 @@ export const DEFAULT_DATA: Curriculum = {
           "keywords": [
             "interakciótervezés",
             "arduino",
-            "haladó",
-            "fizikai computing"
+            "fizikai computing",
+            "szenzorok",
+            "aktuátorok",
+            "fényművészet",
+            "interaktív installáció"
           ],
           "cel": "A kurzus célja az interakciótervezés alapjainak eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalma",
           "pdfUrl": "/tematikak/15034.pdf",
+          "category": [
+            "ux/interakció",
+            "installáció"
+          ],
           "group": null
         },
         {
@@ -2525,7 +3264,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kiss Lőrinc",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy célja a felhasználói élmény (user experience, UX) tervezés alapismereteinek,",
+          "description": "A felhasználói élmény (UX) tervezés módszereit és folyamatait haladó szinten feldolgozó gyakorlati kurzus, amely a Design Thinking keretrendszerre épül. A félév témái között szerepelnek a tervezési alapelvek, usability heurisztikák, platformspecifikus tervezés (reszponzív web, Android, iOS), akadálymentesítés, UX-szövegezés és felhasználói tesztelés. A hallgatók a két félév során egy szabadon választott digitális alkalmazás prototípusát tervezik meg Figmában, a kutatási összefoglalótól a perszónákon és user flow-n át az esettanulmányig.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "UX design stúdiumok 1.",
           "requirement": "gyakorlati jegy",
@@ -2537,11 +3276,17 @@ export const DEFAULT_DATA: Curriculum = {
             "ux design",
             "figma",
             "miro",
-            "haladó",
-            "prototípus"
+            "prototípus",
+            "design thinking",
+            "használhatóság",
+            "felhasználói tesztelés",
+            "akadálymentesítés"
           ],
           "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a UX design terület",
           "pdfUrl": "/tematikak/14761.pdf",
+          "category": [
+            "ux/interakció"
+          ],
           "group": null
         },
         {
@@ -2556,18 +3301,25 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Liszka Tamás",
           "institute": "AMD",
           "note": null,
-          "description": "A média design rendkívül szerteágazó, folyton alakulásban levő művészeti terület. A kurzus során megismerkedünk e művészeti ág szellemtörténeti előzményeivel, tudományos,",
+          "description": "A média design szellemtörténeti előzményeit, tudományos, technikai és társművészeti környezetét feldolgozó előadássorozat. A tematika a kép, jel és szimbólum kérdéseitől (Saussure, Peirce) a fénykép ontológiáján (Bazin), az ikonográfián és a képi fordulaton át a bio-artig, a hálózatkutatásig és a nonlineáris, interaktív művészeti formákig ível. Konkrét művek és alkotók elemzésén keresztül körvonalazódik a média design kortárs és jövőbeli formáit meghatározó művészeti alapállás.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "kollokvium",
           "software": [],
           "keywords": [
-            "elmélet",
-            "médiadesign",
-            "szakelmélet"
+            "médiaelmélet",
+            "szakelmélet",
+            "szemiotika",
+            "ikonográfia",
+            "médiaművészet",
+            "interaktivitás",
+            "képelmélet"
           ],
           "cel": "A kurzus célja a média design általános elméletének elsajátítása, ahhoz, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, el",
           "pdfUrl": "/tematikak/15047.pdf",
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -2582,7 +3334,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szacsvai Pál",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, meghívott előadók prezentációi, mesterkurzusok, innovációs előadások, konferencia- és kiállításlátogatások, valamint közös projektek formájában. Fontos szempont a társterületek alapismereteinek beemelése és a kreatív ipari szemlélet, valamint a portfólió építése. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -2591,11 +3343,15 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
-            "projektmunka",
-            "ba"
+            "mesterkurzus",
+            "portfólió",
+            "projektmunka"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/14760.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -2618,13 +3374,13 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Balogh Áron",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus bevezeti a hallgatókat a játéktervezéshez kapcsolódó háromdimenziós",
+          "description": "A kurzus bevezeti a hallgatókat a játéktervezéshez kapcsolódó háromdimenziós környezetalkotás folyamatába, a Blender-alapú modellezéstől és textúrázástól az Unreal Engine-ben történő valós idejű megjelenítésig. A hallgatók elsajátítják a 3D-modellezés és -exportálás alapjait, majd az Unreal Engine asset-kezelési eszközeivel saját játékkörnyezetet építenek, kitérve a világításra, az atmoszférára és a blueprint-alapú vizuális kódolásra. A félév zárásaként önálló environment-projektet fejeznek be és prezentálnak.",
           "felelos": "Selján Márk Endre",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Unreal Engine",
             "Blender",
+            "Unreal Engine",
             "Quixel"
           ],
           "keywords": [
@@ -2632,10 +3388,17 @@ export const DEFAULT_DATA: Curriculum = {
             "blender",
             "quixel",
             "játékkörnyezet",
-            "level design"
+            "level design",
+            "3d modellezés",
+            "blueprint",
+            "textúrázás"
           ],
-          "cel": "A kurzus célja, hogy a hallgatók gyakorlati példákon keresztül elsajátítsák a háromdimenziós játékkörnyezetek tervezésének és megvalósításának alapvető lépéseit, a Blenderben végzett modellezéstől és textúrázástól az Unreal Engine-ben történő valós idejű megjelenítésig. A félév végére a hallgató kép",
+          "cel": "A kurzus célja, hogy a hallgatók gyakorlati példákon keresztül elsajátítsák a háromdimenziós játékkörnyezetek tervezésének és megvalósításának alapvető lépéseit, a Blenderben végzett modellezéstől és textúrázástól az Unreal Engine-ben történő valós idejű megjelenítésig. A félév végére a hallgató képes lesz önállóan létrehozni és exportálni 3D-modelleket, azokat integrálni egy valós idejű engine környezetébe, valamint koherens, prezentálható environmentet kialakítani.",
           "pdfUrl": "/tematikak/13153.pdf",
+          "category": [
+            "3d",
+            "játék"
+          ],
           "group": null
         },
         {
@@ -2650,21 +3413,29 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Berkes Bálint",
           "institute": "AMD",
           "note": null,
-          "description": "A formák és anyagok vizuális megjelenésének és viselkedésének megismerése a térben,",
+          "description": "A kurzus a formák és anyagok vizuális megjelenésének és térbeli viselkedésének megismerésével, valamint azok szoftveres reprodukálásával és szimulálásával foglalkozik. A hallgatók elsajátítják a 3D szoftverek alapvető használatát a modellezés, textúrázás, világítás, kamerakezelés és renderelés területén, érintve a PBR workflow-t, az UV mapping-et és a fotogrammetriát is. A féléves feladat egy választott mindennapi tárgy teljes körű 3D modelljének elkészítése és koncepcióalapú képsorozattal való bemutatása.",
           "felelos": "Selján Márk Endre",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
+            "Blender",
             "Unreal Engine"
           ],
           "keywords": [
-            "unreal engine",
-            "multimédia",
             "3d",
-            "real-time"
+            "modellezés",
+            "textúrázás",
+            "renderelés",
+            "világítás",
+            "uv mapping",
+            "fotogrammetria",
+            "multimédia"
           ],
           "cel": "A kurzus célja a média designon belül, a multimédia specifikus képalkotás eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) tudásának elsajátítása közép haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni,",
           "pdfUrl": "/tematikak/12454.pdf",
+          "category": [
+            "3d"
+          ],
           "group": null
         },
         {
@@ -2679,14 +3450,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely bevezetést nyújt a médiakultúra alapfogalmaiba és jelenségeibe. A tárgy a média és a kultúra kapcsolatának megértését alapozza meg a média design hallgatók számára. A félév kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "médiakultúra",
+            "médiaelmélet",
+            "kultúra",
+            "tömegmédia",
+            "kommunikáció",
+            "elmélet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -2701,19 +3482,28 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pápai Bence",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus során a hallgatók betekintést nyerhetnek a játékfejlesztés széles spektrumába - az",
+          "description": "A kurzus során a hallgatók betekintést nyernek a játékfejlesztés széles spektrumába, az analóg társasjátékoktól a digitális játékok komplex tervezési és gyártási folyamataiig. A félév első fele a társasjáték-tervezésre (prototípus, balanszírozás, mechanikák), második fele a digitális játékfejlesztés fázisaira (koncepció, prototípus, vertical slice, alfa, béta, kiadás) épül. A féléves feladat egy poháralátét méretű társasjáték megtervezése és prezentálható dokumentálása.",
           "felelos": "Appelshoffer Péter",
           "prerequisite": "Média design stúdiumok 2.",
           "requirement": "gyakorlati jegy",
-          "software": [],
+          "software": [
+            "Unity"
+          ],
           "keywords": [
             "game art",
             "játékfejlesztés",
-            "vizuális tervezés",
-            "game design"
+            "game design",
+            "társasjáték",
+            "prototípus",
+            "játékmechanika",
+            "vizuális tervezés"
           ],
-          "cel": "A kurzus célja a játékfejlesztés eszközeinek, kreatív és technikai folyamatainak megismertetése a teljes gyártási folyamat mentén, a tervezői és vizuális, illetve az elméleti és gyakorlati feladatok összekapcsolásával. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, el",
+          "cel": "A kurzus célja a játékfejlesztés eszközeinek, kreatív és technikai folyamatainak megismertetése a teljes gyártási folyamat mentén, a tervezői és vizuális, illetve az elméleti és gyakorlati feladatok összekapcsolásával. A hallgató képes lesz haladó szinten felismerni, elemezni és alkalmazni a játékfejlesztés tervezési területéhez tartozó ismeretanyagot.",
           "pdfUrl": "/tematikak/13184.pdf",
+          "category": [
+            "játék",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -2728,24 +3518,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kováts Jázon",
           "institute": "AMD",
           "note": null,
-          "description": "A hallgató a kurzus során a hang felvételének alapelveivel, a hang editálásának",
+          "description": "A hallgató a kurzus során a hangfelvétel alapelveivel, a hangszerkesztés és -editálás alapelemeivel, valamint ezek kreatív tervezési alkalmazásával és a kortárs digitális rendszerekben betöltött szerepével ismerkedik meg. A tematika a mikrofonoktól és rögzítőktől a digitális hangszerkesztésen (EQ, zajszűrés, delay, reverb) át a MIDI/OSC-alapú interaktív rendszerekig terjed, Adobe Audition és Ableton Live környezetben. A kurzus megalapozza a későbbi félévek médiaanyagainak hangaláfestéséhez szükséges tudást.",
           "felelos": "Csáki László",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
             "Audition",
-            "Ableton",
-            "Adobe"
+            "Ableton Live",
+            "Max/MSP",
+            "PaulXStretch"
           ],
           "keywords": [
             "hangfelvétel",
+            "hangvágás",
+            "hangdesign",
             "audition",
             "ableton",
-            "hangvágás",
-            "audio"
+            "midi",
+            "osc",
+            "keverés"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja a média design szakma műveléséhez elengedhetetlen, képet kísérő hangnyelvi alapismeretek átadása és az alkotói készségek kifejlesztése, valamint a számítógépes hangmegmunkálás, hangfeldolgozás és hangsávszerkesztés alapelveinek ismertetése és gyakoroltatása.",
           "pdfUrl": "/tematikak/12457.pdf",
+          "category": [
+            "hang"
+          ],
           "group": null
         },
         {
@@ -2760,7 +3557,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Liszka Tamás",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy a játék pszichológiai működésének, céljának és hatásainak vizsgálatára fókuszál,",
+          "description": "A tantárgy a játék pszichológiai működésének, céljának és hatásainak vizsgálatára fókuszál, különös tekintettel arra, hogyan alkalmazhatók a pszichológiai összefüggések a játékélmény tudatos tervezésében. A tematika a fejlődéslélektani alapoktól (Piaget, Vigotszkij) a motiváción és a flow-elméleten át a szociálpszichológiáig, a gamificationig és a UX designig terjed. A hallgatók a félév végén képesek lesznek a játékélmény pszichológiai szempontú elemzésére és formálására saját játéktervezői munkájukban.",
           "felelos": "Appelshoffer Péter",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -2769,10 +3566,17 @@ export const DEFAULT_DATA: Curriculum = {
             "játékpszichológia",
             "flow",
             "motiváció",
-            "kognitív pszichológia"
+            "kognitív pszichológia",
+            "gamification",
+            "csoportdinamika",
+            "fejlődéslélektan"
           ],
           "cel": "A kurzus célja, hogy a hallgató megismerje a játékélményt alakító pszichológiai folyamatokat, a játék fejlődéslélektani, kognitív és szociálpszichológiai vonatkozásait, valamint a motiváció és a flow jelenségeit. A kurzus során a hallgatók megismerkednek a játékpszichológia fejlődéslélektani, kognit",
           "pdfUrl": "/tematikak/12853.pdf",
+          "category": [
+            "játék",
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -2787,23 +3591,32 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Balogh Áron",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy az After Effects 2025 környezetének és a kortárs motion design gyakorlatának",
+          "description": "A tantárgy az After Effects 2025 környezetének és a kortárs motion design gyakorlatának elsajátítására fókuszál, kiegészítve a mesterséges intelligencia alapú képi és videós tartalomgenerálás aktuális trendjeivel. A hallgatók megismerik a kompozíciós felépítést, a kulcskockás animációt, a maszkolási és áttűnési technikákat, a színkorrekciós és 3D layer-módszereket, valamint a professzionális renderelési folyamatot. A félév zárásaként elkészített branding spot integrálja a megszerzett elméleti és gyakorlati kompetenciákat.",
           "felelos": "Kiss Melinda",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
             "After Effects",
-            "Adobe"
+            "Adobe Firefly",
+            "Runway",
+            "Media Encoder"
           ],
           "keywords": [
             "mozgógrafika",
             "after effects",
-            "photoshop",
+            "motion graphics",
             "animáció",
-            "motion graphics"
+            "kulcskocka",
+            "ai",
+            "branding spot",
+            "renderelés"
           ],
-          "cel": "A kurzus célja a mozgógrafika eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása alapszinten. A hallgató a kurzus elvégzése eredményeképpen képes alapszinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a mozgógrafika terület",
+          "cel": "A kurzus célja a mozgógrafika eszközismereti, alkotói és művészi elsajátítása alapszinten: a hallgatók korszerű kompetenciát szereznek a mozgógrafika tervezésében és kivitelezésében Adobe After Effects környezetben, kiegészítve a generatív AI-alapú kreatív eszköztárral, és képesek lesznek önállóan mozgógrafikai alkotásokat létrehozni.",
           "pdfUrl": "/tematikak/12458.pdf",
+          "category": [
+            "animáció",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -2818,21 +3631,32 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Nikázy Gusztáv",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus célja elsősorban a sztenderdizálódott online médiafelületeket leíró nyelvek",
+          "description": "A kurzus a sztenderdizálódott online médiafelületeket leíró nyelvek (HTML, CSS) alapjainak megismerésére és alkalmazására épül. A hallgatók a wireframing és prototyping módszereivel, tipográfiai és akadálymentesítési szempontokkal, valamint reszponzív design megoldásokkal dolgozva önálló tervezési-fejlesztési projektfeladatot valósítanak meg, Figma és Penpot prototípusok segítségével. A cél a template-jellegek határainak feloldása és egyedi, újszerű online médiatartalmak előállítása.",
           "felelos": "Mayer Éva",
           "prerequisite": "Média design stúdiumok 2.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Figma"
+            "HTML",
+            "CSS",
+            "Figma",
+            "Penpot"
           ],
           "keywords": [
-            "multimédia",
-            "figma",
-            "médiatervezés",
-            "ui"
+            "webdesign",
+            "html",
+            "css",
+            "prototípus",
+            "wireframe",
+            "reszponzív design",
+            "tipográfia",
+            "akadálymentesítés"
           ],
           "cel": "A kurzus célja a multimédia médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) v",
           "pdfUrl": "/tematikak/12460.pdf",
+          "category": [
+            "web",
+            "ux/interakció"
+          ],
           "group": null
         },
         {
@@ -2847,14 +3671,23 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a művészetelmélet alapfogalmaival és főbb irányzataival ismerteti meg a hallgatókat. A tárgy a média design képzés elméleti megalapozását szolgálja, a művészeti alkotások értelmezéséhez szükséges fogalmi keretek átadásával. A félév kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "művészetelmélet",
+            "esztétika",
+            "művészettörténet",
+            "kultúra",
+            "elmélet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -2869,7 +3702,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kollár Dávid",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus a modern (digitális) technológiák pszichológiai hatásainak komplex kognitív",
+          "description": "A kurzus a modern digitális technológiák pszichológiai hatásainak komplex kognitív tudományos vizsgálatára összpontosít. A hallgatók átfogó képet kapnak arról, hogy a kurrens technológiák — okoseszközök, közösségi média, virtuális valóság, videójátékok, mesterséges intelligencia — miként formálják az emberi viselkedést, érzelmeket és kognitív folyamatokat. A tárgy emellett bemutatja azokat a fogalmakat és értelmezési kereteket, amelyek az egyének és közösségek digitális technológiákhoz fűződő viszonyát meghatározzák.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -2878,10 +3711,16 @@ export const DEFAULT_DATA: Curriculum = {
             "pszichológia",
             "technológia",
             "médiapszichológia",
+            "kognitív tudomány",
+            "közösségi média",
+            "virtuális valóság",
             "elmélet"
           ],
           "cel": "A kurzus célja a multimedia területén használt új technológia pszichológiai vonatkozásainak ismertetése, ahhoz, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményekép",
           "pdfUrl": "/tematikak/12461.pdf",
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -2896,7 +3735,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Mayer Éva",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét keretében megvalósuló programok a szakmában aktívan dolgozó meghívott előadók prezentációit, mesterkurzusokat, innovációs és technikai témájú előadásokat, workshopokat, konferencia- és kiállításlátogatásokat, valamint közös projektek kivitelezését foglalják magukban. A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át, és a portfólióépítést is támogatja. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -2905,11 +3744,15 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
-            "projektmunka",
-            "ba"
+            "mesterkurzus",
+            "portfólió",
+            "projektmunka"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni workshopok, előadások és meghívott előadók által vezetett projektek formájában, a társterületeket érintő alapismeretek és kompetenciák beemelésével, a kreatív ipari szemlélet fejlesztésével és a portfólió építésével.",
           "pdfUrl": "/tematikak/12745.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -2932,14 +3775,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadássorozat, amely a képalkotás alapvető kérdéseit és a vizuális kommunikáció elméleti hátterét tárgyalja. A kurzus a média design képzés elméleti megalapozását szolgálja, és kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "képalkotás",
+            "vizuális kultúra",
+            "elmélet",
+            "képelmélet",
+            "vizuális kommunikáció",
+            "média design"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -2954,7 +3807,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Liszka Tamás",
           "institute": "AMD",
           "note": null,
-          "description": "Az előadássorozat egyetlen kérdésre keres választ: hogyan készül egy jól játszható játék? A",
+          "description": "Az előadássorozat egyetlen kérdésre keres választ: hogyan készül egy jól játszható játék? A válaszhoz vezető út a filozófián, etológián, pszichológián, designon és matematikán át a ludológiáig vezet, érintve a műfaj, a célközönség, az interfész, a játékmechanika, a jutalmazási rendszerek és a játékfa-komplexitás kérdéseit. A félév témái között szerepel a motiváció, a learning curve, az elbeszéléstechnika, az immerzió és az interakció, esettanulmányokkal; a vizsgára a hallgatók saját játékkoncepciót fejlesztenek és prezentálnak.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -2962,11 +3815,18 @@ export const DEFAULT_DATA: Curriculum = {
           "keywords": [
             "játéktervezés",
             "game design",
-            "elmélet",
-            "játékmechanika"
+            "ludológia",
+            "játékmechanika",
+            "immerzió",
+            "narratíva",
+            "játékelmélet"
           ],
-          "cel": "A kurzus célja a játéktervezés elméletének elsajátítása, ahhoz, hogy a hallgató játéktervezői, alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismer",
+          "cel": "A kurzus célja a játéktervezés elméletének elsajátítása, hogy a hallgató játéktervezői, alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató képessé válik az elméleti ismeretanyagot játéktervezői gyakorlatában és szélesebb, interdiszciplináris keretben is elhelyezni és képviselni.",
           "pdfUrl": "/tematikak/15031.pdf",
+          "category": [
+            "játék",
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -2981,26 +3841,33 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Balogh Áron, Kolosy Becse",
           "institute": "AMD",
           "note": null,
-          "description": "----------- Multimédia specializáció (Madácsi Blanka) A tantárgy a Nuke interfészének, a projektstruktúrának és az alapvető node-ok (merge,",
+          "description": "A tárgy két specializációs ágon fut: a multimédia ágon a hallgatók a Nuke node-alapú compositing munkafolyamatát sajátítják el a rotoscoping, a 2D/planar tracking, a screen replacement, a keying, valamint a tűz- és muzzle flash-integráció technikáival, a félévet breakdown videóval zárva. A játéktervezés ágon a játékfejlesztéshez szükséges 3D asset-gyártás áll a fókuszban: Blenderben modellezés és UV-kiterítés, Substance Painterben PBR textúrázás, végül riggelés és exportálás Unreal Engine-be.",
           "felelos": "Kiss Melinda",
           "prerequisite": "Mozgógrafika 1.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Substance Painter",
-            "Unreal Engine",
+            "Nuke",
             "Blender",
-            "Cursor",
-            "Nuke"
+            "Substance Painter",
+            "Unreal Engine"
           ],
           "keywords": [
             "vfx",
             "nuke",
             "compositing",
-            "substance painter",
-            "unreal engine"
+            "rotoscoping",
+            "keying",
+            "tracking",
+            "3d asset",
+            "pbr"
           ],
-          "cel": "----------- Multimédia specializáció (Madácsi Blanka) A kurzus célja, hogy a hallgatók a félév végére magabiztosan kezeljék a NUKE szoftvert, és alkalmassá váljanak komplexebb junior compositor feladatok önálló elvégzésére. A hallgatók elsajátítják a node-alapú munkafolyamat logikáját, a professzion",
+          "cel": "A multimédia specializáción a cél, hogy a hallgatók magabiztosan kezeljék a Nuke szoftvert és junior compositor feladatok önálló elvégzésére váljanak alkalmassá. A játéktervezés specializáción a cél a játékfejlesztéshez szükséges 3D asset-gyártás technikai és művészeti folyamatainak elsajátítása Blender és Substance Painter segítségével.",
           "pdfUrl": "/tematikak/15049.pdf",
+          "category": [
+            "film/videó",
+            "3d",
+            "animáció"
+          ],
           "group": null
         },
         {
@@ -3015,19 +3882,30 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kováts Jázon",
           "institute": "AMD",
           "note": null,
-          "description": "A Hang labor átfogó bevezetést nyújt a jelenkori média területén elterjedt hangzó technikák alapjaiba. Általános célunk, hogy a hangok szerkesztésén keresztül más művészeti ágakban is alkalmazható tudást és gyakorlatot sajátítsunk el, valam",
+          "description": "A Hang labor átfogó bevezetést nyújt a jelenkori média területén elterjedt hangzó technikák alapjaiba, a filmhangkészítés és a foley művészet gyakorlatával. A hallgatók az egyetem hangstúdiójában dolgoznak: mikrofonozási technikákat tanulnak, speechless speech videókat zörejeznek, és csoportban elkészítik egy kiválasztott kisfilm hangját. A hangok szerkesztésén keresztül más művészeti ágakban is alkalmazható tudást szereznek.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
-          "software": [],
+          "software": [
+            "Audition",
+            "Ableton Live",
+            "Max/MSP",
+            "PaulXStretch"
+          ],
           "keywords": [
             "filmhang",
             "foley",
             "utómunka",
-            "hangvágás"
+            "hangvágás",
+            "hangdesign",
+            "zörejezés",
+            "hangstúdió"
           ],
           "cel": "A hallgatók elméleti és gyakorlati síkon ismerkednek meg, a filmhang készítésének részleteivel, mind a foley művészettel , mind pedig az utómunka egyes fázisainak fontosabb kérdéseit tekintve át.",
           "pdfUrl": "/tematikak/15038.pdf",
+          "category": [
+            "hang"
+          ],
           "group": null
         },
         {
@@ -3042,7 +3920,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Balogh Áron",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások és meghívott vendégelőadók által vezetett projektek formájában. A programok között szakmában dolgozó előadók prezentációi, mesterkurzusok, innovációs és technikai bemutatók, konferencia- és kiállításlátogatások, valamint közös projektek szerepelnek. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -3051,11 +3929,15 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
-            "projektmunka",
+            "mesterkurzus",
+            "portfólió",
             "ba"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/15056.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -3070,25 +3952,37 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Balogh Áron",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy során a hallgatók a hagyományos HTML oldalak építése felől elmozdulnak a",
+          "description": "A tantárgy során a hallgatók a hagyományos HTML oldalak építése felől a modern, dinamikus webes alkalmazások irányába mozdulnak el: megtanulják a Git verziókezelést, a React és Next.js komponensalapú architektúráját, valamint a Tailwind CSS-alapú reszponzív stílusozást. Kiemelt szerepet kap az AI-asszisztált és agent alapú fejlesztés (Cursor, GitHub Copilot, Gemini, Claude) és a prompt engineering, valamint a React Three Fiber webes 3D lehetőségei. A félév végére mindenki egy saját, Vercelen publikált, interaktív 3D elemeket tartalmazó portfólió oldalt épít.",
           "felelos": "Kiss Melinda",
           "prerequisite": "Multimédia design 1.",
           "requirement": "gyakorlati jegy",
           "software": [
+            "React",
+            "Next.js",
+            "Tailwind CSS",
             "React Three Fiber",
-            "Tailwind",
-            "Cursor"
+            "Cursor",
+            "GitHub Copilot",
+            "Git",
+            "Vercel"
           ],
           "keywords": [
             "webfejlesztés",
-            "react three fiber",
+            "react",
+            "next.js",
             "tailwind",
-            "cursor",
+            "react three fiber",
             "ai kódolás",
-            "3d web"
+            "prompt engineering",
+            "portfólió"
           ],
           "cel": "A kurzus célja a modern webfejlesztési technológiák és a mesterséges intelligencia asszisztált kódolás gyakorlati bemutatása. A hallgatók az alapvető statikus weblapkészítési tudásukat továbbfejlesztve megismerkednek a modern komponens alapú architektúrákkal, mint a React és a Next.js keretrendszere",
           "pdfUrl": "/tematikak/15050.pdf",
+          "category": [
+            "web",
+            "fejlesztés",
+            "ai"
+          ],
           "group": null
         },
         {
@@ -3103,22 +3997,30 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Berkes Bálint",
           "institute": "AMD",
           "note": null,
-          "description": "3D terek immerzív rétegeinek mélyebb ismerete a mozgás beemelésével. Az alapvető",
+          "description": "A kurzus a 3D terek immerzív rétegeit mélyíti el a mozgás beemelésével: a hallgatók a Blender-alapozás után áttérnek a Maxon Cinema4D-re, és megismerkednek a motion design, a CGI, a VFX és a motion capture világával. A félév témái az animálás 12 törvénye, a Mograph rendszer, a karaktercsontozás és a Rokoko-alapú motion capture, a fizikai, ruha- és organikus (részecske, pyro) szimulációk, valamint a valós idejű renderelés Unreal Engine-ben. Az egyéni projektfeladat egy folytatólagos animáció készítése, amely csapatszinten egy közös történetté áll össze.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "3D labor (Multimédia) 1.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Cinema4D",
-            "Blender"
+            "Cinema 4D",
+            "Unreal Engine",
+            "Rokoko"
           ],
           "keywords": [
             "cinema 4d",
-            "blender",
-            "3d",
-            "multimédia"
+            "motion design",
+            "mograph",
+            "motion capture",
+            "szimuláció",
+            "3d animáció",
+            "unreal engine"
           ],
           "cel": "A kurzus célja a média designon belül, a multimédia specifikus képalkotás eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) tudásának elsajátítása közép haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni,",
           "pdfUrl": "/tematikak/15030.pdf",
+          "category": [
+            "3d",
+            "animáció"
+          ],
           "group": null
         },
         {
@@ -3133,19 +4035,28 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pápai Bence",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus a videojátékot mint interaktív médiumot vizsgálja, ahol a tartalom, a vizuális",
+          "description": "A kurzus a videojátékot mint interaktív médiumot vizsgálja, ahol a tartalom, a vizuális megjelenés és az interakció egységben határozzák meg az élményt, különös tekintettel a game art és a game design kapcsolatára. A félév a játékprototipizálásra épül: paper prototyping, core mechanics tesztelése, level design alapok, UI/UX wireframe-ek, playtesting és vertical slice készítése. A hallgatók a korábbi félév társasjáték-projektjét adaptálják digitális formába, és a félév végére egy játszható, placeholder assetekkel működő videojáték-prototípust készítenek és prezentálnak.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "Game Art és Design 1.",
           "requirement": "gyakorlati jegy",
-          "software": [],
+          "software": [
+            "Unity"
+          ],
           "keywords": [
             "videojáték",
-            "interaktív médium",
             "game design",
-            "narratíva"
+            "game art",
+            "prototípus",
+            "playtesting",
+            "level design",
+            "interaktív médium"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja, hogy a hallgatók elmélyítsék ismereteiket a videojáték mint interaktív médium működéséről, és képessé váljanak a vizuális és tervezési döntések játékbeli következményeinek felismerésére, valamint digitális játékok tervezési folyamataiban közvetlenül alkalmazható koncepciók és struktúrák kialakítására.",
           "pdfUrl": "/tematikak/14800.pdf",
+          "category": [
+            "játék",
+            "ux/interakció"
+          ],
           "group": null
         },
         {
@@ -3160,22 +4071,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Gerő András",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus a valós idejű játékmotoros fejlesztés során alkalmazott objektumorientált és",
+          "description": "A kurzus a valós idejű játékmotoros fejlesztés objektumorientált és komponensalapú gondolkodását alkalmazza a gyakorlatban Unreal Engine környezetben. A hallgatók megismerik az engine architektúráját (GameMode, Actor, Blueprint), a level design alapjait, a textúra- és material-készítést, a világítást, a post processt, a kamerakezelést és a szekvencia-alapú renderelést. A félév egy önálló projekttel zárul: hangulatos jelenet vagy dioráma készül professzionálisan komponált videórenderekkel.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "3D labor (Játéktervezés) 1.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Unreal Engine"
+            "Unreal Engine",
+            "Blender",
+            "Photoshop"
           ],
           "keywords": [
             "unreal engine",
+            "blueprint",
             "real-time",
-            "oop",
-            "játékmotor",
-            "blueprint"
+            "level design",
+            "material",
+            "világítás",
+            "játékmotor"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja a hallgatók bevezetése a 3D digitális tartalomkészítés gyakorlati alapjaiba valós idejű engine környezetben, hogy képesek legyenek egyszerű, működő real-time jelenetek és prototípusok létrehozására, és tudatosan kezeljék a 3D tartalom és az interaktív működés kapcsolatát a játékfejlesztési folyamaton belül.",
           "pdfUrl": "/tematikak/14786.pdf",
+          "category": [
+            "3d",
+            "játék",
+            "fejlesztés"
+          ],
           "group": null
         }
       ]
@@ -3198,14 +4118,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Előadás jellegű elméleti kurzus, amely a kreatív szakmák gyakorlásához szükséges alapvető gazdasági, menedzsment- és jogi ismereteket adja át. A hallgatók áttekintést kapnak a szakmai működésüket érintő üzleti és jogi keretekről. A tárgy kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "gazdaság",
+            "menedzsment",
+            "jog",
+            "vállalkozás",
+            "kreatív ipar",
+            "üzleti ismeretek"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -3220,7 +4150,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Liszka Tamás",
           "institute": "AMD",
           "note": null,
-          "description": "Az előadássorozat egyetlen kérdésre keres választ: hogyan készül egy jól játszható játék? A",
+          "description": "Az előadássorozat egyetlen kérdésre keres választ: hogyan készül egy jól játszható játék? A válaszhoz a ludológia, a pszichológia, a matematikai játékelmélet, a design és az elbeszéléstechnika területein keresztül jut el, olyan témákat érintve, mint a játékmechanika, a jutalmazási rendszerek, a learning curve, az immerzió és az interakció. A félév végén a hallgatók saját fejlesztésű, innovatív játékkoncepciót prezentálnak, és szakmailag indokolják alkotói döntéseiket.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -3229,10 +4159,18 @@ export const DEFAULT_DATA: Curriculum = {
             "játéktervezés",
             "game design",
             "elmélet",
-            "játékmechanika"
+            "játékmechanika",
+            "ludológia",
+            "narratíva",
+            "immerzió",
+            "játékelmélet"
           ],
-          "cel": "A kurzus célja a játéktervezés elméletének elsajátítása, ahhoz, hogy a hallgató játéktervezői, alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismer",
+          "cel": "A kurzus célja a játéktervezés elméletének elsajátítása, hogy a hallgató azt játéktervezői, alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A kurzus elvégzésével a hallgató képes haladó szinten felismerni, elemezni és alkalmazni az elméleti ismeretanyagot, és játéktervezői gyakorlatát szakmai együttműködésekben, interdiszciplináris keretben is képviselni tudja.",
           "pdfUrl": "/tematikak/15031.pdf",
+          "category": [
+            "játék",
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -3247,19 +4185,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pálfi Szabolcs",
           "institute": "AMD",
           "note": null,
-          "description": "A Média design stúdiumok tantárgy fő területét ebben és a következő félévben a",
+          "description": "A tantárgy ebben és a következő félévben a videojátékok tervezési szempontjainak gyakorlati alkalmazására fókuszál, kiemelten a vizuális megjelenítésre, az ergonómiára és a funkcionalitásra. A hallgatók a game design és a game art alapjaival párhuzamosan ismerkednek, és egy saját videojátékot fejlesztenek az ötlettől a játszható prototípusig és a game design dokumentumig. Emellett megismerkednek olyan kapcsolódó technológiákkal, mint a LED fal rendszerek, a VR környezetek, a 3D szkennelés, a MoCap és a mesterséges intelligencia céltudatos használata.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "Média design stúdiumok 4.",
           "requirement": "gyakorlati jegy",
-          "software": [],
+          "software": [
+            "Unity",
+            "Unreal Engine",
+            "Blender"
+          ],
           "keywords": [
             "médiatervezés",
             "interaktív",
             "non-lineáris",
-            "haladó"
+            "haladó",
+            "game design",
+            "game art",
+            "játékfejlesztés",
+            "prototípus"
           ],
-          "cel": "A kurzus célja, hogy a hallgatók haladó szinten sajátítsák el a digitális médiatervezéshez kapcsolódó eszközismereti, alkotói és esztétikai szemléletmódot, különös tekintettel az interaktív, non-lineáris, élményspecifikus vizuális tartalmakra. A hallgató a kurzus elvégzésével képes lesz alkalmazni a",
+          "cel": "A kurzus célja, hogy a hallgatók haladó szinten sajátítsák el a digitális médiatervezéshez kapcsolódó eszközismereti, alkotói és esztétikai szemléletmódot, különös tekintettel az interaktív, non-lineáris, élményspecifikus vizuális tartalmakra. A kurzus támogatja a komplex gondolkodásmód kialakítását, amelyben a technikai tudás, a vizuális érzékenység és a tervezői szemlélet integráltan jelenik meg.",
           "pdfUrl": "/tematikak/12462.pdf",
+          "category": [
+            "játék",
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -3274,26 +4224,33 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Madácsi Blanka, Berkes Bálint",
           "institute": "AMD",
           "note": null,
-          "description": "A modul (Madácsi Blanka) - Nuke – Haladó compositing I. – smart vector",
+          "description": "Kétmodulos gyakorlati kurzus. Az egyik modul a digitális utómunka és a 3D tartalomkészítés területét mélyíti el a VFX gyártási folyamatra fókuszálva: haladó compositing Nuke-ban, modellezés, UV mapping, animáció és renderelés Mayában, valamint PBR textúrázás Substance 3D Painterben, a félév végére egy komplex VFX-shot vagy 3D jelenet elkészítésével. A másik modul a fényművészettel és a projection mappinggel foglalkozik: a hallgatók a Resolume Arena szoftverrel terveznek és kiviteleznek vetítéses installációkat, a munkáikat dokumentálva.",
           "felelos": "Mayer Éva",
           "prerequisite": "Média labor 2.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Substance",
-            "Resolume",
+            "Nuke",
             "Maya",
-            "Nuke"
+            "Substance Painter",
+            "Resolume Arena"
           ],
           "keywords": [
-            "képalkotás",
-            "photoshop",
-            "substance",
-            "maya",
-            "nuke",
-            "compositing"
+            "compositing",
+            "vfx",
+            "3d modellezés",
+            "textúrázás",
+            "projection mapping",
+            "fényművészet",
+            "installáció",
+            "renderelés"
           ],
-          "cel": "A modul (Madácsi Blanka):",
+          "cel": "A tantárgy célja egyrészt a digitális utómunka és a 3D tartalomkészítés ismereteinek elmélyítése ipari sztenderdek szerint, másrészt a fény művészi alkalmazásának elméleti és gyakorlati elsajátítása multimédiás technológiák segítségével, saját fényalapú alkotások és installációk létrehozásával.",
           "pdfUrl": "/tematikak/12463.pdf",
+          "category": [
+            "3d",
+            "film/videó",
+            "installáció"
+          ],
           "group": null
         },
         {
@@ -3308,14 +4265,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Előadás jellegű elméleti kurzus, amely az ökológia és a művészet kapcsolatát vizsgálja. A hallgatók áttekintést kapnak a környezeti kérdések művészeti reflexióiról és a fenntarthatóság szempontjainak alkotói vonatkozásairól. A tárgy kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "ökológia",
+            "művészet",
+            "fenntarthatóság",
+            "környezet",
+            "kortárs művészet",
+            "elmélet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -3330,7 +4297,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Mayer Éva",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások és meghívott előadók által vezetett projektek formájában. A programok között szerepelnek szakmai prezentációk, mesterkurzusok, innovációs és technikai bemutató előadások, konferencia- és kiállításlátogatások, valamint közös projektek kivitelezése. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -3340,10 +4307,15 @@ export const DEFAULT_DATA: Curriculum = {
             "workshop",
             "előadás",
             "projektmunka",
+            "mesterkurzus",
+            "portfólió",
             "ba"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/12747.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -3366,24 +4338,33 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Berkes Bálint",
           "institute": "AMD",
           "note": null,
-          "description": "Ez a kurzus a fény médiumának kreatív és interdiszciplináris alkalmazására összpontosít,",
+          "description": "A kurzus a fény médiumának kreatív, interdiszciplináris alkalmazására összpontosít, különös tekintettel a vetítéses technikákra (projection mapping) és a generatív, valós idejű vizualizációra. A hallgatók TouchDesigner, Unreal Engine és Cinema 4D segítségével hang- és mozgásreaktív vizuálokat, interaktív installációkat készítenek, és megismerkednek a DMX, Art-Net, OSC és MIDI rendszerekkel. A félév során egy szimulált megrendelői helyzetben csoportos vetítést terveznek a Budapesti Metropolitan Egyetem körépületére, amelyet kiállítás keretében mutatnak be.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
+            "TouchDesigner",
             "Unreal Engine",
-            "TouchDesigner"
+            "Cinema 4D",
+            "After Effects"
           ],
           "keywords": [
             "unreal engine",
             "touchdesigner",
-            "real-time",
+            "valós idejű",
             "vetítés",
             "interaktív",
-            "projektmunka"
+            "mapping",
+            "generatív",
+            "fényművészet"
           ],
-          "cel": "A kurzus célja, hogy a hallgatók valós munkaszituációkhoz hasonló környezetben sajátítsák el a vetítéses technikák alkalmazását, a kreatív döntéshozatalt és a csapatmunkát. Az órák során egy fiktív megrendelő igényei alapján kell vetítésterveket készíteniük egy valós helyszínre, amelynek paraméterei",
+          "cel": "A kurzus célja, hogy a hallgatók valós munkaszituációkhoz hasonló környezetben sajátítsák el a vetítéses technikák alkalmazását, a kreatív döntéshozatalt és a csapatmunkát. Egy fiktív megrendelő fokozatosan megismert igényei alapján kell vetítésterveket készíteniük egy valós helyszínre, rugalmasan alkalmazkodva az új követelményekhez és technikai megkötésekhez.",
           "pdfUrl": "/tematikak/15040.pdf",
+          "category": [
+            "installáció",
+            "ux/interakció",
+            "animáció"
+          ],
           "group": null
         },
         {
@@ -3398,7 +4379,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pálfi Szabolcs",
           "institute": "AMD",
           "note": null,
-          "description": "A videojátékok tervezésének gyakorlati megvalósításával az előző félévben megismert",
+          "description": "A videojáték-tervezés gyakorlati megvalósítására épülő kurzus, amely az előző félév technikai ismereteire alapozva a játéktervezés strukturális és komplex folyamatát, valamint a kiegészítő szakágakat vizsgálja egyéni és csoportos munkában. A hallgatók saját játékötletet fejlesztenek, miközben a narratíva, a tér- és karaktertervezés, a játékmechanikák és a UX kapcsolatát elemzik esettanulmányokon és prezentációkon keresztül. A félév részét képezi meghívott előadó és stúdiólátogatás is, a tervezésmódszertan pedig a diplomamunkára készít fel.",
           "felelos": "Molnár Ágnes Éva",
           "prerequisite": "Média design stúdiumok 5.",
           "requirement": "gyakorlati jegy",
@@ -3406,10 +4387,18 @@ export const DEFAULT_DATA: Curriculum = {
           "keywords": [
             "videojáték",
             "játéktervezés",
+            "narratíva",
+            "játékmechanika",
+            "csapatmunka",
+            "prototípus",
             "médiadesign"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja a hallgatók bevezetése a számítógépes játékfejlesztés világába a játéktervezés elméleti alapjainak elsajátításán és gyakorlati alkalmazásán keresztül: a játékfejlesztői workflow fázisainak, a népszerű játékzsánereknek, a fejlesztői eszközöknek és a tervezési folyamatoknak a megismerése.",
           "pdfUrl": "/tematikak/15046.pdf",
+          "category": [
+            "játék",
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -3424,7 +4413,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szacsvai Pál",
           "institute": "AMD",
           "note": null,
-          "description": "Az Újmédia elméletének folyamatosan megújuló irodalmát követi, ismerteti és értelmezi a kurzus. A foglalkozások során a hallgatók aktív reflexióira építő eszmecsere folyik, mely az",
+          "description": "A kurzus az újmédia elméletének folyamatosan megújuló irodalmát követi, ismerteti és értelmezi, a hallgatók aktív reflexióira építő eszmecsere formájában. Az olvasott szövegekből inspirált elméleti perspektívából elemzi kritikailag a technológiai innováció újabb fordulatait, kiemelt témái között a gépi kreativitás, a mesterséges intelligencia és művészet viszonya, valamint az algoritmusok szerepe szerepel. A félév végén írásbeli vizsga zárja a tárgyat.",
           "felelos": "Mayer Éva",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -3433,10 +4422,17 @@ export const DEFAULT_DATA: Curriculum = {
             "új média",
             "kritikai elmélet",
             "médiaelmélet",
+            "mesterséges intelligencia",
+            "generatív művészet",
+            "algoritmus",
             "elmélet"
           ],
           "cel": "A kurzus célja, hogy a hallgatók megismerkedjenek az új médiumok kritikai elméletével, annak érdekében, hogy azt elméleti alapként és koncepcionális kiegészítésként alkalmazhassák médiatervezési tanulmányaik és gyakorlataik, valamint művészi munkájuk és prezentációs feladataik során.",
           "pdfUrl": "/tematikak/15054.pdf",
+          "category": [
+            "elmélet",
+            "ai"
+          ],
           "group": null
         },
         {
@@ -3451,7 +4447,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kollár Dávid",
           "institute": "AMD",
           "note": null,
-          "description": "A szakdolgozat vagy bármely tudományos íráshoz anyaggyűjtés, felépítése,",
+          "description": "A kurzus a szakdolgozat és általában a tudományos írásművek elkészítésének teljes folyamatát dolgozza fel: az anyaggyűjtést, a forrásfeldolgozást, a hivatkozási formákat, a szövegstruktúra és a tartalomjegyzék kialakítását, végül a tanulmány megírását. A hallgatók a félév során órai és otthoni feladatokon, forráselemzéseken keresztül jutnak el a beadandó záródolgozatig, és külön téma a szakszövegírás és az AI viszonya is.",
           "felelos": "Mayer Éva",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -3460,10 +4456,17 @@ export const DEFAULT_DATA: Curriculum = {
             "szakdolgozat",
             "kutatás",
             "írás",
+            "forrásfeldolgozás",
+            "hivatkozás",
+            "kutatásmódszertan",
             "ba"
           ],
           "cel": "A kurzus célja a szakdolgozat készítéséhez szükséges elméleti és gyakorlati tudás és képességek elsajátítása, ahhoz, hogy a hallgató megfelelő színvonal írásművet legyen képes alkotni a BA tanulmányait lezáró időszakban. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, ",
           "pdfUrl": "/tematikak/15055.pdf",
+          "category": [
+            "diploma/portfólió",
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -3478,21 +4481,30 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Forgács Kristóf, Nikázy Gusztáv",
           "institute": "AMD",
           "note": null,
-          "description": "A BLOKK (Nikázy Gusztáv) A kurzus célja elsősorban az online médiafelületeket leíró, már megismert nyelveinek",
+          "description": "A diplomamunkára felkészítő gyakorlati kurzus két blokkban zajlik. Az egyik blokkban a hallgatók a diplomamunkájukhoz kapcsolódó önálló online médiaterméket terveznek és fejlesztenek: felülettervező szoftverekben (Figma/Penpot) prototípust készítenek, majd dokumentum- és stílusleíró nyelvekkel működő felületté fejlesztik, túllépve a sablonos UX/UI megoldásokon. A másik blokk a diploma projektszerű kezelésére (ütemezés, mérföldkövek), a diplomaprezentáció gyakorlására, valamint a portfólió és showreel összeállítására fókuszál, két kötelező központi konzultációval.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Figma"
+            "Figma",
+            "Penpot"
           ],
           "keywords": [
             "diploma",
-            "figma",
             "portfólió",
-            "tervezés"
+            "showreel",
+            "prototípus",
+            "webdesign",
+            "prezentáció",
+            "projekttervezés"
           ],
           "cel": "A kurzus célja a diplomamunkához szükséges eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) ismeretek elsajátítása, kreatív készségek kifejlesztése, prezentációs és média tervezési tudás megszerzése. A hallgató a kurzus elvégzése eredményeképpen képes felismerni, elemez",
           "pdfUrl": "/tematikak/15036.pdf",
+          "category": [
+            "diploma/portfólió",
+            "web",
+            "ux/interakció"
+          ],
           "group": null
         },
         {
@@ -3507,7 +4519,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pálfi Szabolcs",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások és meghívott előadók által vezetett projektek formájában. A programok között szerepel gyakorló szakemberek prezentációja, mesterkurzus, innovációs és technikai bemutató előadás, konferencia- és kiállításlátogatás, valamint közös projektek kivitelezése. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -3516,11 +4528,16 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
+            "mesterkurzus",
+            "vendégelőadó",
             "projektmunka",
             "ba"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/15058.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -3543,22 +4560,29 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Tóth Gergő",
           "institute": "AMD",
           "note": null,
-          "description": "A 3D-s tervezés alapjainak megismertetése az Autodesk Maya szoftver segítségével.",
+          "description": "A kurzus a 3D-s tervezés alapjait ismerteti meg az Autodesk Maya szoftver segítségével. Gyakorlati feladatokon keresztül a hallgatók virtuális térben létrehozott helyszínekkel dolgoznak: poligonmodellezés, UV-kezelés, textúrázás, világítás és kameramozgatás, valamint Arnold renderelés, layer- és pass-alapú renderelés (AOV-k). A félév a szimulációs eszközöket is érinti: szilárd test, fény, folyadék, haj és ruha szimulációja. A félév végére a hallgatók egy rövid renderelt animációt készítenek.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Maya"
+            "Maya",
+            "Arnold"
           ],
           "keywords": [
             "3d modellezés",
             "szimuláció",
             "maya",
             "textúrázás",
-            "render"
+            "render",
+            "világítás",
+            "uv",
+            "arnold"
           ],
           "cel": "A kurzus célja a 3D modellezés és szimuláció eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a",
           "pdfUrl": "/tematikak/12453.pdf",
+          "category": [
+            "3d"
+          ],
           "group": null
         },
         {
@@ -3573,23 +4597,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Varga Vajk, Polena Réka",
           "institute": "AMD",
           "note": null,
-          "description": "A szemeszter során a hallgatók egyszerű interaktív rendszerek tervezéséhez szükséges",
+          "description": "A szemeszter során a hallgatók az egyszerű interaktív rendszerek tervezéséhez szükséges tudásanyagot sajátítják el gyakorlati feladatokon keresztül: elektronikai alapismeretek, mikrokontrollerekkel épített interaktív architektúrák, valamint a TouchDesigner szoftver és a Microsoft Kinect kombinált használata. A feladatok különböző interfészépítési lehetőségek és komplex interaktív művészeti installációk megvalósítására készítenek fel; a félév végén a hallgatók saját multimédiás interaktív installáció tervét készítik el és prezentálják.",
           "felelos": "Sterk Barbara DLA",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Touch Designer",
-            "TouchDesigner"
+            "TouchDesigner",
+            "Arduino",
+            "Kinect"
           ],
           "keywords": [
             "mikrokontroller",
             "elektronika",
             "touchdesigner",
-            "interaktív",
-            "arduino"
+            "interaktív installáció",
+            "arduino",
+            "kinect",
+            "adatvizualizáció",
+            "vj"
           ],
-          "cel": "A kurzus célja alapvető elektronikai ismeretek elsajátítása és a mikrokontrollerek használatának megértése és használatukkal kapcsolatos gyakorlati tudás elsajátítása, valamint ezek alkalmazása különböző ipari és képzőművészeti területen. A hallgató a kurzus elvégzése után képes haladó szinten létre",
+          "cel": "A kurzus célja alapvető elektronikai ismeretek és a mikrokontrollerek használatával kapcsolatos gyakorlati tudás elsajátítása, valamint ezek alkalmazása ipari és képzőművészeti területen. A hallgató a kurzus után képes haladó szinten analóg és szoftveres eszközökkel vezérelhető interaktív elektronikai rendszereket létrehozni.",
           "pdfUrl": "/tematikak/12466.pdf",
+          "category": [
+            "ux/interakció",
+            "installáció"
+          ],
           "group": null
         },
         {
@@ -3604,14 +4636,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás-kurzus, amely a kortárs művészet elméleti megközelítéseivel és diskurzusaival foglalkozik. A tárgy célja, hogy a hallgatók a média design MA tanulmányaikhoz elméleti és fogalmi hátteret kapjanak a kortárs művészeti jelenségek értelmezéséhez és kritikai elemzéséhez. A kurzus kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "kortárs művészet",
+            "művészetelmélet",
+            "elmélet",
+            "esztétika",
+            "kritikai gondolkodás",
+            "kortárs tendenciák"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -3626,7 +4668,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kollár Dávid",
           "institute": "ELM",
           "note": null,
-          "description": "A kurzus célja a kommunikációs rendszerek és vizuális nyelvek elméleti és gyakorlati",
+          "description": "Az előadás-kurzus a kommunikációs rendszerek és vizuális nyelvek elméleti és gyakorlati dimenzióit vizsgálja kritikai módon, kortárs kommunikációtudományi, filozófiai és szociológiai perspektívákból. Témái között szerepel a nyelv előtti és nonverbális kommunikáció, a vizuális kultúra és képfilozófia, a digitális kommunikáció és hálózatelméletek, a közösségi média és algoritmusos kommunikáció, a filmnyelvi eszközök, valamint az AI és a poszthumán kommunikáció. A hallgatók képessé válnak médiadesign-munkájukat elméleti keretekben kontextualizálni.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -3635,10 +4677,16 @@ export const DEFAULT_DATA: Curriculum = {
             "vizuális nyelv",
             "kommunikáció",
             "elmélet",
-            "jelrendszer"
+            "jelrendszer",
+            "médiaelmélet",
+            "vizuális kultúra",
+            "hálózatelmélet"
           ],
-          "cel": "A kurzus célja a kommunikációs rendszerek és vizuális nyelvek elméleti területének ismertetése, ahhoz, hogy a hallgató média designeri, alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése ered",
+          "cel": "A kurzus célja a kommunikációs rendszerek és vizuális nyelvek elméleti területének ismertetése, hogy a hallgató média designeri, alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa, és tervezői gyakorlatát interdiszciplináris keretben is konceptualizálni, képviselni tudja.",
           "pdfUrl": "/tematikak/12468.pdf",
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -3653,14 +4701,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás-kurzus, amely a médiakultúra jelenségeivel, a média és a kultúra kölcsönhatásaival foglalkozik. A tárgy a média design MA képzés elméleti megalapozását szolgálja, segítve a hallgatókat a médiajelenségek kulturális és társadalmi kontextusban való értelmezésében. A kurzus kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "médiakultúra",
+            "médiaelmélet",
+            "elmélet",
+            "média",
+            "kultúra",
+            "médiatudomány"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -3675,22 +4733,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Németi Fanni, Forgács Kristóf",
           "institute": "AMD",
           "note": null,
-          "description": "A modul (Németi Fanni) After Effects - Film főcím tervezés Az Adobe After Effects ismereteket bemutató kurzus egyik célja, hogy a féléven átívelő",
+          "description": "Két modulból álló gyakorlati kurzus. Az A modulban a hallgatók az Adobe After Effects elmélyült használatát sajátítják el egy féléven átívelő feladaton keresztül: egy szabadon választott filmhez terveznek alternatív főcímet, amelyhez képes forgatókönyvet és látványterveket készítenek, majd a videót After Effectsben állítják össze. A B modulban tervezésmódszertani gyakorlatok és művészeti kutatás után egy fiktív karakter social media oldalát alkotják meg, eredeti posztokkal és dokumentációval.",
           "felelos": "Molnár Ágnes Éva",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
             "After Effects",
-            "Adobe"
+            "Photoshop",
+            "Illustrator"
           ],
           "keywords": [
             "médiatervezés",
             "after effects",
-            "haladó",
-            "tervezés"
+            "főcímtervezés",
+            "mozgógrafika",
+            "storyboard",
+            "social media",
+            "tervezésmódszertan"
           ],
           "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint pre",
           "pdfUrl": "/tematikak/12773.pdf",
+          "category": [
+            "animáció",
+            "2d",
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -3705,7 +4772,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Forgács Kristóf",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, meghívott előadók prezentációi, mesterkurzusok, innovációs és technikai bemutató előadások, konferenciarészvétel, kiállításlátogatás és közös projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, valamint a kreatív iparban használatos szemlélet és a portfólió fejlesztése. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -3714,11 +4781,16 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
-            "projektmunka",
+            "mesterkurzus",
+            "konferencia",
+            "portfólió",
             "ma"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/12744.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -3733,28 +4805,36 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Varga Vajk",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus során a hallgatók megismerkednek a médiaművészet és médiadesign alapjaival,",
+          "description": "Felzárkóztató kurzus, amelyen a különböző szakokról érkező hallgatók a médiaművészet és médiadesign alapjaival ismerkednek meg: képszerkesztés (Photoshop), vektorgrafika (Illustrator), kézi rajz és térábrázolás, fotózás, videóvágás és fényelés (Premiere Pro, After Effects), programozás (C# és Arduino), valamint 3D modellezés (Blender). A kurzus elméleti és gyakorlati készségeket egyaránt fejleszt, a feladatokból a hallgatók egyéni portfóliót építenek.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "After Effects",
-            "Premiere Pro",
-            "Illustrator",
             "Photoshop",
+            "Illustrator",
+            "Premiere Pro",
+            "After Effects",
+            "Blender",
             "Arduino",
-            "Blender"
+            "C#"
           ],
           "keywords": [
             "felzárkóztató",
-            "after effects",
-            "photoshop",
-            "arduino",
-            "blender",
-            "médiadesign"
+            "képszerkesztés",
+            "vektorgrafika",
+            "videóvágás",
+            "programozás",
+            "3d modellezés",
+            "fotózás",
+            "kézi rajz"
           ],
           "cel": "A tárgy célja, hogy a különböző szakokról érkező hallgatókat technikailag felzárkóztassa a médiadesign alapképzésének szintjére.",
           "pdfUrl": "/tematikak/12510.pdf",
+          "category": [
+            "2d",
+            "3d",
+            "fejlesztés"
+          ],
           "group": null
         }
       ]
@@ -3777,14 +4857,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a kritikai kultúrakutatás megközelítéseivel foglalkozik: a kultúra, a média és a társadalom összefüggéseit vizsgálja kritikai nézőpontból. A kurzus a hallgatók elemző és kritikai gondolkodását fejleszti a kortárs kulturális jelenségek értelmezésében.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "kultúrakutatás",
+            "kritikai elmélet",
+            "média",
+            "társadalom",
+            "kultúra",
+            "elmélet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -3799,14 +4889,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a környezetpszichológia kortárs kérdésfeltevéseit tárgyalja: az ember és az épített, illetve természeti környezet kölcsönhatásának pszichológiai vonatkozásait. A kurzus a tervezői munkát megalapozó szemléletet ad a terek észlelésének és használatának megértéséhez.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "környezetpszichológia",
+            "pszichológia",
+            "épített környezet",
+            "tér",
+            "észlelés",
+            "elmélet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -3821,14 +4921,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
+          "description": "Gyakorlati kurzus, amelyben a hallgatók különböző művészeti területek találkozásán alapuló, integrált alkotói munkát végeznek. A társművészeti együttműködés során interdiszciplináris projektekben fejlesztik tervezői és alkotói kompetenciáikat.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "gyakorlati jegy",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "társművészet",
+            "interdiszciplináris",
+            "együttműködés",
+            "projektmunka",
+            "alkotás",
+            "gyakorlat"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -3843,25 +4953,33 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kolosy Becse, Madácsi Blanka",
           "institute": "AMD",
           "note": null,
-          "description": "A Blokk ------ Madácsi Blanka Maya és Substance Painter A tantárgyrész a videójáték-fejlesztéshez szükséges digitális assetek és animációk",
+          "description": "A kurzus a videójáték-fejlesztés teljes vizuális pipeline-ját fedi le két egymásra épülő blokkban: az egyikben a hallgatók Maya és Substance Painter használatával készítenek game-ready 3D asseteket, karaktereket, UV-térképeket, PBR textúrákat, valamint keyframe és motion capture alapú animációkat. A másik blokkban az Unreal Engine környezetben valósítanak meg videójáték-demót: assetintegráció, landscape, materialök, fényelés, blueprint alapú interakciók és karakteranimációk. A félév végére portfólióba illeszthető assetcsomag és játszható demo készül.",
           "felelos": "Molnár Ágnes Éva",
           "prerequisite": "Médiatervezés 1.",
           "requirement": "gyakorlati jegy",
           "software": [
+            "Maya",
             "Substance Painter",
             "Unreal Engine",
-            "Maya"
+            "Rokoko"
           ],
           "keywords": [
-            "after effects",
-            "davinci",
-            "blender",
-            "substance painter",
+            "videójáték",
+            "game-ready asset",
+            "3d modellezés",
+            "pbr textúrázás",
             "unreal engine",
-            "compositing"
+            "motion capture",
+            "rigging",
+            "blueprint"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja, hogy a hallgatók mesterképzéshez illeszkedő, haladó szintű ismereteket szerezzenek a videójáték-fejlesztés teljes vizuális pipeline-járól, különös tekintettel a valós idejű megjelenítésre optimalizált 3D assetek, karakterek és animációk létrehozására, valamint azok játékmotorban történő alkalmazására.",
           "pdfUrl": "/tematikak/15048.pdf",
+          "category": [
+            "3d",
+            "játék",
+            "animáció"
+          ],
           "group": null
         },
         {
@@ -3876,24 +4994,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Tóth Gergő",
           "institute": "AMD",
           "note": null,
-          "description": "A félév során a hallgatók átfogó képet kapnak a game ready assetekről, és a különböző 3D",
+          "description": "A félév során a hallgatók átfogó képet kapnak a game-ready assetekről és a 3D szoftverek, valamint az Unreal Engine közötti átjárhatóságról: nCloth-, részecske- és folyadékszimulációk exportálásáról, növényzettel benépesített terepek MASH Network alapú felépítéséről és a renderelési optimalizációról (Arnold stand-in, AOV-k). Az elkészült anyagokat passz-alapú kompozitálással és fényeléssel dolgozzák fel After Effectsben; a félév végére egy élettel benépesített játék intrót, cinematicot vagy cutscene-t készítenek.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "3D tervezés és szimuláció 1.",
           "requirement": "gyakorlati jegy",
           "software": [
+            "Maya",
+            "Arnold",
             "Unreal Engine",
             "After Effects"
           ],
           "keywords": [
-            "3d animáció",
-            "maya",
-            "mixamo",
-            "unreal engine",
-            "kulcsolás",
-            "pbr"
+            "3d szimuláció",
+            "game ready asset",
+            "pbr",
+            "mash network",
+            "render optimalizáció",
+            "kompozitálás",
+            "cinematic"
           ],
-          "cel": "A modulok elvégzését követően a hallgató képes lesz PBR elvek mentén anyagokat készíteni, a játéktérben, 3D jelenetben terepeket modellezni, strukturálni, és a MASH Network segítségével ezeken nagyszámú objektumot elhelyezni. A hallgató képes lesz további a renderelési időt és erőforrás-használatot ",
+          "cel": "A modulok elvégzését követően a hallgató képes lesz PBR elvek mentén anyagokat készíteni, a játéktérben, 3D jelenetben terepeket modellezni, strukturálni, és a MASH Network segítségével ezeken nagyszámú objektumot elhelyezni, továbbá a renderelési időt és erőforrás-használatot optimalizálni, a render passzokat és layereket utómunkára alkalmas módon előállítani.",
           "pdfUrl": "/tematikak/15033.pdf",
+          "category": [
+            "3d",
+            "animáció"
+          ],
           "group": null
         },
         {
@@ -3908,23 +5033,30 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Varga Vajk, Polena Réka",
           "institute": "AMD",
           "note": null,
-          "description": "A szemeszter során a hallgatók összetett interaktív rendszerek tervezéséhez szükséges",
+          "description": "A szemeszter során a hallgatók összetett interaktív rendszerek tervezését sajátítják el gyakorlati feladatokon keresztül: elektronikai rendszerekkel és mikrokontrollerekkel, TouchDesigner szoftverrel, Microsoft Kinecttel és ezek kombinációival építenek interaktív architektúrákat. A tematikában audio-reaktív vizuálok, mozgásvezérelt interakció, particle systemek, adatvizualizáció, valamint DMX-, NDI-, OSC- és MIDI-alapú vezérlés szerepel. A félév végére saját multimédiás interaktív installációt készítenek, és csoportosan audiovizuális alkotást terveznek a Magyar Zene Háza hangdómjába.",
           "felelos": "Sterk Barbara DLA",
           "prerequisite": "Interaktív rendszerek 1.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Touch Designer",
+            "TouchDesigner",
             "Kinect"
           ],
           "keywords": [
             "touchdesigner",
             "kinect",
-            "interaktív",
-            "motion tracking",
-            "haladó"
+            "interaktív installáció",
+            "mikrokontroller",
+            "adatvizualizáció",
+            "vj",
+            "dmx",
+            "audiovizuális"
           ],
           "cel": "A kurzus célja az interaktív rendszerek eszközismereti, alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni e",
           "pdfUrl": "/tematikak/15043.pdf",
+          "category": [
+            "ux/interakció",
+            "installáció"
+          ],
           "group": null
         },
         {
@@ -3939,7 +5071,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Balogh Áron",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatanterven túlmutató szakmai tudást ad át workshopok, meghívott előadók prezentációi, mesterkurzusok, technikai bemutatók, konferencia- és kiállításlátogatások, valamint közös projektek formájában. A programban Erasmus-ösztöndíj beszámoló, BEST OF diplomaprezentációk és az OMDK intézményi fordulója is szerepel. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre történő leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -3948,11 +5080,16 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
-            "projektmunka",
-            "ma"
+            "mesterkurzus",
+            "portfólió",
+            "erasmus",
+            "omdk"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/15052.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -3967,28 +5104,36 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Balogh Áron",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus során a hallgatók megismerkednek a médiaművészet és médiadesign alapjaival,",
+          "description": "Felzárkóztató kurzus a nem média design alapszakról érkező MA-hallgatóknak, amely a médiaművészet és médiadesign alapjait adja át: képszerkesztés (Photoshop), vektorgrafika (Illustrator), analóg és digitális fotográfia, videóvágás és fényelés (Premiere Pro), 3D modellezés és animáció (Blender), 3D mapping és fényfestés (Resolume Arena), valamint webdesign (Figma, HTML, JavaScript, CSS) és programozási alapok (C#, Arduino). A gyakorlati feladatokból a hallgatók egyéni portfóliót építenek.",
           "felelos": "Kiss Melinda",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Premiere Pro",
-            "Illustrator",
             "Photoshop",
-            "Resolume",
+            "Illustrator",
+            "Premiere Pro",
+            "Blender",
+            "Resolume Arena",
             "Arduino",
-            "Blender"
+            "Figma"
           ],
           "keywords": [
             "médiaművészet",
-            "premiere pro",
-            "resolume",
-            "arduino",
-            "blender",
-            "felzárkóztató"
+            "felzárkóztató",
+            "képszerkesztés",
+            "videóvágás",
+            "3d modellezés",
+            "fényfestés",
+            "webdesign",
+            "fotográfia"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja olyan ismeretkörök átadása, amelyekre a nem média design alapszakot végző hallgatóknak korábban nem nyílt lehetőségük: alapszintű média design technikák, speciális szoftverek ismerete és a média design tervezés alaphelyzetei; a tárgy teljesítésével a hallgató érti és alkalmazni tudja a szakterület alapfogalmait és fő elveit.",
           "pdfUrl": "/tematikak/15037.pdf",
+          "category": [
+            "projekt",
+            "2d",
+            "installáció"
+          ],
           "group": null
         }
       ]
@@ -4011,7 +5156,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kollár Dávid",
           "institute": "ELM",
           "note": null,
-          "description": "A kurzus célja, hogy a hallgatók elsajátítsák a média elemzésének és értelmezésének kritikai",
+          "description": "A kurzus a média elemzésének és értelmezésének kritikai szemléletét adja át: a hallgatók megismerkednek a főbb médiaelméleti irányzatokkal, modellekkel és kulcsfogalmakkal. Szó esik a médiafogyasztási trendekről, a média és a nyilvánosság, illetve a hatalom viszonyáról, a médiareprezentációról, valamint a médiaszövegek szemiotikai és diskurzuselemzéséről. A félév végére a hallgatók képessé válnak a kortárs médiajelenségek és -platformok kontextusban való, kritikai elemzésére.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -4020,10 +5165,17 @@ export const DEFAULT_DATA: Curriculum = {
             "médiaelmélet",
             "analitikus",
             "médiakritika",
-            "elmélet"
+            "elmélet",
+            "reprezentáció",
+            "szemiotika",
+            "nyilvánosság",
+            "befogadáselmélet"
           ],
           "cel": "A kurzus célja, hogy a hallgatók megismerkedjenek az analitikus médiaelmélet alapjaival, és elsajátítsák azokat az elméleti kereteket és fogalmakat, melyek segítségével képessé válnak a média jelenségek mélyebb megértésére és kritikai elemzésére. Az órák során a résztvevők betekintést nyernek a legf",
           "pdfUrl": "/tematikak/12512.pdf",
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -4038,14 +5190,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a kreatív szakmák gyakorlásához szükséges gazdasági és jogi alapismereteket tekinti át. A hallgatók a mesterképzés részeként ismerkednek meg a szakmai működésüket érintő gazdasági és jogi keretekkel. A tárgy kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "gazdaság",
+            "jog",
+            "szerzői jog",
+            "vállalkozás",
+            "kreatívipar",
+            "elmélet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -4060,24 +5222,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Farkas Bence, Kováts Jázon",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus során a hallgatók betekintést nyerhetnek a multimédia környezetben alkalmazott audio lehetőségeibe. Az alapvető hang vágási, keverési módszerek mellett, hangdizájn módszerek és az interaktív",
+          "description": "A kurzus során a hallgatók haladó szinten ismerkednek meg a multimédia környezetben alkalmazott audio lehetőségeivel: a hangvágás és keverés mellett hangdesign-módszerekkel, foley-technikákkal és interaktív megoldásokkal (MIDI, OSC) is dolgoznak. A félévben stúdió- és low budget eszközöket egyaránt használnak, Adobe Audition, PaulXStretch, Ableton Live és MAX környezetben. A kurzus a diplomamunka-tervek hangi megoldásainak konzultációjára is kitér.",
           "felelos": "Csáki László",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
             "Audition",
-            "Ableton",
-            "Adobe"
+            "Ableton Live",
+            "Max/MSP",
+            "PaulXStretch"
           ],
           "keywords": [
             "hangdesign",
             "audition",
             "ableton",
             "hangtervezés",
-            "audio"
+            "audio",
+            "midi",
+            "osc",
+            "foley"
           ],
           "cel": "A kurzus célja a hangdesign eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezen",
           "pdfUrl": "/tematikak/12513.pdf",
+          "category": [
+            "hang"
+          ],
           "group": null
         },
         {
@@ -4092,19 +5261,29 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Varga Vajk, Forgács Kristóf",
           "institute": "AMD",
           "note": null,
-          "description": "A modul (Varga Vajk) A tantárgy célja, hogy a hallgatókat bevezesse a kísérleti médiaművészet világába, különös",
+          "description": "Két modulból álló gyakorlati kurzus, amely a hagyományos média design területeken túlmutató kísérletezésre bátorít. Az egyik modulban a hallgatók a fényművészet és a luminokinetika alapjaival, kiállítástervezéssel és -építéssel, valamint interaktív installációk technológiai hátterével (haladó TouchDesigner) foglalkoznak, és saját projektet valósítanak meg. A másik modulban nagyvárosi kreatív ötlettervek kidolgozása és vizualizálása a cél, amelyek eredeti, figyelemfelkeltő megoldásokkal erősíthetik egy város arculatát.",
           "felelos": "Mayer Éva",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
-          "software": [],
+          "software": [
+            "TouchDesigner"
+          ],
           "keywords": [
             "médiaművészet",
             "kísérleti",
             "experimentális",
-            "képzőművészet"
+            "fényművészet",
+            "luminokinetika",
+            "installáció",
+            "touchdesigner",
+            "avantgárd"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja a hagyományos média design és médiaművészeti területeken kívül eső kompetenciák felfedezése és gyakorlatba ültetése: a kurzus a határterületek vizsgálatára, kísérletek elvégzésére és az azokból való tanulságok levonására bátorítja a hallgatókat.",
           "pdfUrl": "/tematikak/12459.pdf",
+          "category": [
+            "installáció",
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -4119,14 +5298,23 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a kommunikáció alapfogalmait és működését tekinti át a média design mesterképzés hallgatói számára. A tárgy a szakmai munkához szükséges kommunikációs alapismereteket adja át, és kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "kommunikáció",
+            "kommunikációelmélet",
+            "médiakommunikáció",
+            "nyilvánosság",
+            "elmélet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -4141,18 +5329,32 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Berkes Bálint, Pápai Bence",
           "institute": "AMD",
           "note": null,
-          "description": "A modul (Berkes Bálint): A szemeszter során a hallgatók megismerkednek a fény mint",
+          "description": "Két modulból álló haladó gyakorlati tárgy. Az egyik modul a fényt mint művészi eszközt járja körül: projection mapping, DMX-es lámpavezérlés, robotlámpák és valós idejű megoldások (MadMapper, MadLight, Unreal Engine) segítségével a hallgatók saját fényművészeti alkotást hoznak létre. A másik modul a játéktervezés folyamatait fedi le az ötlettől a kiadásig: játékmechanikák, GDD-készítés, karakter- és level design, UX/UI, valamint prototipizálás és optimalizáció témáin keresztül.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "Médiatervezés 2.",
           "requirement": "gyakorlati jegy",
-          "software": [],
+          "software": [
+            "MadMapper",
+            "MadLight",
+            "Unreal Engine"
+          ],
           "keywords": [
             "médiatervezés",
-            "haladó",
-            "projektmunka"
+            "fényművészet",
+            "projection mapping",
+            "dmx",
+            "játéktervezés",
+            "prototípus",
+            "level design",
+            "haladó"
           ],
-          "cel": "A modul (Berkes Bálint):",
+          "cel": "A tantárgy célja egyrészt, hogy a hallgatók megismerjék a fény mint művészi eszköz alkalmazási lehetőségeit a különböző multimédiás formákban, másrészt hogy elsajátítsák a játéktervezés alapelveit és folyamatait a prototípus-készítéstől a tesztelésen át az iterációig.",
           "pdfUrl": "/tematikak/12515.pdf",
+          "category": [
+            "installáció",
+            "játék",
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -4167,7 +5369,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Forgács Kristóf",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, meghívott előadók prezentációi, mesterkurzusok, innovációs és technikai bemutató előadások, konferenciarészvétel, kiállításlátogatás és közös projektek formájában. Hangsúlyos a társterületek alapismereteinek beemelése és a portfólióépítés. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -4177,10 +5379,15 @@ export const DEFAULT_DATA: Curriculum = {
             "workshop",
             "előadás",
             "projektmunka",
+            "mesterkurzus",
+            "konferencia",
             "ma"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/12746.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -4203,14 +5410,27 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pápai Bence",
           "institute": "ELM",
           "note": "szab.váll. létszám: összesen",
-          "description": null,
-          "felelos": null,
-          "prerequisite": null,
+          "description": "A kurzus a digitális produkciók, elsősorban a játékfejlesztési workflow vezetői oldalát mutatja be: projektmenedzsment-alapok, kockázatok és felelősségek, a piac szereplői és a szükséges szakembergárda. Áttekinti a finanszírozási lehetőségeket (közösségi finanszírozás, kiadók, befektetők), a költségtervezést, a marketing és PR szerepét, valamint a gyártás fázisait az ötlettől a megjelenésig. A hallgatók vizsgafeladatként fiktív pitch csomagot állítanak össze koncepcióval, célpiaccal, csapatösszetétellel, költségvetéssel és ütemezéssel.",
+          "felelos": "Besenyei Zsuzsanna",
+          "prerequisite": "-",
           "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "keywords": [
+            "produkció",
+            "projektmenedzsment",
+            "játékfejlesztés",
+            "finanszírozás",
+            "pitch",
+            "költségvetés",
+            "kiadói rendszer",
+            "marketing"
+          ],
+          "cel": "A hallgatók megismerkedjenek a projektek és produkciók létrehozása során felmerülő alkotói, tervezői problémákkal és megoldási stratégiáikkal, ismerjék a produkcióhoz szükséges szakemberek szerepköreit és felelősségeit, és képesek legyenek egy produkció megtervezésére és teljes körű levezénylésére.",
+          "pdfUrl": "/tematikak/ext-produkcios-ismeretek.pdf",
+          "category": [
+            "elmélet",
+            "játék"
+          ],
           "group": null
         },
         {
@@ -4225,14 +5445,28 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pálfi Szabolcs, Forgács Kristóf, Madácsi Blanka, Varga Vajk, Kollár Dávid, Kováts Jázon",
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": null,
-          "prerequisite": null,
+          "description": "A média design MA képzést lezáró diplomatárgy, amely három blokkban készíti fel a hallgatókat: játékfejlesztési projektmunka a tervezéstől a kiadásig, tudományos szakszövegírás és a szakdolgozat strukturált felépítése, valamint a diplomamunka projektszerű kezelése mérföldkövekkel és konzultációkkal. A félév végére portfólió, showreel, prezentáció és a szakdolgozat előzetes változata készül el. A teljesítés feltétele a két központi konzultáción bemutatott, megfelelő készültségű diplomamunka.",
+          "felelos": "Forgács Kristóf",
+          "prerequisite": "-",
           "requirement": "gyakorlati jegy",
-          "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "software": [
+            "Zotero",
+            "ChatGPT"
+          ],
+          "keywords": [
+            "diplomamunka",
+            "portfólió",
+            "showreel",
+            "szakdolgozat",
+            "prezentáció",
+            "projekttervezés",
+            "kutatásmódszertan"
+          ],
+          "cel": "A diplomamunkához szükséges eszközismereti (szoftverismereti), alkotói és művészi ismeretek elsajátítása, kreatív készségek fejlesztése és prezentációs tudás megszerzése haladó szinten.",
+          "pdfUrl": "/tematikak/ext-diplomamunka-media-design.pdf",
+          "category": [
+            "diploma/portfólió"
+          ],
           "group": null
         },
         {
@@ -4247,7 +5481,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Forgács Kristóf",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatanterven túlmutató szakmai programokat kínál: a szakmában aktívan dolgozó meghívott előadók prezentációit, mesterkurzusokat, innovációs és technikai témájú workshopokat, konferenciarészvételt, kiállításlátogatást és közös projektek kivitelezését. A félév programjában szakos szakmai programok, Erasmus-beszámoló, BEST OF diplomaprezentációk és az OMDK intézményi forduló szerepelnek. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -4257,10 +5491,15 @@ export const DEFAULT_DATA: Curriculum = {
             "workshop",
             "előadás",
             "projektmunka",
+            "mesterkurzus",
+            "portfólió",
             "ma"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/15057.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -4283,7 +5522,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Tóth Erika",
           "institute": "AMD",
           "note": null,
-          "description": "A félév során a hallgatók elsajátítják a 3D modellezés alapismereteit. A tantárgy célja a 3D",
+          "description": "A tantárgy alapszintű bevezetést nyújt az animációs művészetben használt digitális eszközökbe, elsősorban a 3D modellezés alapismereteibe. A hallgatók Blenderben tanulnak poligonos szerkesztést, módosítókat, sculptingot, retopológiát, UV-szerkesztést, fény- és renderbeállításokat. A félév végére saját referenciák alapján önállóan felépítik egy karakter 3D tömegvázlatát, és portfólióképes render képeket készítenek.",
           "felelos": "Kiss Melinda",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -4293,11 +5532,19 @@ export const DEFAULT_DATA: Curriculum = {
           "keywords": [
             "3d modellezés",
             "blender",
-            "alapok",
+            "poligonos szerkesztés",
+            "sculpting",
+            "textúrázás",
+            "renderelés",
+            "karaktermodell",
             "digitális"
           ],
-          "cel": null,
+          "cel": "A tantárgy alapszintű bevezetést nyújt az animációs művészetben használatos digitális eszközök lehetőségeibe: a hallgatók elsajátítják a 3D modellezés és mozgatás alapjait, a digitális térbeli gondolkodás főbb elveit, és megismerkednek a specifikus szoftverek használatával.",
           "pdfUrl": "/tematikak/10531.pdf",
+          "category": [
+            "3d",
+            "animáció"
+          ],
           "group": null
         },
         {
@@ -4312,28 +5559,36 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Varga Vajk",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus során a hallgatók megismerkednek a médiaművészet és médiadesign alapjaival,",
+          "description": "Felzárkóztató kurzus a más szakokról érkező hallgatók számára, amely a médiadesign alapképzés technikai alapjait fedi le. A hallgatók megismerkednek a médiaművészet alapjaival, a képszerkesztéssel (Photoshop), a vektorgrafikával (Illustrator), a kézi rajzzal, a fotózással, a videóvágással és effektezéssel (Premiere Pro, After Effects), a programozással (C# és Arduino), valamint a 3D modellezéssel (Blender). Az elkészült gyakorlati munkákból a hallgatók egyéni portfóliót építenek.",
           "felelos": "-",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "After Effects",
-            "Premiere Pro",
-            "Illustrator",
             "Photoshop",
+            "Illustrator",
+            "Premiere Pro",
+            "After Effects",
+            "Blender",
             "Arduino",
-            "Blender"
+            "C#"
           ],
           "keywords": [
             "felzárkóztató",
-            "after effects",
-            "photoshop",
-            "arduino",
-            "blender",
-            "médiadesign"
+            "képszerkesztés",
+            "vektorgrafika",
+            "videóvágás",
+            "programozás",
+            "3d modellezés",
+            "médiadesign",
+            "fotográfia"
           ],
           "cel": "A tárgy célja, hogy a különböző szakokról érkező hallgatókat technikailag felzárkóztassa a médiadesign alapképzésének szintjére.",
           "pdfUrl": "/tematikak/10461.pdf",
+          "category": [
+            "2d",
+            "film/videó",
+            "3d"
+          ],
           "group": null
         },
         {
@@ -4348,7 +5603,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kunszt Gábor, Sterk Barbara",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus bevezető részében bemutatásra kerül az Arduino fejlesztői környezet és ennek",
+          "description": "A kurzus bevezető részében a hallgatók megismerik az Arduino fejlesztői környezetet, valamint elektronikai és programozói alapismereteket szereznek (digitális és analóg I/O, vezérlési szerkezetek, szervomotorok). Emellett bepillantást nyernek a folyamatalapú fizikai algoritmikus alkotás világába. A félév második felében műhelymunka keretében anyagkísérleteket és prototípusgyártást végeznek, majd saját koncepció alapján kisebb interaktív rendszereket, objekteket készítenek és prezentálnak.",
           "felelos": "Sterk Barbara DLA",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -4359,10 +5614,18 @@ export const DEFAULT_DATA: Curriculum = {
             "interakciótervezés",
             "arduino",
             "fizikai computing",
-            "prototípus"
+            "elektronika",
+            "prototípus",
+            "interaktív objekt",
+            "kinetikus művészet"
           ],
-          "cel": "A kurzus célja az interakciótervezés alapjainak elsajátítása eszközismereti (Arduino nyelv), fizikai alkotói (tervezői) és művészeti (esztétikai) szemlélet szempontjából. A hallgató a kurzus elvégzése eredményeképpen képes felismerni, elemezni, érteni, alkalmazni, valamint prezentálni az interakciót",
+          "cel": "A kurzus célja az interakciótervezés alapjainak elsajátítása eszközismereti (Arduino nyelv), fizikai alkotói (tervezői) és művészeti (esztétikai) szemlélet szempontjából; a hallgató képes lesz felismerni, elemezni, érteni, alkalmazni és prezentálni az interakciótervezés alapjait képező ismeretanyagot.",
           "pdfUrl": "/tematikak/10444.pdf",
+          "category": [
+            "ux/interakció",
+            "installáció",
+            "fejlesztés"
+          ],
           "group": null
         },
         {
@@ -4377,7 +5640,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szabó Eszter",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus során a hallgatók megismerik és megtanulják kezelni az After Effects szoftvert,",
+          "description": "A kurzus során a hallgatók megismerik és megtanulják kezelni az After Effects szoftvert, amelyben különböző mozgógrafikai alkotásokat hoznak létre: loopolt shape-animációkat, audio-reaktív animációkat, vektoros karakteranimációt és Puppet tool-lal készített járásciklust. A technikai ismeretek mellett különböző mozgógrafikai stílusokkal is megismerkednek. A félév végén az órai munkákból egy önálló, hanggal ellátott, 1-2 perces videót vágnak össze, amely a Mozgógrafika 2. tantárgyat is megalapozza.",
           "felelos": "Kiss Melinda",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -4388,12 +5651,18 @@ export const DEFAULT_DATA: Curriculum = {
           "keywords": [
             "mozgógrafika",
             "after effects",
-            "photoshop",
             "animáció",
-            "motion graphics"
+            "motion graphics",
+            "karakteranimáció",
+            "shape layer",
+            "puppet tool"
           ],
           "cel": "A kurzus célja a mozgógrafika eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása alapszinten. A hallgató a kurzus elvégzése eredményeképpen képes alapszinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a mozgógrafika terület",
           "pdfUrl": "/tematikak/10456.pdf",
+          "category": [
+            "animáció",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -4408,19 +5677,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Mayer Éva",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy a média design szak egyik alapozó főtantárgya, mely a hallgatók alkotó készségét és művészeti kreativitását hivatott fejleszteni és minden egyéb gyakorlati tudást igénylő média design tárgyat megalapozni.",
+          "description": "A média design szak alapozó főtantárgya, amely a hallgatók alkotókészségét és művészeti kreativitását fejleszti, és megalapozza a szak gyakorlati tárgyait. Az első félév ismeretanyaga a kompozíció, a perspektíva/tér és az anatómia: a hallgatók portréábrázolást, szabadkézi és digitálisan továbbdolgozott perspektíva-rajzokat, kollázs- és frottázstechnikás kompozíciókat, valamint színtani és parafrázis-feladatokat készítenek. A tárgy a térlátás, a kompozíciós készség és a vizuális gondolkodás fejlesztésével a médiatervezés továbbtanulására készít fel.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
-          "software": [],
-          "keywords": [
-            "médiadesign",
-            "alapozó",
-            "kreativitás",
-            "tervezés"
+          "software": [
+            "Lightroom",
+            "Premiere Pro",
+            "After Effects"
           ],
-          "cel": null,
+          "keywords": [
+            "kompozíció",
+            "perspektíva",
+            "anatómia",
+            "kézi rajz",
+            "térábrázolás",
+            "színtan",
+            "képi gondolkodás",
+            "alapozó"
+          ],
+          "cel": "A tantárgy célja a média design szakma műveléséhez elengedhetetlen képnyelvi alapismeretek átadása és az alkotói készségek kifejlesztése, valamint a manuális és számítógépes képalkotás alapelveinek, eljárásainak ismertetése és gyakoroltatása.",
           "pdfUrl": "/tematikak/10451.pdf",
+          "category": [
+            "2d",
+            "grafika/tipográfia"
+          ],
           "group": null
         },
         {
@@ -4435,7 +5716,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Berkes Bálint, Dózsa Liliána",
           "institute": "AMD",
           "note": null,
-          "description": "A formák és anyagok vizuális megjelenésének és viselkedésének megismerése a térben,",
+          "description": "A kurzus a formák és anyagok térbeli vizuális megjelenésének és viselkedésének megismerésével, valamint azok szoftveres reprodukálásával és szimulálásával foglalkozik. A hallgatók a Blender alapvető használatát sajátítják el a modellezés, textúrázás (UV mapping, shader setup), világítás, kamerakezelés és renderelés (PBR workflow) területén, kiegészítve képelméleti ismeretekkel. A féléves feladat egy választott mindennapi eszköz lemodellezése és koncepció szerinti képsorozat készítése.",
           "felelos": "Mayer Éva",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -4443,13 +5724,20 @@ export const DEFAULT_DATA: Curriculum = {
             "Blender"
           ],
           "keywords": [
-            "képalkotás",
-            "blender",
             "3d",
-            "médiadesign"
+            "blender",
+            "modellezés",
+            "textúrázás",
+            "világítás",
+            "renderelés",
+            "pbr",
+            "képelmélet"
           ],
           "cel": "A kurzus célja a média design specifikus képalkotás eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása közép haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználn",
           "pdfUrl": "/tematikak/10460.pdf",
+          "category": [
+            "3d"
+          ],
           "group": null
         },
         {
@@ -4464,7 +5752,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szacsvai Pál",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások és meghívott előadók által vezetett projektek formájában. A programok között szerepel gyakorló szakemberek prezentációja, mesterkurzusok, innovációs és technikai bemutató előadások, konferencia- és kiállításlátogatás, valamint közös projektek kivitelezése. Az első alkalom a média design szakkal, a félév felépítésével és az Erasmus-lehetőségekkel való ismerkedést szolgálja.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -4473,11 +5761,16 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
-            "projektmunka",
+            "mesterkurzus",
+            "kiállítás",
+            "portfólióépítés",
             "ba"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/10446.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -4492,7 +5785,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Bohati Bence, Dér Kristóf Gordon",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy célja a felhasználói élmény (user experience, UX) tervezés alapismereteinek,",
+          "description": "A tantárgy a felhasználói élmény (UX) tervezés alapismereteit, módszereit és folyamatait, valamint az ezekhez használt szoftvereket (Miro, Figma) ismerteti meg a Design Thinking keretrendszer mentén. A hallgatók feltáró kutatással, interjúkészítéssel, perszónákkal, customer journey-vel, információs architektúrával és user flow-val alapozzák meg egy szabadon választott digitális alkalmazás tervét, majd Figmában UI elemeket és UI kitet készítenek. A kétféléves kurzus végére képesek lesznek egy digitális alkalmazás felhasználói élményének megtervezésére.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -4502,13 +5795,19 @@ export const DEFAULT_DATA: Curriculum = {
           ],
           "keywords": [
             "ux design",
-            "figma",
-            "miro",
+            "design thinking",
             "felhasználói élmény",
-            "prototípus"
+            "kutatás",
+            "perszóna",
+            "customer journey",
+            "prototípus",
+            "figma"
           ],
           "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása alap szinten. A hallgató a kurzus elvégzése eredményeképpen képes alap szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a UX design területét k",
           "pdfUrl": "/tematikak/10555.pdf",
+          "category": [
+            "ux/interakció"
+          ],
           "group": null
         }
       ]
@@ -4531,7 +5830,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Tóth Erika",
           "institute": "AMD",
           "note": null,
-          "description": "A félév során a hallgatók megismerik a 3D animáció alapjait. A kurzus fókuszában az",
+          "description": "A félév során a hallgatók megismerik a 3D animáció alapjait Blenderben. A kurzus fókuszában az animációs technikák elsajátítása áll: keyframe-ek, görbék, kinematikák (FK/IK), constraint-ek, karakteranimáció, riggelés, skinnelés, walk cycle, valamint a Rigify használata. A félév végén a hallgatók saját animációs műalkotást hoznak létre a tanult technikák gyakorlására és elmélyítésére.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "Digitális stúdiumok 1.",
           "requirement": "gyakorlati jegy",
@@ -4542,10 +5841,18 @@ export const DEFAULT_DATA: Curriculum = {
             "3d animáció",
             "blender",
             "animáció",
-            "rigging"
+            "rigging",
+            "karakteranimáció",
+            "walk cycle",
+            "keyframe",
+            "skinning"
           ],
-          "cel": null,
+          "cel": "A tantárgy alapszintű bevezetést nyújt az animációs művészetben használatos digitális eszközök lehetőségeibe. A hallgatók elsajátítják a 3D modellezés és mozgatás alapjait, a digitális térbeli gondolkodás főbb elveit, és a kurzus teljesítésével képesek lesznek alapszinten, nagy biztonsággal mozogni a 3D-s virtuális környezetben.",
           "pdfUrl": "/tematikak/12058.pdf",
+          "category": [
+            "3d",
+            "animáció"
+          ],
           "group": null
         },
         {
@@ -4560,28 +5867,36 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Varga Vajk",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus során a hallgatók megismerkednek a médiaművészet és médiadesign alapjaival,",
+          "description": "Felzárkóztató kurzus a nem média design alapszakról érkező hallgatóknak, amely a médiaművészet és médiadesign alapjait adja át. A hallgatók megismerkednek a képszerkesztéssel (Photoshop), vektorgrafikával (Illustrator), fotózással, videóvágással (Premiere Pro), programozással (C# és Arduino), 3D modellezéssel (Blender), 3D mappinggel és fényfestéssel (Resolume Arena), valamint a webdesign alapjaival (Figma, HTML, JavaScript, CSS). A kurzus elméleti és gyakorlati készségeket egyaránt fejleszt, hogy a hallgatók önálló projekteket hozhassanak létre.",
           "felelos": "Kiss Melinda",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Premiere Pro",
-            "Illustrator",
             "Photoshop",
-            "Resolume",
+            "Illustrator",
+            "Premiere Pro",
+            "Blender",
+            "Resolume Arena",
             "Arduino",
-            "Blender"
+            "Figma"
           ],
           "keywords": [
             "médiaművészet",
-            "premiere pro",
-            "resolume",
-            "arduino",
-            "blender",
-            "felzárkóztató"
+            "felzárkóztató",
+            "képszerkesztés",
+            "videóvágás",
+            "fényfestés",
+            "webdesign",
+            "3d modellezés",
+            "fotó"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja olyan ismeretkörök átadása, amelyekre az alapképzés során a nem média design alapszakot végző hallgatóknak nem nyílt lehetőségük: alapszintű média design technikák, speciális szoftverek ismerete, a média design tervezés fő alaphelyzetei és kihívásai.",
           "pdfUrl": "/tematikak/11215.pdf",
+          "category": [
+            "2d",
+            "film/videó",
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -4596,7 +5911,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Sterk Barbara, Kunszt Gábor",
           "institute": "AMD",
           "note": null,
-          "description": null,
+          "description": "A kurzus két modulban mélyíti el a fizikai interakciótervezés ismereteit haladó szinten. A technikai modulban a hallgatók Arduino programozással, haladó szenzor- és aktuátorhasználattal (távolság-, fény-, érintésérzékelés, fények és motorok vezérlése) tanulnak önállóan interaktív tárgyakat létrehozni. A művészeti modul elméleti kitekintésen, inspirációgyűjtésen, fénykutatáson, anyagkísérleten és tárgytervezésen keresztül vezeti be őket a fizikai interakciótervezés művészeti alkalmazásába, a félév végén interaktív műalkotás készül.",
           "felelos": "Sterk Barbara DLA",
           "prerequisite": "Interakciótervezés 1.",
           "requirement": "gyakorlati jegy",
@@ -4606,11 +5921,20 @@ export const DEFAULT_DATA: Curriculum = {
           "keywords": [
             "interakciótervezés",
             "arduino",
-            "haladó",
-            "fizikai computing"
+            "fizikai computing",
+            "szenzorok",
+            "aktuátorok",
+            "fényművészet",
+            "interaktív installáció",
+            "luminokinetika"
           ],
           "cel": "A kurzus célja az interakciótervezés alapjainak eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalma",
           "pdfUrl": "/tematikak/11221.pdf",
+          "category": [
+            "ux/interakció",
+            "installáció",
+            "fejlesztés"
+          ],
           "group": null
         },
         {
@@ -4622,10 +5946,10 @@ export const DEFAULT_DATA: Curriculum = {
           "credits": 5,
           "active": null,
           "groups": null,
-          "instructors": "Madácsi Bianka",
+          "instructors": "Madácsi Blanka",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus során a hallgatók elmélyítik tudásukat a Nuke szoftverben. A résztvevők átfogó",
+          "description": "A kurzus során a hallgatók az előző félévben megszerzett ismeretekre alapozva elmélyítik tudásukat a Nuke compositing szoftverben, és átfogó betekintést nyernek a vizuális effektek (VFX) világába és a filmipar működésébe. A témák között szerepel a rotoscoping, a screen replacement, a 2D és 3D tracking, a clean up, a keying technikák, valamint tűz- és muzzle flash effektek integrálása. A félév záróprojekttel és a workflow optimalizálásával zárul.",
           "felelos": "Kiss Melinda",
           "prerequisite": "Mozgógrafika 1.",
           "requirement": "gyakorlati jegy",
@@ -4636,11 +5960,18 @@ export const DEFAULT_DATA: Curriculum = {
             "vfx",
             "nuke",
             "compositing",
-            "substance painter",
-            "unreal engine"
+            "keying",
+            "tracking",
+            "rotoscoping",
+            "vizuális effektek",
+            "filmipar"
           ],
           "cel": "A kurzus célja, hogy a résztvevők megismerkedjenek a VFX világával, elsajátítsák az iparágban használt szoftverek, például a Nuke alapvető használatát, valamint betekintést nyerjenek a filmipar működésébe, különös tekintettel a vizuális effektek szerepére és integrációjára a produkciókban. Az óra so",
           "pdfUrl": "/tematikak/11428.pdf",
+          "category": [
+            "animáció",
+            "film/videó"
+          ],
           "group": null
         },
         {
@@ -4655,24 +5986,30 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Varga Vajk, Szűcs Levente",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy célja a média design szakma műveléséhez elengedhetetlen képnyelvi, fotógráfiai és mozgóképnyelvi alapismeretek átadása és a területen való alkotói készségek",
+          "description": "A tantárgy a média design szakma műveléséhez elengedhetetlen képnyelvi, fotográfiai és mozgóképnyelvi alapismereteket adja át, az analóg és digitális képalkotástól a szoftveres képfeldolgozásig. A hallgatók a sötétkamrai fotogramkészítéstől a lyukkamerán és síkfilmes gépeken át a digitális fotográfiáig haladnak, gyakorolják a kompozíciót, a világítást és az expozíciós technikákat. A képek utómunkáját és rendszerezését Adobe Lightroomban és Photoshopban sajátítják el, a félév 6-8 képes fotósorozattal zárul.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "Média design stúdiumok 1.",
           "requirement": "gyakorlati jegy",
           "software": [
             "Photoshop",
-            "Lightroom",
-            "Adobe"
+            "Lightroom"
           ],
           "keywords": [
             "fotó",
+            "analóg fotográfia",
             "photoshop",
             "lightroom",
-            "premiere pro",
-            "médiatervezés"
+            "kompozíció",
+            "világítás",
+            "expozíció",
+            "képszerkesztés"
           ],
           "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása alap szinten. A hallgató a kurzus elvégzése eredményeképpen képes alap szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezent",
           "pdfUrl": "/tematikak/11224.pdf",
+          "category": [
+            "fotó",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -4687,22 +6024,32 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Dózsa Liliána, Berkes Bálint",
           "institute": "AMD",
           "note": null,
-          "description": "A hallgatók az őszi félévben megismerkedtek a 3D képalkotás alapjaival, de a tavaszi félév új kihívást tartogat számukra a 3D animációs ismeretek képében. A félév első felében a",
+          "description": "A tavaszi félévben a hallgatók a 3D képalkotási alapokra építve a 3D animáció világába lépnek. A félév első felében a motion design kultúrával, a klasszikus animációs elmélettel (az animáció 12 alapelve), karaktercsontozással és motion capture animálással ismerkednek, elsősorban Cinema 4D-ben. A második rész a VFX-re épül: fizikai, ruha- és organikus (részecske, füst, folyadék) szimulációkat készítenek, majd Unreal Engine-ben renderelnek valós idejű jelenetet. Féléves feladatként közös, folytatólagos golyóvándorlás-animációt készítenek.",
           "felelos": "Molnár Ágnes Éva",
           "prerequisite": "Média labor 1.",
           "requirement": "gyakorlati jegy",
           "software": [
             "Cinema 4D",
-            "Blender"
+            "Blender",
+            "Unreal Engine",
+            "Rokoko"
           ],
           "keywords": [
-            "3d",
+            "3d animáció",
             "cinema 4d",
             "blender",
-            "képalkotás"
+            "motion design",
+            "szimuláció",
+            "vfx",
+            "motion capture",
+            "unreal engine"
           ],
           "cel": "A kurzus célja a média design specifikus képalkotás eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása közép haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználn",
           "pdfUrl": "/tematikak/11390.pdf",
+          "category": [
+            "3d",
+            "animáció"
+          ],
           "group": null
         },
         {
@@ -4717,7 +6064,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szacsvai Pál",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások és meghívott előadók által vezetett projektek formájában. A programok között szerepel szakmai előadók prezentációja, mesterkurzusok, innovációs és technikai bemutatók, konferencia- és kiállításlátogatás, valamint közös projektek kivitelezése. Fontos szempont a társterületek alapismereteinek beemelése és a portfólióépítés.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -4726,11 +6073,16 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
+            "mesterkurzus",
             "projektmunka",
+            "portfólió",
             "ba"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni workshopok, előadások és meghívott előadók által vezetett projektek formájában, a MyBrand szemlélet alappilléreire — szakterületek találkozására, a kreatív ipari szemlélet fejlesztésére és a portfólióépítésre — építve.",
           "pdfUrl": "/tematikak/11834.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -4745,7 +6097,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Dér Kristóf Gordon, Bohati Bence",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy célja a felhasználói élmény (user experience, UX) tervezés alapismereteinek,",
+          "description": "A tantárgy a felhasználói élmény (UX) tervezés ismereteit, módszereit és folyamatait mélyíti el haladó szinten, a Design Thinking keretrendszer mentén, Miro és Figma szoftverekkel. A félév témái között szerepel a vizuális hierarchia, az interakciók, a reszponzív webdesign, az Android/iOS platformok, a usability heurisztikák és a felhasználói tesztelés. A hallgatók egy szabadon választott digitális alkalmazás prototípusát tervezik meg Figmában, a kutatástól a perszónákon és user flow-n át az esettanulmányig.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "UX design stúdiumok 1.",
           "requirement": "gyakorlati jegy",
@@ -4757,11 +6109,18 @@ export const DEFAULT_DATA: Curriculum = {
             "ux design",
             "figma",
             "miro",
-            "haladó",
-            "prototípus"
+            "prototípus",
+            "design thinking",
+            "felhasználói tesztelés",
+            "reszponzív design",
+            "usability"
           ],
           "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a UX design terület",
           "pdfUrl": "/tematikak/11228.pdf",
+          "category": [
+            "ux/interakció",
+            "web"
+          ],
           "group": null
         }
       ]
@@ -4784,19 +6143,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Nikázy Gusztáv",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus célja elsősorban az online médiafelületeket leíró, már megismert nyelveinek",
+          "description": "A kurzus az online médiafelületek már megismert leíró nyelveire (HTML, CSS) építve egyedi, a template-jelleg határait feloldó, újszerű médiatartalmak létrehozását célozza. A hallgatók modern felülettervező szoftverben megtervezik grafikai-kommunikációs felületeiket, majd dokumentum- és stílusleíró nyelvekkel működő prototípus szintjén valósítják meg azokat. A félév egyéni projektmunkára épül: saját online kommunikációs stratégia, történetmesélésre épülő blog, honlap vagy portfólió tervezése és kivitelezése, wireframing és prototípus-készítés oktatói konzultációval.",
           "felelos": "Szendeff-Sztojánovits Andrea",
           "prerequisite": "Média design stúdiumok 2.",
           "requirement": "gyakorlati jegy",
-          "software": [],
+          "software": [
+            "HTML",
+            "CSS",
+            "Penpot"
+          ],
           "keywords": [
             "médiatervezés",
-            "haladó",
-            "médiadesign",
-            "tervezés"
+            "webdesign",
+            "prototípus",
+            "html",
+            "css",
+            "storytelling",
+            "ux/ui",
+            "online média"
           ],
-          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint pre",
+          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni, alkalmazni és prezentálni a médiatervezés területét képező ismeretanyagot, technikai tudást és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/10455.pdf",
+          "category": [
+            "web",
+            "ux/interakció"
+          ],
           "group": null
         },
         {
@@ -4811,24 +6182,33 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Berkes Bálint, Cseszneg Gyöngyi",
           "institute": "AMD",
           "note": null,
-          "description": "A modul (Cseszneg Gyöngyi) - Adobe Animate Adott koncepció vizuális megjelenítése, különféle hangulatok megfogalmazása a",
+          "description": "Kétmodulos gyakorlati labor: az A modul az Adobe Animate-re épülő 2D animációval és karaktertervezéssel foglalkozik — adott koncepció vizuális megjelenítése, hangulatok megfogalmazása, egyéni karakter kidolgozása, szabadkézi és vektoros digitális rajzolás, valamint híres portrék animált mozgó montázsa Photoshop és After Effects segítségével. A B modul a 3D projection mapping világába vezet be a Resolume Arena szoftverrel: fényalapú installációk tervezése és kivitelezése, jelforrások, NDI, midi/dmx jelek és hangreaktív installáció készítése egyéni és csoportos feladatokban.",
           "felelos": "Szendeff-Sztojánovits Andrea",
           "prerequisite": "Média labor 2.",
           "requirement": "gyakorlati jegy",
           "software": [
+            "Animate",
             "Photoshop",
-            "Adobe"
+            "After Effects",
+            "Resolume Arena"
           ],
           "keywords": [
-            "képalkotás",
-            "photoshop",
-            "substance",
-            "maya",
-            "nuke",
-            "compositing"
+            "2d animáció",
+            "karaktertervezés",
+            "projection mapping",
+            "fényinstalláció",
+            "adobe animate",
+            "resolume arena",
+            "mozgó montázs",
+            "installáció"
           ],
           "cel": "A modul (Cseszneg Gyöngyi): A kurzus célja a média design specifikus képalkotás eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni,",
           "pdfUrl": "/tematikak/10462.pdf",
+          "category": [
+            "animáció",
+            "installáció",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -4843,7 +6223,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Mayer Éva",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások és meghívott előadók által vezetett projektek formájában. A programok között szerepel a szakmában aktívan dolgozó előadók prezentációja, mesterkurzusok, innovációs és technikai témájú előadások, konferenciarészvétel, kiállításlátogatás és közös projektek kivitelezése. Fontos szempont a társterületeket érintő alapismeretek beemelése és a portfólióépítés.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -4852,11 +6232,16 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
+            "mesterkurzus",
             "projektmunka",
-            "ba"
+            "kiállítás",
+            "konferencia"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/10442.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -4879,7 +6264,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Horányi Soma",
           "institute": "AMD",
           "note": null,
-          "description": "Első lépésben a hallgatók megismerik a 3D alkalmazások jellemzőit, a Blender telepítésének",
+          "description": "A kurzus a Blender nyílt forráskódú 3D szoftver rutinszerű használatát tanítja meg gyakorlati példafeladatokon keresztül: a hallgatók a 3D alapfogalmaitól (vertex, poligon, UVW) a teljes munkameneten át (modellezés, textúrázás, riggelés, animáció, fényelés, renderelés, kompozitálás) jutnak el az önálló projektig. Az érintett témák között szerepel a 3D nyomtatás, ékszermintázás, ételvizualizáció, kozmetikai termékvizualizáció, belsőtéri storyboard-tervezés és az AR/VR célú low poly modellezés. A félév személyes projekttel és prezentációval zárul.",
           "felelos": "Selján Márk Endre",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -4889,12 +6274,18 @@ export const DEFAULT_DATA: Curriculum = {
           "keywords": [
             "3d",
             "blender",
-            "digitális megjelenítés",
             "modellezés",
-            "renderelés"
+            "renderelés",
+            "textúrázás",
+            "3d nyomtatás",
+            "termékvizualizáció",
+            "low poly"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja, hogy a különböző szakterületeken tanuló hallgatók versenyképes 3D-s tudásra tegyenek szert: elképzeléseiket a 3D eszközeivel tudják vizualizálni, és elsajátítsák a Blender professzionális, rutinszerű használatát.",
           "pdfUrl": "/tematikak/12077.pdf",
+          "category": [
+            "3d"
+          ],
           "group": null
         },
         {
@@ -4909,24 +6300,32 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Berkes Bálint",
           "institute": "AMD",
           "note": null,
-          "description": "Ez a kurzus a fény médiumának kreatív és interdiszciplináris alkalmazására összpontosít,",
+          "description": "A kurzus a fény médiumának kreatív, interdiszciplináris alkalmazására összpontosít, különös tekintettel a vetítéses technikákra és a generatív vizualizációra. A hallgatók TouchDesigner, Unreal Engine és Cinema 4D segítségével hang- és mozgásreaktív vizuálokat, interaktív installációkat készítenek, megismerik a DMX, Art-Net, OSC és MIDI rendszereket. A félév során egy fiktív megrendelőnek dolgozva, csapatmunkában készítenek csoportos vetítést a Magyar Zene Háza Hangdóm termébe.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
+            "TouchDesigner",
             "Unreal Engine",
-            "TouchDesigner"
+            "Cinema 4D",
+            "After Effects"
           ],
           "keywords": [
-            "unreal engine",
-            "touchdesigner",
-            "real-time",
             "vetítés",
+            "mapping",
+            "generatív vizuál",
+            "touchdesigner",
+            "unreal engine",
+            "dmx",
             "interaktív",
-            "projektmunka"
+            "fényművészet"
           ],
           "cel": "A kurzus célja, hogy a hallgatók valós munkaszituációkhoz hasonló környezetben sajátítsák el a vetítéses technikák alkalmazását, a kreatív döntéshozatalt és a csapatmunkát. Az órák során egy fiktív megrendelő igényei alapján kell vetítésterveket készíteniük egy valós helyszínre, amelynek paraméterei",
           "pdfUrl": "/tematikak/11214.pdf",
+          "category": [
+            "ux/interakció",
+            "installáció"
+          ],
           "group": null
         },
         {
@@ -4941,21 +6340,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Mayer Éva",
           "institute": "AMD",
           "note": null,
-          "description": "A félév tematikája az ÉN-TÉR-KÉP téma kibontására összpontosul. A hallgatókkal együtt más-más elméleti háttér felől közelítjük meg az \"én-tér-kép\" kapcsolatát. Az én identitásának definiálását, megjelenítési és értelmezési lehetőségeit",
+          "description": "A félév az ÉN-TÉR-KÉP téma kibontására épül: a hallgatók az identitás megjelenítési lehetőségeit vizsgálják különböző terekben és művészeti műfajokban, a kortárs installációs művészet, a body art és a performance elméleti hátterével. A féléves komplex feladatban egy virtuális kiállítási teret hoznak létre tetszőleges 3D szoftverrel, digitális önportré-sorozat, kép+objekt és installáció műfajok bevonásával. A kiállításhoz InDesign vagy Illustrator segítségével meghívót vagy plakátot is terveznek.",
           "felelos": "Mayer Éva",
           "prerequisite": "Média design stúdiumok 3.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "InDesign"
+            "InDesign",
+            "Illustrator"
           ],
           "keywords": [
-            "tördelés",
+            "installáció",
+            "virtuális kiállítás",
+            "identitás",
+            "önportré",
+            "3d modellezés",
+            "kortárs művészet",
             "indesign",
-            "kiadványszerkesztés",
-            "tipográfia"
+            "plakát"
           ],
           "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint pre",
           "pdfUrl": "/tematikak/11225.pdf",
+          "category": [
+            "installáció",
+            "3d",
+            "fotó"
+          ],
           "group": null
         },
         {
@@ -4970,18 +6379,25 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Liszka Tamás",
           "institute": "AMD",
           "note": null,
-          "description": "A média design rendkívül szerteágazó, folyton alakulásban levő művészeti terület. A kurzus során megismerkedünk e művészeti ág szellemtörténeti előzményeivel, tudományos,",
+          "description": "A média design szerteágazó, folyton alakuló művészeti terület szellemtörténeti előzményeivel, tudományos, technikai és társművészeti környezetével ismertet meg az előadássorozat. Témái között szerepel a kép, jel és szimbólum szemiotikája, a fénykép ontológiája, a képi fordulat, a bio-art, a játék- és hálózatelmélet, valamint az interaktív és nonlineáris művészeti formák. Konkrét művek és alkotók vizsgálatán keresztül körvonalazza a média design kortárs és jövőbeli formáit meghatározó művészeti alapállást.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "kollokvium",
           "software": [],
           "keywords": [
-            "elmélet",
-            "médiadesign",
-            "szakelmélet"
+            "médiaelmélet",
+            "szemiotika",
+            "képi fordulat",
+            "ikonográfia",
+            "interaktivitás",
+            "hálózatkutatás",
+            "elmélet"
           ],
           "cel": "A kurzus célja a média design általános elméletének elsajátítása, ahhoz, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, el",
           "pdfUrl": "/tematikak/11227.pdf",
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -4996,7 +6412,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Sterk Barbara",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások és meghívott előadók által vezetett projektek formájában. A programok között szerepel a szakmában aktívan dolgozó előadók prezentációja, mesterkurzusok, innovációs és technikai bemutatók, konferencia- és kiállításlátogatás, valamint közös projektek kivitelezése. Fontos szempont a társterületi kompetenciák beemelése és a portfólióépítés.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -5005,11 +6421,15 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
-            "projektmunka",
-            "ba"
+            "mesterkurzus",
+            "portfólió",
+            "kreatív ipar"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/11831.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -5024,21 +6444,30 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szacsvai Pál",
           "institute": "AMD",
           "note": null,
-          "description": "A tantárgy célja a tipográfiai érzékenység kialakítása, fejlesztése és alkalmazásának",
+          "description": "A tantárgy a tipográfiai érzékenység kialakítását és a szöveges közlés megformálásának, kép és szöveg együttes elrendezésének technikáit tanítja. A félév a betűtörténetet (a római kapitálistól a gótikán és reneszánszon át a talp nélküli antikváig) betűrajzi és kreatív gyakorlatokkal dolgozza fel, párhuzamosan a számítógépes kiadványtervezés (DTP) alapjaival InDesignban. A hallgatók saját betűtípust, fontállományt és kiadványtervet készítenek.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "InDesign"
+            "InDesign",
+            "Photoshop",
+            "Fontself"
           ],
           "keywords": [
             "tipográfia",
             "betűrajz",
+            "betűtörténet",
+            "betűtervezés",
+            "kiadványszerkesztés",
+            "dtp",
             "indesign",
-            "betűtervezés"
+            "fonttervezés"
           ],
           "cel": "A kurzus célja a tipográfia és betűrajz eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása alapszinten. A hallgató a kurzus elvégzése eredményeképpen képes alapszinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint ",
           "pdfUrl": "/tematikak/11220.pdf",
+          "category": [
+            "grafika/tipográfia"
+          ],
           "group": null
         },
         {
@@ -5053,7 +6482,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Liszka Tamás",
           "institute": "AMD",
           "note": null,
-          "description": "A médiaelmélet és a művészetfilozófia területén számtalan olyan kérdés van, amelyeket a",
+          "description": "Az előadássorozat az új médiumok kritikai elméletébe vezet be, a klasszikus médiaelméleti és művészetfilozófiai szakszövegeket a mesterséges intelligencia közelmúltbeli fejlődésének fényében újraolvasva. Témái között szerepel az újmédia definíciója és az Ars Electronica, a digitális létezés cyberpunk-reflexiói, Baudrillard szimulakrum-elmélete, Manovich új média-nyelve, a képi fordulat, valamint a múzeum és az online tér viszonya. A félév szakszövegolvasásra, vitákra és félév végi tesztre épül.",
           "felelos": "Mayer Éva",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -5062,10 +6491,17 @@ export const DEFAULT_DATA: Curriculum = {
             "új média",
             "kritikai elmélet",
             "médiaelmélet",
-            "elmélet"
+            "mesterséges intelligencia",
+            "szimulakrum",
+            "képi fordulat",
+            "cyberpunk"
           ],
           "cel": "A kurzus célja, hogy a hallgatók megismerkedjenek az új médiumok kritikai elméletével, annak érdekében, hogy azt elméleti alapként és koncepcionális kiegészítésként alkalmazhassák médiatervezési tanulmányaik és gyakorlataik, valamint művészi munkájuk és prezentációs feladataik során.",
           "pdfUrl": "/tematikak/11205.pdf",
+          "category": [
+            "elmélet",
+            "ai"
+          ],
           "group": null
         }
       ]
@@ -5088,7 +6524,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Liszka Tamás",
           "institute": "AMD",
           "note": null,
-          "description": "Az előadássorozat egyetlen kérdésre keres választ: hogyan készül egy jól játszható játék? A",
+          "description": "Az előadássorozat egyetlen kérdésre keres választ: hogyan készül egy jól játszható játék? A válaszhoz vezető út a filozófián, etológián, pszichológián, designon és matematikán át a ludológiáig vezet. A hallgatók a játék műfaját, célját, közönségét, az interfészt, a játékmechanikát, a jutalmazási rendszereket, az elbeszéléstechnikát és az immerziót vizsgálják esettanulmányokon keresztül, a félév végén pedig saját játékkoncepciót fejlesztenek és prezentálnak.",
           "felelos": "Liszka Tamás Zoltán",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -5097,10 +6533,18 @@ export const DEFAULT_DATA: Curriculum = {
             "játéktervezés",
             "game design",
             "elmélet",
-            "játékmechanika"
+            "játékmechanika",
+            "ludológia",
+            "narratíva",
+            "immerzió",
+            "játékpszichológia"
           ],
           "cel": "A kurzus célja a játéktervezés elméletének elsajátítása, ahhoz, hogy a hallgató játéktervezői, alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismer",
           "pdfUrl": "/tematikak/10463.pdf",
+          "category": [
+            "játék",
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -5115,7 +6559,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Horányi Soma",
           "institute": "AMD",
           "note": null,
-          "description": "Első lépésben a hallgatók megismerik a 3D alkalmazások jellemzőit, a Blender telepítésének",
+          "description": "A kurzus a Blender open source 3D szoftver elsajátítását és rutinszerű használatát segíti elő, hogy a hallgatók elképzeléseiket a 3D nyújtotta eszközökkel tudják vizualizálni. A félév során a 3D munkafolyamat teljes ívét bejárják: modellezés, textúrázás, UVW kiterítés, digitális mintázás, anyagbeállítás, világítás és renderelés. A gyakorlati projektek között szerepel városrész-építés, ruhaszimuláció, ételvizualizáció, 3D nyomtatásra szánt ékszer, termékvizualizáció, storyboard és AR/VR célú low poly modellezés, a félév személyes záróprojekttel és prezentációval zárul.",
           "felelos": "Selján Márk Endre",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -5125,12 +6569,18 @@ export const DEFAULT_DATA: Curriculum = {
           "keywords": [
             "3d",
             "blender",
-            "digitális megjelenítés",
             "modellezés",
-            "renderelés"
+            "renderelés",
+            "textúrázás",
+            "3d nyomtatás",
+            "termékvizualizáció",
+            "digitális mintázás"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja, hogy a hallgatók olyan versenyképes 3D-s tudásra tegyenek szert, amely választott hivatásukat segíti: a Blender professzionális használatával összetett tervezési, kutatási és prezentálási módszerekkel tudjanak dolgozni.",
           "pdfUrl": "/tematikak/10521.pdf",
+          "category": [
+            "3d"
+          ],
           "group": null
         },
         {
@@ -5145,24 +6595,30 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Szacsvai Pál",
           "institute": "AMD",
           "note": null,
-          "description": "A hallgató a kurzus során a képernyő-specifikus grafikai tervezés alapelveivel, a képi közlés",
+          "description": "A hallgató a kurzus során a képernyő-specifikus grafikai tervezés alapelveivel és a képi közlés alapelemeivel (szín, forma, vonal, kompozíció, tipográfiai és rajzi struktúra) ismerkedik meg, valamint ezek kreatív alkalmazásával a kortárs digitális kommunikációs rendszerekben. Az Adobe Illustrator és Photoshop használatán keresztül gyakorolja a számítógépes képalkotást, képfeldolgozást és képszerkesztést: adatvizualizáció, logó-parafrázis, piktogramszett és vektoros-bitmap hibrid grafikák készülnek. A tárgy megalapozza a későbbi félévek mozgógrafikai és 3D modellezői tudását.",
           "felelos": "Kiss Melinda",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
             "Illustrator",
-            "Photoshop",
-            "Adobe"
+            "Photoshop"
           ],
           "keywords": [
             "grafikai tervezés",
             "illustrator",
             "photoshop",
             "képi közlés",
-            "digitális grafika"
+            "digitális grafika",
+            "piktogram",
+            "vizuális kommunikáció",
+            "adatvizualizáció"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja a média design szakma műveléséhez elengedhetetlen képnyelvi és mozgóképnyelvi alapismeretek átadása, valamint a számítógépes képalkotás, képfeldolgozás és képszerkesztés alapelveinek gyakoroltatása az Adobe Illustrator és Photoshop programok használatával.",
           "pdfUrl": "/tematikak/10449.pdf",
+          "category": [
+            "grafika/tipográfia",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -5177,27 +6633,33 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Ulrich Gábor",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus a hallgatók ökonomikus látásmódját bővíti, hogy rendelkezzenek a mozgóképes",
+          "description": "A kurzus a mozgóképes tipográfia kultúrtörténeti, stilisztikai, információs és technikai vonatkozásaiba vezet be: a hallgatók az alapvető betűtörténeti és tipográfiai ismeretektől jutnak el a dinamikus tipográfia esztétikai és dramaturgiai alkalmazásáig. A számítógépes gyakorlatokon az After Effects szoftverben készítenek animált szövegeket, stáblistát, egyszerű és összetett főcímeket, a program pedig együttműködik az Adobe Premiere, Audition, Photoshop és Illustrator szoftverekkel. A félév végi produktum három rövid, különböző műfajú mozgóképes felirat-munka tervezése és kivitelezése.",
           "felelos": "-",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
             "After Effects",
-            "Illustrator",
             "Photoshop",
-            "Audition",
-            "Premiere",
-            "Adobe"
+            "Illustrator",
+            "Premiere Pro",
+            "Audition"
           ],
           "keywords": [
             "tipográfia",
             "mozgókép",
             "after effects",
             "kinetikus tipográfia",
+            "animáció",
+            "betűtörténet",
+            "főcím",
+            "stáblista"
+          ],
+          "cel": "A tantárgy célja, hogy a hallgatók ökonomikus látásmóddal rendelkezzenek a mozgóképes tipográfia kultúrtörténeti, stilisztikai, információs és technikai vonatkozásait illetően, képessé váljanak mozgóképes mű elemzésére, egyéni tipográfia megtervezésére és kivitelezésére, valamint jártasságot szerezzenek az After Effects használatában.",
+          "pdfUrl": "/tematikak/10539.pdf",
+          "category": [
+            "grafika/tipográfia",
             "animáció"
           ],
-          "cel": null,
-          "pdfUrl": "/tematikak/10539.pdf",
           "group": null
         },
         {
@@ -5212,19 +6674,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pálfi Szabolcs",
           "institute": "AMD",
           "note": null,
-          "description": "A Média design stúdiumok tantárgy fő területét ebben és a következő félévben a",
+          "description": "A tantárgy fő területe ebben és a következő félévben a videojátékok tervezési szempontjainak gyakorlati alkalmazása, kifejezetten a vizuális megjelenítésre, ergonómiára és funkcionalitásra fókuszálva. A hallgatók a game design és a game art alapjaival párhuzamosan ismerkednek, és saját videojátékot fejlesztenek az ötlettől a játszható prototípusig, Unity és Unreal játékmotorok, valamint Blender és Adobe szoftverek együttes használatával. A félév végére a játék elméleti és vizuális koncepciójától eljutnak a game design dokumentumig, miközben LED fal rendszerekkel, VR környezetekkel, 3D szkenneléssel, MoCap-pel és a mesterséges intelligencia céltudatos használatával is megismerkednek.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "Média design stúdiumok 4.",
           "requirement": "gyakorlati jegy",
-          "software": [],
+          "software": [
+            "Unity",
+            "Unreal Engine",
+            "Blender"
+          ],
           "keywords": [
             "médiatervezés",
-            "interaktív",
-            "non-lineáris",
-            "haladó"
+            "game design",
+            "game art",
+            "videojáték",
+            "játékmotor",
+            "level design",
+            "prototípus",
+            "interaktív"
           ],
           "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint pre",
           "pdfUrl": "/tematikak/10459.pdf",
+          "category": [
+            "játék",
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -5239,7 +6713,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Sterk Barbara",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét keretében megvalósuló programok a szakmában aktívan dolgozó meghívott előadók prezentációit, mesterkurzusokat, innovációs témájú előadásokat és workshopokat, technikai bemutatókat, konferenciarészvételt, kiállításlátogatást és közös projektek kivitelezését foglalják magukban. A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át, a társterületek alapismereteinek beemelésével és a portfólióépítés támogatásával.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -5248,11 +6722,16 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
+            "mesterkurzus",
+            "portfólió",
             "projektmunka",
             "ba"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/10340.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -5267,7 +6746,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kollár Dávid",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus a modern (digitális) technológiák pszichológiai hatásainak komplex kognitív",
+          "description": "A kurzus a modern digitális technológiák pszichológiai hatásainak komplex kognitív tudományos vizsgálatára összpontosít: a hallgatók átfogó képet kapnak arról, hogy a kurrens technológiák miként formálják az emberi viselkedést, érzelmeket és kognitív folyamatokat. A témakörök között szerepel az okoseszközök, a közösségi média, a virtuális valóság és a videójátékok pszichológiai hatása, a reziliencia, valamint az új technológiák pozitív és negatív hatásai. A kurzus bemutatja azokat a fogalmakat és értelmezési kereteket is, amelyek az egyének és közösségek digitális technológiákhoz fűződő viszonyát meghatározzák.",
           "felelos": "Molnár Ágnes Éva",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -5276,10 +6755,17 @@ export const DEFAULT_DATA: Curriculum = {
             "pszichológia",
             "technológia",
             "médiapszichológia",
-            "elmélet"
+            "elmélet",
+            "kognitív tudomány",
+            "közösségi média",
+            "virtuális valóság",
+            "digitális kultúra"
           ],
           "cel": "A kurzus célja az új technológia pszichológiai vonatkozásainak ismertetése, ahhoz, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten feli",
           "pdfUrl": "/tematikak/10556.pdf",
+          "category": [
+            "elmélet"
+          ],
           "group": null
         }
       ]
@@ -5302,21 +6788,33 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Forgács Kristóf, Nikázy Gusztáv",
           "institute": "AMD",
           "note": null,
-          "description": "A BLOKK (Nikázy Gusztáv) A kurzus célja elsősorban az online médiafelületeket leíró, már megismert nyelveinek",
+          "description": "A végzős hallgatókat a diplomamunkához kapcsolódó feladatok elvégzésére felkészítő gyakorlati kurzus, két blokkban. Az egyik blokkban a hallgató modern online felülettervező szoftverekben (Figma/Penpot) megtervezi, majd dokumentum- és stílusleíró nyelvekkel prototípus szinten megvalósítja a diplomamunkáját támogató, önálló alkotásként is értelmezhető online médiaterméket, a szokásos UX/UI kereteken túlmutató megoldásokkal. A másik blokk a diplomamunka projektszerű kezelését (timing, mérföldkövek, vészforgatókönyv), a diplomaprezentáció összeállítását és gyakorlását, valamint a portfólió és showreel elkészítését segíti.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Figma"
+            "Figma",
+            "Penpot",
+            "HTML",
+            "CSS"
           ],
           "keywords": [
             "diploma",
-            "figma",
             "portfólió",
-            "tervezés"
+            "showreel",
+            "prototípus",
+            "webdesign",
+            "prezentáció",
+            "projekttervezés",
+            "figma"
           ],
-          "cel": "A kurzus célja a diplomamunkához szükséges eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) ismeretek elsajátítása, kreatív készségek kifejlesztése, prezentációs és média tervezési tudás megszerzése. A hallgató a kurzus elvégzése eredményeképpen képes felismerni, elemez",
+          "cel": "A kurzus célja a diplomamunkához szükséges eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) ismeretek elsajátítása, kreatív készségek fejlesztése, prezentációs és médiatervezési tudás megszerzése. A hallgató képessé válik a diplomamunkája elkészítéséhez szükséges ismeretanyag, technikai tudás és prezentációs eljárások alkalmazására, valamint szakmai pozíciójának és eredményeinek értékelésére a kreatív iparban.",
           "pdfUrl": "/tematikak/11217.pdf",
+          "category": [
+            "diploma/portfólió",
+            "web",
+            "ux/interakció"
+          ],
           "group": null
         },
         {
@@ -5331,18 +6829,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pálfi Szabolcs",
           "institute": "AMD",
           "note": null,
-          "description": "A videojátékok tervezésének gyakorlati megvalósításával az előző félévben megismert",
+          "description": "Az előző félév technikai ismereteire építve a kurzus a játéktervezés strukturális, komplex folyamatát és kiegészítő szakágait vizsgálja egyéni és csoportos munkában. A hallgatók saját videojáték-ötletet fejlesztenek megadott tematikák mentén, miközben a narratíva, a tér- és karaktertervezés, valamint a UX/UI elemek kapcsolatát tanulmányozzák esettanulmányokon, prezentációkon, meghívott előadókon és stúdiólátogatáson keresztül. A félév kiemelt hangsúlyt fektet a tervezésmódszertanra, amely a diplomamunkához szükséges támpontokat teremti meg.",
           "felelos": "Molnár Ágnes Éva",
           "prerequisite": "Média design stúdiumok 5.",
           "requirement": "gyakorlati jegy",
-          "software": [],
+          "software": [
+            "Lightroom",
+            "Premiere Pro",
+            "After Effects"
+          ],
           "keywords": [
             "videojáték",
             "játéktervezés",
+            "narratíva",
+            "történetmesélés",
+            "karaktertervezés",
+            "tértervezés",
+            "játékmotor",
             "médiadesign"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja a hallgatók bevezetése a számítógépes játékfejlesztés világába a játéktervezés elméleti alapjainak elsajátításán és gyakorlati hasznosításán keresztül. A hallgató megismeri a népszerűbb játékzsánereket, a fejlesztői eszközök működését, a játéktervezői mentalitást és a tervezési folyamatokat.",
           "pdfUrl": "/tematikak/11226.pdf",
+          "category": [
+            "játék",
+            "ux/interakció"
+          ],
           "group": null
         },
         {
@@ -5357,7 +6868,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Sterk Barbara",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások és meghívott előadók által vezetett projektek formájában. A programok között szerepel a szakmában aktívan dolgozó előadók prezentációja, mesterkurzusok, innovációs és technikai bemutató előadások, konferencia- és kiállításlátogatás, valamint közös projektek kivitelezése. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -5366,11 +6877,16 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
+            "mesterkurzus",
             "projektmunka",
+            "kiállítás",
             "ba"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni workshopok, előadások és meghívott előadók által vezetett projektek formájában, a társterületeket érintő alapismeretek és kompetenciák beemelésével, a kreatív ipari szemlélet fejlesztésével és a portfólió építésével.",
           "pdfUrl": "/tematikak/11826.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -5385,7 +6901,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kollár Dávid",
           "institute": "AMD",
           "note": null,
-          "description": "A szakdolgozat vagy bármely tudományos íráshoz anyaggyűjtés, felépítése,",
+          "description": "A kurzus a szakdolgozat és általában a tudományos írásmű elkészítésének teljes folyamatát fedi le: anyaggyűjtés, forrásfeldolgozás, hivatkozási formák, a szövegstruktúra és a tartalomjegyzék kialakítása, végül a tanulmány megírása. A félév során a hallgatók pontosítják szakdolgozati témájukat, több forrást dolgoznak fel és ismertetnek, kutatásmódszertani ismereteket szereznek, és a szakszövegírás és az AI kapcsolatával is foglalkoznak. A félév végére elkészül a forrásgyűjtés, a tartalomjegyzék és a bevezetés.",
           "felelos": "Mayer Éva",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -5393,11 +6909,18 @@ export const DEFAULT_DATA: Curriculum = {
           "keywords": [
             "szakdolgozat",
             "kutatás",
-            "írás",
+            "forrásgyűjtés",
+            "hivatkozás",
+            "tudományos írás",
+            "kutatásmódszertan",
             "ba"
           ],
-          "cel": "A kurzus célja a szakdolgozat készítéséhez szükséges elméleti és gyakorlati tudás és képességek elsajátítása, ahhoz, hogy a hallgató megfelelő színvonal írásművet legyen képes alkotni a BA tanulmányait lezáró időszakban. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, ",
+          "cel": "A kurzus célja a szakdolgozat készítéséhez szükséges elméleti és gyakorlati tudás elsajátítása, hogy a hallgató megfelelő színvonalú írásművet legyen képes alkotni a BA tanulmányait lezáró időszakban, és megszerzett szakmai tudását a szakmai fórumokon és a szélesebb, interdiszciplináris mezőnyben érdemben képviselje.",
           "pdfUrl": "/tematikak/11222.pdf",
+          "category": [
+            "diploma/portfólió",
+            "elmélet"
+          ],
           "group": null
         }
       ]
@@ -5420,22 +6943,29 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Tóth Gergő",
           "institute": "AMD",
           "note": null,
-          "description": "A 3D-s tervezés alapjainak megismertetése az Autodesk Maya szoftver segítségével.",
+          "description": "A kurzus a 3D-s tervezés alapjait ismerteti meg az Autodesk Maya szoftver segítségével. Gyakorlati feladatokon keresztül a hallgatók virtuális térben létrehozott helyszínekkel dolgoznak: polygon modellezés, UV-kiterítés, textúrázás, shading, világítás és Arnold render, valamint layer- és pass-alapú renderelés. A félév a virtuális térben működő szimulációs eszközöket is érinti (szilárd test, fény, folyadék, haj, ruha), és a félév végére egy renderelt animáció készül el.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Maya"
+            "Maya",
+            "Arnold"
           ],
           "keywords": [
             "3d modellezés",
             "szimuláció",
             "maya",
             "textúrázás",
-            "render"
+            "render",
+            "világítás",
+            "uv",
+            "arnold"
           ],
-          "cel": "A kurzus célja a 3D modellezés és szimuláció eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a",
+          "cel": "A kurzus célja a 3D modellezés és szimuláció eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni, felhasználni és prezentálni a 3D modellezés és szimuláció területét képező ismeretanyagot, technikai tudást és alkotói képességet.",
           "pdfUrl": "/tematikak/10443.pdf",
+          "category": [
+            "3d"
+          ],
           "group": null
         },
         {
@@ -5450,23 +6980,32 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Bogdán Zoltán, Palotás Kincső",
           "institute": "AMD",
           "note": null,
-          "description": "3D (Bogdán Zoltán): A félév alatt egy 3D-s képet, élethű textúrákkal, fényekkel, látvánnyal",
+          "description": "Kétmodulos gyakorlati kurzus: a 3D modulban a hallgatók egy élethű textúrákkal, fényekkel és látvánnyal kidolgozott 3D-s képet készítenek a Maya shading, textúrázás, világítás és render eszközeivel, egyszerű dinamikai szimulációval és animációval kiegészítve. A 2D modulban a digitális animáció alapjait sajátítják el After Effectsben a kezdetektől az exportálásig, féléves feladatként pedig archív fotókra épülő, állókép alapú parallax animációt hoznak létre.",
           "felelos": "Selján Márk Endre",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
+            "Maya",
             "After Effects",
-            "Maya"
+            "Photoshop"
           ],
           "keywords": [
             "3d",
             "maya",
             "after effects",
             "textúra",
-            "fény"
+            "fény",
+            "shading",
+            "parallax animáció",
+            "kompozitálás"
           ],
-          "cel": null,
+          "cel": "A tantárgy az animáció területén használatos digitális eljárások magas szintű alkalmazására helyezi a hangsúlyt, kiemelten és személyre szabottan támogatva a párhuzamosan futó kreatív projekteket. A félévi tevékenység önálló kutatásra és kísérletezésre sarkallja a hallgatókat, amelynek eredményeként új eszközöket fedeznek fel és projektre szabott, egyéni munkafolyamatokat alakítanak ki.",
           "pdfUrl": "/tematikak/10542.pdf",
+          "category": [
+            "3d",
+            "2d",
+            "animáció"
+          ],
           "group": null
         },
         {
@@ -5481,11 +7020,12 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Varga Vajk",
           "institute": "AMD",
           "note": null,
-          "description": "A szemeszter során a hallgatók egyszerű interaktív rendszerek tervezéséhez szükséges",
+          "description": "A szemeszter során a hallgatók egyszerű interaktív rendszerek tervezéséhez szükséges tudást sajátítanak el gyakorlati feladatokon keresztül: elektronikai alapismeretek, forrasztás, mikrokontrollerek és érzékelők használata, valamint a mikrokontrollerek és szoftverek (pl. TouchDesigner) összekapcsolása, DMX vezérlés. A félév végére mindenki egy saját multimédiás, interaktív installáció terveit készíti el és prezentálja.",
           "felelos": "Sterk Barbara DLA",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
+            "Arduino",
             "TouchDesigner"
           ],
           "keywords": [
@@ -5493,10 +7033,17 @@ export const DEFAULT_DATA: Curriculum = {
             "elektronika",
             "touchdesigner",
             "interaktív",
-            "arduino"
+            "arduino",
+            "installáció",
+            "érzékelők",
+            "dmx"
           ],
-          "cel": "A kurzus célja alapvető elektronikai ismeretek elsajátítása és a mikrokontrollerek használatának megértése és használatukkal kapcsolatos gyakorlati tudás elsajátítása, valamint ezek alkalmazása különböző ipari és képzőművészeti területen. A hallgató a kurzus elvégzése után képes haladó szinten létre",
+          "cel": "A kurzus célja alapvető elektronikai ismeretek elsajátítása, a mikrokontrollerek használatának megértése és gyakorlati alkalmazása különböző ipari és képzőművészeti területeken. A hallgató a kurzus elvégzése után képes haladó szinten létrehozni analóg és szoftveres eszközökkel vezérelhető interaktív elektronikai rendszereket, és gyakorlati tudást szerez az interaktív installációk megvalósítási metódusairól.",
           "pdfUrl": "/tematikak/10458.pdf",
+          "category": [
+            "ux/interakció",
+            "installáció"
+          ],
           "group": null
         },
         {
@@ -5511,22 +7058,32 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Németi Fanni, Forgács Kristóf",
           "institute": "AMD",
           "note": null,
-          "description": "A modul (Németi Fanni) A tárgyat az A csoportban kéthetente 6 órába tömbösítve tartjuk. After Effects - Film főcím és kreatív mozgóképes CV tervezés Az Adobe After Effects ismereteket bemutató kurzus egyik célja, hogy a féléven átívelő",
+          "description": "Kétmodulos gyakorlati kurzus a médiatervezés haladó szintű elsajátítására. Az egyik modulban a hallgatók After Effectsben dolgoznak: egy szabadon választott filmhez alternatív főcímet, valamint kreatív mozgóképes önéletrajzot (CV) terveznek és kiviteleznek storyboardtól a kész filmig. A másik modulban tervezésmódszertani gyakorlatok és művészeti kutatás után egy fiktív karakter social media oldalát építik fel eredeti, kreatív posztokkal.",
           "felelos": "Molnár Ágnes Éva",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
             "After Effects",
-            "Adobe"
+            "Photoshop",
+            "Illustrator"
           ],
           "keywords": [
             "médiatervezés",
             "after effects",
-            "haladó",
-            "tervezés"
+            "mozgókép",
+            "főcím",
+            "mozgástervezés",
+            "közösségi média",
+            "storyboard",
+            "tervezésmódszertan"
           ],
-          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint pre",
+          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni, felhasználni és prezentálni a médiatervezés területét képező ismeretanyagot, technikai tudást és alkotói képességet.",
           "pdfUrl": "/tematikak/10454.pdf",
+          "category": [
+            "animáció",
+            "2d",
+            "film/videó"
+          ],
           "group": null
         },
         {
@@ -5541,7 +7098,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Forgács Kristóf",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások és meghívott előadók által vezetett projektek formájában. A programok között szerepel a szakmában aktívan dolgozó előadók prezentációja, mesterkurzusok, innovációs és technikai bemutatók, konferenciarészvétel, kiállításlátogatás és közös projektek kivitelezése. Fontos szempont a társterületi alapismeretek beemelése és a portfólióépítés.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -5551,10 +7108,15 @@ export const DEFAULT_DATA: Curriculum = {
             "workshop",
             "előadás",
             "projektmunka",
-            "ma"
+            "kiállítás",
+            "mesterkurzus",
+            "konferencia"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában, a társterületeket érintő kompetenciák beemelésével és a kreatív iparban használatos szemlélet, valamint a portfólió fejlesztésével.",
           "pdfUrl": "/tematikak/10452.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -5577,24 +7139,30 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Tóth Gergő",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzusom célja, hogy a diákok alaposan elsajátítsák a 3D tervezés alapjait. Az előző",
+          "description": "A kurzus a 3D tervezés elmélyítésére épül: a hallgatók finomhangolják kulcsolási, kameramozgatási, renderelési és fényelési képességeiket, és megtanulják a komplex 3D jeleneteket produkciós minőségben utómunkára előkészíteni és véglegesíteni. A félév során az Autodesk Maya legújabb szimulációs és árnyalási eszközeivel, Mixamo-alapú karakteranimációval, környezetépítéssel (camera mapping, bifrost szimulációk) és kompozitálási alapokkal foglalkoznak. A félév végi projekt egy maximum egyperces videó, amely a megszerzett tudást összegzi.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "3D tervezés és szimuláció 1.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Mixamo",
-            "Maya"
+            "Maya",
+            "Mixamo"
           ],
           "keywords": [
             "3d animáció",
             "maya",
             "mixamo",
-            "unreal engine",
             "kulcsolás",
-            "pbr"
+            "renderelés",
+            "kompozitálás",
+            "szimuláció",
+            "fényelés"
           ],
-          "cel": "A kurzusom célja, hogy a diákok alaposan elsajátítsák a 3D tervezés alapjait. Az előző félévben tapasztalt hiányosságok kiküszöbölésére fektetem a hangsúlyt: finomhangoljuk a hallgatók kulcsolási, kameramozgatási, renderelési, fényelési képességeit. A félév során megismerkedünk majd az utómunka szof",
+          "cel": "A kurzus célja, hogy a diákok alaposan elsajátítsák a 3D tervezés alapjait: az előző félévben tapasztalt hiányosságok kiküszöbölésével finomhangolják a kulcsolási, kameramozgatási, renderelési és fényelési képességeiket, valamint megismerjék az utómunka-szoftverek szerepét a produkciós minőségű 3D jelenetek véglegesítésében.",
           "pdfUrl": "/tematikak/11223.pdf",
+          "category": [
+            "3d",
+            "animáció"
+          ],
           "group": null
         },
         {
@@ -5606,26 +7174,35 @@ export const DEFAULT_DATA: Curriculum = {
           "credits": 5,
           "active": null,
           "groups": null,
-          "instructors": "Bodgán Zoltán, Palotás Kincső",
+          "instructors": "Bogdán Zoltán, Palotás Kincső",
           "institute": "AMD",
           "note": null,
-          "description": null,
+          "description": "A tantárgy az animáció területén használatos digitális eljárások magas szintű alkalmazására helyezi a hangsúlyt, önálló kutatásra és kísérletezésre sarkallva a hallgatókat. A 3D blokkban egy komplexebb 3D animáció készül Autodesk Maya szoftverrel: forgatott 2D nyersanyaghoz illesztett 3D tér, HDRI világítás, karakter rigging és render passes kompozitálás. A 2D blokkban After Effectsben egy 3-5 másodperces mozgó logó (ID) készül saját logótervezéssel és animálással, effektek és expressionök használatával.",
           "felelos": "Selján Márk Endre",
           "prerequisite": "Digitális tervezés 1.",
           "requirement": "gyakorlati jegy",
           "software": [
+            "Maya",
             "After Effects",
-            "Illustrator",
-            "Maya"
+            "Illustrator"
           ],
           "keywords": [
             "3d",
             "maya",
             "after effects",
-            "illustrator"
+            "illustrator",
+            "kompozitálás",
+            "mozgó logó",
+            "karakteranimáció",
+            "expression"
           ],
-          "cel": null,
+          "cel": "A tantárgy célja az animáció területén használatos digitális eljárások magas szintű alkalmazása, a párhuzamosan futó kreatív projektek személyre szabott támogatásával. A hallgatók önálló kutatás és kísérletezés révén új eszközöket fedeznek fel, és projektre szabott, egyéni munkafolyamatokat alakítanak ki.",
           "pdfUrl": "/tematikak/12057.pdf",
+          "category": [
+            "3d",
+            "animáció",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -5640,12 +7217,12 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Varga Vajk",
           "institute": "AMD",
           "note": null,
-          "description": "A szemeszter során a hallgatók összetett interaktív rendszerek tervezéséhez szükséges",
+          "description": "A szemeszter során a hallgatók összetett interaktív rendszerek tervezéséhez szükséges tudást sajátítanak el gyakorlati feladatokon keresztül: elektronikai rendszerekkel, mikrokontrollerekkel, TouchDesigner szoftverrel és Microsoft Kinecttel dolgoznak. Témák többek között az audio-reaktív vizuálok, mozgásvezérelt interfészek, particle systemek, DMX/NDI/OSC/MIDI vezérlés és adatvizualizáció. A félév végén saját multimédiás interaktív installációt készítenek, valamint csoportosan audiovizuális alkotást terveznek a Magyar Zene Háza hangdómjába.",
           "felelos": "Sterk Barbara DLA",
           "prerequisite": "Interaktív rendszerek 1.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Touch Designer",
+            "TouchDesigner",
             "Kinect"
           ],
           "keywords": [
@@ -5653,10 +7230,17 @@ export const DEFAULT_DATA: Curriculum = {
             "kinect",
             "interaktív",
             "motion tracking",
-            "haladó"
+            "installáció",
+            "adatvizualizáció",
+            "vj",
+            "elektronika"
           ],
           "cel": "A kurzus célja az interaktív rendszerek eszközismereti, alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni e",
           "pdfUrl": "/tematikak/11434.pdf",
+          "category": [
+            "ux/interakció",
+            "installáció"
+          ],
           "group": null
         },
         {
@@ -5671,28 +7255,34 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Princz Ágoston, Németi Fanni",
           "institute": "AMD",
           "note": null,
-          "description": "A Blokk (Princz Ágoston) VFX -",
+          "description": "A kurzus két blokkban dolgozza fel a médiatervezés haladó gyakorlatát. Az egyik blokk a filmes vizuális effektek (VFX) utómunkájára fókuszál: tervezés, forgatási eljárások, kamera lekövetés, rotoscope, digital matte paint és kompozitálás Blender és DaVinci Resolve szoftverekkel. A másik blokkban a hallgatók egy 1-2 perces explainer (magyarázó) videót készítenek szabadon választott témában, saját szöveggel, storyboarddal és látványtervvel, a megvalósításhoz Adobe After Effectset használva.",
           "felelos": "Molnár Ágnes Éva",
           "prerequisite": "Médiatervezés 1.",
           "requirement": "gyakorlati jegy",
           "software": [
+            "Blender",
+            "DaVinci Resolve",
             "After Effects",
             "Illustrator",
-            "Photoshop",
-            "DaVinci",
-            "Blender",
-            "Adobe"
+            "Photoshop"
           ],
           "keywords": [
+            "vfx",
+            "kompozitálás",
             "after effects",
-            "davinci",
             "blender",
-            "substance painter",
-            "unreal engine",
-            "compositing"
+            "davinci resolve",
+            "explainer videó",
+            "utómunka",
+            "mozgógrafika"
           ],
           "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása magas szinten. A hallgató a kurzus elvégzése eredményeképpen képes elmélyült szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a médiatervez",
           "pdfUrl": "/tematikak/11230.pdf",
+          "category": [
+            "film/videó",
+            "animáció",
+            "3d"
+          ],
           "group": null
         },
         {
@@ -5707,7 +7297,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Mayer Éva",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások és meghívott előadók által vezetett projektek formájában. A programok között szerepelnek a szakmában aktívan dolgozó előadók prezentációi, mesterkurzusok, innovációs és technikai bemutató előadások, konferenciarészvétel, kiállításlátogatás és közös projektek kivitelezése. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -5716,11 +7306,16 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
-            "projektmunka",
-            "ma"
+            "mesterkurzus",
+            "portfólió",
+            "konferencia",
+            "kiállítás"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/11835.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -5743,22 +7338,32 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Bogdán Zoltán, Palotás Kincső",
           "institute": "AMD",
           "note": null,
-          "description": "3D (Bogdán Zoltán): A félév alatt egy komplexebb 3D animáció elkészítése lesz a feladat, az előző években már megismert Autodesk szoftver segítségével. A félév kiemelt feladata a Maya 2022 további animációs, szimulációs eszközeinek megismer",
+          "description": "A kurzus két modulban mélyíti a digitális animációs tudást: a 3D modulban a hallgatók a Maya haladó szimulációs eszközeivel (nCloth ruhaszimuláció, tűz- és Bifrost folyadékszimuláció) készítenek egy komplexebb 3D animációt, a shadeléstől a renderelésig. A 2D modulban a digitális animációs utómunka folyamatait gyakorolják — maszkolás, karakteranimálás, puppet tool, effektek, kompozitálás, expression-ök —, a féléves beadandó egy 1-3 perces infografikai animáció.",
           "felelos": "Csáki László",
           "prerequisite": "Digitális tervezés 2.",
           "requirement": "gyakorlati jegy",
           "software": [
-            "Maya"
+            "Maya",
+            "After Effects",
+            "Photoshop"
           ],
           "keywords": [
             "3d",
             "maya",
-            "gyárthatóság",
-            "egyéni stílus",
-            "modellezés"
+            "szimuláció",
+            "ncloth",
+            "bifrost",
+            "mozgógrafika",
+            "kompozitálás",
+            "infografika"
           ],
           "cel": "A tárgy a korábbi tapasztalatokra alapozba, továbbra is az egyéni stílus és projektre szabott munkamódszer fejlesztésére helyezi a hangsúlyt, szem előtt tartva a gyárthatóság szempontjait. A tárgyalt területek érintik a 2d és 3d animáció, valamint a vizuális effektek animációs vonatkozású területét.",
           "pdfUrl": "/tematikak/10543.pdf",
+          "category": [
+            "3d",
+            "animáció",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -5773,18 +7378,30 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Berkes Bálint, Pápai Bence",
           "institute": "AMD",
           "note": null,
-          "description": "A modul (Berkes Bálint): A szemeszter során a hallgatók megismerkednek a fény mint",
+          "description": "Kétmodulos gyakorlati tárgy: az A modulban a hallgatók a fényt mint művészi eszközt tanulmányozzák — projection mapping, DMX-vezérelt lámpák, robotlámpák és valós idejű Unreal Engine-es megoldások segítségével saját fényművészeti installációt hoznak létre. A B modul a game design alapjaira fókuszál: játékmechanikák, GDD-írás, karakter- és level design, UX/UI, prototípuskészítés és iteráció, a félév végén saját játékfejlesztési asset dokumentált leadásával.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "Médiatervezés 2.",
           "requirement": "gyakorlati jegy",
-          "software": [],
-          "keywords": [
-            "médiatervezés",
-            "haladó",
-            "projektmunka"
+          "software": [
+            "MadMapper",
+            "Unreal Engine"
           ],
-          "cel": "A modul (Berkes Bálint):",
+          "keywords": [
+            "fényművészet",
+            "projection mapping",
+            "installáció",
+            "dmx",
+            "játékmechanika",
+            "játéktervezés",
+            "prototípus",
+            "pályatervezés"
+          ],
+          "cel": "A tárgy célja, hogy a hallgatók megismerjék a fény mint művészi eszköz alkalmazási lehetőségeit a multimédiás formákban, valamint elsajátítsák a játéktervezés alapelveit és folyamatait a mechanikáktól a prototípuskészítésen át az iterációig.",
           "pdfUrl": "/tematikak/10447.pdf",
+          "category": [
+            "installáció",
+            "játék"
+          ],
           "group": null
         },
         {
@@ -5799,7 +7416,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Forgács Kristóf",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át: a szakmában aktívan dolgozó meghívott előadók prezentációi, mesterkurzusok, innovációs előadások és workshopok, technikai bemutatók, konferenciarészvétel, kiállításlátogatás és közös projektek formájában. Fontos szempont a társterületi alapismeretek és kompetenciák beemelése, valamint a portfólió építése.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -5808,11 +7425,16 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
-            "projektmunka",
+            "mesterkurzus",
+            "konferencia",
+            "portfólió",
             "ma"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/10341.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -5832,10 +7454,10 @@ export const DEFAULT_DATA: Curriculum = {
           "credits": 20,
           "active": null,
           "groups": null,
-          "instructors": "Forgács Kristóf, Pápai Bence, Kollár",
+          "instructors": "Forgács Kristóf, Pápai Bence, Kollár Dávid",
           "institute": "AMD",
           "note": null,
-          "description": "A BLOKK (Pápai Bence) A hallgató a kurzus során megismerkedik a játékfejlesztés folyamataival kezdve a tervezéstől a kiadásig. Ez idő alatt maga is megtapasztalhatja a csapatban való munkát, miközben saját magát is képzi az általa kiválaszt",
+          "description": "A mesterszakos diplomafélév három blokkban készíti fel a végzős hallgatókat a diplomához kapcsolódó feladatokra. Az egyik blokk a játékfejlesztés teljes folyamatát járja végig a tervezéstől a kiadásig, csapatmunkában, a hallgató által választott fejlesztési területen (grafika, animáció, level design, hang stb.). Egy másik blokk a szakszövegírást, a tudományos szövegek feldolgozását és a szakdolgozat strukturált felépítését gyakoroltatja, a harmadik pedig a diplomamunka projektszerű kezelését, a diplomaprezentációt, valamint a portfólió és showreel összeállítását segíti.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -5844,10 +7466,18 @@ export const DEFAULT_DATA: Curriculum = {
             "diplomamunka",
             "ma",
             "portfólió",
-            "prezentáció"
+            "showreel",
+            "prezentáció",
+            "szakdolgozat",
+            "játékfejlesztés",
+            "projekttervezés"
           ],
-          "cel": "A kurzus célja a diplomamunkához szükséges eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) ismeretek elsajátítása, kreatív készségek kifejlesztése és prezentációs tudás megszerzése haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felis",
+          "cel": "A kurzus célja a diplomamunkához szükséges eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) ismeretek elsajátítása, kreatív készségek kifejlesztése és prezentációs tudás megszerzése haladó szinten. A hallgató a kurzus eredményeképpen képes haladó szinten felismerni, elemezni, érteni és alkalmazni a diplomamunkája elkészítéséhez elengedhetetlen ismeretanyagot, technikai tudást és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/11218.pdf",
+          "category": [
+            "diploma/portfólió",
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -5862,7 +7492,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Forgács Kristóf",
           "institute": "AMD",
           "note": null,
-          "description": "A projekthét keretében megvalósuló programok a következő kategóriákba tartoznak: A szakmában aktívan dolgozó meghívott előadók prezentációja A szakma jeles képviselőinek mesterkurzusa",
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások és meghívott előadók által vezetett projektek formájában. A programok között szerepel szakmában dolgozó előadók prezentációja, mesterkurzusok, innovációs és technikai bemutató előadások, konferenciarészvétel, kiállításlátogatás és közös projektek kivitelezése. A teljesítés feltétele a jelenlét, valamint a kijelölt szakmai feladatok határidőre való leadása.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -5871,11 +7501,16 @@ export const DEFAULT_DATA: Curriculum = {
             "projekthét",
             "workshop",
             "előadás",
+            "mesterkurzus",
             "projektmunka",
+            "kiállítás",
             "ma"
           ],
           "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
           "pdfUrl": "/tematikak/11828.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -5898,14 +7533,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Előadás jellegű elméleti alapozó tárgy, amely a művészettörténet meghatározó korszakait és irányzatait társadalomtudományi kontextusban tárgyalja. A hallgatók a művek és alkotók megismerése mellett a mögöttes társadalmi, kulturális és gazdasági összefüggéseket is vizsgálják, ami megalapozza a média design képzés vizuális műveltségét.",
           "felelos": null,
           "prerequisite": null,
-          "requirement": "k (kollokvium)",
+          "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "művészettörténet",
+            "társadalomtudomány",
+            "kultúrtörténet",
+            "vizuális kultúra",
+            "korszakok",
+            "elmélet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -5920,14 +7565,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a kommunikáció alapfogalmait, modelljeit és folyamatait ismerteti. A tárgy a kommunikációtudomány alapvető ismeretanyagát adja át, megalapozva a média design szak további elméleti és gyakorlati tárgyait.",
           "felelos": null,
           "prerequisite": null,
-          "requirement": "k",
+          "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "kommunikáció",
+            "kommunikációelmélet",
+            "médiaelmélet",
+            "üzenet",
+            "befogadó",
+            "alapismeretek"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -5942,14 +7597,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Szacsvai PálOktató: Mayer ÉvaÖsszegzés: alapozó, alkotói készségfejlesztő tárgy, művészettörténeti és anatómiai bevezetőkkel, kompozíció és perspektíva gyakorlattalCél: média design alapjai; képnyelvi alapismeretek átadása; manuális és digitális képalkotás elvei és gyakorlata; kompozíció, perspektíva, anatómia, térábrázolás fejlesztéseFő témák: portré ábrázolás, kompozíciók (szimmetrikus, asszimetrikus, frottázs, grottázs, kollázs, szabadkézi rajz), perspektíva (egy- és kétpontos), színkontraszt zenei műre, digitális parafrázis, imaginációs kreatív gyakorlatok, múzeumlátogatásTanulási produktumok: portrérajzok, kompozíciók, perspektíva rajzok, színkontraszt kompozíció, digitális parafrázisok, kreatív alkotásokÓraszám: gyakorlat heti 4 óra, előadás nincs, két csoport.Követelmény: gyakorlatKredit: 5Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
-          "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "description": "A média design szak alapozó, alkotói készségfejlesztő főtantárgya, amely a manuális és digitális képalkotás alapelveit tanítja kompozíciós, perspektíva- és anatómiai gyakorlatokon keresztül. A félév a kockológiától és a rész-egész kompozícióktól a portréábrázoláson és a színkontraszt-gyakorlatokon át a digitális parafrázisokig vezet, múzeumlátogatással kiegészítve. A kézi rajzokat a hallgatók digitális szoftverekkel értelmezik tovább, így fejlődik térlátásuk, kompozíciós készségük és egyéni formanyelvük.",
+          "felelos": "Szacsvai Pál",
+          "prerequisite": "-",
+          "requirement": "gyakorlati jegy",
+          "software": [
+            "Lightroom",
+            "Premiere Pro",
+            "After Effects"
+          ],
+          "keywords": [
+            "kompozíció",
+            "perspektíva",
+            "anatómia",
+            "szabadkézi rajz",
+            "térábrázolás",
+            "színtan",
+            "parafrázis",
+            "képalkotás"
+          ],
+          "cel": "A média design szakma műveléséhez elengedhetetlen képnyelvi alapismeretek átadása, az alkotói készségek fejlesztése, valamint a manuális és számítógépes képalkotás alapelveinek ismertetése és gyakoroltatása.",
+          "pdfUrl": "/tematikak/ext-media-design-studiumok-1.pdf",
+          "category": [
+            "2d",
+            "grafika/tipográfia"
+          ],
           "group": null
         },
         {
@@ -5964,14 +7636,30 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Kiss MelindaOktató: Szacsvai PálÖsszegzés: alapozó tárgy, amely a digitális grafikai tervezés és képfeldolgozás alapelveit tanítja, fókuszban az Adobe Illustrator és Photoshop alkalmazásaCél: média design szak alapképességeinek fejlesztése digitális grafikai eszközökkel; képi közlés elemei (szín, forma, vonal, kompozíció, tipográfia) és kreatív alkalmazásuk; kortárs digitális kommunikációs rendszerek megismeréseFő témák: adatvizualizálás, vizuális kommunikáció alapjai, grafikus kommunikáció, forma és grafikai elemek, jelölőrendszerek, optikai hatások, piktogram, kép kiegészítése grafikai elemekkel, banner Tanulási produktumok: 2D és 3D gráf tervezés, sci-fi grafika, kép a képben, klónozás bio-scifi témában, logó parafrázis, piktogram szett, komplex grafika (pl. augmented reality terv)Óraszám: gyakorlat heti 4 óra, előadás nincs, 20 fő, 2 csoportKövetelmény: gyakorlatKredit: 5Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
-          "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "description": "Alapozó gyakorlati tárgy, amely a képernyő-specifikus grafikai tervezés és a digitális képalkotás, képfeldolgozás alapelveit tanítja az Adobe Illustrator és Photoshop használatán keresztül. A hallgatók a képi közlés alapelemeivel (szín, forma, vonal, kompozíció, tipográfia) és azok kreatív alkalmazásával dolgoznak adatvizualizációs, piktogram-, logóparafrázis- és bannertervezési feladatokban. A kurzus megalapozza a későbbi mozgógrafikai és 3D modellezői tanulmányokat.",
+          "felelos": "Kiss Melinda",
+          "prerequisite": "-",
+          "requirement": "gyakorlati jegy",
+          "software": [
+            "Illustrator",
+            "Photoshop"
+          ],
+          "keywords": [
+            "digitális grafika",
+            "vizuális kommunikáció",
+            "piktogram",
+            "adatvizualizáció",
+            "vektorgrafika",
+            "képfeldolgozás",
+            "logó",
+            "banner"
+          ],
+          "cel": "A média design szakma műveléséhez szükséges képnyelvi és mozgóképnyelvi alapismeretek átadása, valamint a számítógépes képalkotás, képfeldolgozás és képszerkesztés alapelveinek elsajátítása az Adobe Illustrator és Photoshop programok használatával.",
+          "pdfUrl": "/tematikak/ext-digitalis-grafikai-studiumok.pdf",
+          "category": [
+            "2d",
+            "grafika/tipográfia"
+          ],
           "group": null
         },
         {
@@ -5986,14 +7674,29 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Balogh Áron Zsigmond Dr.Oktató: Kiss Lőrinc (Korábbbban: Bohati Bence, Dér Kristóf Gordon)Összegzés: alapozó UX design tárgy, amely a felhasználói élmény tervezésének alapjait, folyamatát és eszközeit tanítja (pl. Miro, Figma) a Design Thinking keretrendszerébenCél: a hallgató képes lesz digitális alkalmazások UX tervezésére, a felhasználói szempontok teljes körű figyelembevételére és a digitális terméktervezői készségek fejlesztéséreFő témák: UX alapok, Design Thinking, kutatás, interjúkészítés, perszónák, customer journey, ötletelés, információs architektúra, user flow, Figma, UI elemek, mood board, UI kit készítésTanulási produktumok: kutatási összefoglaló, perszónák, customer journey, információs architektúra, user flow, interfész tervek, prototípus, esettanulmányÓraszám: gyakorlat heti 2 óra, előadás nincsKövetelmény: gyakorlatKredit: 4Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
-          "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "description": "Alapozó UX design gyakorlat, amely a felhasználói élmény tervezés alapismereteit, módszereit és folyamatait tanítja a Design Thinking keretrendszer mentén, Miro és Figma szoftverek használatával. A hallgatók egy szabadon választott digitális alkalmazás tervezési folyamatát viszik végig a feltáró kutatástól és interjúzástól a perszónákon, customer journey-n és információs architektúrán át az interfésztervekig és a prototípusig. A kurzus a munkaerőpiacon keresett digitális terméktervezői készségeket alapozza meg.",
+          "felelos": "Balogh Áron Zsigmond Dr.",
+          "prerequisite": "-",
+          "requirement": "gyakorlati jegy",
+          "software": [
+            "Figma",
+            "Miro"
+          ],
+          "keywords": [
+            "ux",
+            "felhasználói élmény",
+            "design thinking",
+            "perszóna",
+            "customer journey",
+            "user flow",
+            "prototípus",
+            "figma"
+          ],
+          "cel": "A UX design eszközismereti, alkotói és művészi elsajátítása alapszinten; a hallgató képes lesz a UX design ismeretanyagát felismerni, elemezni, alkalmazni és prezentálni.",
+          "pdfUrl": "/tematikak/ext-ux-design-studiumok-1.pdf",
+          "category": [
+            "ux/interakció"
+          ],
           "group": null
         },
         {
@@ -6008,14 +7711,25 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Szacsvai PálOktató: Szacsvai PálÖsszegzés: interdiszciplináris projekthét, mely workshopok, előadások, meghívott szakmai vendégek, közös projektek és mesterkurzusok formájában bővíti a hallgatók szakmai tudását és kompetenciáitCél: a kreatív iparban alkalmazható szemléletmód és kompetenciák fejlesztése, különböző szakterületek közötti párbeszéd és együttműködés ösztönzése, portfólió építésének támogatásaFő témák: szakmai ismeretek bővítése, meghívott előadók, innovációs workshopok, technikai bemutatók, konferencia- és kiállítás látogatások, közös projektekTanulási produktumok: szakmai ismeretek, gyakorlati tapasztalatok, portfólióelemekÓraszám: gyakorlat heti 2 óra, előadás nincsKövetelmény: jelenlét és szakmai feladatok teljesítéseKredit: 0Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
+          "description": "Interdiszciplináris projekthét, amely a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások, mesterkurzusok és meghívott szakmai vendégek programjai formájában. A programok között innovációs előadások, technikai bemutatók, konferencia- és kiállításlátogatások, valamint közös projektek szerepelnek, támogatva a kreatív ipari szemlélet fejlesztését és a portfólióépítést.",
+          "felelos": "Forgács Kristóf",
+          "prerequisite": "-",
+          "requirement": "jelenlét és a kijelölt szakmai feladatok teljesítése",
           "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "keywords": [
+            "projekthét",
+            "workshop",
+            "mesterkurzus",
+            "meghívott előadó",
+            "portfólió",
+            "kreatív ipar",
+            "kiállítás"
+          ],
+          "cel": "A mintatantervi ismereteken túlmutató szakmai tudás átadása, a különböző szakterületek közötti párbeszéd ösztönzése, a kreatív iparban használatos szemlélet és a portfólióépítés támogatása.",
+          "pdfUrl": "/tematikak/ext-projekthet-1-media-design-ba.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -6030,14 +7744,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
+          "description": "A METU MyBrand programjához kapcsolódó tréning jellegű kurzus művészeti szakos hallgatóknak, amely a személyes márka és a szakmai identitás tudatos építését alapozza meg. A hallgatók önismereti és karriertervezési gyakorlatokon keresztül ismerkednek saját erősségeikkel és céljaikkal.",
           "felelos": null,
           "prerequisite": null,
           "requirement": "tr (tréning)",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "személyes márka",
+            "önismeret",
+            "karrier",
+            "tréning",
+            "portfólió",
+            "mybrand"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -6052,14 +7776,29 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "?Oktató: Kunszt Gábor, Új oktató szervezése folyamatban?Összegzés: az interakciótervezés alapjainak elsajátítása technikai (Arduino), fizikai és művészeti szemléletből; kreatív alkotói képességek fejlesztése prototípus-készítéssel és anyagkísérletekkelCél: az interakciótervezés ismeretanyagának, technikai tudásának és alkotói képességek fejlesztése; kreatív, analitikus gondolkodás és komplex problémamegoldás ösztönzése; tervezési folyamat és projektvezetési döntések megértéseFő témák: elektronika alapjai, Arduino programozás (digital és analog I/O, vezérlési szerkezetek, ciklusok), fizikai algoritmikus alkotás, anyagkísérletek, kinetikus előképek, műhelymunka, prototípusgyártás, prezentációTanulási produktumok: saját tervezésű és gyártású interaktív objektek, videódokumentáció, prezentációÓraszám: gyakorlat heti 6 óra, előadás nincsKövetelmény: gyakorlatKredit: 7Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
-          "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "description": "Az interakciótervezés alapjait tanító gyakorlat, amely technikai és művészeti modulra tagolódik. A technikai részben a hallgatók az elektronika alapjait és az Arduino programozását sajátítják el (digitális és analóg I/O, vezérlési szerkezetek, ciklusok, szervomotorok), a művészeti modulban pedig a fizikai algoritmikus alkotás, kinetikus előképek és anyagkísérletek világával ismerkednek. A félév végére műhelymunka keretében saját tervezésű interaktív objekteket készítenek videódokumentációval és prezentációval.",
+          "felelos": "Sterk Barbara DLA",
+          "prerequisite": "-",
+          "requirement": "gyakorlati jegy",
+          "software": [
+            "Arduino"
+          ],
+          "keywords": [
+            "interakciótervezés",
+            "arduino",
+            "elektronika",
+            "fizikai számítástechnika",
+            "prototípus",
+            "kinetikus",
+            "anyagkísérlet",
+            "interaktív objekt"
+          ],
+          "cel": "Az interakciótervezés alapjainak elsajátítása eszközismereti (Arduino), fizikai alkotói és művészeti szemlélet szempontjából; a hallgató képes lesz az interakciótervezés ismeretanyagát felismerni, elemezni, alkalmazni és prezentálni.",
+          "pdfUrl": "/tematikak/ext-interakciotervezes-1.pdf",
+          "category": [
+            "ux/interakció",
+            "installáció"
+          ],
           "group": null
         }
       ]
@@ -6082,14 +7821,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
+          "description": "A művészettörténet-sorozat második féléve, amely a művészet történetét társadalomtudományi kontextusban tárgyalja. A kurzus a korszakok, irányzatok és alkotók megismerésén túl a művek társadalmi, kulturális és gazdasági beágyazottságának megértését célozza. Az elméleti ismeretek a hallgatók tervezői és alkotói munkájának történeti megalapozását szolgálják.",
           "felelos": "—Oktató: —Összegzés: —Cél: —Alkalmazott szoftver: —Kérdés-kérés: —Előfeltétel: —Előadás: 2 óraGyakorlat: 0 óraKövetelmény: kKredit: 4Intézet: ELM",
           "prerequisite": null,
-          "requirement": null,
+          "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "művészettörténet",
+            "társadalomtudomány",
+            "kultúrtörténet",
+            "műelemzés",
+            "vizuális kultúra",
+            "elmélet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -6104,14 +7853,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely bevezetést nyújt a filozófia és az esztétika alapkérdéseibe, fő irányzataiba és fogalmi rendszerébe. A kurzus a művészeti és tervezői gyakorlat elméleti hátterét alapozza meg, fejlesztve a hallgatók kritikai és fogalmi gondolkodását.",
           "felelos": null,
           "prerequisite": null,
-          "requirement": "k",
+          "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "filozófia",
+            "esztétika",
+            "művészetfilozófia",
+            "elmélet",
+            "kritikai gondolkodás",
+            "fogalmi alapok"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -6126,14 +7885,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Szacsvai PálOktató: Szacsvai PálÖsszegzés: alapozó tipográfia és betűrajz kurzus, mely a betűk szerkezeti elemeit, történetét, tipográfiai technikákat és digitális kiadványtervezést ismerteti, gyakorlati betűtervezéssel és layout-alkotássalCél: a hallgató képes legyen felismerni, elemezni és alkalmazni a tipográfia és betűrajz elméleti és gyakorlati ismereteit, kreatív betűkompozíciók és kiadványok tervezéséreFő témák: betűanatómia, betűtörténet (római kapitális, gótika, reneszánsz, barokk, talpnélküli, egyptienne), DTP alapok (Indesign), betűtervezés, digitális kiadványtervezés, nyomdai előkészítésTanulási produktumok: rács-struktúrájú betűkompozíció, konstruktív/dekonstruktív betűkompozíció, geometrikus betűterv, kábel és kontúr típusú betűterv, monogram, fontterv, kiadványtervÓraszám: gyakorlat heti 4 óraKövetelmény: beadandók, aktív részvétel, határidők betartásaKredit: 5Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
-          "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "description": "Alapozó tipográfia és betűrajz kurzus, amely a betűanatómiát, a betűtörténetet a római kapitálistól a talpnélküli antikváig, valamint a számítógépes kiadványtervezés (DTP) alapjait dolgozza fel. A hallgatók betűrajzi és kreatív gyakorlatokon keresztül betűkompozíciókat, geometrikus, kábel és kontúr típusú betűterveket, saját fontot és kiadványtervet készítenek. A szoftveres munka az InDesignra épül, a tervezett betű fontállománnyá alakításáig és a nyomdai előkészítésig.",
+          "felelos": "Szacsvai Pál",
+          "prerequisite": "-",
+          "requirement": "gyakorlati jegy",
+          "software": [
+            "InDesign",
+            "Photoshop",
+            "Fontself"
+          ],
+          "keywords": [
+            "tipográfia",
+            "betűrajz",
+            "betűtörténet",
+            "betűtervezés",
+            "kiadványtervezés",
+            "dtp",
+            "fonttervezés",
+            "nyomdai előkészítés"
+          ],
+          "cel": "A tipográfia és betűrajz eszközismereti, alkotói és művészi elsajátítása alapszinten; a hallgató képes legyen felismerni, elemezni és alkalmazni a tipográfia és betűrajz ismeretanyagát, valamint prezentálni munkáit.",
+          "pdfUrl": "/tematikak/ext-tipografia-es-beturajz.pdf",
+          "category": [
+            "grafika/tipográfia",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -6148,14 +7924,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Varga Vajk, Szűcs LeventeOktató: Varga Vajk, Szűcs LeventeÖsszegzés: média design stúdiumok második része, mely a képnyelvi, fotográfiai és mozgóképnyelvi alapokat, valamint az analóg és digitális képalkotás és képszerkesztés eszközeit tanítja, fókuszban az Adobe Photoshop és Lightroom programokkalCél: a hallgató képes legyen alap szinten médiatervezési képességek alkalmazására, digitális kép- és videófeldolgozásra, valamint prezentációraFő témák: fotográfia története és elmélete, analóg fotográfia alapjai, fotógrammok, kamera- és fotótechnika, kompozíció, világítás, kísérleti fotográfia, digitális utómunka, Photoshop használatTanulási produktumok: fotógrammok, analóg és digitális fotók, fotósorozatok különböző technikákkal, kreatív képek, digitális képszerkesztett munkákÓraszám: gyakorlat heti 4 óraKövetelmény: aktív részvétel, kötelező feladatok leadása, határidők betartásaKredit: 5, Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
-          "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "description": "A médiatervezés képnyelvi, fotográfiai és mozgóképnyelvi alapjait tanító gyakorlati kurzus második féléve. A hallgatók az expozíció, világítástechnika, plánok és kompozíció témáitól a Lightroom-alapú képfeldolgozáson át a mozgóképkészítésig jutnak: kameramozgások, vágás, log rögzítés és színkezelés, hangi történetmesélés, valamint a Premiere Pro és After Effects közti Dynamic Link használata. Féléves feladat egy hívószóra készített fotósorozat és egy rövid kisfilm.",
+          "felelos": "Szacsvai Pál",
+          "prerequisite": "Média design stúdiumok 1. (teljesítés)",
+          "requirement": "gyakorlati jegy",
+          "software": [
+            "Lightroom",
+            "Premiere Pro",
+            "After Effects"
+          ],
+          "keywords": [
+            "fotográfia",
+            "mozgókép",
+            "képnyelv",
+            "világítás",
+            "kompozíció",
+            "vágás",
+            "színkezelés",
+            "utómunka"
+          ],
+          "cel": "A médiatervezés eszközismereti, alkotói és művészi elsajátítása alapszinten; a hallgató képes legyen a képnyelvi ismeretek, a videó-felvételtechnika és a szerkesztés alkalmazására és továbbtanulására.",
+          "pdfUrl": "/tematikak/ext-media-design-studiumok-2.pdf",
+          "category": [
+            "fotó",
+            "film/videó"
+          ],
           "group": null
         },
         {
@@ -6170,14 +7963,29 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Sterk Barbara DLAOktató: Sterk Barbara, Kunszt GáborÖsszegzés: haladó interakciótervezés kurzus, amely az Arduino programozási nyelv fejlettebb gyakorlatait és a fizikai interakció művészeti alkalmazását tárgyalja, hangsúlyt helyezve a kreatív tervezési folyamatokra, anyagkísérletekre és interaktív projektek megvalósításáraCél: a hallgató képes legyen komplex interaktív rendszerek tervezésére, alkotói és technikai tudásának magas szintű alkalmazására, valamint a csapatmunkában való eredményes részvételreFő témák: haladó Arduino programozás (szenzorok, aktuátorok, vezérlési szerkezetek), fizikai algoritmikus alkotás, luminokinetika, fény- és mozgástanulmány, anyagkísérletek, projekttervezés és megvalósítás, dokumentáció, prezentációTanulási produktumok: interaktív műalkotások, műleírások, projekt dokumentációk, prezentációkÓraszám: gyakorlat heti 6 óraKövetelmény: aktív részvétel, projektmérföldkövek teljesítéseKredit: 7Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
-          "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "description": "Haladó interakciótervezés kurzus, amely technikai és művészeti modulból áll. A technikai modulban a hallgatók az Arduino haladóbb gyakorlatait sajátítják el: szenzorok (távolság-, fény-, érintés- és közelségérzékelés) és aktuátorok (fények, szervók, motorok) programozását. A művészeti modul inspirációgyűjtésen, fénykutatáson, anyagkísérleten és a luminokinetika művészettörténeti kontextusán keresztül vezet el egy interaktív műalkotás megtervezéséig, kivitelezéséig és dokumentálásáig.",
+          "felelos": "Sterk Barbara",
+          "prerequisite": "Interakciótervezés 1. (teljesítés)",
+          "requirement": "gyakorlati jegy",
+          "software": [
+            "Arduino"
+          ],
+          "keywords": [
+            "interakciótervezés",
+            "arduino",
+            "fizikai számítástechnika",
+            "szenzorok",
+            "aktuátorok",
+            "luminokinetika",
+            "interaktív installáció",
+            "anyagkísérlet"
+          ],
+          "cel": "Az interakciótervezés eszközismereti, alkotói és művészi elsajátítása haladó szinten; a hallgató képes legyen önállóan interaktív tárgyak, művek létrehozására és prezentálására.",
+          "pdfUrl": "/tematikak/ext-interakciotervezes-2.pdf",
+          "category": [
+            "ux/interakció",
+            "installáció"
+          ],
           "group": null
         },
         {
@@ -6192,14 +8000,30 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Dr. Balogh Áron ZsigmondOktató: Dér Kristóf Gordon, Bohati BenceÖsszegzés: haladó UX design kurzus, amely a felhasználói élmény tervezés eszközeit, módszereit és folyamatát tanítja, hangsúlyt fektetve a Design Thinkingre és digitális alkalmazás prototípusok készítéséreCél: a hallgató képes legyen komplex UX tervezési folyamatokat kezelni, kreatív és technikai készségeket alkalmazni, és eredményesen kommunikálni a tervezési folyamatokatFő témák: vizuális hierarchia, interakciók, reszponzív web design, platformok (Android, iOS), szöveg és interface, usability heurisztikák, felhasználói tesztelés, marketing design, esettanulmány, prezentációs technikákTanulási produktumok: kutatási összefoglaló, perszónák, customer journey, információs architektúra, user flow, interfész tervek, prototípus, esettanulmány, féléves prezentációÓraszám: gyakorlat heti 2 óraKövetelmény: gyakorlatKredit: 4Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
-          "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "description": "A felhasználói élmény tervezés haladó kurzusa, amely a Design Thinking keretrendszer mentén viszi végig a hallgatókat egy szabadon választott digitális alkalmazás tervezési folyamatán. Témái a vizuális hierarchia és tervezési alapelvek, interakciók, usability heurisztikák, platformok (reszponzív web, Android, iOS), akadálymentesítés, felhasználói tesztelés és az esettanulmány-készítés. A féléves munka Figmában készített prototípusban, valamint kutatási összefoglalóban, perszónákban, customer journey-ben, user flow-ban és interfész tervekben ölt testet.",
+          "felelos": "Balogh Áron Zsigmond",
+          "prerequisite": "UX design stúdiumok 1. (teljesítés)",
+          "requirement": "gyakorlati jegy",
+          "software": [
+            "Figma",
+            "Miro"
+          ],
+          "keywords": [
+            "ux design",
+            "felhasználói élmény",
+            "design thinking",
+            "prototípus",
+            "usability",
+            "felhasználói tesztelés",
+            "reszponzív",
+            "interfész"
+          ],
+          "cel": "A UX design eszközismereti, alkotói és művészi elsajátítása haladó szinten; a hallgató képes legyen egy digitális alkalmazás felhasználói élményének megtervezésére és a folyamat prezentálására.",
+          "pdfUrl": "/tematikak/ext-ux-design-studiumok-2.pdf",
+          "category": [
+            "ux/interakció",
+            "web"
+          ],
           "group": null
         },
         {
@@ -6214,14 +8038,26 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Szacsvai PálOktató: Liszka TamásÖsszegzés: média design elméleti kurzus, mely a szakma főbb elméleteit, történeti és kortárs tendenciáit, művészeti alapállását és prezentációs eszközeit tárgyaljaCél: a hallgató képes legyen a média design elméleti ismereteit alkotói és tervezői munkájában alkalmazni, kritikusan gondolkodni és szakmai álláspontját megalapozottan képviselniFő témák: kép, jel, szimbólum, fénykép ontológiája, szóbeli és írásbeli kommunikáció, ikonográfia, bio-art, játékelmélet, gráfelmélet, interaktivitás, mentális képek, művészeti esettanulmányokTanulási produktumok: aktív részvétel, félév végi beszámolóÓraszám: előadás heti 2 óraKövetelmény: részvétel és beszámolóKredit: 4Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
+          "description": "Elméleti előadás, amely a média design szellemtörténeti előzményeivel, tudományos, technikai és társművészeti környezetével foglalkozik. Témái között szerepel a kép, jel és szimbólum szemiotikája, a fénykép ontológiája, a szóbeliség és írásbeliség, az ikonográfia és a képi fordulat, a bio-art, a játék- és gráfelmélet, az interaktivitás és a nonlineáris művészeti formák. Konkrét művek és alkotók elemzésén keresztül körvonalazza a média design kortárs művészeti alapállását.",
+          "felelos": "Szacsvai Pál",
+          "prerequisite": "-",
+          "requirement": "félév végi teszt vagy esszé",
           "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "keywords": [
+            "médiaelmélet",
+            "szemiotika",
+            "ikonográfia",
+            "bio-art",
+            "interaktivitás",
+            "hálózatkutatás",
+            "médiaművészet",
+            "képelmélet"
+          ],
+          "cel": "A média design általános elméletének elsajátítása, hogy a hallgató alkotó-, tervező- és prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa.",
+          "pdfUrl": "/tematikak/ext-media-design-szakelmelet.pdf",
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -6236,14 +8072,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Forgács KristófOktató: Szacsvai PálÖsszegzés: projekthét második része, amely workshopok, előadások, meghívott szakmai előadók, közös projektek és mesterkurzusok formájában bővíti a hallgatók szakmai tudását és kompetenciáitCél: különböző szakterületek találkozásának ösztönzése, kreatív ipari szemlélet fejlesztése és portfólió építés támogatásaFő témák: szakmai ismeretek bővítése, innovációs workshopok, technikai bemutatók, konferenciarészvétel, kiállítás látogatás, közös projektek kivitelezéseTanulási produktumok: szakmai ismeretek, gyakorlati tapasztalatok, portfólióelemekÓraszám: gyakorlat heti 2 óraKövetelmény: jelenlét és szakmai feladatok teljesítéseKredit: 0Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
+          "description": "A mintatantervben foglalt szakmai ismereteken túlmutató tudást átadó kurzus, amely workshopok, meghívott szakmai előadók prezentációi, mesterkurzusok, technikai bemutatók, konferenciarészvétel, kiállításlátogatás és közös projektek formájában valósul meg. Célja a különböző szakterületek találkozásának ösztönzése, a kreatív ipari szemlélet fejlesztése és a portfólióépítés támogatása.",
+          "felelos": "Forgács Kristóf",
+          "prerequisite": "-",
+          "requirement": "jelenlét és a kijelölt szakmai feladatok teljesítése",
           "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "keywords": [
+            "projekthét",
+            "workshop",
+            "mesterkurzus",
+            "portfólió",
+            "kreatív ipar",
+            "szakmai program"
+          ],
+          "cel": "A mintatanterven túlmutató szakmai tudás átadása, társterületi kompetenciák beemelése, a kreatív ipari szemlélet és a portfólióépítés fejlesztése.",
+          "pdfUrl": "/tematikak/ext-projekthet-2-media-design-ba.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -6266,14 +8112,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "A művészetelmélet alapfogalmait és főbb irányzatait bemutató elméleti előadás. A kurzus a művészeti alkotások értelmezéséhez és elemzéséhez szükséges fogalmi kereteket adja át, támogatva a hallgatók tervezői és alkotói munkájának elméleti megalapozását.",
           "felelos": null,
           "prerequisite": null,
-          "requirement": "k (kollokvium)",
+          "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "művészetelmélet",
+            "esztétika",
+            "művészettörténet",
+            "elmélet",
+            "vizuális kultúra",
+            "műelemzés"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -6288,14 +8144,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "A médiakultúra alapjaiba bevezető elméleti előadás, amely a média működésének, történetének és társadalmi-kulturális szerepének átfogó megismerését szolgálja. A kurzus fogalmi és elméleti alapot nyújt a média design szakos hallgatók további tanulmányaihoz.",
           "felelos": null,
           "prerequisite": null,
-          "requirement": "k",
+          "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "médiakultúra",
+            "médiaelmélet",
+            "tömegkommunikáció",
+            "vizuális kultúra",
+            "média",
+            "elmélet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -6310,14 +8176,32 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Kiss MelindaOktató: Balogh ÁronÖsszegzés: mozgógrafika alapozó kurzus, amely az After Effects szoftver kezelését és alap animációs technikákat tanítja, fókuszban a kreatív gondolkodás és különböző mozgógrafikai stílusok megismeréseCél: a hallgató képes legyen önálló mozgógrafikai alkotások létrehozására, az alapvető technikai és kreatív ismeretek elsajátítására, valamint az alkotói folyamatban való aktív részvételreFő témák: After Effects UI, GIF stílusú videók, animációs alapelvek, tutorialok, audio-reaktív animációk, karakter animáció, puppet tool, kreatív videótervezés, projektmunkaTanulási produktumok: rövid animációk, karakter animációk, kreatív videók, féléves záró videó hanggalÓraszám: gyakorlat heti 4 óraKövetelmény: aktív részvétel, feladatok elkészítése, portfólió elemek leadásaKredit: 5Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
-          "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "description": "Mozgógrafikai alapozó gyakorlat, amely az Adobe After Effects környezetében tanítja a kortárs motion design eszköztárát: kompozíciós felépítés, kulcskockás animáció, maszkolási és áttűnési technikák, színkorrekció, 3D layer-módszerek és a professzionális renderelési folyamat. A tematikát AI-alapú képi és videós tartalomgenerálás (Firefly, Runway) egészíti ki. A félév fő tanulási produktuma egy branding spot vizsgamunka, amelyet írásbeli elméleti zárthelyi egészít ki.",
+          "felelos": "Kiss Melinda",
+          "prerequisite": "-",
+          "requirement": "gyakorlati jegy",
+          "software": [
+            "After Effects",
+            "Adobe Firefly",
+            "Runway",
+            "Media Encoder"
+          ],
+          "keywords": [
+            "mozgógrafika",
+            "motion design",
+            "animáció",
+            "after effects",
+            "kulcskocka",
+            "kompozíció",
+            "generatív ai",
+            "branding spot"
+          ],
+          "cel": "A mozgógrafika eszközismereti, alkotói és művészi elsajátítása alapszinten, hogy a hallgató korszerű kompetenciákkal, önállóan hozzon létre mozgógrafikai alkotásokat After Effects szoftverkörnyezetben, generatív AI-eszközökkel kiegészítve.",
+          "pdfUrl": "/tematikak/ext-mozgografika-1.pdf",
+          "category": [
+            "animáció",
+            "2d"
+          ],
           "group": null
         },
         {
@@ -6332,14 +8216,25 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Szacsvai PálOktató: Mayer ÉvaÖsszegzés: projekthét harmadik része, amely workshopok, előadások, meghívott szakmai vendégek, közös projektek és mesterkurzusok formájában bővíti a hallgatók szakmai tudását és kompetenciáitCél: a kreatív iparban használatos szemlélet fejlesztése, különböző szakterületek közötti együttműködés ösztönzése, portfólió építésének támogatásaFő témák: szakmai programok, meghívott előadók, innovációs workshopok, technikai bemutatók, konferenciarészvétel, kiállítás látogatás, közös projektekTanulási produktumok: szakmai ismeretek, gyakorlati tapasztalatok, portfólióelemekÓraszám: gyakorlat heti 2 óraKövetelmény: jelenlét és szakmai feladatok teljesítéseKredit: 0Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
+          "description": "A projekthét a mintatantervi szakmai ismereteken túlmutató tudást ad át workshopok, előadások, mesterkurzusok és meghívott szakmai vendégek által vezetett közös projektek formájában. A programok között innovációs előadások, technikai bemutatók, konferenciarészvétel és kiállítás-látogatás is szerepel, támogatva a szakterületek közötti együttműködést és a portfólióépítést.",
+          "felelos": "Forgács Kristóf",
+          "prerequisite": "-",
+          "requirement": "gyakorlati jegy",
           "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "keywords": [
+            "projekthét",
+            "workshop",
+            "mesterkurzus",
+            "vendégelőadó",
+            "portfólió",
+            "kreatív ipar",
+            "együttműködés"
+          ],
+          "cel": "A kreatív iparban használatos szemlélet fejlesztése, különböző szakterületek találkozásának és a tudáselemek egymásra épülésének ösztönzése, valamint a hallgatói portfólió építésének támogatása.",
+          "pdfUrl": "/tematikak/ext-projekthet-3-media-design-ba.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -6354,14 +8249,28 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": null,
+          "description": "Gyakorlati kurzus, amely a formák és anyagok térbeli vizuális megjelenésének és viselkedésének megismerésére, valamint azok szoftveres reprodukálására és szimulálására épül. A hallgatók a Blender alapvető használatát sajátítják el a modellezés, textúrázás, világítás, kamerakezelés és renderelés területén, a félévet egy saját tárgy lemodellezése és koncepció szerinti képsorozat zárja.",
+          "felelos": "Mayer Éva",
           "prerequisite": "Média-design stúdiumok 2.",
-          "requirement": "gy",
-          "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "requirement": "gyakorlati jegy",
+          "software": [
+            "Blender"
+          ],
+          "keywords": [
+            "3d",
+            "modellezés",
+            "textúrázás",
+            "renderelés",
+            "világítás",
+            "blender",
+            "pbr",
+            "képelmélet"
+          ],
+          "cel": "A média design specifikus képalkotás eszközismereti, alkotói és művészi elsajátítása középhaladó szinten, hogy a hallgató képes legyen a 3D képalkotás ismeretanyagát felismerni, elemezni, alkalmazni és prezentálni.",
+          "pdfUrl": "/tematikak/ext-media-labor-1.pdf",
+          "category": [
+            "3d"
+          ],
           "group": null
         },
         {
@@ -6376,14 +8285,26 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Molnár Ágnes ÉvaOktató: Kollár DávidÖsszegzés: az új technológiák pszichológiai hatásainak tudományos vizsgálata, amely elméleti alapot nyújt a média designereknek alkotó- és tervezőmunkájukhoz, valamint szakmai együttműködéseikhez; fókuszban a digitális technológiák emberi viselkedésre és kognitív folyamatokra gyakorolt hatásaCél: a hallgató képes legyen felismerni, elemezni és alkalmazni az új technológiák pszichológiai aspektusait, tudatosan kezelni alkotói munkájában, és kritikusan viszonyulni a digitális korszak kihívásaihozFő témák: technológia és kultúra kölcsönhatásai, kognitív tudomány, okoseszközök, közösségi média, virtuális valóság, videójátékok pszichológiai hatásai, reziliencia, technológiák negatív és pozitív hatásaiTanulási produktumok: szakirodalom feldolgozása, aktív részvétel az előadásokonÓraszám: előadás heti 2 óraKövetelmény: aktív részvétel, írásbeli vizsgaKredit: 4Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
+          "description": "Elméleti előadás, amely a modern digitális technológiák pszichológiai hatásainak kognitív tudományos vizsgálatára összpontosít: hogyan formálják a kurrens technológiák az emberi viselkedést, érzelmeket és kognitív folyamatokat. A tematika kitér az okoseszközök, a közösségi média, a virtuális valóság és a videójátékok pszichológiai hatásaira, a rezilienciára, valamint az egyének és közösségek digitális technológiákhoz fűződő viszonyát meghatározó értelmezési keretekre.",
+          "felelos": "Forgács Kristóf",
+          "prerequisite": "-",
+          "requirement": "kollokvium (aktív órai részvétel 20%, írásbeli vizsga 80%)",
           "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "keywords": [
+            "pszichológia",
+            "új technológiák",
+            "kognitív tudomány",
+            "közösségi média",
+            "virtuális valóság",
+            "videójátékok",
+            "reziliencia",
+            "digitális kultúra"
+          ],
+          "cel": "Az új technológiák pszichológiai vonatkozásainak ismertetése, hogy a hallgató alkotó-, tervező- és prezentációs munkájához elméleti megalapozásként alkalmazhassa, és designeri gyakorlatát szélesebb, interdiszciplináris keretben tudja elhelyezni.",
+          "pdfUrl": "/tematikak/ext-uj-technologiak-pszichologiai-vonatkozasai.pdf",
+          "category": [
+            "elmélet"
+          ],
           "group": null
         }
       ]
@@ -6406,14 +8327,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a képalkotás elméleti alapjait tárgyalja, a Művészetelmélet kurzusra épülve. A hallgatók a kép fogalmával, a vizuális ábrázolás elméleti kérdéseivel és a képi jelentésképzés összefüggéseivel foglalkoznak, ami megalapozza a média design gyakorlati tárgyainak tudatos, reflektált művelését.",
           "felelos": null,
           "prerequisite": "Művészetelmélet",
-          "requirement": "k (kollokvium)",
+          "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "képalkotás",
+            "képelmélet",
+            "vizuális kultúra",
+            "művészetelmélet",
+            "esztétika",
+            "médiaelmélet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -6428,14 +8359,32 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": null,
-          "prerequisite": null,
-          "requirement": null,
-          "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "description": "Specializációk szerint bontott gyakorlati kurzus: a Multimédia specializáción a hallgatók a Nuke node-alapú compositing munkafolyamatát sajátítják el (rotoscoping, 2D/planar tracking, screen replacement, keying, tűz- és muzzle flash-integráció), a félév végén breakdown videót készítenek. A Játéktervezés specializáción Blenderben és Substance Painterben tanulnak game-ready 3D asset-gyártást: modellezést, UV-kiterítést, PBR textúrázást, riggelést és Unreal Engine-be exportálást.",
+          "felelos": "Kiss Melinda",
+          "prerequisite": "Mozgógrafika 1. (teljesítés)",
+          "requirement": "gyakorlati jegy",
+          "software": [
+            "Nuke",
+            "Blender",
+            "Substance Painter",
+            "Unreal Engine"
+          ],
+          "keywords": [
+            "compositing",
+            "vfx",
+            "rotoscoping",
+            "keying",
+            "tracking",
+            "3d modellezés",
+            "textúrázás",
+            "game art"
+          ],
+          "cel": "A hallgatók a félév végére magabiztosan kezeljék a compositing (Nuke), illetve a 3D asset-gyártási (Blender, Substance Painter) munkafolyamatokat, és alkalmassá váljanak junior szintű iparági feladatok önálló elvégzésére.",
+          "pdfUrl": "/tematikak/ext-mozgografika-2.pdf",
+          "category": [
+            "animáció",
+            "3d"
+          ],
           "group": null
         },
         {
@@ -6450,14 +8399,26 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Forgács KristófOktató: Sterk BarbaraÖsszegzés: projekthét negyedik része, amely a szakmai ismereteken túlmutató tudást ad át workshopok, előadások, vendégelőadók és közös projektek formájában; hangsúlyt kap a különböző szakterületek közötti együttműködés, kreatív ipari szemlélet fejlesztése és portfólióépítésCél: a hallgatók szakmai és kreatív kompetenciáinak fejlesztése, szakmai párbeszéd és együttműködés ösztönzése, a kreatív ipar elvárásainak megfelelő szakmai készségek fejlesztéseFő témák: meghívott előadók, mesterkurzusok, innovációs és technikai workshopok, konferenciarészvétel, kiállítás látogatás, közös projektek kivitelezéseTanulási produktumok: bővített szakmai ismeretek, gyakorlati tapasztalatok, portfólióelemekÓraszám: gyakorlat heti 2 óraKövetelmény: jelenlét és szakmai feladatok teljesítése, határidőre leadásKredit: 0Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
+          "description": "A projekthét a mintatantervi szakmai ismereteken túlmutató tudást ad át workshopok, előadások, mesterkurzusok és meghívott vendégelőadók által vezetett projektek formájában. A programok között szerepel konferenciarészvétel, kiállításlátogatás és közös projektek kivitelezése is, hangsúlyt fektetve a szakterületek közötti együttműködésre, a kreatív ipari szemlélet fejlesztésére és a portfólióépítésre.",
+          "felelos": "Forgács Kristóf",
+          "prerequisite": "-",
+          "requirement": "gyakorlati jegy (jelenlét és a kijelölt szakmai feladatok határidőre teljesítése)",
           "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "keywords": [
+            "projekthét",
+            "workshop",
+            "előadás",
+            "vendégelőadó",
+            "mesterkurzus",
+            "portfólió",
+            "együttműködés",
+            "kreatív ipar"
+          ],
+          "cel": "A hallgatók szakmai és kreatív kompetenciáinak fejlesztése a mintatanterven túlmutató programokkal, a szakterületek közötti párbeszéd és együttműködés ösztönzése, valamint a kreatív ipar elvárásainak megfelelő szemlélet és portfólió építése.",
+          "pdfUrl": "/tematikak/ext-projekthet-4-media-design-ba.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -6472,14 +8433,31 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Dózsa Liliána, Berkes Bálint",
           "institute": "AMD",
           "note": null,
-          "description": "3D képalkotás alapjaival, és 3D animáció",
+          "description": "A Média labor 1.-re épülő gyakorlati kurzus, amely a 3D képalkotást a 3D animáció irányába viszi tovább. A félév első felében a hallgatók a motion design alapjait, az animáció 12 alapelvét, a karaktercsontozást és a motion capture animálást sajátítják el Cinema 4D-ben és Blenderben, majd a félév második felében fizikai, ruha-, részecske- és pyro-szimulációkkal, valamint Unreal Engine-es valós idejű rendereléssel foglalkoznak. A féléves feladat egy közös, folytatólagos golyóvándorlás-animáció elkészítése.",
           "felelos": "Molnár Ágnes Éva",
           "prerequisite": "Média labor 1.",
-          "requirement": "gy",
-          "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "requirement": "gyakorlati jegy",
+          "software": [
+            "Blender",
+            "Cinema 4D",
+            "Unreal Engine",
+            "Rokoko"
+          ],
+          "keywords": [
+            "3d animáció",
+            "motion design",
+            "szimuláció",
+            "vfx",
+            "karakteranimáció",
+            "motion capture",
+            "riggelés"
+          ],
+          "cel": "A média design specifikus képalkotás szoftverismereti, alkotói és esztétikai elsajátítása középhaladó szinten; a hallgató képes legyen a 3D animációs és szimulációs ismeretanyagot haladó szinten felismerni, elemezni, alkalmazni és prezentálni.",
+          "pdfUrl": "/tematikak/ext-media-labor-2.pdf",
+          "category": [
+            "3d",
+            "animáció"
+          ],
           "group": null
         }
       ]
@@ -6502,14 +8480,24 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely az ökológia és a művészet kapcsolódási pontjait vizsgálja. A kurzus a környezeti kérdések művészeti reflexióival és a fenntarthatóság kreatív alkotói gyakorlatokban betöltött szerepével foglalkozik. A tárgy kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
-          "requirement": "k (kollokvium)",
+          "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "ökológia",
+            "művészet",
+            "fenntarthatóság",
+            "környezet",
+            "kortárs művészet",
+            "elmélet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -6524,14 +8512,25 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "ELM",
           "note": null,
-          "description": null,
+          "description": "Elméleti előadás, amely a kreatív szakmák gyakorlásához szükséges gazdasági, menedzsment- és jogi alapismereteket adja át. A hallgatók áttekintést kapnak a szakmai működést érintő gazdálkodási és jogi keretekről. A tárgy kollokviummal zárul.",
           "felelos": null,
           "prerequisite": null,
-          "requirement": "k",
+          "requirement": "kollokvium",
           "software": [],
-          "keywords": [],
+          "keywords": [
+            "gazdaság",
+            "menedzsment",
+            "jog",
+            "vállalkozás",
+            "szerzői jog",
+            "kreatív ipar",
+            "elmélet"
+          ],
           "cel": null,
           "pdfUrl": null,
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -6546,14 +8545,25 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Forgács KristófOktató: Sterk BarbaraÖsszegzés: projekthét negyedik része, amely a szakmai ismereteken túlmutató tudást ad át workshopok, előadások, vendégelőadók és közös projektek formájában; hangsúlyt kap a különböző szakterületek közötti együttműködés, kreatív ipari szemlélet fejlesztése és portfólióépítésCél: a hallgatók szakmai és kreatív kompetenciáinak fejlesztése, szakmai párbeszéd és együttműködés ösztönzése, a kreatív ipar elvárásainak megfelelő szakmai készségek fejlesztéseFő témák: meghívott előadók, mesterkurzusok, innovációs és technikai workshopok, konferenciarészvétel, kiállítás látogatás, közös projektek kivitelezéseTanulási produktumok: bővített szakmai ismeretek, gyakorlati tapasztalatok, portfólióelemekÓraszám: gyakorlat heti 2 óraKövetelmény: jelenlét és szakmai feladatok teljesítése, határidőre leadásKredit: 0Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások, mesterkurzusok és meghívott előadók által vezetett projektek formájában. A programok között szerepel konferenciarészvétel, kiállításlátogatás, technikai bemutatók és közös projektek kivitelezése, hangsúlyt fektetve a szakterületek közötti együttműködésre és a portfólióépítésre. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
+          "felelos": "Forgács Kristóf",
+          "prerequisite": "-",
           "requirement": null,
           "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "keywords": [
+            "projekthét",
+            "workshop",
+            "vendégelőadó",
+            "mesterkurzus",
+            "portfólió",
+            "együttműködés",
+            "kreatív ipar"
+          ],
+          "cel": "A hallgatók szakmai és kreatív kompetenciáinak fejlesztése a szakterületek találkozása, a tudáselemek egymásra épülése és a kreatív iparban használatos szemlélet erősítése révén, a MyBrand szemlélet alappilléreinek megvalósításával.",
+          "pdfUrl": "/tematikak/ext-projekthet-5-media-design-ba.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         },
         {
@@ -6565,17 +8575,36 @@ export const DEFAULT_DATA: Curriculum = {
           "credits": 7,
           "active": null,
           "groups": null,
-          "instructors": "Berkes Bálint, Cseszneg GyöngyiÖsszegzés: —",
+          "instructors": "Berkes Bálint, Cseszneg Gyöngyi",
           "institute": "AMD",
           "note": null,
-          "description": "A modul, Gyöngyi: karaktertervezés,B modul: Báltint: 3D mapping alapok Resolume Arena",
+          "description": "Kétmodulos gyakorlati labor: az A modul a digitális utómunka és a 3D tartalomkészítés VFX-gyártási folyamatára fókuszál, haladó kompozitálással (Nuke), modellezéssel, UV mappinggel, animációval és rendereléssel (Maya), valamint PBR textúrázással (Substance 3D Painter), a félév végére egy komplex VFX-shot vagy 3D jelenet készül el ipari sztenderdek szerint. A B modul a fény művészi alkalmazásával és a projection mapping formanyelvével foglalkozik: a hallgatók a Resolume Arena szoftverrel terveznek és kiviteleznek fényalapú installációkat, amelyeket dokumentálnak és bemutatnak.",
           "felelos": "Szendeff-Sztojánovits Andrea",
           "prerequisite": "Média-design stúdiumok 2.",
-          "requirement": "gy",
-          "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "requirement": "gyakorlati jegy",
+          "software": [
+            "Nuke",
+            "Maya",
+            "Substance Painter",
+            "Resolume Arena"
+          ],
+          "keywords": [
+            "vfx",
+            "compositing",
+            "3d modellezés",
+            "textúrázás",
+            "projection mapping",
+            "fényművészet",
+            "installáció",
+            "renderelés"
+          ],
+          "cel": "A hallgatók elmélyítik ismereteiket a digitális utómunka és a 3D tartalomkészítés területén a VFX-gyártási folyamat mentén, valamint elsajátítják a fény művészi alkalmazásának elméleti és gyakorlati alapjait multimédiás technológiák és projection mapping eszközök használatával.",
+          "pdfUrl": "/tematikak/ext-media-labor-3.pdf",
+          "category": [
+            "3d",
+            "film/videó",
+            "installáció"
+          ],
           "group": null
         }
       ]
@@ -6598,14 +8627,26 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Mayer ÉvaOktató: Liszka TamásÖsszegzés: az új médiumok kritikai elméletét bemutató kurzus, amely elméleti alapot nyújt a médiatervezéshez, művészi munkához és szakmai prezentációkhoz; a mesterséges intelligencia megjelenése új nézőpontokat hoz a médiaelméletbe és művészetfilozófiábaCél: a hallgató képes legyen elemző módon feldolgozni az új média kritikai szövegeit, alkalmazni a megszerzett tudást alkotói munkában, kritikusan szemlélni a média design kortárs diskurzusait és etikájátFő témák: új média definíciója, Ars Electronica, digitális és mesterséges létezés, cyberpunk filmek, szimulakrum (Baudrillard), új média nyelve (Lev Manovich), múzeumi és online tér, kortárs képzőművészet jelenségei, komputer animációk és képi világukTanulási produktumok: szakszöveg elemzések, prezentációk, önálló kutatásokÓraszám: előadás heti 2 óraKövetelmény: aktív részvétel, félévi tesztKredit: 4Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
+          "description": "Az új médiumok kritikai elméletébe bevezető előadás, amely az újmédia folyamatosan megújuló szakirodalmát követi, ismerteti és értelmezi. A foglalkozásokon a hallgatók aktív reflexióira építő eszmecsere folyik, amely a technológiai innováció újabb fordulatait — a gépi kreativitást, a mesterséges intelligenciát mint másik intelligenciát, az algoritmus szerepét a művészetben — elemzi kritikailag. A kurzus elméleti alapot nyújt a médiatervezési gyakorlathoz, a művészi munkához és a szakmai prezentációkhoz.",
+          "felelos": "Mayer Éva",
+          "prerequisite": "-",
+          "requirement": "A hallgató érdemjegyét az órák látogatásán kívül a vitákban való részvétel és a félév végi írásbeli vizsga határozza meg.",
           "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "keywords": [
+            "új média",
+            "médiaelmélet",
+            "kritikai gondolkodás",
+            "mesterséges intelligencia",
+            "generatív művészet",
+            "algoritmus",
+            "manovich",
+            "digitális kultúra"
+          ],
+          "cel": "A hallgatók megismerkedjenek az új médiumok kritikai elméletével, hogy azt elméleti alapként és koncepcionális kiegészítésként alkalmazhassák médiatervezési tanulmányaik, művészi munkájuk és prezentációs feladataik során.",
+          "pdfUrl": "/tematikak/ext-uj-media-kritikai-studiumok.pdf",
+          "category": [
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -6620,14 +8661,33 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Berkes Bálint",
           "institute": "AMD",
           "note": null,
-          "description": "Mapping tervezés / vetítéses technikák alkalmazását",
+          "description": "A kurzus a fény médiumának kreatív és interdiszciplináris alkalmazására összpontosít, különös tekintettel a vetítéses technikákra (mapping) és a generatív vizualizációra. A hallgatók TouchDesigner, Unreal Engine és Cinema 4D segítségével készítenek interaktív, hang- és mozgásreaktív, térspecifikus fényalkotásokat, valamint megismerik a DMX, Art-Net, OSC és MIDI rendszereket. A félév során egy szimulációs keretben, fiktív megrendelőnek dolgozva csoportos vetítést terveznek a Budapesti Metropolitan Egyetem körépületére, amelyet vetítési kiállításon mutatnak be.",
           "felelos": "Szacsvai Pál",
-          "prerequisite": null,
-          "requirement": "k",
-          "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "prerequisite": "-",
+          "requirement": "kollokvium",
+          "software": [
+            "TouchDesigner",
+            "Unreal Engine",
+            "Cinema 4D",
+            "After Effects"
+          ],
+          "keywords": [
+            "mapping",
+            "vetítéstechnika",
+            "generatív vizualizáció",
+            "fényművészet",
+            "interaktív installáció",
+            "dmx",
+            "hangreaktív vizuál",
+            "valós idejű grafika"
+          ],
+          "cel": "A hallgatók valós munkaszituációkhoz hasonló környezetben sajátítsák el a vetítéses technikák alkalmazását, a kreatív döntéshozatalt és a csapatmunkát, egy fiktív megrendelő igényei alapján készítve vetítésterveket valós helyszínre.",
+          "pdfUrl": "/tematikak/ext-interaktiv-grafika.pdf",
+          "category": [
+            "installáció",
+            "ux/interakció",
+            "animáció"
+          ],
           "group": null
         },
         {
@@ -6642,14 +8702,26 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kollár Dávid",
           "institute": "AMD",
           "note": null,
-          "description": "Szakdoga",
+          "description": "A kurzus a BA-tanulmányokat lezáró szakdolgozat megírására készíti fel a hallgatókat: a témaválasztástól a forrásgyűjtésen és -feldolgozáson át a szöveg struktúrájának kialakításáig és a tanulmány megírásáig. Témái között szerepel a hivatkozási formák, a tartalomjegyzék-készítés, a kutatásmódszertan, valamint a szakszövegírás és az AI viszonya. Az értékelés az órai és otthoni feladatok, valamint a félév végi beadandó dolgozat alapján történik.",
           "felelos": "Mayer Éva",
-          "prerequisite": null,
-          "requirement": "gy",
+          "prerequisite": "-",
+          "requirement": "gyakorlati jegy",
           "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "keywords": [
+            "szakdolgozat",
+            "tudományos írás",
+            "forrásgyűjtés",
+            "kutatásmódszertan",
+            "hivatkozás",
+            "szövegstruktúra",
+            "műleírás"
+          ],
+          "cel": "A szakdolgozat készítéséhez szükséges elméleti és gyakorlati tudás elsajátítása, hogy a hallgató megfelelő színvonalú írásművet legyen képes alkotni BA-tanulmányai lezáró időszakában.",
+          "pdfUrl": "/tematikak/ext-szakdolgozat-keszitese.pdf",
+          "category": [
+            "diploma/portfólió",
+            "elmélet"
+          ],
           "group": null
         },
         {
@@ -6664,14 +8736,32 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Forgács Kristóf, Nikázy Gusztáv",
           "institute": "AMD",
           "note": null,
-          "description": "A BLOKK (Nikázy Gusztáv) A kurzus célja elsősorban az online médiafelületeket leíró, már megismert nyelveinek segítségével és azok keresztül tudatosan alkalmazott megoldások seítségével egyedimegoldások keresése, a template-jellegek határai",
+          "description": "A diplomamunka elkészítésére felkészítő gyakorlati kurzus, amely két blokkban fut. Az egyik blokkban a hallgatók a diplomamunkájukhoz kapcsolódó önálló online médiaterméket terveznek és fejlesztenek: modern felülettervező szoftverekben (Figma/Penpot) készítenek prototípust, majd dokumentum- és stílusleíró nyelvekkel valósítják meg, a template-jellegű megoldások keretein túllépve. A másik blokk a diploma projektszerű kezelésére (ütemezés, mérföldkövek), a diplomaprezentáció gyakorlására, valamint a portfólió és showreel összeállítására fókuszál; a teljesítés feltétele két központi konzultáción való részvétel.",
           "felelos": "Forgács Kristóf",
-          "prerequisite": null,
-          "requirement": "gy",
-          "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "prerequisite": "-",
+          "requirement": "gyakorlati jegy",
+          "software": [
+            "Figma",
+            "Penpot",
+            "HTML",
+            "CSS"
+          ],
+          "keywords": [
+            "diplomamunka",
+            "portfólió",
+            "showreel",
+            "prototípus",
+            "webtervezés",
+            "prezentáció",
+            "projekttervezés",
+            "médiatermék"
+          ],
+          "cel": "A diplomamunkához szükséges szoftverismereti, alkotói és művészi ismeretek elsajátítása, kreatív készségek fejlesztése, valamint prezentációs és médiatervezési tudás megszerzése.",
+          "pdfUrl": "/tematikak/ext-duplomatervezesi-feladat.pdf",
+          "category": [
+            "diploma/portfólió",
+            "web"
+          ],
           "group": null
         },
         {
@@ -6686,14 +8776,25 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": null,
-          "felelos": "Forgács KristófOktató: Sterk BarbaraÖsszegzés: projekthét hatodik része, amely workshopok, előadások, meghívott szakmai vendégek, közös projektek és mesterkurzusok formájában bővíti a hallgatók szakmai tudását és kompetenciáit; hangsúlyt kap a társterületek közötti együttműködés, innováció és portfólió építésCél: a hallgatók kreatív és szakmai kompetenciáinak fejlesztése, a szakmai párbeszéd és együttműködés ösztönzése, valamint a kreatív ipar elvárásainak megfelelő szakmai készségek kialakításaFő témák: szakmai programok, meghívott előadók, innovációs workshopok, technikai bemutatók, konferenciarészvétel, kiállítás látogatás, közös projektek kivitelezéseTanulási produktumok: bővített szakmai ismeretek, gyakorlati tapasztalatok, portfólióelemekÓraszám: gyakorlat heti 2 óraKövetelmény: jelenlét és szakmai feladatok teljesítése, határidőre leadásKredit: 0Intézet: Animáció és Média Design Tanszék",
-          "prerequisite": null,
-          "requirement": null,
+          "description": "A projekthét a mintatantervben foglalt szakmai ismereteken túlmutató tudást ad át workshopok, előadások, mesterkurzusok és meghívott szakmai vendégek által vezetett projektek formájában. A programok között innovációs előadások, technikai bemutatók, konferenciarészvétel, kiállításlátogatás és közös projektek kivitelezése szerepel, hangsúlyt kap a társterületek közötti együttműködés és a portfólióépítés. A teljesítés feltétele a jelenlét és a kijelölt szakmai feladatok határidőre való leadása.",
+          "felelos": "Forgács Kristóf",
+          "prerequisite": "-",
+          "requirement": "A tárgy teljesítésének feltétele a jelenlét, valamint a kijelölt szakmai feladatok teljesítése és határidőre való leadása.",
           "software": [],
-          "keywords": [],
-          "cel": null,
-          "pdfUrl": null,
+          "keywords": [
+            "projekthét",
+            "workshop",
+            "mesterkurzus",
+            "vendégelőadó",
+            "kreatív ipar",
+            "portfólióépítés",
+            "együttműködés"
+          ],
+          "cel": "A mintatanterven túlmutató szakmai tudás átadása, a társterületi kompetenciák beemelése, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
+          "pdfUrl": "/tematikak/ext-projekthet-6-media-design-ba.pdf",
+          "category": [
+            "projekt"
+          ],
           "group": null
         }
       ]
@@ -6749,5 +8850,5 @@ export const GROUP_LABEL: Record<number, string> = {
 };
 
 export function emptyCourse(): Course {
-  return { type: 'Kötelező', name: '', specialization: null, courseType: 'gyakorlat', hours: null, credits: null, active: null, groups: null, instructors: null, institute: 'AMD', note: null, description: null, felelos: null, prerequisite: null, requirement: null, software: [], keywords: [], cel: null, pdfUrl: null, group: null };
+  return { type: 'Kötelező', name: '', specialization: null, courseType: 'gyakorlat', hours: null, credits: null, active: null, groups: null, instructors: null, institute: 'AMD', note: null, description: null, felelos: null, prerequisite: null, requirement: null, software: [], keywords: [], category: [], cel: null, pdfUrl: null, group: null };
 }

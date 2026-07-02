@@ -178,6 +178,9 @@ body {
 .cn-card:hover .cn-edit { display: block; }
 .cn-kws { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
 .cn-kw { font-size: .6rem; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: var(--brand-100); color: var(--brand-text); }
+.cn-cats { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
+.cn-cat { font-family: var(--ff); font-size: .56rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; background: transparent; color: var(--ink-2); border: 1px solid var(--line-2); cursor: pointer; }
+.cn-cat:hover { border-color: var(--brand); color: var(--brand-text); }
 .cn-foot { display: flex; align-items: center; gap: 8px; margin-top: 9px; }
 .cn-soft { min-width: 0; font-family: var(--ff-mono); font-size: .63rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cn-pdf { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 3px; font-size: .64rem; font-weight: 700; letter-spacing: .02em; color: var(--brand-text); text-decoration: none; padding: 3px 9px; border: 1px solid color-mix(in srgb, var(--brand) 32%, var(--line)); border-radius: 999px; }
@@ -243,6 +246,9 @@ body {
 .cc-card:hover .cc-edit { display: block; }
 .cc-kws { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
 .cc-kw { font-size: .64rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--brand-100); color: var(--brand-text); }
+.cc-cats { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.cc-cat { font-family: var(--ff); font-size: .58rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; background: transparent; color: var(--ink-2); border: 1px solid var(--line-2); cursor: pointer; }
+.cc-cat:hover { border-color: var(--brand); color: var(--brand-text); }
 .cc-foot { display: flex; align-items: center; gap: 9px; margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--line); }
 .cc-soft { min-width: 0; font-family: var(--ff-mono); font-size: .67rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cc-pdf { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 4px; font-size: .68rem; font-weight: 700; letter-spacing: .02em; color: var(--brand-text); text-decoration: none; padding: 4px 10px; border: 1px solid color-mix(in srgb, var(--brand) 32%, var(--line)); border-radius: 999px; }
@@ -280,6 +286,11 @@ body {
 .dr-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .dr-chip { font-size: .72rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--brand-100); color: var(--brand-text); }
 .dr-chip.sw { font-family: var(--ff-mono); font-weight: 500; background: var(--paper-2); color: var(--ink-2); border: 1px solid var(--line); }
+.dr-cats { margin: 8px 0 2px; }
+.dr-chip.cat { font-family: var(--ff); font-size: .62rem; letter-spacing: .05em; text-transform: uppercase; border-radius: 5px; background: transparent; color: var(--ink-2); border: 1px solid var(--line-2); cursor: pointer; }
+.dr-chip.cat:hover { border-color: var(--brand); color: var(--brand-text); }
+.dr-chip.cat.is-on { background: var(--brand); border-color: var(--brand); color: #fff; }
+.cat-picker { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 0; }
 .dr-pdf { display: flex; width: 100%; justify-content: center; text-align: center; margin-bottom: 10px; text-decoration: none; border-color: color-mix(in srgb, var(--brand) 32%, var(--line)); color: var(--brand-text); font-weight: 600; }
 .dr-pdf:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
 .dr-edit { width: 100%; justify-content: center; margin-top: 8px; text-align: center; }

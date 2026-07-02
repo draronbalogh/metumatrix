@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import {
-  Cohort, Course, Curriculum, DEFAULT_DATA, UserEdge, VERSION_ORDER, emptyCourse, semLabel, specShort,
+  CATEGORIES, Cohort, Course, Curriculum, DEFAULT_DATA, UserEdge, VERSION_ORDER, catList, emptyCourse, semLabel, specShort,
 } from '@/data/curriculum';
 import CatalogView from './CatalogView';
 import EditModal from './EditModal';
@@ -42,6 +42,7 @@ export default function CurriculumApp() {
   const [spec, setSpec] = useState('');
   const [ctype, setCtype] = useState('');
   const [instr, setInstr] = useState('');
+  const [cat, setCat] = useState('');
   const [editor, setEditor] = useState<Ref2 | null>(null);
   const [details, setDetails] = useState<Ref2 | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -194,7 +195,8 @@ export default function CurriculumApp() {
   const onDetails = useCallback((ci: number, xi: number) => setDetails({ ci, xi }), []);
   const onAdd = useCallback((ci: number) => setEditor({ ci, xi: -1 }), []);
   const onInstructor = useCallback((name: string) => setInstr((v) => (v === name ? '' : name)), []);
-  const handlers = useMemo<Handlers>(() => ({ onEdit, onDetails, onAdd, onInstructor }), [onEdit, onDetails, onAdd, onInstructor]);
+  const onCategory = useCallback((c: string) => setCat((v) => (v === c ? '' : c)), []);
+  const handlers = useMemo<Handlers>(() => ({ onEdit, onDetails, onAdd, onInstructor, onCategory }), [onEdit, onDetails, onAdd, onInstructor, onCategory]);
 
   const addEdge = useCallback((e: UserEdge) => {
     const cur = dataRef.current;
@@ -226,7 +228,7 @@ export default function CurriculumApp() {
   }, [commit]);
   const persist = useMemo<Persist>(() => ({ addEdge, deleteEdge, moveNode, savePositions, applyConnection, resetPositions }), [addEdge, deleteEdge, moveNode, savePositions, applyConnection, resetPositions]);
 
-  const filter = useMemo<Filter>(() => ({ q, spec, ctype, instr }), [q, spec, ctype, instr]);
+  const filter = useMemo<Filter>(() => ({ q, spec, ctype, instr, cat }), [q, spec, ctype, instr, cat]);
   const vp = useMemo<View>(() => ({ ver, prog }), [ver, prog]);
   const versions = useMemo(() => VERSION_ORDER.filter((v) => data.cohorts.some((c) => c.version === v)), [data]);
   const visibleCohorts = useMemo(() => data.cohorts.filter((c) => c.version === ver && c.program === prog), [data, ver, prog]);
@@ -243,6 +245,11 @@ export default function CurriculumApp() {
     const s = new Set<string>();
     visibleCohorts.forEach((c) => c.courses.forEach((x) => (x.instructors || '').split(',').map((n) => n.trim()).filter(Boolean).forEach((n) => s.add(n))));
     return [...s].sort((a, b) => a.localeCompare(b, 'hu'));
+  }, [visibleCohorts]);
+  const allCats = useMemo(() => {
+    const s = new Set<string>();
+    visibleCohorts.forEach((c) => c.courses.forEach((x) => catList(x).forEach((k) => s.add(k))));
+    return CATEGORIES.filter((k) => s.has(k));
   }, [visibleCohorts]);
 
   const detailCourse = details ? data.cohorts[details.ci]?.courses[details.xi] : null;
@@ -292,6 +299,12 @@ export default function CurriculumApp() {
             <option value="">Minden oktató</option>
             {allInstructors.map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
+          {allCats.length > 0 && (
+            <select className={`presetsel instrsel${cat ? ' is-on' : ''}`} value={cat} onChange={(e) => setCat(e.target.value)} title="Szűrés kategóriára (mindkét nézetben)">
+              <option value="">Minden kategória</option>
+              {allCats.map((k) => <option key={k} value={k}>{k}</option>)}
+            </select>
+          )}
           <div className="filters">
             {specs.map((s) => (
               <button key={s} className={`chip${spec === s ? ' is-on' : ''}`} onClick={() => setSpec((v) => (v === s ? '' : s))}>{s}</button>
@@ -315,7 +328,7 @@ export default function CurriculumApp() {
           {view === 'map' ? (
             <MapView data={data} filter={filter} handlers={handlers} persist={persist} theme={theme} view={vp} />
           ) : (
-            <CatalogView data={data} filter={filter} view={vp} onDetails={onDetails} onEdit={onEdit} onAdd={onAdd} onInstructor={onInstructor} />
+            <CatalogView data={data} filter={filter} view={vp} onDetails={onDetails} onEdit={onEdit} onAdd={onAdd} onInstructor={onInstructor} onCategory={onCategory} />
           )}
         </div>
       </div>
@@ -331,6 +344,13 @@ export default function CurriculumApp() {
               <div className="dr-eyebrow">{c.program} · {semLabel(c.semester)} · {x.type}</div>
               <h2 className="dr-name">{x.name}</h2>
               {x.specialization && <div className="dr-spec">{x.specialization}</div>}
+              {catList(x).length > 0 && (
+                <div className="dr-chips dr-cats">
+                  {catList(x).map((k) => (
+                    <button key={k} className={`dr-chip cat${cat === k ? ' is-on' : ''}`} title={`Szűrés kategóriára: ${k}`} onClick={() => onCategory(k)}>{k}</button>
+                  ))}
+                </div>
+              )}
               <div className="dr-stats">
                 <div><b>{x.courseType}</b><span>forma</span></div>
                 <div><b>{x.hours ?? '–'}</b><span>óra/hét</span></div>

@@ -1,13 +1,14 @@
 import { Node, Edge, MarkerType } from 'reactflow';
-import { Course, Curriculum, semLabel, specShort, courseGroup, courseRank } from '@/data/curriculum';
+import { Course, Curriculum, catList, semLabel, specShort, courseGroup, courseRank } from '@/data/curriculum';
 
-export interface Filter { q: string; spec: string; ctype: string; instr: string; }
+export interface Filter { q: string; spec: string; ctype: string; instr: string; cat: string; }
 export interface View { ver: string; prog: 'BA' | 'MA'; }
 export interface Handlers {
   onEdit: (ci: number, xi: number) => void;
   onDetails: (ci: number, xi: number) => void;
   onAdd: (ci: number) => void;
   onInstructor: (name: string) => void;
+  onCategory: (cat: string) => void;
 }
 
 export const GRID = 24;
@@ -41,15 +42,16 @@ export function buildGraph(data: Curriculum, filter: Filter, h: Handlers, view: 
   const nodes: Node[] = [];
   const edges: Edge[] = [];
 
-  const filterActive = !!(filter.q || filter.spec || filter.ctype || filter.instr);
+  const filterActive = !!(filter.q || filter.spec || filter.ctype || filter.instr || filter.cat);
   const matches = (c: Course) => {
     if (filter.q) {
       const s = filter.q.toLowerCase();
-      if (!(c.name.toLowerCase().includes(s) || (c.specialization || '').toLowerCase().includes(s) || (c.instructors || '').toLowerCase().includes(s))) return false;
+      if (!(c.name.toLowerCase().includes(s) || (c.specialization || '').toLowerCase().includes(s) || (c.instructors || '').toLowerCase().includes(s) || catList(c).some((k) => k.includes(s)) || c.keywords.some((k) => k.toLowerCase().includes(s)) || c.software.some((k) => k.toLowerCase().includes(s)))) return false;
     }
     if (filter.spec && specShort(c.specialization) !== filter.spec) return false;
     if (filter.ctype && c.courseType !== filter.ctype) return false;
     if (filter.instr && !instrList(c).includes(filter.instr)) return false;
+    if (filter.cat && !catList(c).includes(filter.cat)) return false;
     return true;
   };
 
@@ -90,7 +92,7 @@ export function buildGraph(data: Curriculum, filter: Filter, h: Handlers, view: 
       nodes.push({
         id, type: 'course',
         position: { x: COURSE_X0 + col * STEP_X, y: rowTop + CARD_TOP },
-        data: { course, ci, xi, dim: filterActive && !hit, hit, onEdit: h.onEdit, onDetails: h.onDetails },
+        data: { course, ci, xi, dim: filterActive && !hit, hit, onEdit: h.onEdit, onDetails: h.onDetails, onCategory: h.onCategory },
       });
       const { base, num } = baseAndNum(course.name);
       if (num != null) (series[base] ||= []).push({ id, sem: c.semester || 0, num });

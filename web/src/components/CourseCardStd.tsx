@@ -1,14 +1,15 @@
 'use client';
 
-import { Course, specShort, groupClass } from '@/data/curriculum';
+import { Course, catList, specShort, groupClass } from '@/data/curriculum';
 
 interface Props {
   course: Course;
   onDetails: () => void;
   onEdit: () => void;
+  onCategory: (cat: string) => void;
 }
 
-export default function CourseCardStd({ course: x, onDetails, onEdit }: Props) {
+export default function CourseCardStd({ course: x, onDetails, onEdit, onCategory }: Props) {
   const ea = x.courseType === 'előadás';
   return (
     <div className={`cc-card ${groupClass(x)}`} onClick={onDetails}>
@@ -22,6 +23,14 @@ export default function CourseCardStd({ course: x, onDetails, onEdit }: Props) {
         {x.specialization && <span className="cc-spec">{specShort(x.specialization)}</span>}
         <span className="cc-kr">{x.credits ?? '–'} kr</span>
       </div>
+      {catList(x).length > 0 && (
+        <div className="cc-cats">
+          {catList(x).map((k) => (
+            <button key={k} className="cc-cat" title={`Szűrés kategóriára: ${k}`}
+              onClick={(e) => { e.stopPropagation(); onCategory(k); }}>{k}</button>
+          ))}
+        </div>
+      )}
       {x.description && <div className="cc-desc">{x.description.length > 220 ? x.description.slice(0, 220).trimEnd() + '…' : x.description}</div>}
       {x.keywords.length > 0 && (
         <div className="cc-kws">{x.keywords.slice(0, 5).map((k) => <span key={k} className="cc-kw">{k}</span>)}</div>

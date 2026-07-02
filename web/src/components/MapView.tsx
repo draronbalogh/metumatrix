@@ -7,11 +7,34 @@ import ReactFlow, {
   Connection, Edge, Node,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Curriculum, UserEdge } from '@/data/curriculum';
+import { Course, Curriculum, UserEdge, courseGroup, GROUP_LABEL } from '@/data/curriculum';
 import { buildGraph, Filter, Handlers, View, GRID, COURSE_X0, STEP_X } from '@/lib/buildGraph';
-import { ProgramNode, SemesterNode, CourseNode } from './MapNodes';
+import { ProgramNode, SemesterNode, CourseNode, FrameNode } from './MapNodes';
 
-const nodeTypes = { program: ProgramNode, semester: SemesterNode, course: CourseNode };
+const nodeTypes = { program: ProgramNode, semester: SemesterNode, course: CourseNode, frame: FrameNode };
+
+// spec-blokk keretek: cohortonként a Multimédia (g1) / Játéktervezés (g2) kártyák befoglaló doboza
+const CARD_W = 248, FR_PADX = 14, FR_PADT = 20, FR_CARDH = 240, FR_PADB = 8;
+function buildFrames(nodes: Node[]): Node[] {
+  const box: Record<string, { minX: number; maxX: number; minY: number; maxY: number; g: number }> = {};
+  nodes.forEach((n) => {
+    if (n.type !== 'course') return;
+    const course = (n.data as { course?: Course })?.course;
+    if (!course) return;
+    const g = courseGroup(course);
+    if (g !== 1 && g !== 2) return;
+    const key = `${(n.data as { ci: number }).ci}-${g}`;
+    const b = box[key] || (box[key] = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity, g });
+    b.minX = Math.min(b.minX, n.position.x); b.maxX = Math.max(b.maxX, n.position.x);
+    b.minY = Math.min(b.minY, n.position.y); b.maxY = Math.max(b.maxY, n.position.y);
+  });
+  return Object.entries(box).map(([key, b]) => ({
+    id: `frame-${key}`, type: 'frame',
+    position: { x: b.minX - FR_PADX, y: b.minY - FR_PADT },
+    data: { g: b.g, label: GROUP_LABEL[b.g], w: b.maxX - b.minX + CARD_W + FR_PADX * 2, h: b.maxY - b.minY + FR_CARDH + FR_PADT + FR_PADB },
+    draggable: false, selectable: false, focusable: false, zIndex: -1,
+  }));
+}
 
 export interface Persist {
   addEdge: (e: UserEdge) => void;
@@ -44,7 +67,10 @@ function Inner({ data, filter, handlers, persist, theme, view }: Props) {
   }), []);
 
   const initNodes = useMemo<Node[]>(
-    () => built.nodes.map((n) => (data.positions?.[n.id] ? { ...n, position: data.positions[n.id] } : n)),
+    () => {
+      const positioned = built.nodes.map((n) => (data.positions?.[n.id] ? { ...n, position: data.positions[n.id] } : n));
+      return [...buildFrames(positioned), ...positioned];
+    },
     [built, data.positions],
   );
   const filterActive = !!(filter.q || filter.spec || filter.ctype || filter.instr || filter.cat);
@@ -110,7 +136,7 @@ function Inner({ data, filter, handlers, persist, theme, view }: Props) {
     persist.savePositions(next);
   }, [built, nodes, persist, setNodes]);
 
-  const miniColor = (n: Node) => (n.type === 'program' ? '#ff2d6f' : n.type === 'semester' ? (dark ? '#e9e9e4' : '#0e0f11') : n.data?.dim ? (dark ? '#26272c' : '#e7e7e2') : (dark ? '#3a3d44' : '#ffffff'));
+  const miniColor = (n: Node) => (n.type === 'frame' ? 'transparent' : n.type === 'program' ? '#ff2d6f' : n.type === 'semester' ? (dark ? '#e9e9e4' : '#0e0f11') : n.data?.dim ? (dark ? '#26272c' : '#e7e7e2') : (dark ? '#3a3d44' : '#ffffff'));
 
   return (
     <div className="mapwrap">

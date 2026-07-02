@@ -99,6 +99,15 @@ export const SemesterNode = memo(function SemesterNode({ data }: { data: SemData
   );
 });
 
+// Specializáció-blokk kerete a mátrixban — nem interaktív, a kártyák MÖGÖTT ül (pointer-events: none a CSS-ben)
+export const FrameNode = memo(function FrameNode({ data }: { data: { g: number; label: string; w: number; h: number } }) {
+  return (
+    <div className={`spec-frame g${data.g}`} style={{ width: data.w, height: data.h }}>
+      <span className="spec-frame-lbl">{data.label}</span>
+    </div>
+  );
+});
+
 export const ProgramNode = memo(function ProgramNode({ data }: { data: { program: string; height: number } }) {
   return (
     <div className="prog-rail" style={{ height: data.height }}>

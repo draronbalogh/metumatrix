@@ -186,6 +186,15 @@ body {
 .cn-pdf { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 3px; font-size: .64rem; font-weight: 700; letter-spacing: .02em; color: var(--brand-text); text-decoration: none; padding: 3px 9px; border: 1px solid color-mix(in srgb, var(--brand) 32%, var(--line)); border-radius: 999px; }
 .cn-pdf:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
 
+/* Specializáció-blokk keret (mátrix): nem interaktív, a kártyák mögött */
+.react-flow__node-frame { pointer-events: none !important; z-index: -1 !important; }
+.spec-frame { position: relative; border: 2px dashed; border-radius: 16px; }
+.spec-frame.g1 { border-color: color-mix(in srgb, var(--g1) 50%, transparent); background: color-mix(in srgb, var(--g1) 5%, transparent); }
+.spec-frame.g2 { border-color: color-mix(in srgb, var(--g2) 50%, transparent); background: color-mix(in srgb, var(--g2) 5%, transparent); }
+.spec-frame-lbl { position: absolute; top: -11px; left: 16px; font-size: .6rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; padding: 3px 11px; border-radius: 999px; color: #fff; white-space: nowrap; }
+.spec-frame.g1 .spec-frame-lbl { background: var(--g1); }
+.spec-frame.g2 .spec-frame-lbl { background: var(--g2); }
+
 .react-flow__handle.hdl { width: 14px; height: 14px; border: 2px solid var(--card); opacity: .6; z-index: 3; transform-origin: center; transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease; }
 .react-flow__handle.hdl.out { background: var(--brand); }
 .react-flow__handle.hdl.in { background: var(--card); box-shadow: inset 0 0 0 2.5px var(--brand); }

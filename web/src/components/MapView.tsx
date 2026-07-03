@@ -52,9 +52,11 @@ interface Props {
   persist: Persist;
   theme: 'light' | 'dark';
   view: View;
+  locked: boolean;
+  onToggleLock: () => void;
 }
 
-function Inner({ data, filter, handlers, persist, theme, view }: Props) {
+function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleLock }: Props) {
   const dark = theme === 'dark';
   const [legendOpen, setLegendOpen] = useState(false);
   const built = useMemo(() => buildGraph(data, filter, handlers, view), [data, filter, handlers, view]);
@@ -170,7 +172,7 @@ function Inner({ data, filter, handlers, persist, theme, view }: Props) {
   const miniColor = (n: Node) => (n.type === 'frame' ? 'transparent' : n.type === 'program' ? '#ff2d6f' : n.type === 'semester' ? (dark ? '#e9e9e4' : '#0e0f11') : n.data?.dim ? (dark ? '#26272c' : '#e7e7e2') : (dark ? '#3a3d44' : '#ffffff'));
 
   return (
-    <div className="mapwrap">
+    <div className={`mapwrap${locked ? ' locked' : ''}`}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -182,7 +184,9 @@ function Inner({ data, filter, handlers, persist, theme, view }: Props) {
         onNodeDragStop={onNodeDragStop}
         onSelectionDragStop={onSelectionDragStop}
         defaultEdgeOptions={{ type: 'default' }}
-        deleteKeyCode={['Backspace', 'Delete']}
+        deleteKeyCode={locked ? null : ['Backspace', 'Delete']}
+        nodesDraggable={!locked}
+        elementsSelectable={!locked}
         snapToGrid
         snapGrid={[GRID, GRID]}
         connectionLineType={ConnectionLineType.Bezier}
@@ -190,7 +194,7 @@ function Inner({ data, filter, handlers, persist, theme, view }: Props) {
         minZoom={0.1}
         maxZoom={1.8}
         proOptions={{ hideAttribution: true }}
-        nodesConnectable
+        nodesConnectable={!locked}
         elevateEdgesOnSelect
         multiSelectionKeyCode="Shift"
         selectionKeyCode="Shift"
@@ -201,7 +205,12 @@ function Inner({ data, filter, handlers, persist, theme, view }: Props) {
         <MiniMap pannable zoomable nodeColor={miniColor} nodeStrokeColor={dark ? '#000' : '#0e0f11'} maskColor={dark ? 'rgba(14,15,17,.6)' : 'rgba(242,243,239,.55)'} style={{ background: dark ? '#17181b' : '#fff' }} />
         <Panel position="top-right">
           <div className="map-tools">
-            <button className="btn" onClick={onAlign} title="A node-okat sorba/oszlopba igazítja (vízszintesen egy vonalba, függőlegesen rácsra), a mozgatásokat megtartva">⌗ Igazítás</button>
+            <button
+              className={`btn lockbtn${locked ? ' is-on' : ''}`}
+              onClick={onToggleLock}
+              title={locked ? 'Az elrendezés zárolva: a kártyák és kapcsolatok nem mozdulnak, csak pásztázni/zoomolni lehet. Kattints a feloldáshoz.' : 'Az elrendezés szabad: a kártyák húzhatók, kapcsolatok köthetők. Kattints a zároláshoz (nézelődéshez ajánlott).'}
+            >{locked ? '🔒 Zárolva' : '🔓 Szabad'}</button>
+            {!locked && <button className="btn" onClick={onAlign} title="A node-okat sorba/oszlopba igazítja (vízszintesen egy vonalba, függőlegesen rácsra), a mozgatásokat megtartva">⌗ Igazítás</button>}
           </div>
         </Panel>
       </ReactFlow>

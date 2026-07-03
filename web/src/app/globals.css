@@ -339,6 +339,11 @@ html[data-theme='dark'] .react-flow__node.selected .cn-card, html[data-theme='da
 html[data-theme='dark'] .prog-rail { box-shadow: 0 0 26px rgba(255, 45, 111, .22); }
 html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 
+/* ---- elrendezés-zárolás (lakat) ---- */
+.lockbtn.is-on { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 700; }
+.mapwrap.locked .react-flow__handle.hdl { opacity: 0 !important; pointer-events: none !important; }
+.mapwrap.locked .cn-card { cursor: pointer; }
+
 /* ---- responsive ---- */
 /* asztali nézeten a ☰ gomb rejtve, a wrapper láthatatlan (display: contents = a régi elrendezés változatlan) */
 .tools-toggle { display: none; }
@@ -365,11 +370,21 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
   .tools-toggle { display: inline-flex; margin-left: auto; min-width: 40px; justify-content: center; }
   .tools-toggle.has-f { border-color: var(--brand); color: var(--brand-text); font-weight: 700; }
   .toolbar-more { display: none; }
-  .toolbar-more.open { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; padding: 10px 0 6px; border-top: 1px dashed var(--line); }
-  .toolbar-more.open .search { flex: 1 1 100%; max-width: none; }
-  .toolbar-more.open .presetsel, .toolbar-more.open .instrsel { flex: 1 1 44%; max-width: none; }
+  /* a lenyíló panel vizuálisan elkülönül: saját kártya-háttér, keret, árnyék */
+  .toolbar-more.open {
+    display: flex; flex-wrap: wrap; gap: 9px; width: 100%;
+    margin: 8px 0 5px; padding: 13px 12px;
+    background: var(--paper-2); border: 1px solid var(--line-2); border-radius: 14px;
+    box-shadow: 0 10px 28px rgba(16, 17, 20, .13), inset 0 1px 0 rgba(255, 255, 255, .04);
+  }
+  .toolbar-more.open .search { flex: 1 1 100%; max-width: none; background-color: var(--card); }
+  .toolbar-more.open .presetsel, .toolbar-more.open .instrsel { flex: 1 1 44%; max-width: none; background: var(--card); }
+  .toolbar-more.open .btn { background: var(--card); }
+  .toolbar-more.open .chip { background: var(--card); }
+  .toolbar-more.open .chip.is-on { background: var(--brand); }
   .toolbar-more.open .spacer { display: none; }
-  .toolbar-more.open .filters { width: 100%; }
+  .toolbar-more.open .filters { width: 100%; padding-top: 2px; border-top: 1px dashed var(--line); }
+  .toolbar-more.open .themebtn { background: var(--card); }
 
   /* részletek panel + szerkesztő modal teljes szélességben */
   .drawer { width: 100vw; padding: 18px 16px 40px; }

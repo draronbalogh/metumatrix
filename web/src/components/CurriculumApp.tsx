@@ -18,6 +18,7 @@ const MapView = dynamic(() => import('./MapView'), {
 const LS_KEY = 'mediadesign-2026-27-v9';
 const THEME_KEY = 'md-theme';
 const PRESET_KEY = 'md-preset';
+const LOCK_KEY = 'md-locked';
 type Preset = 'neue' | 'tordeles' | 'muszerfal' | 'muterem';
 const PRESETS: { id: Preset; label: string }[] = [
   { id: 'muszerfal', label: 'Műszerfal — modern app' },
@@ -46,6 +47,7 @@ export default function CurriculumApp() {
   const [editor, setEditor] = useState<Ref2 | null>(null);
   const [details, setDetails] = useState<Ref2 | null>(null);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [locked, setLocked] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -65,6 +67,10 @@ export default function CurriculumApp() {
         const t = localStorage.getItem(THEME_KEY); if (t === 'dark' || t === 'light') setTheme(t);
         const p = localStorage.getItem(PRESET_KEY) as Preset | null;
         if (p && PRESETS.some((x) => x.id === p)) setPreset(p);
+        // elrendezés-zárolás: mentett érték, különben érintőkijelzőn alapból zárolva
+        const l = localStorage.getItem(LOCK_KEY);
+        if (l != null) setLocked(l === '1');
+        else if (window.matchMedia('(pointer: coarse)').matches) setLocked(true);
       } catch { /* ignore */ }
       setHydrated(true);
     })();
@@ -197,6 +203,10 @@ export default function CurriculumApp() {
   const onAdd = useCallback((ci: number) => setEditor({ ci, xi: -1 }), []);
   const onInstructor = useCallback((name: string) => setInstr((v) => (v === name ? '' : name)), []);
   const onCategory = useCallback((c: string) => setCat((v) => (v === c ? '' : c)), []);
+  const toggleLock = useCallback(() => setLocked((v) => {
+    try { localStorage.setItem(LOCK_KEY, v ? '0' : '1'); } catch { /* ignore */ }
+    return !v;
+  }), []);
   const handlers = useMemo<Handlers>(() => ({ onEdit, onDetails, onAdd, onInstructor, onCategory }), [onEdit, onDetails, onAdd, onInstructor, onCategory]);
 
   const addEdge = useCallback((e: UserEdge) => {
@@ -334,7 +344,7 @@ export default function CurriculumApp() {
 
         <div className="viewport">
           {view === 'map' ? (
-            <MapView data={data} filter={filter} handlers={handlers} persist={persist} theme={theme} view={vp} />
+            <MapView data={data} filter={filter} handlers={handlers} persist={persist} theme={theme} view={vp} locked={locked} onToggleLock={toggleLock} />
           ) : (
             <CatalogView data={data} filter={filter} view={vp} onDetails={onDetails} onEdit={onEdit} onAdd={onAdd} onInstructor={onInstructor} onCategory={onCategory} />
           )}

@@ -15,24 +15,25 @@ const nodeTypes = { program: ProgramNode, semester: SemesterNode, course: Course
 
 // Csoport-zónák („swimlane”): soronként a csoport kártyáinak befoglalója, a szomszédos sorok
 // darabjai függőlegesen összeérnek, így csoportonként EGY összefüggő színes terület rajzolódik ki
-// (Közös / Multimédia / Játéktervezés / külső elméleti). Csak akkor jelenik meg, ha a nézetben van specializáció.
+// (Közös / Multimédia / Játéktervezés / külső elméleti). Akkor jelenik meg, ha a nézetben
+// legalább KÉT különböző csoport van (MA-n pl. közös + ELM) — egyetlen csoportnál csak zaj lenne.
 const CARD_W = 248, FR_PADX = 14, FR_PADT = 20, FR_CARDH = 240, FR_PADB = 8;
 const ZONE_LABEL: Record<number, string> = { 0: 'Közös tárgyak', 1: GROUP_LABEL[1], 2: GROUP_LABEL[2], 3: GROUP_LABEL[3] };
 function buildZones(nodes: Node[]): Node[] {
   const box: Record<string, { minX: number; maxX: number; minY: number; g: number }> = {};
-  let hasSpec = false;
+  const present = new Set<number>();
   nodes.forEach((n) => {
     if (n.type !== 'course') return;
     const course = (n.data as { course?: Course })?.course;
     if (!course) return;
     const g = courseGroup(course);
-    if (g === 1 || g === 2) hasSpec = true;
+    present.add(g);
     const key = `${(n.data as { ci: number }).ci}-${g}`;
     const b = box[key] || (box[key] = { minX: Infinity, maxX: -Infinity, minY: Infinity, g });
     b.minX = Math.min(b.minX, n.position.x); b.maxX = Math.max(b.maxX, n.position.x);
     b.minY = Math.min(b.minY, n.position.y);
   });
-  if (!hasSpec) return [];
+  if (present.size < 2) return [];
   const out: Node[] = [];
   [0, 1, 2, 3].forEach((g) => {
     const pieces = Object.values(box).filter((b) => b.g === g).sort((a, b) => a.minY - b.minY);

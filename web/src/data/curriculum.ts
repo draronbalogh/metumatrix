@@ -271,7 +271,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólió",
             "kiállítás"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások, meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégelőadók, akár közös programok formájában, valamint a különböző szakterületek találkozása, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/12722.pdf",
           "category": [
             "projekt"
@@ -308,7 +308,7 @@ export const DEFAULT_DATA: Curriculum = {
             "perszóna",
             "user flow"
           ],
-          "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása alap szinten. A hallgató a kurzus elvégzése eredményeképpen képes alap szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a UX design területét k",
+          "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) elsajátítása alap szinten. A hallgató a kurzus elvégzése eredményeképpen képes alap szinten felismerni, elemezni, érteni és felhasználni (alkalmazni), valamint prezentálni a UX design területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/12741.pdf",
           "category": [
             "ux/interakció"
@@ -417,7 +417,7 @@ export const DEFAULT_DATA: Curriculum = {
             "dtp",
             "fonttervezés"
           ],
-          "cel": "A kurzus célja a tipográfia és betűrajz eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása alapszinten. A hallgató a kurzus elvégzése eredményeképpen képes alapszinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint ",
+          "cel": "A kurzus célja a tipográfia és betűrajz eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása alapszinten. A hallgató a kurzus elvégzése eredményeképpen képes alapszinten felismerni, elemezni, érteni és felhasználni, valamint prezentálni a tipográfia és betűrajz területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/15053.pdf",
           "category": [
             "grafika/tipográfia",
@@ -456,7 +456,7 @@ export const DEFAULT_DATA: Curriculum = {
             "világítás",
             "médiatervezés"
           ],
-          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása alap szinten. A hallgató a kurzus elvégzése eredményeképpen képes alap szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezent",
+          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása alap szinten. A hallgató a kurzus elvégzése eredményeképpen képes alap szinten felismerni, elemezni, érteni és felhasználni, valamint prezentálni a médiatervezés területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/15044.pdf",
           "category": [
             "fotó",
@@ -492,7 +492,7 @@ export const DEFAULT_DATA: Curriculum = {
             "fényművészet",
             "elektronika"
           ],
-          "cel": "A kurzus célja az interakciótervezés alapjainak eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalma",
+          "cel": "A kurzus célja az interakciótervezés alapjainak eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni, valamint prezentálni az interakciótervezés alapjainak területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/15034.pdf",
           "category": [
             "ux/interakció",
@@ -530,7 +530,7 @@ export const DEFAULT_DATA: Curriculum = {
             "akadálymentesítés",
             "user flow"
           ],
-          "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a UX design terület",
+          "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni, valamint prezentálni a UX design területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/14761.pdf",
           "category": [
             "ux/interakció"
@@ -563,7 +563,7 @@ export const DEFAULT_DATA: Curriculum = {
             "képelmélet",
             "interaktivitás"
           ],
-          "cel": "A kurzus célja a média design általános elméletének elsajátítása, ahhoz, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, el",
+          "cel": "A kurzus célja a média design általános elméletének elsajátítása, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és alkalmazni az elsajátított elméleti ismeretanyagot, és médiatervezői, médiaművészi gyakorlatát el tudja helyezni és sikeresen képviselni tudja szakmai együttműködései során, valamint egy szélesebb, interdiszciplináris keretben.",
           "pdfUrl": "/tematikak/15047.pdf",
           "category": [
             "elmélet"
@@ -596,7 +596,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólió",
             "ba"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégelőadók, akár közös programok formájában. A tárgy keretében megvalósulnak a MyBrand szemlélet fontos alappillérei: a különböző szakterületek találkozása, a tudás- és kompetenciaelemek egymásra épülése, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/14760.pdf",
           "category": [
             "projekt"
@@ -779,7 +779,7 @@ export const DEFAULT_DATA: Curriculum = {
             "projektmunka",
             "portfólió"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, valamint a MyBrand szemlélet alappilléreinek megvalósítása: a különböző szakterületek találkozása, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/12745.pdf",
           "category": [
             "projekt"
@@ -818,7 +818,7 @@ export const DEFAULT_DATA: Curriculum = {
             "akadálymentesítés",
             "ui"
           ],
-          "cel": "A kurzus célja a multimédia médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) v",
+          "cel": "A kurzus célja a multimédia médiatervezés eszközismereti, alkotói és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni, valamint prezentálni a médiatervezés multimédia területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/12460.pdf",
           "category": [
             "web",
@@ -856,7 +856,7 @@ export const DEFAULT_DATA: Curriculum = {
             "fotogrammetria",
             "pbr"
           ],
-          "cel": "A kurzus célja a média designon belül, a multimédia specifikus képalkotás eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) tudásának elsajátítása közép haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni,",
+          "cel": "A kurzus célja a média designon belül a multimédia-specifikus képalkotás eszközismereti, alkotói és művészi tudásának elsajátítása középhaladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni, valamint prezentálni a multimédia-specifikus képalkotás területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/12454.pdf",
           "category": [
             "3d"
@@ -924,7 +924,7 @@ export const DEFAULT_DATA: Curriculum = {
             "vertical slice",
             "tesztelés"
           ],
-          "cel": "A kurzus célja a játékfejlesztés eszközeinek, kreatív és technikai folyamatainak megismertetése a teljes gyártási folyamat mentén, a tervezői és vizuális, illetve az elméleti és gyakorlati feladatok összekapcsolásával. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, el",
+          "cel": "A kurzus célja a játékfejlesztés eszközeinek, kreatív és technikai folyamatainak megismertetése a teljes gyártási folyamat mentén, a tervezői és vizuális, illetve az elméleti és gyakorlati feladatok összekapcsolásával. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és alkalmazni, valamint prezentálni a játékfejlesztés tervezési területéhez tartozó ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat. Ez a tudás lehetővé teszi a komplex alkotási módszerek alkalmazását művészi, alkalmazott és ipari környezetben egyaránt.",
           "pdfUrl": "/tematikak/13184.pdf",
           "category": [
             "játék",
@@ -997,7 +997,7 @@ export const DEFAULT_DATA: Curriculum = {
             "csoportdinamika",
             "ux"
           ],
-          "cel": "A kurzus célja, hogy a hallgató megismerje a játékélményt alakító pszichológiai folyamatokat, a játék fejlődéslélektani, kognitív és szociálpszichológiai vonatkozásait, valamint a motiváció és a flow jelenségeit. A kurzus során a hallgatók megismerkednek a játékpszichológia fejlődéslélektani, kognit",
+          "cel": "A kurzus célja, hogy a hallgató megismerje a játékélményt alakító pszichológiai folyamatokat, a játék fejlődéslélektani, kognitív és szociálpszichológiai vonatkozásait, valamint a motiváció és a flow jelenségeit. A hallgató a kurzus elvégzése után képes felismerni és elemezni a játékélményt alakító pszichológiai folyamatokat, és ezeket tudatosan alkalmazni saját játéktervezői és kreatív munkájában, multidiszciplináris szakmai környezetben is.",
           "pdfUrl": "/tematikak/12853.pdf",
           "category": [
             "elmélet",
@@ -1185,7 +1185,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólió",
             "ba"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, valamint a MyBrand szemlélet alappilléreinek megvalósítása: a különböző szakterületek találkozása, a tudáselemek egymásra épülése, a kreatív ipari szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/15056.pdf",
           "category": [
             "projekt"
@@ -1268,7 +1268,7 @@ export const DEFAULT_DATA: Curriculum = {
             "unreal engine",
             "animáció"
           ],
-          "cel": "A kurzus célja a média designon belül, a multimédia specifikus képalkotás eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) tudásának elsajátítása közép haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni,",
+          "cel": "A kurzus célja a média designon belül a multimédia-specifikus képalkotás eszközismereti, alkotói és művészi tudásának elsajátítása középhaladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni, alkalmazni és prezentálni a multimédia-specifikus képalkotás ismeretanyagát, technikai tudását és prezentációs eljárásait.",
           "pdfUrl": "/tematikak/15030.pdf",
           "category": [
             "3d",
@@ -1775,7 +1775,7 @@ export const DEFAULT_DATA: Curriculum = {
             "kutatásmódszertan",
             "ba"
           ],
-          "cel": "A kurzus célja a szakdolgozat készítéséhez szükséges elméleti és gyakorlati tudás és képességek elsajátítása, ahhoz, hogy a hallgató megfelelő színvonal írásművet legyen képes alkotni a BA tanulmányait lezáró időszakban. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, ",
+          "cel": "A kurzus célja a szakdolgozat készítéséhez szükséges elméleti és gyakorlati tudás és képességek elsajátítása, hogy a hallgató megfelelő színvonalú írásművet legyen képes alkotni a BA tanulmányait lezáró időszakban. A kurzus elvégzése eredményeképpen a hallgató képes haladó szinten felismerni, elemezni, érteni és értekező prózai szinten gyakorlatban alkalmazni az elsajátított elméleti ismeretanyagot, és szakdolgozata által szakmai tudását a megfelelő szakmai fórumokon érdemben képviselni.",
           "pdfUrl": "/tematikak/15055.pdf",
           "category": [
             "diploma/portfólió",
@@ -1815,7 +1815,7 @@ export const DEFAULT_DATA: Curriculum = {
             "projekttervezés",
             "prezentáció"
           ],
-          "cel": "A kurzus célja a diplomamunkához szükséges eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) ismeretek elsajátítása, kreatív készségek kifejlesztése, prezentációs és média tervezési tudás megszerzése. A hallgató a kurzus elvégzése eredményeképpen képes felismerni, elemez",
+          "cel": "A kurzus célja a diplomamunkához szükséges eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) ismeretek elsajátítása, kreatív készségek kifejlesztése, prezentációs és médiatervezési tudás megszerzése. A hallgató a kurzus végére képes felismerni, elemezni, érteni és alkalmazni a diplomamunkája elkészítéséhez elengedhetetlen ismeretanyagot, technikai tudást és prezentációs eljárásokat, valamint értékelni saját pozícióját és eredményeit a kreatív iparban és a médiaművészeti szcénában.",
           "pdfUrl": "/tematikak/15036.pdf",
           "category": [
             "diploma/portfólió",
@@ -1850,7 +1850,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólió",
             "ba"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, valamint a MyBrand szemlélet alappillérei: a különböző szakterületek találkozása, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/15058.pdf",
           "category": [
             "projekt"
@@ -1895,7 +1895,7 @@ export const DEFAULT_DATA: Curriculum = {
             "arnold",
             "uv"
           ],
-          "cel": "A kurzus célja a 3D modellezés és szimuláció eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a",
+          "cel": "A kurzus célja a 3D modellezés és szimuláció eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni, valamint prezentálni a 3D modellezés és szimuláció területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/12453.pdf",
           "category": [
             "3d"
@@ -1933,7 +1933,7 @@ export const DEFAULT_DATA: Curriculum = {
             "vj-zés",
             "adatvizualizáció"
           ],
-          "cel": "A kurzus célja alapvető elektronikai ismeretek elsajátítása és a mikrokontrollerek használatának megértése és használatukkal kapcsolatos gyakorlati tudás elsajátítása, valamint ezek alkalmazása különböző ipari és képzőművészeti területen. A hallgató a kurzus elvégzése után képes haladó szinten létre",
+          "cel": "A kurzus célja alapvető elektronikai ismeretek elsajátítása, a mikrokontrollerek használatának megértése és a velük kapcsolatos gyakorlati tudás megszerzése, valamint ezek alkalmazása különböző ipari és képzőművészeti területeken. A hallgató a kurzus elvégzése után képes haladó szinten létrehozni analóg és szoftveres eszközökkel vezérelhető interaktív elektronikai rendszereket, és gyakorlati tudást szerez az interaktív installációk megvalósítási lehetőségeinek különböző metódusairól.",
           "pdfUrl": "/tematikak/12466.pdf",
           "category": [
             "ux/interakció",
@@ -2000,7 +2000,7 @@ export const DEFAULT_DATA: Curriculum = {
             "médiaelmélet",
             "hálózatelmélet"
           ],
-          "cel": "A kurzus célja a kommunikációs rendszerek és vizuális nyelvek elméleti területének ismertetése, ahhoz, hogy a hallgató média designeri, alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése ered",
+          "cel": "A kurzus célja a kommunikációs rendszerek és vizuális nyelvek elméleti területének ismertetése, hogy a hallgató média designeri, alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és alkalmazni az elsajátított elméleti ismeretanyagot tanulmányai és gyakorlata megalapozásához, művészi és tervezői gyakorlatának konceptualizálásához és szakmai együttműködései során való képviseletéhez.",
           "pdfUrl": "/tematikak/12468.pdf",
           "category": [
             "elmélet"
@@ -2070,7 +2070,7 @@ export const DEFAULT_DATA: Curriculum = {
             "művészeti kutatás",
             "tervezésmódszertan"
           ],
-          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint pre",
+          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemléleti) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni, valamint prezentálni a médiatervezés területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/12773.pdf",
           "category": [
             "animáció",
@@ -2105,7 +2105,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólió",
             "mesterképzés"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, valamint a MyBrand szemlélet alappilléreinek megvalósítása: különböző szakterületek találkozása, tudás- és kompetenciaelemek egymásra épülése, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/12744.pdf",
           "category": [
             "projekt"
@@ -2127,7 +2127,7 @@ export const DEFAULT_DATA: Curriculum = {
           "description": "Felzárkóztató kurzus, amelynek során a hallgatók megismerkednek a médiaművészet és médiadesign alapjaival: képszerkesztéssel (Photoshop), vektorgrafikával (Illustrator), kézi rajzzal, fotózással, videóvágással és fényeléssel (Premiere Pro, After Effects), programozással (C# és Arduino), valamint 3D modellezéssel (Blender). A kurzus elméleti és gyakorlati készségeket egyaránt fejleszt, a feladatokból a hallgatók egyéni portfóliót építenek. Értékelése: megfelelt / nem felelt meg.",
           "felelos": "Balogh Áron Zsigmond Dr.",
           "prerequisite": "-",
-          "requirement": "gyakorlati jegy",
+          "requirement": "megfelelt / nem felelt meg",
           "software": [
             "Photoshop",
             "Illustrator",
@@ -2371,7 +2371,7 @@ export const DEFAULT_DATA: Curriculum = {
             "osc",
             "audiovizuális"
           ],
-          "cel": "A kurzus célja az interaktív rendszerek eszközismereti, alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni e",
+          "cel": "A kurzus célja az interaktív rendszerek eszközismereti, alkotói (tervezői) és művészi (esztétikai szemlélet szempontjából történő) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni, felhasználni és prezentálni az e rendszerek területének műveléséhez szükséges ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/15043.pdf",
           "category": [
             "ux/interakció",
@@ -2404,7 +2404,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólió",
             "szakmai program"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak, workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, valamint a MyBrand szemlélet alappilléreinek megvalósítása: a különböző szakterületek találkozása, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/15052.pdf",
           "category": [
             "projekt"
@@ -2700,7 +2700,7 @@ export const DEFAULT_DATA: Curriculum = {
             "mesterkurzus",
             "konferencia"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, valamint a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/12746.pdf",
           "category": [
             "projekt"
@@ -2763,7 +2763,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Pálfi Szabolcs, Forgács Kristóf, Madácsi Blanka, Varga Vajk, Kollár Dávid, Kováts Jázon",
           "institute": "AMD",
           "note": null,
-          "description": "A záró félév kurzusa a diplomamunka elkészítését kíséri végig három blokkban: a hallgatók a diplomaprojekt szisztematikus, projektszerű felépítésével (ütemezés, mérföldkövek), a szakdolgozat megírásának módszertanával (kutatási kérdés, hivatkozás, szakirodalom-feldolgozás), valamint a portfólió és showreel összeállításával foglalkoznak. A félév során rendszeres konzultációk és hallgatói prezentációk kísérik a munkát, a teljesítés feltétele két központi konzultáción való bemutatás, amelyet oktatói bizottság értékel.",
+          "description": "A záró félév kurzusa három blokkban kíséri a diplomamunka elkészítését: az egyik blokkban a hallgatók a játékfejlesztés folyamataival ismerkednek meg a tervezéstől a kiadásig, és közös projektben a maguk választotta területen hoznak létre portfólióba illeszthető produktumokat; a másikban a szakdolgozatírás módszertanát sajátítják el (kutatási kérdés, hivatkozás, szakirodalom-feldolgozás, formai követelmények); a harmadikban a diplomamunka projektszerű felépítésével (ütemezés, mérföldkövek, vészforgatókönyv), a diplomaprezentáció gyakorlásával, valamint a portfólió és showreel összeállításával foglalkoznak. A teljesítés további feltétele a félév során két központi konzultáción való részvétel, ahol a diplomamunka készültségét oktatókból álló bizottság értékeli.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "gyakorlati jegy",
@@ -2810,7 +2810,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólió",
             "ma"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, valamint a MyBrand szemlélet alappilléreinek megvalósítása: különböző szakterületek találkozása, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/15057.pdf",
           "category": [
             "projekt"
@@ -3026,7 +3026,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólió",
             "ba"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégelőadók, akár közös programok formájában. A tárgy keretében megvalósulnak a MyBrand szemlélet fontos alappillérei: különböző szakterületek találkozása, tudás- és kompetenciaelemek egymásra épülése, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/12722.pdf",
           "category": [
             "projekt"
@@ -3063,7 +3063,7 @@ export const DEFAULT_DATA: Curriculum = {
             "perszóna",
             "user flow"
           ],
-          "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása alap szinten. A hallgató a kurzus elvégzése eredményeképpen képes alap szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a UX design területét k",
+          "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) elsajátítása alap szinten. A hallgató a kurzus elvégzése eredményeképpen képes alap szinten felismerni, elemezni, érteni, felhasználni és prezentálni a UX design területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/12741.pdf",
           "category": [
             "ux/interakció"
@@ -3173,7 +3173,7 @@ export const DEFAULT_DATA: Curriculum = {
             "dtp",
             "fonttervezés"
           ],
-          "cel": "A kurzus célja a tipográfia és betűrajz eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása alapszinten. A hallgató a kurzus elvégzése eredményeképpen képes alapszinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint ",
+          "cel": "A kurzus célja a tipográfia és betűrajz eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása alapszinten. A hallgató a kurzus elvégzése eredményeképpen képes alapszinten felismerni, elemezni, érteni és felhasználni (alkalmazni), valamint prezentálni a tipográfia és betűrajz területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/15053.pdf",
           "category": [
             "grafika/tipográfia",
@@ -3212,7 +3212,7 @@ export const DEFAULT_DATA: Curriculum = {
             "vágás",
             "színkorrekció"
           ],
-          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása alap szinten. A hallgató a kurzus elvégzése eredményeképpen képes alap szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezent",
+          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása alap szinten. A hallgató a kurzus elvégzése eredményeképpen képes alap szinten felismerni, elemezni, érteni és felhasználni (alkalmazni), valamint prezentálni a médiatervezés területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/15044.pdf",
           "category": [
             "fotó",
@@ -3248,7 +3248,7 @@ export const DEFAULT_DATA: Curriculum = {
             "fényművészet",
             "interaktív installáció"
           ],
-          "cel": "A kurzus célja az interakciótervezés alapjainak eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalma",
+          "cel": "A kurzus célja az interakciótervezés alapjainak eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni), valamint prezentálni az interakciótervezés alapjainak területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/15034.pdf",
           "category": [
             "ux/interakció",
@@ -3286,7 +3286,7 @@ export const DEFAULT_DATA: Curriculum = {
             "felhasználói tesztelés",
             "akadálymentesítés"
           ],
-          "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a UX design terület",
+          "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni), valamint prezentálni a UX design területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/14761.pdf",
           "category": [
             "ux/interakció"
@@ -3319,7 +3319,7 @@ export const DEFAULT_DATA: Curriculum = {
             "interaktivitás",
             "képelmélet"
           ],
-          "cel": "A kurzus célja a média design általános elméletének elsajátítása, ahhoz, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, el",
+          "cel": "A kurzus célja a média design általános elméletének elsajátítása, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és alkalmazni az elsajátított elméleti ismeretanyagot, és médiatervezői, médiaművészi gyakorlatát el tudja helyezni és sikeresen képviselni tudja szakmai együttműködései során, valamint egy szélesebb, interdiszciplináris keretben.",
           "pdfUrl": "/tematikak/15047.pdf",
           "category": [
             "elmélet"
@@ -3351,7 +3351,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólió",
             "projektmunka"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/14760.pdf",
           "category": [
             "projekt"
@@ -3435,7 +3435,7 @@ export const DEFAULT_DATA: Curriculum = {
             "fotogrammetria",
             "multimédia"
           ],
-          "cel": "A kurzus célja a média designon belül, a multimédia specifikus képalkotás eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) tudásának elsajátítása közép haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni,",
+          "cel": "A kurzus célja a média designon belül a multimédia-specifikus képalkotás eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemléletbeli) tudásának elsajátítása közép haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni, felhasználni és prezentálni a multimédia-specifikus képalkotás területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/12454.pdf",
           "category": [
             "3d"
@@ -3575,7 +3575,7 @@ export const DEFAULT_DATA: Curriculum = {
             "csoportdinamika",
             "fejlődéslélektan"
           ],
-          "cel": "A kurzus célja, hogy a hallgató megismerje a játékélményt alakító pszichológiai folyamatokat, a játék fejlődéslélektani, kognitív és szociálpszichológiai vonatkozásait, valamint a motiváció és a flow jelenségeit. A kurzus során a hallgatók megismerkednek a játékpszichológia fejlődéslélektani, kognit",
+          "cel": "A kurzus célja, hogy a hallgató megismerje a játékélményt alakító pszichológiai folyamatokat, a játék fejlődéslélektani, kognitív és szociálpszichológiai vonatkozásait, valamint a motiváció és a flow jelenségeit. A hallgató a kurzus elvégzése után képes felismerni és elemezni a játékélményt alakító pszichológiai folyamatokat, és ezeket tudatosan alkalmazni saját játéktervezői és kreatív munkájában, multidiszciplináris szakmai környezetben is.",
           "pdfUrl": "/tematikak/12853.pdf",
           "category": [
             "játék",
@@ -3655,7 +3655,7 @@ export const DEFAULT_DATA: Curriculum = {
             "tipográfia",
             "akadálymentesítés"
           ],
-          "cel": "A kurzus célja a multimédia médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) v",
+          "cel": "A kurzus célja a multimédia médiatervezés eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemléletbeli) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni, felhasználni és prezentálni a médiatervezés multimédia területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/12460.pdf",
           "category": [
             "web",
@@ -3720,7 +3720,7 @@ export const DEFAULT_DATA: Curriculum = {
             "virtuális valóság",
             "elmélet"
           ],
-          "cel": "A kurzus célja a multimedia területén használt új technológia pszichológiai vonatkozásainak ismertetése, ahhoz, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményekép",
+          "cel": "A kurzus célja a multimédia területén használt új technológiák pszichológiai vonatkozásainak ismertetése, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és alkalmazni az új technológiák pszichológiai vonatkozásainak elméleti ismeretanyagát, és multimédia designer gyakorlatát szakmai együttműködésekben és szélesebb, interdiszciplináris keretben is el tudja helyezni.",
           "pdfUrl": "/tematikak/12461.pdf",
           "category": [
             "elmélet"
@@ -3937,7 +3937,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólió",
             "ba"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak, workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégelőadók, akár közös programok formájában. A tárgy keretében megvalósulnak a MyBrand szemlélet alappillérei: a különböző szakterületek találkozása, a tudás- és kompetenciaelemek egymásra épülése, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/15056.pdf",
           "category": [
             "projekt"
@@ -3980,7 +3980,7 @@ export const DEFAULT_DATA: Curriculum = {
             "prompt engineering",
             "portfólió"
           ],
-          "cel": "A kurzus célja a modern webfejlesztési technológiák és a mesterséges intelligencia asszisztált kódolás gyakorlati bemutatása. A hallgatók az alapvető statikus weblapkészítési tudásukat továbbfejlesztve megismerkednek a modern komponens alapú architektúrákkal, mint a React és a Next.js keretrendszere",
+          "cel": "A kurzus célja a modern webfejlesztési technológiák és a mesterséges intelligencia asszisztált kódolás gyakorlati bemutatása. A hallgatók az alapvető statikus weblapkészítési tudásukat továbbfejlesztve megismerkednek a modern komponensalapú architektúrákkal (React, Next.js), a Tailwind CSS-alapú vizuális építkezéssel és a látványos Web3D megoldások integrálásával. A félév végére a hallgatók képesek lesznek önállóan felépíteni egy magas színvonalú, modern technológiákra épülő interaktív portfólió oldalt.",
           "pdfUrl": "/tematikak/15050.pdf",
           "category": [
             "web",
@@ -4019,7 +4019,7 @@ export const DEFAULT_DATA: Curriculum = {
             "3d animáció",
             "unreal engine"
           ],
-          "cel": "A kurzus célja a média designon belül, a multimédia specifikus képalkotás eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) tudásának elsajátítása közép haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni,",
+          "cel": "A kurzus célja a média designon belül a multimédia-specifikus képalkotás eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemléleti) tudásának elsajátítása középhaladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni, felhasználni és prezentálni a multimédia-specifikus képalkotás területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/15030.pdf",
           "category": [
             "3d",
@@ -4315,7 +4315,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólió",
             "ba"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégelőadók, akár közös programok formájában. A tárgy keretében megvalósulnak a MyBrand szemlélet fontos alappillérei: különböző szakterületek találkozása, a tudás- és kompetenciaelemek egymásra épülése, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/12747.pdf",
           "category": [
             "projekt"
@@ -4465,7 +4465,7 @@ export const DEFAULT_DATA: Curriculum = {
             "kutatásmódszertan",
             "ba"
           ],
-          "cel": "A kurzus célja a szakdolgozat készítéséhez szükséges elméleti és gyakorlati tudás és képességek elsajátítása, ahhoz, hogy a hallgató megfelelő színvonal írásművet legyen képes alkotni a BA tanulmányait lezáró időszakban. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, ",
+          "cel": "A kurzus célja a szakdolgozat készítéséhez szükséges elméleti és gyakorlati tudás és képességek elsajátítása, hogy a hallgató megfelelő színvonalú írásművet legyen képes alkotni a BA tanulmányait lezáró időszakban. A kurzus elvégzése eredményeképpen a hallgató képes haladó szinten felismerni, elemezni, érteni és értekező prózai szinten a gyakorlatban alkalmazni az elsajátított elméleti ismeretanyagot, és szakdolgozata révén a BA tanulmányai alatt megszerzett szakmai tudását a megfelelő szakmai fórumokon és a szélesebb, interdiszciplináris mezőnyben érdemben képviselni.",
           "pdfUrl": "/tematikak/15055.pdf",
           "category": [
             "diploma/portfólió",
@@ -4502,7 +4502,7 @@ export const DEFAULT_DATA: Curriculum = {
             "prezentáció",
             "projekttervezés"
           ],
-          "cel": "A kurzus célja a diplomamunkához szükséges eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) ismeretek elsajátítása, kreatív készségek kifejlesztése, prezentációs és média tervezési tudás megszerzése. A hallgató a kurzus elvégzése eredményeképpen képes felismerni, elemez",
+          "cel": "A kurzus célja a diplomamunkához szükséges eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) ismeretek elsajátítása, kreatív készségek kifejlesztése, prezentációs és médiatervezési tudás megszerzése. A hallgató a kurzus elvégzése eredményeképpen képes felismerni, elemezni, érteni és alkalmazni a diplomamunkája elkészítéséhez elengedhetetlen ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat, valamint képes értékelni a szakmai területen belül elfoglalt pozícióját és alkalmazni tudását a kreatív iparban és a médiaművészeti szcénában.",
           "pdfUrl": "/tematikak/15036.pdf",
           "category": [
             "diploma/portfólió",
@@ -4537,7 +4537,7 @@ export const DEFAULT_DATA: Curriculum = {
             "projektmunka",
             "ba"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak, workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, valamint a MyBrand szemlélet alappilléreinek megvalósítása: különböző szakterületek találkozása, tudás- és kompetenciaelemek egymásra épülése, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/15058.pdf",
           "category": [
             "projekt"
@@ -4582,7 +4582,7 @@ export const DEFAULT_DATA: Curriculum = {
             "uv",
             "arnold"
           ],
-          "cel": "A kurzus célja a 3D modellezés és szimuláció eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a",
+          "cel": "A kurzus célja a 3D modellezés és szimuláció eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni, valamint prezentálni a 3D modellezés és szimuláció területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/12453.pdf",
           "category": [
             "3d"
@@ -4755,7 +4755,7 @@ export const DEFAULT_DATA: Curriculum = {
             "social media",
             "tervezésmódszertan"
           ],
-          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint pre",
+          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemléleti) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni, valamint prezentálni a médiatervezés területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/12773.pdf",
           "category": [
             "animáció",
@@ -4790,7 +4790,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólió",
             "ma"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak, workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, valamint a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/12744.pdf",
           "category": [
             "projekt"
@@ -5055,7 +5055,7 @@ export const DEFAULT_DATA: Curriculum = {
             "dmx",
             "audiovizuális"
           ],
-          "cel": "A kurzus célja az interaktív rendszerek eszközismereti, alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni e",
+          "cel": "A kurzus célja az interaktív rendszerek eszközismereti, alkotói (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni, felhasználni és prezentálni az e rendszerek területének műveléséhez szükséges ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/15043.pdf",
           "category": [
             "ux/interakció",
@@ -5089,7 +5089,7 @@ export const DEFAULT_DATA: Curriculum = {
             "erasmus",
             "omdk"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, valamint a MyBrand szemlélet alappillérei: szakterületek találkozása, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/15052.pdf",
           "category": [
             "projekt"
@@ -5175,7 +5175,7 @@ export const DEFAULT_DATA: Curriculum = {
             "nyilvánosság",
             "befogadáselmélet"
           ],
-          "cel": "A kurzus célja, hogy a hallgatók megismerkedjenek az analitikus médiaelmélet alapjaival, és elsajátítsák azokat az elméleti kereteket és fogalmakat, melyek segítségével képessé válnak a média jelenségek mélyebb megértésére és kritikai elemzésére. Az órák során a résztvevők betekintést nyernek a legf",
+          "cel": "A kurzus célja, hogy a hallgatók megismerkedjenek az analitikus médiaelmélet alapjaival, és elsajátítsák azokat az elméleti kereteket és fogalmakat, amelyek segítségével képessé válnak a médiajelenségek mélyebb megértésére és kritikai elemzésére. A résztvevők betekintést nyernek a legfontosabb médiaelméleti megközelítésekbe és modellekbe, megismerik a főbb irányzatok kulcsfogalmait, és képessé válnak a médiatartalmak és -platformok kritikai szempontú, társadalmi, kulturális és technológiai kontextusban való elemzésére.",
           "pdfUrl": "/tematikak/12512.pdf",
           "category": [
             "elmélet"
@@ -5246,7 +5246,7 @@ export const DEFAULT_DATA: Curriculum = {
             "osc",
             "foley"
           ],
-          "cel": "A kurzus célja a hangdesign eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezen",
+          "cel": "A kurzus célja a hangdesign eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemléletű) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni, felhasználni és prezentálni a hangdesign területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/12513.pdf",
           "category": [
             "hang"
@@ -5387,7 +5387,7 @@ export const DEFAULT_DATA: Curriculum = {
             "konferencia",
             "ma"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, valamint a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/12746.pdf",
           "category": [
             "projekt"
@@ -5499,7 +5499,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólió",
             "ma"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése vendégelőadók vagy közös programok révén, valamint a MyBrand szemlélet alappilléreinek megvalósítása: különböző szakterületek találkozása, tudás- és kompetenciaelemek egymásra épülése, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/15057.pdf",
           "category": [
             "projekt"
@@ -5661,7 +5661,7 @@ export const DEFAULT_DATA: Curriculum = {
             "shape layer",
             "puppet tool"
           ],
-          "cel": "A kurzus célja a mozgógrafika eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása alapszinten. A hallgató a kurzus elvégzése eredményeképpen képes alapszinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a mozgógrafika terület",
+          "cel": "A kurzus célja a mozgógrafika eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) elsajátítása alapszinten. A hallgató a kurzus elvégzése eredményeképpen képes alapszinten felismerni, elemezni, érteni és felhasználni, valamint prezentálni a mozgógrafika területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/10456.pdf",
           "category": [
             "animáció",
@@ -5737,7 +5737,7 @@ export const DEFAULT_DATA: Curriculum = {
             "pbr",
             "képelmélet"
           ],
-          "cel": "A kurzus célja a média design specifikus képalkotás eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása közép haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználn",
+          "cel": "A kurzus célja a média design specifikus képalkotás eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása közép haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni, valamint prezentálni a média design specifikus képalkotás területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/10460.pdf",
           "category": [
             "3d"
@@ -5770,7 +5770,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólióépítés",
             "ba"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, valamint a MyBrand szemlélet alappillérei: különböző szakterületek találkozása, tudás- és kompetenciaelemek egymásra épülése, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/10446.pdf",
           "category": [
             "projekt"
@@ -5807,7 +5807,7 @@ export const DEFAULT_DATA: Curriculum = {
             "prototípus",
             "figma"
           ],
-          "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása alap szinten. A hallgató a kurzus elvégzése eredményeképpen képes alap szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a UX design területét k",
+          "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) elsajátítása alapszinten. A hallgató a kurzus elvégzése eredményeképpen képes alapszinten felismerni, elemezni, érteni és felhasználni, valamint prezentálni a UX design területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/10555.pdf",
           "category": [
             "ux/interakció"
@@ -5932,7 +5932,7 @@ export const DEFAULT_DATA: Curriculum = {
             "interaktív installáció",
             "luminokinetika"
           ],
-          "cel": "A kurzus célja az interakciótervezés alapjainak eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalma",
+          "cel": "A kurzus célja az interakciótervezés alapjainak eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemlélet szempontjából való) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni), valamint prezentálni az interakciótervezés alapjainak területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/11221.pdf",
           "category": [
             "ux/interakció",
@@ -5970,7 +5970,7 @@ export const DEFAULT_DATA: Curriculum = {
             "vizuális effektek",
             "filmipar"
           ],
-          "cel": "A kurzus célja, hogy a résztvevők megismerkedjenek a VFX világával, elsajátítsák az iparágban használt szoftverek, például a Nuke alapvető használatát, valamint betekintést nyerjenek a filmipar működésébe, különös tekintettel a vizuális effektek szerepére és integrációjára a produkciókban. Az óra so",
+          "cel": "A kurzus célja, hogy a résztvevők megismerkedjenek a VFX világával, elsajátítsák az iparágban használt szoftverek, például a Nuke alapvető használatát, valamint betekintést nyerjenek a filmipar működésébe, különös tekintettel a vizuális effektek szerepére és integrációjára a produkciókban. Az óra során az alapvető technikák, fogalmak és munkafolyamatok bemutatására kerül sor, hogy megalapozzák a résztvevők tudását és fejlesszék gyakorlati készségeiket.",
           "pdfUrl": "/tematikak/11428.pdf",
           "category": [
             "animáció",
@@ -6008,7 +6008,7 @@ export const DEFAULT_DATA: Curriculum = {
             "expozíció",
             "képszerkesztés"
           ],
-          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása alap szinten. A hallgató a kurzus elvégzése eredményeképpen képes alap szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezent",
+          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemlélet szempontjából való) elsajátítása alapszinten. A hallgató a kurzus elvégzése eredményeképpen képes alapszinten felismerni, elemezni, érteni és felhasználni (alkalmazni), valamint prezentálni a médiatervezés területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/11224.pdf",
           "category": [
             "fotó",
@@ -6048,7 +6048,7 @@ export const DEFAULT_DATA: Curriculum = {
             "motion capture",
             "unreal engine"
           ],
-          "cel": "A kurzus célja a média design specifikus képalkotás eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása közép haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználn",
+          "cel": "A kurzus célja a média design specifikus képalkotás eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemlélet szempontjából való) elsajátítása középhaladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni), valamint prezentálni a média design specifikus képalkotás területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/11390.pdf",
           "category": [
             "3d",
@@ -6119,7 +6119,7 @@ export const DEFAULT_DATA: Curriculum = {
             "reszponzív design",
             "usability"
           ],
-          "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a UX design terület",
+          "cel": "A kurzus célja a UX design eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni), valamint prezentálni a UX design területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/11228.pdf",
           "category": [
             "ux/interakció",
@@ -6206,7 +6206,7 @@ export const DEFAULT_DATA: Curriculum = {
             "mozgó montázs",
             "installáció"
           ],
-          "cel": "A modul (Cseszneg Gyöngyi): A kurzus célja a média design specifikus képalkotás eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni,",
+          "cel": "A kurzus célja a média design specifikus képalkotás eszközismereti, alkotói és művészi (esztétikai) elsajátítása haladó szinten: a hallgató képes haladó szinten felismerni, elemezni, érteni, alkalmazni és prezentálni a média design specifikus képalkotás ismeretanyagát és technikai tudását. A B modul célja emellett a fény művészi alkalmazása elméleti és gyakorlati alapjainak elsajátítása multimédiás technológiák használatával: a hallgatók megismerik a fény fizikai és esztétikai tulajdonságait, és képesek lesznek saját fényalapú művészeti alkotásokat, kreatív fényinstallációkat létrehozni, dokumentálni és bemutatni.",
           "pdfUrl": "/tematikak/10462.pdf",
           "category": [
             "animáció",
@@ -6241,7 +6241,7 @@ export const DEFAULT_DATA: Curriculum = {
             "kiállítás",
             "konferencia"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, valamint a MyBrand szemlélet alappilléreinek megvalósítása: különböző szakterületek találkozása, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/10442.pdf",
           "category": [
             "projekt"
@@ -6324,7 +6324,7 @@ export const DEFAULT_DATA: Curriculum = {
             "interaktív",
             "fényművészet"
           ],
-          "cel": "A kurzus célja, hogy a hallgatók valós munkaszituációkhoz hasonló környezetben sajátítsák el a vetítéses technikák alkalmazását, a kreatív döntéshozatalt és a csapatmunkát. Az órák során egy fiktív megrendelő igényei alapján kell vetítésterveket készíteniük egy valós helyszínre, amelynek paraméterei",
+          "cel": "A kurzus célja, hogy a hallgatók valós munkaszituációkhoz hasonló környezetben sajátítsák el a vetítéses technikák alkalmazását, a kreatív döntéshozatalt és a csapatmunkát. Egy fiktív megrendelő igényei alapján készítenek vetítésterveket egy valós helyszínre, amelynek paramétereit és elvárásait fokozatosan, változó követelmények mellett ismerik meg. A kurzus végére megtapasztalják, milyen kihívásokkal jár egy professzionális fény- és vetítésinstalláció megtervezése és kivitelezése.",
           "pdfUrl": "/tematikak/11214.pdf",
           "category": [
             "ux/interakció",
@@ -6362,7 +6362,7 @@ export const DEFAULT_DATA: Curriculum = {
             "indesign",
             "plakát"
           ],
-          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint pre",
+          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemléletű) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni, felhasználni és prezentálni a médiatervezés területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/11225.pdf",
           "category": [
             "installáció",
@@ -6397,7 +6397,7 @@ export const DEFAULT_DATA: Curriculum = {
             "hálózatkutatás",
             "elmélet"
           ],
-          "cel": "A kurzus célja a média design általános elméletének elsajátítása, ahhoz, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, el",
+          "cel": "A kurzus célja a média design általános elméletének elsajátítása, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzésével képes az elsajátított elméleti ismeretanyagot felismerni, elemezni és alkalmazni, valamint médiatervezői és médiaművészi gyakorlatát elhelyezni és képviselni szakmai együttműködésekben és szélesebb, interdiszciplináris keretben.",
           "pdfUrl": "/tematikak/11227.pdf",
           "category": [
             "elmélet"
@@ -6429,7 +6429,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólió",
             "kreatív ipar"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/11831.pdf",
           "category": [
             "projekt"
@@ -6467,7 +6467,7 @@ export const DEFAULT_DATA: Curriculum = {
             "indesign",
             "fonttervezés"
           ],
-          "cel": "A kurzus célja a tipográfia és betűrajz eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása alapszinten. A hallgató a kurzus elvégzése eredményeképpen képes alapszinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint ",
+          "cel": "A kurzus célja a tipográfia és betűrajz eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai szemléletű) elsajátítása alapszinten. A hallgató a kurzus elvégzése eredményeképpen képes alapszinten felismerni, elemezni, érteni, felhasználni és prezentálni a tipográfia és betűrajz területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/11220.pdf",
           "category": [
             "grafika/tipográfia"
@@ -6543,7 +6543,7 @@ export const DEFAULT_DATA: Curriculum = {
             "immerzió",
             "játékpszichológia"
           ],
-          "cel": "A kurzus célja a játéktervezés elméletének elsajátítása, ahhoz, hogy a hallgató játéktervezői, alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismer",
+          "cel": "A kurzus célja a játéktervezés elméletének elsajátítása, hogy a hallgató játéktervezői, alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus végére képes haladó szinten felismerni, elemezni, érteni és alkalmazni az elsajátított elméleti ismeretanyagot, és játéktervezői gyakorlatát el tudja helyezni egy szélesebb, interdiszciplináris keretben.",
           "pdfUrl": "/tematikak/10463.pdf",
           "category": [
             "játék",
@@ -6697,7 +6697,7 @@ export const DEFAULT_DATA: Curriculum = {
             "prototípus",
             "interaktív"
           ],
-          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint pre",
+          "cel": "A kurzus célja a médiatervezés eszközismereti, alkotói és művészi elsajátítása haladó szinten: a hallgató képes lesz felismerni, elemezni, érteni, alkalmazni és prezentálni a médiatervezés e szintjét képező ismeretanyagot, technikai tudást és prezentációs eljárásokat. A tervezésmódszertani ismeretek gyakorlati alkalmazásával új tervezési stratégiát hoz létre, és a multidiszciplináris területeket kombinálva komplex alkotási módszert sajátít el.",
           "pdfUrl": "/tematikak/10459.pdf",
           "category": [
             "játék",
@@ -6731,7 +6731,7 @@ export const DEFAULT_DATA: Curriculum = {
             "projektmunka",
             "ba"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, valamint a különböző szakterületek találkozása, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/10340.pdf",
           "category": [
             "projekt"
@@ -6765,7 +6765,7 @@ export const DEFAULT_DATA: Curriculum = {
             "virtuális valóság",
             "digitális kultúra"
           ],
-          "cel": "A kurzus célja az új technológia pszichológiai vonatkozásainak ismertetése, ahhoz, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten feli",
+          "cel": "A kurzus célja az új technológia pszichológiai vonatkozásainak ismertetése, hogy a hallgató alkotó-, tervező- és művészi, valamint prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató a kurzus végére képes haladó szinten felismerni, elemezni, érteni és alkalmazni az elméleti ismeretanyagot, és média designer gyakorlatát el tudja helyezni egy szélesebb, interdiszciplináris keretben.",
           "pdfUrl": "/tematikak/10556.pdf",
           "category": [
             "elmélet"
@@ -7239,7 +7239,7 @@ export const DEFAULT_DATA: Curriculum = {
             "vj",
             "elektronika"
           ],
-          "cel": "A kurzus célja az interaktív rendszerek eszközismereti, alkotói, (tervezői) és művészi (esztétikai szemlélet szempontjából) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni e",
+          "cel": "A kurzus célja az interaktív rendszerek eszközismereti, alkotói (tervezői) és művészi (esztétikai) elsajátítása haladó szinten. A hallgató a kurzus elvégzése eredményeképpen képes haladó szinten felismerni, elemezni, érteni, felhasználni és prezentálni az ezen rendszerek területének műveléséhez szükséges ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/11434.pdf",
           "category": [
             "ux/interakció",
@@ -7280,7 +7280,7 @@ export const DEFAULT_DATA: Curriculum = {
             "utómunka",
             "mozgógrafika"
           ],
-          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói, (tervezői) és művészi (esztétikai) elsajátítása magas szinten. A hallgató a kurzus elvégzése eredményeképpen képes elmélyült szinten felismerni, elemezni, érteni és felhasználni (alkalmazni) valamint prezentálni a médiatervez",
+          "cel": "A kurzus célja a médiatervezés eszközismereti (szoftverismereti), alkotói (tervezői) és művészi (esztétikai) elsajátítása magas szinten. A hallgató a kurzus elvégzése eredményeképpen képes elmélyült szinten felismerni, elemezni, érteni, felhasználni és prezentálni a médiatervezés területét képező ismeretanyagot, technikai tudást, alkotói képességet és prezentációs eljárásokat.",
           "pdfUrl": "/tematikak/11230.pdf",
           "category": [
             "film/videó",
@@ -7315,7 +7315,7 @@ export const DEFAULT_DATA: Curriculum = {
             "konferencia",
             "kiállítás"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégelőadók, akár közös programok formájában. A tárgy keretében megvalósulnak a MyBrand szemlélet fontos alappillérei: különböző szakterületek találkozása, tudás- és kompetenciaelemek egymásra épülése, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/11835.pdf",
           "category": [
             "projekt"
@@ -7434,7 +7434,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólió",
             "ma"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégelőadók, akár közös programok formájában, valamint a MyBrand szemlélet alappilléreinek megvalósítása és a portfólió építése.",
           "pdfUrl": "/tematikak/10341.pdf",
           "category": [
             "projekt"
@@ -7510,7 +7510,7 @@ export const DEFAULT_DATA: Curriculum = {
             "kiállítás",
             "ma"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak. Mindez workshopok, előadások, meghívott előadók által vezetett projektek formájában valósul meg. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégeladók,",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni a hallgatóknak workshopok, előadások és meghívott előadók által vezetett projektek formájában. Fontos szempont a társterületeket érintő alapismeretek és kompetenciák beemelése, akár vendégelőadók, akár közös programok formájában. A tárgy keretében megvalósulnak a MyBrand szemlélet fontos alappillérei: különböző szakterületek találkozása, tudás- és kompetenciaelemek egymásra épülése, a kreatív iparban használatos szemlélet fejlesztése és a portfólió építése.",
           "pdfUrl": "/tematikak/11828.pdf",
           "category": [
             "projekt"
@@ -8255,7 +8255,7 @@ export const DEFAULT_DATA: Curriculum = {
           "note": null,
           "description": "Gyakorlati kurzus, amely a formák és anyagok térbeli vizuális megjelenésének és viselkedésének megismerésére, valamint azok szoftveres reprodukálására és szimulálására épül. A hallgatók a Blender alapvető használatát sajátítják el a modellezés, textúrázás, világítás, kamerakezelés és renderelés területén, a félévet egy saját tárgy lemodellezése és koncepció szerinti képsorozat zárja.",
           "felelos": "Mayer Éva",
-          "prerequisite": "Média-design stúdiumok 2.",
+          "prerequisite": "-",
           "requirement": "gyakorlati jegy",
           "software": [
             "Blender"
@@ -8439,7 +8439,7 @@ export const DEFAULT_DATA: Curriculum = {
           "note": null,
           "description": "A Média labor 1.-re épülő gyakorlati kurzus, amely a 3D képalkotást a 3D animáció irányába viszi tovább. A félév első felében a hallgatók a motion design alapjait, az animáció 12 alapelvét, a karaktercsontozást és a motion capture animálást sajátítják el Cinema 4D-ben és Blenderben, majd a félév második felében fizikai, ruha-, részecske- és pyro-szimulációkkal, valamint Unreal Engine-es valós idejű rendereléssel foglalkoznak. A féléves feladat egy közös, folytatólagos golyóvándorlás-animáció elkészítése.",
           "felelos": "Molnár Ágnes Éva",
-          "prerequisite": "Média labor 1.",
+          "prerequisite": "Média labor 1. (teljesítés)",
           "requirement": "gyakorlati jegy",
           "software": [
             "Blender",
@@ -8583,8 +8583,8 @@ export const DEFAULT_DATA: Curriculum = {
           "institute": "AMD",
           "note": null,
           "description": "Kétmodulos gyakorlati labor: az A modul a digitális utómunka és a 3D tartalomkészítés VFX-gyártási folyamatára fókuszál, haladó kompozitálással (Nuke), modellezéssel, UV mappinggel, animációval és rendereléssel (Maya), valamint PBR textúrázással (Substance 3D Painter), a félév végére egy komplex VFX-shot vagy 3D jelenet készül el ipari sztenderdek szerint. A B modul a fény művészi alkalmazásával és a projection mapping formanyelvével foglalkozik: a hallgatók a Resolume Arena szoftverrel terveznek és kiviteleznek fényalapú installációkat, amelyeket dokumentálnak és bemutatnak.",
-          "felelos": "Szendeff-Sztojánovits Andrea",
-          "prerequisite": "Média-design stúdiumok 2.",
+          "felelos": "Mayer Éva",
+          "prerequisite": "Média labor 2.",
           "requirement": "gyakorlati jegy",
           "software": [
             "Nuke",
@@ -8668,7 +8668,7 @@ export const DEFAULT_DATA: Curriculum = {
           "description": "A kurzus a fény médiumának kreatív és interdiszciplináris alkalmazására összpontosít, különös tekintettel a vetítéses technikákra (mapping) és a generatív vizualizációra. A hallgatók TouchDesigner, Unreal Engine és Cinema 4D segítségével készítenek interaktív, hang- és mozgásreaktív, térspecifikus fényalkotásokat, valamint megismerik a DMX, Art-Net, OSC és MIDI rendszereket. A félév során egy szimulációs keretben, fiktív megrendelőnek dolgozva csoportos vetítést terveznek a Budapesti Metropolitan Egyetem körépületére, amelyet vetítési kiállításon mutatnak be.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "-",
-          "requirement": "kollokvium",
+          "requirement": "gyakorlati jegy",
           "software": [
             "TouchDesigner",
             "Unreal Engine",

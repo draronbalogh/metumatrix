@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import {
-  CATEGORIES, Cohort, Course, Curriculum, DEFAULT_DATA, UserEdge, VERSION_ORDER, catList, emptyCourse, semLabel, specShort,
+  CATEGORIES, Cohort, Course, Curriculum, DEFAULT_DATA, EdgeLook, UserEdge, VERSION_ORDER, catList, emptyCourse, semLabel, specShort,
 } from '@/data/curriculum';
 import CatalogView from './CatalogView';
 import EditModal from './EditModal';
@@ -217,6 +217,10 @@ export default function CurriculumApp() {
     const cur = dataRef.current;
     commit({ ...cur, userEdges: (cur.userEdges || []).filter((x) => x.id !== id) });
   }, [commit]);
+  const setEdgeLook = useCallback((id: string, look: EdgeLook) => {
+    const cur = dataRef.current;
+    commit({ ...cur, userEdges: (cur.userEdges || []).map((x) => (x.id === id ? { ...x, look } : x)) });
+  }, [commit]);
   const moveNode = useCallback((id: string, pos: { x: number; y: number }) => {
     const cur = dataRef.current;
     commit({ ...cur, positions: { ...(cur.positions || {}), [id]: pos } });
@@ -237,7 +241,7 @@ export default function CurriculumApp() {
     const cur = dataRef.current;
     commit({ ...cur, positions: {} });
   }, [commit]);
-  const persist = useMemo<Persist>(() => ({ addEdge, deleteEdge, moveNode, savePositions, applyConnection, resetPositions }), [addEdge, deleteEdge, moveNode, savePositions, applyConnection, resetPositions]);
+  const persist = useMemo<Persist>(() => ({ addEdge, deleteEdge, setEdgeLook, moveNode, savePositions, applyConnection, resetPositions }), [addEdge, deleteEdge, setEdgeLook, moveNode, savePositions, applyConnection, resetPositions]);
 
   const filter = useMemo<Filter>(() => ({ q, spec, ctype, instr, cat }), [q, spec, ctype, instr, cat]);
   const vp = useMemo<View>(() => ({ ver, prog }), [ver, prog]);

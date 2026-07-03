@@ -339,6 +339,19 @@ html[data-theme='dark'] .react-flow__node.selected .cn-card, html[data-theme='da
 html[data-theme='dark'] .prog-rail { box-shadow: 0 0 26px rgba(255, 45, 111, .22); }
 html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 
+/* ---- él-stílus menü (koppintás egy kézi összekötésre) ---- */
+.edge-menu { position: fixed; z-index: 90; display: flex; flex-direction: column; gap: 7px; padding: 9px; background: var(--card); border: 1px solid var(--line-2); border-radius: 12px; box-shadow: 0 14px 40px rgba(16, 17, 20, .24); }
+.em-row { display: flex; gap: 6px; align-items: center; }
+.em-btn { display: grid; place-items: center; width: 44px; height: 34px; border: 1px solid var(--line); background: var(--paper-2); border-radius: 8px; cursor: pointer; padding: 0; }
+.em-btn:hover { border-color: var(--line-2); }
+.em-btn.on { border-color: var(--brand); background: var(--brand-100); }
+.em-btn svg { display: block; }
+.em-anim line { animation: emdash .5s linear infinite; }
+@keyframes emdash { to { stroke-dashoffset: -12; } }
+.em-del { flex: 1; font-family: var(--ff); font-size: .78rem; font-weight: 600; padding: 8px 10px; border-radius: 8px; cursor: pointer; border: 1px solid color-mix(in srgb, var(--brand) 40%, var(--line)); background: transparent; color: var(--brand-text); }
+.em-del:hover { background: var(--brand); border-color: var(--brand); color: #fff; }
+.em-x { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--line); background: var(--paper-2); color: var(--ink-2); border-radius: 8px; cursor: pointer; }
+
 /* ---- elrendezés-zárolás (lakat) ---- */
 .lockbtn.is-on { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 700; }
 .mapwrap.locked .react-flow__handle.hdl { opacity: 0 !important; pointer-events: none !important; }

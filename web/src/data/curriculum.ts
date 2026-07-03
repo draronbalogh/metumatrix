@@ -41,12 +41,16 @@ export interface Cohort {
   courses: Course[];
 }
 
+// kézi összekötés vonalstílusa: animált (alapértelmezés) / folyamatos / szaggatott / pontozott
+export type EdgeLook = 'anim' | 'solid' | 'dash' | 'dot';
+
 export interface UserEdge {
   id: string;
   source: string;
   target: string;
   sourceHandle?: string | null;
   targetHandle?: string | null;
+  look?: EdgeLook;
 }
 
 export interface Curriculum {

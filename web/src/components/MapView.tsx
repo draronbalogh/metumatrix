@@ -7,7 +7,7 @@ import ReactFlow, {
   Connection, Edge, Node,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Course, Curriculum, UserEdge, courseGroup, GROUP_LABEL } from '@/data/curriculum';
+import { Course, Curriculum, EdgeLook, UserEdge, courseGroup, GROUP_LABEL } from '@/data/curriculum';
 import { buildGraph, Filter, Handlers, View, GRID, COURSE_X0, STEP_X } from '@/lib/buildGraph';
 import { ProgramNode, SemesterNode, CourseNode, FrameNode } from './MapNodes';
 
@@ -39,11 +39,30 @@ function buildFrames(nodes: Node[]): Node[] {
 export interface Persist {
   addEdge: (e: UserEdge) => void;
   deleteEdge: (id: string) => void;
+  setEdgeLook: (id: string, look: EdgeLook) => void;
   moveNode: (id: string, pos: { x: number; y: number }) => void;
   savePositions: (map: Record<string, { x: number; y: number }>) => void;
   applyConnection: (e: UserEdge, positions: Record<string, { x: number; y: number }>) => void;
   resetPositions: () => void;
 }
+
+const EDGE_RED = '#d7144b';
+const EDGE_MARKER = { type: MarkerType.ArrowClosed, color: EDGE_RED, width: 20, height: 20 };
+// vonalstílus -> ReactFlow él-tulajdonságok
+function lookProps(look?: EdgeLook): Partial<Edge> {
+  switch (look) {
+    case 'solid': return { type: 'default', animated: false, markerEnd: EDGE_MARKER, style: { stroke: EDGE_RED, strokeWidth: 2.5 } };
+    case 'dash': return { type: 'default', animated: false, markerEnd: EDGE_MARKER, style: { stroke: EDGE_RED, strokeWidth: 2.5, strokeDasharray: '9 6' } };
+    case 'dot': return { type: 'default', animated: false, markerEnd: EDGE_MARKER, style: { stroke: EDGE_RED, strokeWidth: 3, strokeDasharray: '0.5 8', strokeLinecap: 'round' } };
+    default: return { type: 'default', animated: true, markerEnd: EDGE_MARKER, style: { stroke: EDGE_RED, strokeWidth: 2.5 } };
+  }
+}
+const EDGE_LOOKS: { id: EdgeLook; label: string; dash?: string; anim?: boolean }[] = [
+  { id: 'anim', label: 'Animált — folyamatosságot, egymásra épülést mutat', dash: '7 5', anim: true },
+  { id: 'solid', label: 'Folyamatos vonal' },
+  { id: 'dash', label: 'Szaggatott vonal' , dash: '9 6' },
+  { id: 'dot', label: 'Pontozott vonal', dash: '0.5 8' },
+];
 
 interface Props {
   data: Curriculum;
@@ -59,14 +78,8 @@ interface Props {
 function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleLock }: Props) {
   const dark = theme === 'dark';
   const [legendOpen, setLegendOpen] = useState(false);
+  const [edgeMenu, setEdgeMenu] = useState<{ id: string; x: number; y: number; look: EdgeLook } | null>(null);
   const built = useMemo(() => buildGraph(data, filter, handlers, view), [data, filter, handlers, view]);
-
-  const userEdgeStyle = useMemo(() => ({
-    type: 'default',
-    animated: true,
-    style: { stroke: '#d7144b', strokeWidth: 2.5 },
-    markerEnd: { type: MarkerType.ArrowClosed, color: '#d7144b', width: 20, height: 20 },
-  }), []);
 
   const initNodes = useMemo<Node[]>(
     () => {
@@ -80,9 +93,9 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
   const initEdges = useMemo<Edge[]>(
     () => [...built.edges, ...(data.userEdges || []).map((e) => {
       const dim = filterActive && !(hitIds.has(e.source) && hitIds.has(e.target));
-      return { ...e, ...userEdgeStyle, className: dim ? 'edge-dim' : undefined };
+      return { ...e, ...lookProps(e.look), className: dim ? 'edge-dim' : undefined };
     })],
-    [built, data.userEdges, userEdgeStyle, filterActive, hitIds],
+    [built, data.userEdges, filterActive, hitIds],
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initNodes);
@@ -147,6 +160,14 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
   const onEdgesDelete = useCallback((eds: Edge[]) => {
     eds.forEach((e) => { if (e.id.startsWith('u-')) persist.deleteEdge(e.id); });
   }, [persist]);
+  // koppintás/kattintás egy kézi élre -> stílus/törlés menü (mobilon ez a törlési út is)
+  const onEdgeClick = useCallback((ev: React.MouseEvent, edge: Edge) => {
+    if (locked || !edge.id.startsWith('u-')) return;
+    ev.stopPropagation();
+    const ue = (data.userEdges || []).find((x) => x.id === edge.id);
+    setEdgeMenu({ id: edge.id, x: ev.clientX, y: ev.clientY, look: ue?.look || 'anim' });
+  }, [locked, data.userEdges]);
+  useEffect(() => { if (locked) setEdgeMenu(null); }, [locked]);
   const onNodeDragStop = useCallback((_e: React.MouseEvent, node: Node | undefined) => {
     if (node?.id && node.position) persist.moveNode(node.id, node.position);
   }, [persist]);
@@ -181,6 +202,8 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onEdgesDelete={onEdgesDelete}
+        onEdgeClick={onEdgeClick}
+        onPaneClick={() => setEdgeMenu(null)}
         onNodeDragStop={onNodeDragStop}
         onSelectionDragStop={onSelectionDragStop}
         defaultEdgeOptions={{ type: 'default' }}
@@ -217,6 +240,31 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
       {built.nodes.length === 0 && (
         <div className="map-empty">Ehhez a verzióhoz / programhoz nincs adat a térképen.<br />Válts verziót vagy programot fent, vagy a <b>Katalógus</b> nézetben adj hozzá tárgyat.</div>
       )}
+      {edgeMenu && (
+        <div
+          className="edge-menu"
+          style={{ left: Math.max(8, Math.min(edgeMenu.x - 90, window.innerWidth - 208)), top: Math.min(edgeMenu.y + 10, window.innerHeight - 110) }}
+        >
+          <div className="em-row">
+            {EDGE_LOOKS.map((o) => (
+              <button
+                key={o.id}
+                className={`em-btn${edgeMenu.look === o.id ? ' on' : ''}${o.anim ? ' em-anim' : ''}`}
+                title={o.label}
+                onClick={() => { persist.setEdgeLook(edgeMenu.id, o.id); setEdgeMenu((m) => (m ? { ...m, look: o.id } : m)); }}
+              >
+                <svg width="34" height="10" viewBox="0 0 34 10">
+                  <line x1="2" y1="5" x2="32" y2="5" stroke={EDGE_RED} strokeWidth={o.id === 'dot' ? 3 : 2.5} strokeDasharray={o.dash} strokeLinecap="round" />
+                </svg>
+              </button>
+            ))}
+          </div>
+          <div className="em-row">
+            <button className="em-del" onClick={() => { persist.deleteEdge(edgeMenu.id); setEdgeMenu(null); }}>🗑 Kapcsolat törlése</button>
+            <button className="em-x" onClick={() => setEdgeMenu(null)}>✕</button>
+          </div>
+        </div>
+      )}
       <div className={`legend${legendOpen ? ' open' : ''}`}>
         <button className="legend-toggle" onClick={() => setLegendOpen((o) => !o)} title="Jelmagyarázat">{legendOpen ? '✕ Jelmagyarázat' : 'ⓘ'}</button>
         {legendOpen && (
@@ -226,7 +274,7 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
             </div>
             <div className="row"><span className="ln build" /> tárgy épül a tárgyra (a nyíl a korábbi félévtől a későbbi felé mutat)</div>
             <div className="row"><span className="dot out" /> kimenet (húzd innen) &nbsp;<span className="dot in" /> bemenet (ide kösd)</div>
-            <div className="row"><span className="hint">Kattints a részletekért · Shift+húzás = többes kijelölés · Delete = kapcsolat törlése · Ctrl+Z = visszavonás</span></div>
+            <div className="row"><span className="hint">Kattints a kártyára a részletekért · koppints a piros élre: vonalstílus / törlés · Shift+húzás = többes kijelölés · Ctrl+Z = visszavonás</span></div>
           </div>
         )}
       </div>

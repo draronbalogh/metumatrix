@@ -16,7 +16,7 @@ const PROG_X = -288;
 const HEADER_X = 0;
 export const COURSE_X0 = 280;
 export const STEP_X = 320;
-const ROW_H = 296;
+export const ROW_H = 296;
 const CARD_TOP = 40;
 
 const buildEdge = {

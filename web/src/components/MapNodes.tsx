@@ -99,11 +99,12 @@ export const SemesterNode = memo(function SemesterNode({ data }: { data: SemData
   );
 });
 
-// Specializáció-blokk kerete a mátrixban — nem interaktív, a kártyák MÖGÖTT ül (pointer-events: none a CSS-ben)
-export const FrameNode = memo(function FrameNode({ data }: { data: { g: number; label: string; w: number; h: number } }) {
+// Csoport-zóna („swimlane”) a mátrixban — nem interaktív, a kártyák MÖGÖTT ül (pointer-events: none a CSS-ben).
+// zt/zb: a függőleges futam első/utolsó darabja (lekerekítés csak a futam tetején/alján, így a darabok egybeolvadnak)
+export const FrameNode = memo(function FrameNode({ data }: { data: { g: number; label: string | null; w: number; h: number; zt?: boolean; zb?: boolean } }) {
   return (
-    <div className={`spec-frame g${data.g}`} style={{ width: data.w, height: data.h }}>
-      <span className="spec-frame-lbl">{data.label}</span>
+    <div className={`spec-zone g${data.g}${data.zt ? ' zt' : ''}${data.zb ? ' zb' : ''}`} style={{ width: data.w, height: data.h }}>
+      {data.label && <span className="spec-zone-lbl">{data.label}</span>}
     </div>
   );
 });

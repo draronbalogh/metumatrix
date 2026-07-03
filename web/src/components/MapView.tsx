@@ -8,32 +8,54 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { Course, Curriculum, EdgeLook, UserEdge, courseGroup, GROUP_LABEL } from '@/data/curriculum';
-import { buildGraph, Filter, Handlers, View, GRID, COURSE_X0, STEP_X } from '@/lib/buildGraph';
+import { buildGraph, Filter, Handlers, View, GRID, COURSE_X0, STEP_X, ROW_H } from '@/lib/buildGraph';
 import { ProgramNode, SemesterNode, CourseNode, FrameNode } from './MapNodes';
 
 const nodeTypes = { program: ProgramNode, semester: SemesterNode, course: CourseNode, frame: FrameNode };
 
-// spec-blokk keretek: cohortonként a Multimédia (g1) / Játéktervezés (g2) kártyák befoglaló doboza
+// Csoport-zónák („swimlane”): soronként a csoport kártyáinak befoglalója, a szomszédos sorok
+// darabjai függőlegesen összeérnek, így csoportonként EGY összefüggő színes terület rajzolódik ki
+// (Közös / Multimédia / Játéktervezés / külső elméleti). Csak akkor jelenik meg, ha a nézetben van specializáció.
 const CARD_W = 248, FR_PADX = 14, FR_PADT = 20, FR_CARDH = 240, FR_PADB = 8;
-function buildFrames(nodes: Node[]): Node[] {
-  const box: Record<string, { minX: number; maxX: number; minY: number; maxY: number; g: number }> = {};
+const ZONE_LABEL: Record<number, string> = { 0: 'Közös tárgyak', 1: GROUP_LABEL[1], 2: GROUP_LABEL[2], 3: GROUP_LABEL[3] };
+function buildZones(nodes: Node[]): Node[] {
+  const box: Record<string, { minX: number; maxX: number; minY: number; g: number }> = {};
+  let hasSpec = false;
   nodes.forEach((n) => {
     if (n.type !== 'course') return;
     const course = (n.data as { course?: Course })?.course;
     if (!course) return;
     const g = courseGroup(course);
-    if (g !== 1 && g !== 2) return;
+    if (g === 1 || g === 2) hasSpec = true;
     const key = `${(n.data as { ci: number }).ci}-${g}`;
-    const b = box[key] || (box[key] = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity, g });
+    const b = box[key] || (box[key] = { minX: Infinity, maxX: -Infinity, minY: Infinity, g });
     b.minX = Math.min(b.minX, n.position.x); b.maxX = Math.max(b.maxX, n.position.x);
-    b.minY = Math.min(b.minY, n.position.y); b.maxY = Math.max(b.maxY, n.position.y);
+    b.minY = Math.min(b.minY, n.position.y);
   });
-  return Object.entries(box).map(([key, b]) => ({
-    id: `frame-${key}`, type: 'frame',
-    position: { x: b.minX - FR_PADX, y: b.minY - FR_PADT },
-    data: { g: b.g, label: GROUP_LABEL[b.g], w: b.maxX - b.minX + CARD_W + FR_PADX * 2, h: b.maxY - b.minY + FR_CARDH + FR_PADT + FR_PADB },
-    draggable: false, selectable: false, focusable: false, zIndex: -1,
-  }));
+  if (!hasSpec) return [];
+  const out: Node[] = [];
+  [0, 1, 2, 3].forEach((g) => {
+    const pieces = Object.values(box).filter((b) => b.g === g).sort((a, b) => a.minY - b.minY);
+    // függőlegesen szomszédos sorok darabjai egy futamba (run) kerülnek -> összeérő zóna
+    const runs: (typeof pieces)[] = [];
+    pieces.forEach((p) => {
+      const last = runs[runs.length - 1];
+      if (last && p.minY - last[last.length - 1].minY < ROW_H * 1.6) last.push(p);
+      else runs.push([p]);
+    });
+    runs.forEach((run, ri) => run.forEach((p, i) => {
+      const first = i === 0, lastP = i === run.length - 1;
+      const top = p.minY - FR_PADT;
+      const h = lastP ? FR_CARDH + FR_PADT + FR_PADB : run[i + 1].minY - FR_PADT - top;
+      out.push({
+        id: `zone-${g}-${ri}-${i}`, type: 'frame',
+        position: { x: p.minX - FR_PADX, y: top },
+        data: { g, label: first ? ZONE_LABEL[g] : null, w: p.maxX - p.minX + CARD_W + FR_PADX * 2, h, zt: first, zb: lastP },
+        draggable: false, selectable: false, focusable: false, zIndex: -1,
+      });
+    }));
+  });
+  return out;
 }
 
 export interface Persist {
@@ -84,7 +106,7 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
   const initNodes = useMemo<Node[]>(
     () => {
       const positioned = built.nodes.map((n) => (data.positions?.[n.id] ? { ...n, position: data.positions[n.id] } : n));
-      return [...buildFrames(positioned), ...positioned];
+      return [...buildZones(positioned), ...positioned];
     },
     [built, data.positions],
   );

@@ -45,6 +45,7 @@ export default function CurriculumApp() {
   const [cat, setCat] = useState('');
   const [editor, setEditor] = useState<Ref2 | null>(null);
   const [details, setDetails] = useState<Ref2 | null>(null);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -285,6 +286,12 @@ export default function CurriculumApp() {
             <button className={prog === 'BA' ? 'is-on' : ''} onClick={() => setProg('BA')}>BA</button>
             <button className={prog === 'MA' ? 'is-on' : ''} onClick={() => setProg('MA')}>MA</button>
           </div>
+          <button
+            className={`btn tools-toggle${q || spec || ctype || instr || cat ? ' has-f' : ''}`}
+            onClick={() => setToolsOpen((o) => !o)}
+            title="Szűrők és eszközök"
+          >{toolsOpen ? '✕' : '☰'}{(q || spec || ctype || instr || cat) && !toolsOpen ? ' •' : ''}</button>
+          <div className={`toolbar-more${toolsOpen ? ' open' : ''}`}>
           <select className="presetsel" value={ver} onChange={(e) => setVer(e.target.value)} title="Tanterv-verzió">
             {versions.map((v) => <option key={v} value={v}>{v === 'régi (korábbi)' ? 'Régi (korábbi)' : v}</option>)}
           </select>
@@ -321,6 +328,7 @@ export default function CurriculumApp() {
           <button className="btn" onClick={() => fileRef.current?.click()}>⤒ Betöltés</button>
           <button className="btn btn--danger" onClick={resetData}>↺ Alaphelyzet</button>
           <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importJSON(f); e.target.value = ''; }} />
+          </div>
         </div>
       </div>
 

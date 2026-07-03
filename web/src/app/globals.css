@@ -340,7 +340,45 @@ html[data-theme='dark'] .prog-rail { box-shadow: 0 0 26px rgba(255, 45, 111, .22
 html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 
 /* ---- responsive ---- */
+/* asztali nézeten a ☰ gomb rejtve, a wrapper láthatatlan (display: contents = a régi elrendezés változatlan) */
+.tools-toggle { display: none; }
+.toolbar-more { display: contents; }
+.app-shell { height: 100dvh; }
+
 @media (max-width: 720px) {
-  .totstrip { width: 100%; justify-content: space-between; }
   .cc-totals { width: 100%; margin-left: 0; }
+
+  /* fejléc: egyetlen kompakt sor */
+  .masthead { padding: 8px 0; }
+  .masthead .wrap { flex-wrap: nowrap; gap: 10px; }
+  .kicker, .subtitle { display: none; }
+  .brandmark { gap: 8px; }
+  .brandmark .logo { width: 26px; height: 26px; font-size: 13px; border-radius: 7px; }
+  .title { font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .totstrip { gap: 10px; width: auto; }
+  .totstrip b { font-size: .95rem; }
+  .totstrip span { font-size: .5rem; }
+
+  /* eszköztár: 1 kompakt sor + ☰ mögött lenyíló panel */
+  .toolbar__inner { padding: 7px 0; gap: 6px 8px; }
+  .viewtoggle button { padding: 5px 11px; font-size: .78rem; }
+  .tools-toggle { display: inline-flex; margin-left: auto; min-width: 40px; justify-content: center; }
+  .tools-toggle.has-f { border-color: var(--brand); color: var(--brand-text); font-weight: 700; }
+  .toolbar-more { display: none; }
+  .toolbar-more.open { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; padding: 10px 0 6px; border-top: 1px dashed var(--line); }
+  .toolbar-more.open .search { flex: 1 1 100%; max-width: none; }
+  .toolbar-more.open .presetsel, .toolbar-more.open .instrsel { flex: 1 1 44%; max-width: none; }
+  .toolbar-more.open .spacer { display: none; }
+  .toolbar-more.open .filters { width: 100%; }
+
+  /* részletek panel + szerkesztő modal teljes szélességben */
+  .drawer { width: 100vw; padding: 18px 16px 40px; }
+  .ovl { padding: 8px; align-items: flex-end; }
+  .modal { width: 100%; max-height: 92dvh; }
+  .f { grid-template-columns: 1fr; padding: 12px 14px 4px; }
+  .field.full { grid-column: auto; }
+
+  /* térkép-segédek kisebbre */
+  .legend { max-width: calc(100vw - 24px); }
+  .react-flow__minimap { display: none; }
 }

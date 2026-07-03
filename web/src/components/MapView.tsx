@@ -89,10 +89,41 @@ function Inner({ data, filter, handlers, persist, theme, view }: Props) {
   useEffect(() => { setEdges(initEdges); }, [initEdges, setEdges]);
 
   const rf = useReactFlow();
+  // okos igazítás: asztali nézetben a teljes gráf; mobilon (keskeny kijelző) a teljes gráf
+  // mikroszkopikus lenne, ezért az első félév fejlécére + első kártyájára zoomolunk
+  const smartFit = useCallback((duration: number) => {
+    if (window.innerWidth < 720) {
+      const all = rf.getNodes();
+      const sem = all.find((n) => n.type === 'semester');
+      if (sem) {
+        const ci = (sem.data as { ci?: number }).ci;
+        const course = all
+          .filter((n) => n.type === 'course' && (n.data as { ci?: number }).ci === ci)
+          .sort((a, b) => a.position.x - b.position.x)[0];
+        rf.fitView({ nodes: course ? [sem, course] : [sem], padding: 0.08, duration });
+        return;
+      }
+    }
+    rf.fitView({ padding: 0.1, duration });
+  }, [rf]);
   useEffect(() => {
-    const t = setTimeout(() => rf.fitView({ padding: 0.1, duration: 300 }), 90);
+    const t = setTimeout(() => smartFit(300), 90);
     return () => clearTimeout(t);
-  }, [rf, view.ver, view.prog]);
+  }, [smartFit, view.ver, view.prog]);
+  // jelentős szélesség-változásnál (pl. telefon elforgatása) újraigazítás — a magasság-változást
+  // (mobil billentyűzet felugrása) szándékosan figyelmen kívül hagyjuk
+  useEffect(() => {
+    let t: number | null = null;
+    let lastW = window.innerWidth;
+    const onResize = () => {
+      if (Math.abs(window.innerWidth - lastW) < 120) return;
+      lastW = window.innerWidth;
+      if (t) window.clearTimeout(t);
+      t = window.setTimeout(() => smartFit(200), 250);
+    };
+    window.addEventListener('resize', onResize);
+    return () => { window.removeEventListener('resize', onResize); if (t) window.clearTimeout(t); };
+  }, [smartFit]);
 
   const onConnect = useCallback((c: Connection) => {
     if (!c.source || !c.target) return;

@@ -48,7 +48,9 @@ export const CourseNode = memo(function CourseNode({ data }: { data: CourseData 
           ))}
         </div>
       )}
-      {x.description && <div className="cn-desc">{x.description.length > 140 ? x.description.slice(0, 140).trimEnd() + '…' : x.description}</div>}
+      {(x.short || x.description) && (
+        <div className={`cn-desc${x.short ? ' is-short' : ''}`}>{x.short || ((x.description as string).length > 140 ? (x.description as string).slice(0, 140).trimEnd() + '…' : x.description)}</div>
+      )}
       {x.keywords.length > 0 && (
         <div className="cn-kws">{x.keywords.slice(0, 4).map((k) => <span key={k} className="cn-kw">{k}</span>)}</div>
       )}

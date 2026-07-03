@@ -14,6 +14,7 @@ export interface Course {
   institute: string;
   note: string | null;
   description: string | null;
+  short?: string | null;
   felelos: string | null;
   prerequisite: string | null;
   requirement: string | null;
@@ -107,7 +108,8 @@ export const DEFAULT_DATA: Curriculum = {
             "grafika/tipográfia",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "Vektor- és pixelgrafika: adatvizualizáció, piktogram, logóparafrázis, hibrid grafika (Illustrator, Photoshop)."
         },
         {
           "type": "Kötelező",
@@ -143,7 +145,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "installáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Arduino-alapú fizikai prototípusok: elektronika, programozás, anyagkísérletek, saját interaktív objektumok."
         },
         {
           "type": "Kötelező",
@@ -174,7 +177,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Kommunikáció alapfogalmai, elméletei és modelljei — társadalomtudományi alapozó előadás, kollokviummal."
         },
         {
           "type": "Kötelező",
@@ -213,7 +217,8 @@ export const DEFAULT_DATA: Curriculum = {
             "2d",
             "grafika/tipográfia"
           ],
-          "group": null
+          "group": null,
+          "short": "Kompozíció, perspektíva, portré-anatómia, színtan szabadkézi rajzzal és digitálisan; parafrázis, múzeum."
         },
         {
           "type": "Kötelező",
@@ -244,7 +249,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Meghatározó művészeti korszakok és irányzatok társadalmi kontextusban; vizuális kultúra, kritikai gondolkodás."
         },
         {
           "type": "Kötelező",
@@ -276,7 +282,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, meghívott előadók, kiállításlátogatás és közös projektek — portfólióépítés."
         },
         {
           "type": "Kötelező",
@@ -313,7 +320,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "ux/interakció"
           ],
-          "group": null
+          "group": null,
+          "short": "Design Thinking: kutatás, interjú, perszóna, customer journey, user flow, UI-tervek Figmában és Miróban."
         }
       ]
     },
@@ -353,7 +361,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Műalkotások elemzése társadalmi, kulturális és történeti összefüggésekben, korszakokon átívelően."
         },
         {
           "type": "Kötelező",
@@ -384,7 +393,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Filozófiai irányzatok és esztétikai alapproblémák áttekintése, elméleti alap a művészeti tanulmányokhoz."
         },
         {
           "type": "Kötelező",
@@ -423,7 +433,8 @@ export const DEFAULT_DATA: Curriculum = {
             "grafika/tipográfia",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "Betűtörténet a római kapitálistól, betűrajz, fontterv és kiadványtervezés InDesignban, nyomdai előkészítés."
         },
         {
           "type": "Kötelező",
@@ -462,7 +473,8 @@ export const DEFAULT_DATA: Curriculum = {
             "fotó",
             "film/videó"
           ],
-          "group": null
+          "group": null,
+          "short": "Fotó: expozíció, világítás, plánok, Lightroom; mozgókép: vágás, szín, hang (Premiere, After Effects)."
         },
         {
           "type": "Kötelező",
@@ -498,7 +510,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "installáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Arduino-programozás szenzorokkal és aktuátorokkal; interaktív fényművészeti alkotás tervezése, építése."
         },
         {
           "type": "Kötelező",
@@ -535,7 +548,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "ux/interakció"
           ],
-          "group": null
+          "group": null,
+          "short": "Design Thinking, usability heurisztikák, akadálymentesítés, tesztelés; app-prototípus Figmában."
         },
         {
           "type": "Kötelező",
@@ -568,7 +582,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Kép, jel és szimbólum, fénykép-ontológia, bio-art, hálózatelmélet és nonlineáris művészeti formák."
         },
         {
           "type": "Kötelező",
@@ -601,7 +616,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, meghívott előadók, kiállításlátogatás és közös projektek; portfólióépítés."
         }
       ]
     },
@@ -641,7 +657,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "A művészet értelmezésének alapfogalmai és fő irányzatai; esztétikai, kritikai és elemző gondolkodás."
         },
         {
           "type": "Kötelező",
@@ -673,7 +690,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "A média történeti alakulása és társadalmi-kulturális szerepe; médiajelenségek kritikai értelmezése."
         },
         {
           "type": "Kötelező",
@@ -713,7 +731,8 @@ export const DEFAULT_DATA: Curriculum = {
             "animáció",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "After Effects-alapok: kulcskocka, maszkolás, színkorrekció, 3D layer, AI-generálás; záró branding spot."
         },
         {
           "type": "Kötelező",
@@ -752,7 +771,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "hang"
           ],
-          "group": null
+          "group": null,
+          "short": "Hangfelvétel, vágás, EQ, zajszűrés, reverb; hangdesign és MIDI/OSC interaktív rendszerek (Audition, Ableton)."
         },
         {
           "type": "Kötelező",
@@ -784,7 +804,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Meghívott előadók, mesterkurzusok, workshopok, kiállításlátogatás; társterületi tudás és portfólióépítés."
         },
         {
           "type": "Kötelező",
@@ -824,7 +845,8 @@ export const DEFAULT_DATA: Curriculum = {
             "web",
             "ux/interakció"
           ],
-          "group": null
+          "group": null,
+          "short": "HTML/CSS-alapok, wireframe és prototípus (Figma, Penpot), tipográfia, akadálymentesítés, reszponzív design."
         },
         {
           "type": "Kötelező",
@@ -861,7 +883,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "3d"
           ],
-          "group": null
+          "group": null,
+          "short": "Blender-alapok: modellezés, textúrázás, UV mapping, világítás, render, fotogrammetria; tárgymodell-projekt."
         },
         {
           "type": "Kötelező és szabváll.",
@@ -894,7 +917,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Okoseszközök, közösségi média, VR, videójátékok és AI pszichológiai hatásai; kogníció, reziliencia."
         },
         {
           "type": "Kötelező",
@@ -930,7 +954,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "Társasjáték-tervezés: prototípus, balansz, mechanika; digitális gyártási fázisok koncepciótól gold masterig."
         },
         {
           "type": "Kötelező",
@@ -969,7 +994,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "játék"
           ],
-          "group": null
+          "group": null,
+          "short": "Játékkörnyezet-építés: Blender-modellezés és textúrázás, Unreal világítás, atmoszféra, blueprint-alapok."
         },
         {
           "type": "Kötelező",
@@ -1003,7 +1029,8 @@ export const DEFAULT_DATA: Curriculum = {
             "elmélet",
             "játék"
           ],
-          "group": null
+          "group": null,
+          "short": "Fejlődéslélektan (Piaget, Vigotszkij), motiváció, flow, csoportdinamika, gamification és UX a játékélményben."
         }
       ]
     },
@@ -1043,12 +1070,13 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "A kép fogalma, működése és szerepe a vizuális kultúrában — képelméleti alapok a design gyakorlathoz."
         },
         {
           "type": "Kötelező és szabváll.",
           "name": "A játéktervezés elmélete",
-          "specialization": null,
+          "specialization": "Játéktervezés specializáció",
           "courseType": "előadás",
           "hours": 2,
           "credits": 4,
@@ -1072,13 +1100,14 @@ export const DEFAULT_DATA: Curriculum = {
             "immerzió",
             "játékelmélet"
           ],
-          "cel": "A kurzus célja a játéktervezés elméletének elsajátítása, hogy a hallgató játéktervezői, alkotói és prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató képessé válik az elsajátított elméleti ismeretanyagot elemezni és játéktervezői gyakorlatában, szakmai együttműködéseiben és tágabb interdiszciplináris keretben alkalmazni.",
-          "pdfUrl": "/tematikak/15031.pdf",
           "category": [
             "játék",
             "elmélet"
           ],
-          "group": null
+          "cel": "A kurzus célja a játéktervezés elméletének elsajátítása, hogy a hallgató játéktervezői, alkotói és prezentációs munkájához elméleti megalapozásként és fogalmi kiegészítésként alkalmazhassa. A hallgató képessé válik az elsajátított elméleti ismeretanyagot elemezni és játéktervezői gyakorlatában, szakmai együttműködéseiben és tágabb interdiszciplináris keretben alkalmazni.",
+          "pdfUrl": "/tematikak/15031.pdf",
+          "group": null,
+          "short": "Hogyan készül jól játszható játék? Játékmechanika, jutalmazás, narratíva, immerzió, saját játékkoncepció."
         },
         {
           "type": "Kötelező",
@@ -1119,7 +1148,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Nuke compositing: roto, tracking, keying, tűzeffektek; vagy game-ready 3D assetek (Blender, Substance)."
         },
         {
           "type": "Kötelező",
@@ -1157,7 +1187,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "hang"
           ],
-          "group": null
+          "group": null,
+          "short": "Filmhang és foley a stúdióban: mikrofonozás, zörejezés, hangdesign, speechless speech videók hangosítása."
         },
         {
           "type": "Kötelező",
@@ -1190,7 +1221,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, meghívott szakmai előadók, kiállításlátogatás és közös projektek kivitelezése."
         },
         {
           "type": "Kötelező",
@@ -1235,7 +1267,8 @@ export const DEFAULT_DATA: Curriculum = {
             "fejlesztés",
             "ai"
           ],
-          "group": null
+          "group": null,
+          "short": "React, Next.js, Tailwind és AI-asszisztált kódolás: publikált interaktív 3D portfólió oldal (R3F, Vercel)."
         },
         {
           "type": "Kötelező",
@@ -1274,7 +1307,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Cinema 4D motion design: Mograph, karaktercsontozás, Rokoko mocap, fizikai és ruha-szimuláció, Unreal render."
         },
         {
           "type": "Kötelező",
@@ -1310,7 +1344,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "ux/interakció"
           ],
-          "group": null
+          "group": null,
+          "short": "Játékprototípus Unityben: paper prototyping, core mechanics, level design, playtesting, vertical slice."
         },
         {
           "type": "Kötelező",
@@ -1349,7 +1384,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "játék"
           ],
-          "group": null
+          "group": null,
+          "short": "Unreal Engine workflow: level design blockout, materialok, világítás, post process, Level Sequence render."
         }
       ]
     },
@@ -1389,7 +1425,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Ökológiai gondolkodás a kortárs művészetben: fenntarthatóság, ember–természet viszony."
         },
         {
           "type": "Kötelező",
@@ -1421,7 +1458,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Kreatív ipari alapok: vállalkozás, menedzsment, szerzői jog — a tervezői munka gazdasági és jogi keretei."
         },
         {
           "type": "Kötelező",
@@ -1453,7 +1491,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Szakmai munkák, koncepciók és portfóliók hatásos bemutatása: vizuális és verbális előadástechnika gyakorlása."
         },
         {
           "type": "Kötelező",
@@ -1487,7 +1526,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, vendégelőadók, kiállításlátogatás, közös projektek."
         },
         {
           "type": "Kötelező",
@@ -1523,7 +1563,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "3d"
           ],
-          "group": null
+          "group": null,
+          "short": "Blender 3D alapok: modellezés, UV-textúrázás, világítás, PBR render; féléves tárgymodell és képsorozat."
         },
         {
           "type": "Kötelező",
@@ -1561,7 +1602,8 @@ export const DEFAULT_DATA: Curriculum = {
             "web",
             "fejlesztés"
           ],
-          "group": null
+          "group": null,
+          "short": "Összetett webes és interaktív projektek tervezése és kivitelezése (HTML, CSS, Figma, Penpot)."
         },
         {
           "type": "Kötelező",
@@ -1596,7 +1638,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "Game art, játékmenet és interakció összefüggései projektmunkában, Unity játékmotoros fejlesztés felé lépve."
         },
         {
           "type": "Kötelező",
@@ -1630,7 +1673,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "játék"
           ],
-          "group": null
+          "group": null,
+          "short": "Játékfejlesztési műhelymunka Unityben: eszközök, munkafolyamatok, saját játékprojektek építése."
         }
       ]
     },
@@ -1679,7 +1723,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "3d"
           ],
-          "group": null
+          "group": null,
+          "short": "Projection mapping és valós idejű generatív vizuálok: TouchDesigner, Unreal Engine, DMX; közös épületvetítés."
         },
         {
           "type": "Kötelező",
@@ -1713,7 +1758,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Videojáték-tervezés csoportban: saját játékötlet, narratíva, tér- és karaktertervezés, esettanulmányok."
         },
         {
           "type": "Kötelező",
@@ -1747,7 +1793,8 @@ export const DEFAULT_DATA: Curriculum = {
             "elmélet",
             "ai"
           ],
-          "group": null
+          "group": null,
+          "short": "Újmédia-elmélet szövegolvasással: gépi kreativitás, AI-művészet, algoritmus, a digitális jövő kérdései."
         },
         {
           "type": "Kötelező",
@@ -1781,7 +1828,8 @@ export const DEFAULT_DATA: Curriculum = {
             "diploma/portfólió",
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Forrásgyűjtés, hivatkozás, szövegstruktúra és kutatásmódszertan a saját szakdolgozati témára alkalmazva."
         },
         {
           "type": "Kötelező",
@@ -1822,7 +1870,8 @@ export const DEFAULT_DATA: Curriculum = {
             "web",
             "ux/interakció"
           ],
-          "group": null
+          "group": null,
+          "short": "Diplomához kapcsolódó online médiatermék (Figma/Penpot, HTML/CSS) + projektterv, portfólió és showreel."
         },
         {
           "type": "Kötelező",
@@ -1855,7 +1904,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, meghívott szakemberek előadásai, kiállításlátogatás és közös projektek."
         }
       ]
     },
@@ -1900,7 +1950,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "3d"
           ],
-          "group": null
+          "group": null,
+          "short": "Maya: polygon modellezés, UV, textúrázás, világítás, Arnold render, AOV-k; félév végi renderelt animáció."
         },
         {
           "type": "Kötelező",
@@ -1940,7 +1991,8 @@ export const DEFAULT_DATA: Curriculum = {
             "installáció",
             "fejlesztés"
           ],
-          "group": null
+          "group": null,
+          "short": "Elektronika, Arduino, TouchDesigner, Kinect, DMX: audio-reaktív vizuálok és saját interaktív installáció."
         },
         {
           "type": "Kötelező",
@@ -1972,7 +2024,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Kortárs művészeti irányzatok és diskurzusok: elméleti keret a saját alkotói gyakorlat értelmezéséhez."
         },
         {
           "type": "Kötelező és szabváll.",
@@ -2005,7 +2058,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Humánetológia, képfilozófia, hálózatelméletek, filmnyelv, AI, poszthumán média."
         },
         {
           "type": "Kötelező",
@@ -2037,7 +2091,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Média és kultúra kölcsönhatásai: médiajelenségek társadalmi, kulturális összefüggésekben, elméleti alapozás."
         },
         {
           "type": "Kötelező",
@@ -2077,7 +2132,8 @@ export const DEFAULT_DATA: Curriculum = {
             "2d",
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Alternatív filmfőcím After Effectsben (storyboard, látványterv) + fiktív karakter social media oldala."
         },
         {
           "type": "Kötelező",
@@ -2110,7 +2166,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, meghívott előadók, konferencia- és kiállításlátogatás, közös projektek."
         },
         {
           "type": "Kötelező",
@@ -2154,7 +2211,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "fejlesztés"
           ],
-          "group": null
+          "group": null,
+          "short": "Felzárkóztató: Photoshop, Illustrator, kézi rajz, fotó, Premiere-vágás, C#/Arduino, Blender 3D alapok."
         }
       ]
     },
@@ -2194,7 +2252,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Kortárs kultúra és média kritikai, társadalomtudományi elemzése; fogalomkészlet az alkotói reflexióhoz."
         },
         {
           "type": "Kötelező",
@@ -2226,7 +2285,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Ember és épített, mediatizált környezet kölcsönhatásai; pszichológiai szempontok a tervezői gondolkodáshoz."
         },
         {
           "type": "Kötelező",
@@ -2258,7 +2318,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Interdiszciplináris projektmunka más művészeti ágak képviselőivel: közös alkotói folyamat és módszertan."
         },
         {
           "type": "Kötelező",
@@ -2299,7 +2360,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Game-ready 3D assetek, karakterek, mocap (Maya, Substance Painter), majd demo játék Unreal blueprintekkel."
         },
         {
           "type": "Kötelező",
@@ -2339,7 +2401,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "nCloth-, részecske- és folyadékszimuláció, MASH, Arnold; cutscene After Effectsben."
         },
         {
           "type": "Kötelező",
@@ -2377,7 +2440,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "installáció"
           ],
-          "group": null
+          "group": null,
+          "short": "TouchDesigner, Kinect, mikrokontrollerek: audioreaktív vizuálok, DMX/OSC/MIDI, saját interaktív installáció."
         },
         {
           "type": "Kötelező",
@@ -2409,7 +2473,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, meghívott előadók, kiállításlátogatás; Erasmus-beszámolók és OMDK-forduló."
         },
         {
           "type": "Kötelező",
@@ -2453,7 +2518,8 @@ export const DEFAULT_DATA: Curriculum = {
             "2d",
             "3d"
           ],
-          "group": null
+          "group": null,
+          "short": "Felzárkóztatás: fotó, videóvágás, Blender 3D, fényfestés (Resolume), webdesign (Figma, HTML/CSS), Arduino."
         }
       ]
     },
@@ -2492,7 +2558,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Kommunikáció alapfogalmai és folyamatai: kommunikációelmélet, médiakommunikáció, prezentáció."
         },
         {
           "type": "Kötelező",
@@ -2524,7 +2591,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Gazdasági és jogi alapok a kreatíviparban: szerzői jog, vállalkozási és piaci ismeretek."
         },
         {
           "type": "Kötelező",
@@ -2563,7 +2631,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "hang"
           ],
-          "group": null
+          "group": null,
+          "short": "Hangvágás, keverés, EQ, foley, MIDI/OSC-alapú interaktív rendszerek (Audition, Ableton Live, Max)."
         },
         {
           "type": "Kötelező",
@@ -2602,7 +2671,8 @@ export const DEFAULT_DATA: Curriculum = {
             "installáció",
             "játék"
           ],
-          "group": null
+          "group": null,
+          "short": "Fényművészet (projection mapping, DMX, Unreal Engine) és játéktervezés a GDD-től a prototípusig."
         },
         {
           "type": "Kötelező",
@@ -2639,7 +2709,8 @@ export const DEFAULT_DATA: Curriculum = {
             "installáció",
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Fényművészet, luminokinetika, interaktív installációk (TouchDesigner), városi kreatív ötlettervek."
         },
         {
           "type": "Kötelező",
@@ -2672,7 +2743,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Médiaelméleti irányzatok, média és hatalom, reprezentáció, szemiotikai és diskurzuselemzés."
         },
         {
           "type": "Kötelező",
@@ -2705,7 +2777,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, kiállításlátogatás meghívott szakemberekkel; portfólió."
         }
       ]
     },
@@ -2749,7 +2822,8 @@ export const DEFAULT_DATA: Curriculum = {
             "projekt",
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Játékipari produkció vezetői oldala: finanszírozás, kiadók, PM-eszközök, marketing; fiktív pitch csomag."
         },
         {
           "type": "Kötelező",
@@ -2782,7 +2856,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "diploma/portfólió"
           ],
-          "group": null
+          "group": null,
+          "short": "Három blokk: játékfejlesztési csapatprojekt, szakdolgozat-módszertan, projektterv, portfólió és showreel."
         },
         {
           "type": "Kötelező",
@@ -2815,7 +2890,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Meghívott előadók, mesterkurzusok, workshopok; Erasmus-beszámoló, BEST OF diplomaprezentációk, OMDK forduló."
         }
       ]
     },
@@ -2861,7 +2937,8 @@ export const DEFAULT_DATA: Curriculum = {
             "grafika/tipográfia",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "Vektor- és pixelgrafika: adatvizualizáció, piktogram, logó, banner, hibrid képnyelv (Illustrator, Photoshop)."
         },
         {
           "type": "Kötelező",
@@ -2897,7 +2974,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "installáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Arduino: elektronika, szenzorok, szervók, anyagkísérletek, interaktív objektumok építése."
         },
         {
           "type": "Kötelező",
@@ -2928,7 +3006,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Kommunikáció alapfogalmai, modelljei és folyamatai — közös elméleti alapozó előadás, kollokviummal."
         },
         {
           "type": "Kötelező",
@@ -2967,7 +3046,8 @@ export const DEFAULT_DATA: Curriculum = {
             "2d",
             "grafika/tipográfia"
           ],
-          "group": null
+          "group": null,
+          "short": "Kompozíció, perspektíva, portréanatómia: szabadkézi rajz digitális technikákkal, parafrázis, múzeumlátogatás."
         },
         {
           "type": "Kötelező",
@@ -2998,7 +3078,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Korszakok és művészeti jelenségek társadalmi-kulturális összefüggésekben; közös elméleti alapozó, kollokvium."
         },
         {
           "type": "Kötelező",
@@ -3031,7 +3112,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, meghívott előadók; szakbemutató, Erasmus-ismertető, portfólióépítés."
         },
         {
           "type": "Kötelező",
@@ -3068,7 +3150,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "ux/interakció"
           ],
-          "group": null
+          "group": null,
+          "short": "Design Thinking: kutatás, perszóna, customer journey, user flow, app-prototípus Figmában és Miróban."
         }
       ]
     },
@@ -3108,7 +3191,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Művészeti korszakok és irányzatok társadalmi, kulturális, gazdasági összefüggésekben; műelemzés, kritika."
         },
         {
           "type": "Kötelező",
@@ -3140,7 +3224,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Filozófiai és esztétikai alapfogalmak, gondolkodástörténeti hagyomány; elméleti alap a kritikai műelemzéshez."
         },
         {
           "type": "Kötelező",
@@ -3179,7 +3264,8 @@ export const DEFAULT_DATA: Curriculum = {
             "grafika/tipográfia",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "Betűtörténet a római kapitálistól a sans serifig; saját fontterv és kiadványterv InDesignban, Fontselffel."
         },
         {
           "type": "Kötelező",
@@ -3218,7 +3304,8 @@ export const DEFAULT_DATA: Curriculum = {
             "fotó",
             "film/videó"
           ],
-          "group": null
+          "group": null,
+          "short": "Fotó: expozíció, világítás, plánok; Lightroom; mozgókép vágás, színezés, hang (Premiere Pro, After Effects)."
         },
         {
           "type": "Kötelező",
@@ -3254,7 +3341,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "installáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Arduino-alapú fizikai computing: szenzorok, fény- és motorvezérlés; csoportos interaktív fénymű építése."
         },
         {
           "type": "Kötelező",
@@ -3291,7 +3379,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "ux/interakció"
           ],
-          "group": null
+          "group": null,
+          "short": "Usability, platformok (web, Android, iOS), akadálymentesítés, felhasználói tesztelés; prototípus Figmában."
         },
         {
           "type": "Kötelező",
@@ -3324,7 +3413,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Szemiotikától a bio-artig: kép, jel, fénykép-ontológia, ikonográfia, hálózatkutatás, interaktív műformák."
         },
         {
           "type": "Kötelező",
@@ -3356,7 +3446,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, meghívott előadók, kiállításlátogatások; portfólióépítés és projektmunka."
         }
       ]
     },
@@ -3403,7 +3494,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "játék"
           ],
-          "group": null
+          "group": null,
+          "short": "Játékkörnyezetek Blenderben és Unreal Engine-ben: modellezés, textúrázás, világítás, blueprint, environment."
         },
         {
           "type": "Kötelező",
@@ -3440,7 +3532,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "3d"
           ],
-          "group": null
+          "group": null,
+          "short": "3D alapok Blenderben: modellezés, PBR textúrázás, UV mapping, világítás, renderelés, fotogrammetria."
         },
         {
           "type": "Kötelező és szabváll.",
@@ -3472,7 +3565,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Média és kultúra: médiaelméleti alapfogalmak, tömegmédia-jelenségek elemzése."
         },
         {
           "type": "Kötelező",
@@ -3508,7 +3602,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "Társasjáték-tervezés (prototípus, balansz, mechanikák) és digitális játékfejlesztési fázisok a kiadásig."
         },
         {
           "type": "Kötelező",
@@ -3547,7 +3642,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "hang"
           ],
-          "group": null
+          "group": null,
+          "short": "Hangfelvétel és -szerkesztés: EQ, reverb, zajszűrés, hangdesign, MIDI/OSC rendszerek Auditionben, Abletonban."
         },
         {
           "type": "Kötelező",
@@ -3581,7 +3677,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Flow, motiváció, fejlődéslélektan (Piaget, Vigotszkij), csoportdinamika, gamification, UX a játéktervezésben."
         },
         {
           "type": "Kötelező",
@@ -3621,7 +3718,8 @@ export const DEFAULT_DATA: Curriculum = {
             "animáció",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "After Effects-alapok: kulcskockás animáció, maszkolás, színkorrekció, AI-képgenerálás, branding spot."
         },
         {
           "type": "Kötelező",
@@ -3661,7 +3759,8 @@ export const DEFAULT_DATA: Curriculum = {
             "web",
             "ux/interakció"
           ],
-          "group": null
+          "group": null,
+          "short": "Webtervezés HTML/CSS-sel: wireframe, Figma/Penpot prototípus, tipográfia, reszponzív és akadálymentes design."
         },
         {
           "type": "Kötelező",
@@ -3692,7 +3791,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Esztétikai alapfogalmak és fő elméleti irányzatok: fogalmi keretek a műalkotások értelmezéséhez."
         },
         {
           "type": "Kötelező",
@@ -3725,7 +3825,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Okoseszközök, közösségi média, VR, videójátékok és AI hatása a viselkedésre és a kognitív folyamatokra."
         },
         {
           "type": "Kötelező",
@@ -3757,7 +3858,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Szakmai workshopok, mesterkurzusok, kiállításlátogatások és közös projektek, portfólióépítéssel."
         }
       ]
     },
@@ -3797,7 +3899,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Képelmélet és vizuális kultúra előadássorozat: a kép működése, a vizuális kommunikáció elméleti háttere."
         },
         {
           "type": "Kötelező és szabváll.",
@@ -3831,7 +3934,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Hogyan készül jól játszható játék? Ludológia, motiváció, jutalmazás, narratíva, immerzió, játékkoncepció."
         },
         {
           "type": "Kötelező",
@@ -3872,7 +3976,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Nuke compositing: roto, tracking, keying — vagy játék-asset: Blender modell, Substance PBR, Unreal export."
         },
         {
           "type": "Kötelező",
@@ -3910,7 +4015,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "hang"
           ],
-          "group": null
+          "group": null,
+          "short": "Filmhang és foley a hangstúdióban: mikrofonozás, zörejezés, kisfilm hangjának csoportos elkészítése."
         },
         {
           "type": "Kötelező",
@@ -3942,7 +4048,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, vendégelőadók, kiállítás- és konferencialátogatás; portfólióépítés."
         },
         {
           "type": "Kötelező",
@@ -3987,7 +4094,8 @@ export const DEFAULT_DATA: Curriculum = {
             "fejlesztés",
             "ai"
           ],
-          "group": null
+          "group": null,
+          "short": "React, Next.js, Tailwind, AI-asszisztált kódolás és Web3D (R3F); interaktív portfólió-oldal Vercelen."
         },
         {
           "type": "Kötelező",
@@ -4025,7 +4133,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Cinema 4D motion design: animálás 12 törvénye, Mograph, motion capture, szimulációk, Unreal render."
         },
         {
           "type": "Kötelező",
@@ -4061,7 +4170,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "ux/interakció"
           ],
-          "group": null
+          "group": null,
+          "short": "Játékprototipizálás: paper prototyping, level design, UI/UX wireframe, playtesting; vertical slice Unityben."
         },
         {
           "type": "Kötelező",
@@ -4100,7 +4210,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "fejlesztés"
           ],
-          "group": null
+          "group": null,
+          "short": "Unreal Engine: blueprintek, level design, materialok, világítás, post process; dioráma videórenderrel."
         }
       ]
     },
@@ -4140,7 +4251,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Kreatív ipari működés üzleti és jogi keretei: vállalkozási, gazdálkodási és menedzsmentalapok."
         },
         {
           "type": "Kötelező",
@@ -4175,7 +4287,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Hogyan készül jól játszható játék? Ludológia, játékmechanika, jutalmazási rendszerek, immerzió, narratíva."
         },
         {
           "type": "Kötelező",
@@ -4214,7 +4327,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Saját videojáték az ötlettől a játszható prototípusig: game design, game art, GDD (Unity, Unreal, Blender)."
         },
         {
           "type": "Kötelező",
@@ -4255,7 +4369,8 @@ export const DEFAULT_DATA: Curriculum = {
             "film/videó",
             "installáció"
           ],
-          "group": null
+          "group": null,
+          "short": "VFX-pipeline: Nuke compositing, Maya modellezés, Substance textúrázás + projection mapping (Resolume)."
         },
         {
           "type": "Kötelező és szabváll.",
@@ -4287,7 +4402,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Környezeti kérdések művészeti reflexiói: fenntarthatóság és ökológiai szemlélet a kortárs alkotásokban."
         },
         {
           "type": "Kötelező",
@@ -4320,7 +4436,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, vendégelőadók, kiállítás- és konferencialátogatás, közös projektek."
         }
       ]
     },
@@ -4369,7 +4486,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Projection mapping, hang- és mozgásreaktív vizuálok (TouchDesigner, Unreal, DMX) a körépületre."
         },
         {
           "type": "Kötelező",
@@ -4403,7 +4521,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Videojáték-tervezés csoportban: játékötlet fejlesztése — narratíva, tér- és karaktertervezés, mechanikák."
         },
         {
           "type": "Kötelező",
@@ -4437,7 +4556,8 @@ export const DEFAULT_DATA: Curriculum = {
             "elmélet",
             "ai"
           ],
-          "group": null
+          "group": null,
+          "short": "Újmédia-elmélet szövegolvasással: gépi kreativitás, AI és művészet, algoritmusok kritikai elemzése."
         },
         {
           "type": "Kötelező",
@@ -4471,7 +4591,8 @@ export const DEFAULT_DATA: Curriculum = {
             "diploma/portfólió",
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Tudományos írás lépésről lépésre: forrásgyűjtés, hivatkozás, szövegstruktúra, kutatásmódszertan, AI-használat."
         },
         {
           "type": "Kötelező",
@@ -4509,7 +4630,8 @@ export const DEFAULT_DATA: Curriculum = {
             "web",
             "ux/interakció"
           ],
-          "group": null
+          "group": null,
+          "short": "Diplomához kapcsolódó online médiatermék (Figma/Penpot prototípus, webfejlesztés) + portfólió és showreel."
         },
         {
           "type": "Kötelező",
@@ -4542,7 +4664,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, vendégelőadók, konferencia- és kiállításlátogatás a tantervi kereteken túl."
         }
       ]
     },
@@ -4587,7 +4710,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "3d"
           ],
-          "group": null
+          "group": null,
+          "short": "Maya-alapú 3D: poligonmodellezés, UV, textúrázás, világítás, Arnold render, AOV-k; félévvégi animáció."
         },
         {
           "type": "Kötelező",
@@ -4626,7 +4750,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "installáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Elektronika, mikrokontrollerek, TouchDesigner és Kinect: interaktív installáció tervezése, VJ-alapok."
         },
         {
           "type": "Kötelező",
@@ -4658,7 +4783,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Kortárs művészeti jelenségek értelmezése, kritikai elemzése; elméleti és fogalmi háttér az MA-munkákhoz."
         },
         {
           "type": "Kötelező",
@@ -4691,7 +4817,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Nonverbális és digitális kommunikáció, képfilozófia, hálózatelméletek, közösségi média, filmnyelv, AI."
         },
         {
           "type": "Kötelező",
@@ -4723,7 +4850,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Média és kultúra kölcsönhatásai: médiajelenségek értelmezése társadalmi, kulturális kontextusban."
         },
         {
           "type": "Kötelező",
@@ -4762,7 +4890,8 @@ export const DEFAULT_DATA: Curriculum = {
             "2d",
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Alternatív filmfőcím After Effectsben (storyboard, látványterv) + fiktív karakter social media oldala."
         },
         {
           "type": "Kötelező",
@@ -4795,7 +4924,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, meghívott előadók, konferencia- és kiállításlátogatás; portfólióépítés."
         },
         {
           "type": "Kötelező",
@@ -4839,7 +4969,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "fejlesztés"
           ],
-          "group": null
+          "group": null,
+          "short": "Felzárkóztató: Photoshop, Illustrator, kézi rajz, fotó, Premiere-vágás, C#/Arduino, Blender 3D; portfólió."
         }
       ]
     },
@@ -4879,7 +5010,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Kultúra, média és társadalom összefüggései kritikai nézőpontból; kortárs kulturális jelenségek elemzése."
         },
         {
           "type": "Kötelező",
@@ -4911,7 +5043,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Ember és épített/természeti környezet kölcsönhatása: terek észlelése és használata tervezői szemmel."
         },
         {
           "type": "Kötelező",
@@ -4943,7 +5076,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Művészeti területek találkozása: interdiszciplináris, csoportos projektek, közös alkotói munka."
         },
         {
           "type": "Kötelező",
@@ -4984,7 +5118,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Game-ready 3D assetek, mocap animáció (Maya, Substance Painter), majd játszható demó Unreal Engine-ben."
         },
         {
           "type": "Kötelező",
@@ -5023,7 +5158,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "nCloth-, részecske- és folyadékszimuláció, MASH terepek, renderoptimalizálás; kompozitálás After Effectsben."
         },
         {
           "type": "Kötelező",
@@ -5061,7 +5197,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "installáció"
           ],
-          "group": null
+          "group": null,
+          "short": "TouchDesigner + Kinect: audio-reaktív, mozgásvezérelt vizuálok, DMX/OSC/MIDI, saját interaktív installáció."
         },
         {
           "type": "Kötelező",
@@ -5094,7 +5231,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, meghívott előadók; Erasmus-beszámoló, BEST OF diplomaprezentációk, OMDK forduló."
         },
         {
           "type": "Kötelező",
@@ -5138,7 +5276,8 @@ export const DEFAULT_DATA: Curriculum = {
             "2d",
             "installáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Felzárkóztató: fotó, videóvágás, Blender 3D, fényfestés (Resolume), webdesign (Figma, HTML/CSS/JS)."
         }
       ]
     },
@@ -5180,7 +5319,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Médiaelméleti irányzatok, média és hatalom, reprezentáció, szemiotikai és diskurzuselemzés kortárs példákon."
         },
         {
           "type": "Kötelező",
@@ -5212,7 +5352,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Kreatív szakmák gyakorlásához szükséges gazdasági és jogi alapok: szerzői jog, vállalkozási ismeretek."
         },
         {
           "type": "Kötelező",
@@ -5251,7 +5392,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "hang"
           ],
-          "group": null
+          "group": null,
+          "short": "Hangvágás, keverés, foley, MIDI/OSC interaktív rendszerek Audition, Ableton Live és Max környezetben."
         },
         {
           "type": "Kötelező",
@@ -5288,7 +5430,8 @@ export const DEFAULT_DATA: Curriculum = {
             "installáció",
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Fényművészet, luminokinetika, kiállításépítés és haladó TouchDesigner; városi kreatív ötlettervek."
         },
         {
           "type": "Kötelező",
@@ -5319,7 +5462,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Kommunikációs alapfogalmak és modellek: médiakommunikáció, nyilvánosság, elméleti háttér."
         },
         {
           "type": "Kötelező",
@@ -5359,7 +5503,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Projection mapping, DMX-lámpavezérlés, Unreal Engine fényinstallációk; játéktervezés GDD-től prototípusig."
         },
         {
           "type": "Kötelező",
@@ -5392,7 +5537,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, kiállításlátogatás meghívott szakemberekkel; portfólió."
         }
       ]
     },
@@ -5435,7 +5581,8 @@ export const DEFAULT_DATA: Curriculum = {
             "elmélet",
             "játék"
           ],
-          "group": null
+          "group": null,
+          "short": "Játékfejlesztés vezetői oldala: finanszírozás, kiadói rendszer, marketing, PM-eszközök; fiktív pitch csomag."
         },
         {
           "type": "Kötelező",
@@ -5471,7 +5618,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "diploma/portfólió"
           ],
-          "group": null
+          "group": null,
+          "short": "Játékfejlesztési projektmunka, szakszövegírás, projektterv; kimenet: portfólió, showreel, szakdolgozat."
         },
         {
           "type": "Kötelező",
@@ -5504,7 +5652,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Meghívott előadók, mesterkurzusok, workshopok; Erasmus-beszámoló, BEST OF diplomaprezentációk, OMDK forduló."
         }
       ]
     },
@@ -5549,7 +5698,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "3D modellezés Blenderben: poligonszerkesztés, sculpting, retopológia, UV, render — féléves karaktermodell."
         },
         {
           "type": "Kötelező",
@@ -5593,7 +5743,8 @@ export const DEFAULT_DATA: Curriculum = {
             "film/videó",
             "3d"
           ],
-          "group": null
+          "group": null,
+          "short": "Felzárkóztató alapok: Photoshop, Illustrator, rajz, fotó, Premiere, After Effects, Arduino, Blender."
         },
         {
           "type": "Kötelező",
@@ -5630,7 +5781,8 @@ export const DEFAULT_DATA: Curriculum = {
             "installáció",
             "fejlesztés"
           ],
-          "group": null
+          "group": null,
+          "short": "Arduino-alapú elektronika és programozás: szervók, anyagkísérletek, saját interaktív objekt építése."
         },
         {
           "type": "Kötelező",
@@ -5667,7 +5819,8 @@ export const DEFAULT_DATA: Curriculum = {
             "animáció",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "After Effects alapok: loopolt shape-animációk, audio-reaktív animáció, Puppet tool járásciklus, féléves videó."
         },
         {
           "type": "Kötelező",
@@ -5706,7 +5859,8 @@ export const DEFAULT_DATA: Curriculum = {
             "2d",
             "grafika/tipográfia"
           ],
-          "group": null
+          "group": null,
+          "short": "Kompozíció, perspektíva, anatómia: portrérajz, frottázs- és kollázskompozíciók, színtan, parafrázis-feladatok."
         },
         {
           "type": "Kötelező",
@@ -5742,7 +5896,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "3d"
           ],
-          "group": null
+          "group": null,
+          "short": "Blender-alapok: modellezés, UV-textúrázás, világítás, PBR render; hétköznapi tárgy modellje képsorozattal."
         },
         {
           "type": "Kötelező",
@@ -5775,7 +5930,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, meghívott előadók, kiállításlátogatás, közös projektek, Erasmus-infók."
         },
         {
           "type": "Kötelező",
@@ -5812,7 +5968,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "ux/interakció"
           ],
-          "group": null
+          "group": null,
+          "short": "Design Thinking gyakorlatban: kutatás, interjú, perszóna, customer journey, user flow, UI kit Figmában."
         }
       ]
     },
@@ -5857,7 +6014,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "3D animáció Blenderben: riggelés, FK/IK, weight painting, Rigify, walk cycle, saját animációs projekt."
         },
         {
           "type": "Kötelező",
@@ -5901,7 +6059,8 @@ export const DEFAULT_DATA: Curriculum = {
             "film/videó",
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Felzárkóztató: Photoshop, Illustrator, videóvágás, Blender, fényfestés (Resolume), webdesign, Arduino."
         },
         {
           "type": "Kötelező",
@@ -5939,7 +6098,8 @@ export const DEFAULT_DATA: Curriculum = {
             "installáció",
             "fejlesztés"
           ],
-          "group": null
+          "group": null,
+          "short": "Haladó Arduino: szenzorok, fény- és motorvezérlés; interaktív fényművészeti alkotás tervezése, építése."
         },
         {
           "type": "Kötelező",
@@ -5976,7 +6136,8 @@ export const DEFAULT_DATA: Curriculum = {
             "animáció",
             "film/videó"
           ],
-          "group": null
+          "group": null,
+          "short": "VFX Nuke-ban: rotoscoping, 2D/3D tracking, keying, clean up, screen replacement, tűz- és muzzle flash."
         },
         {
           "type": "Kötelező",
@@ -6014,7 +6175,8 @@ export const DEFAULT_DATA: Curriculum = {
             "fotó",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "Analóg és digitális fotográfia: fotogram, lyukkamera, világítás, kompozíció; Lightroom/Photoshop utómunka."
         },
         {
           "type": "Kötelező",
@@ -6054,7 +6216,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "3D animáció és VFX Cinema 4D-ben: 12 alapelv, csontozás, motion capture, szimulációk, Unreal render."
         },
         {
           "type": "Kötelező",
@@ -6087,7 +6250,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, szakmai előadások, kiállításlátogatás és közös projektek portfólióépítéssel."
         },
         {
           "type": "Kötelező",
@@ -6125,7 +6289,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "web"
           ],
-          "group": null
+          "group": null,
+          "short": "App-prototípus Figmában: user flow, perszónák, reszponzív design, usability, felhasználói tesztelés."
         }
       ]
     },
@@ -6172,7 +6337,8 @@ export const DEFAULT_DATA: Curriculum = {
             "web",
             "ux/interakció"
           ],
-          "group": null
+          "group": null,
+          "short": "Egyéni webprojekt HTML/CSS-sel: blog, portfólió vagy honlap, wireframe és Penpot prototípus készítése."
         },
         {
           "type": "Kötelező",
@@ -6213,7 +6379,8 @@ export const DEFAULT_DATA: Curriculum = {
             "installáció",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "2D animáció, karaktertervezés Animate-ben; projection mapping és hangreaktív fényinstalláció Resolume-mal."
         },
         {
           "type": "Kötelező",
@@ -6246,7 +6413,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, vendégelőadók, kiállításlátogatás és közös projektek a portfólióépítéshez."
         }
       ]
     },
@@ -6290,7 +6458,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "3d"
           ],
-          "group": null
+          "group": null,
+          "short": "Blender-munkamenet a modellezéstől a renderelésig: 3D nyomtatás, ékszer, ételvizualizáció, low poly AR/VR."
         },
         {
           "type": "Kötelező",
@@ -6330,7 +6499,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "installáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Vetítéses technikák, hang- és mozgásreaktív vizuálok (TouchDesigner, Unreal, DMX) a Hangdómba."
         },
         {
           "type": "Kötelező",
@@ -6369,7 +6539,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "fotó"
           ],
-          "group": null
+          "group": null,
+          "short": "ÉN-TÉR-KÉP: digitális önportrék, kép+objekt és installáció 3D-ben modellezett virtuális kiállítási térben."
         },
         {
           "type": "Kötelező",
@@ -6402,7 +6573,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Szemiotika, a fénykép ontológiája, képi fordulat, bio-art, hálózat- és játékelmélet művek elemzésével."
         },
         {
           "type": "Kötelező",
@@ -6434,7 +6606,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, meghívott szakmai előadók, kiállításlátogatás és közös projektek egy héten át."
         },
         {
           "type": "Kötelező",
@@ -6472,7 +6645,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "grafika/tipográfia"
           ],
-          "group": null
+          "group": null,
+          "short": "Betűtörténet a római kapitálistól a sans serifig; saját betűtípus, fontállomány és kiadványterv InDesignban."
         },
         {
           "type": "Kötelező",
@@ -6506,7 +6680,8 @@ export const DEFAULT_DATA: Curriculum = {
             "elmélet",
             "ai"
           ],
-          "group": null
+          "group": null,
+          "short": "Médiaelméleti szövegek (Baudrillard szimulakruma, Manovich) újraolvasása az AI és a cyberpunk fényében."
         }
       ]
     },
@@ -6549,7 +6724,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Jól játszható játék titkai: ludológia, játékmechanika, jutalmazási rendszerek, immerzió; saját játékkoncepció."
         },
         {
           "type": "Kötelező és szabváll.",
@@ -6585,7 +6761,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "3d"
           ],
-          "group": null
+          "group": null,
+          "short": "Blender-alapú 3D: modellezés, textúrázás, renderelés — város, ékszer, ételvizualizáció, low poly AR/VR."
         },
         {
           "type": "Kötelező",
@@ -6623,7 +6800,8 @@ export const DEFAULT_DATA: Curriculum = {
             "grafika/tipográfia",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "Vektor- és pixelgrafika: adatvizualizáció, piktogram, logó, hibrid grafikák (Illustrator, Photoshop)."
         },
         {
           "type": "Kötelező és szabváll.",
@@ -6664,7 +6842,8 @@ export const DEFAULT_DATA: Curriculum = {
             "grafika/tipográfia",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Animált szövegek After Effectsben: stáblista, főcímek, kinetikus tipográfia betűtörténeti alapokkal."
         },
         {
           "type": "Kötelező",
@@ -6703,7 +6882,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Saját videojáték az ötlettől a játszható prototípusig: game design, game art, Unity/Unreal, Blender."
         },
         {
           "type": "Kötelező",
@@ -6736,7 +6916,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Meghívott előadók, mesterkurzusok, workshopok és kiállításlátogatás — portfólióépítés a kreatív iparhoz."
         },
         {
           "type": "Kötelező",
@@ -6770,7 +6951,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Okoseszközök, közösségi média, VR és videojátékok pszichológiai hatásai; reziliencia, digitális kultúra."
         }
       ]
     },
@@ -6819,7 +7001,8 @@ export const DEFAULT_DATA: Curriculum = {
             "web",
             "ux/interakció"
           ],
-          "group": null
+          "group": null,
+          "short": "Diplomát támogató online médiatermék Figma/Penpot prototípussal, projektterv, portfólió és showreel."
         },
         {
           "type": "Kötelező",
@@ -6858,7 +7041,8 @@ export const DEFAULT_DATA: Curriculum = {
             "játék",
             "ux/interakció"
           ],
-          "group": null
+          "group": null,
+          "short": "Saját videojáték-ötlet fejlesztése: narratíva, tér- és karaktertervezés, UX/UI, stúdiólátogatás."
         },
         {
           "type": "Kötelező",
@@ -6891,7 +7075,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, vendégelőadók, kiállításlátogatás, közös projektek."
         },
         {
           "type": "Kötelező",
@@ -6925,7 +7110,8 @@ export const DEFAULT_DATA: Curriculum = {
             "diploma/portfólió",
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Forrásgyűjtés, hivatkozás, kutatásmódszertan, szövegstruktúra; félév végére tartalomjegyzék és bevezetés."
         }
       ]
     },
@@ -6970,7 +7156,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "3d"
           ],
-          "group": null
+          "group": null,
+          "short": "Maya: polygon modellezés, UV, shading, Arnold render, pass-ek, szimulációk; félévvégi renderelt animáció."
         },
         {
           "type": "Kötelező",
@@ -7010,7 +7197,8 @@ export const DEFAULT_DATA: Curriculum = {
             "2d",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Élethű 3D kép Mayában (textúra, fény, render) + After Effects: archív fotókra épülő parallax animáció."
         },
         {
           "type": "Kötelező",
@@ -7048,7 +7236,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "installáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Elektronika, forrasztás, Arduino és szenzorok, TouchDesigner- és DMX-vezérlés; saját installáció terve."
         },
         {
           "type": "Kötelező",
@@ -7088,7 +7277,8 @@ export const DEFAULT_DATA: Curriculum = {
             "2d",
             "film/videó"
           ],
-          "group": null
+          "group": null,
+          "short": "Alternatív filmfőcím és mozgóképes CV After Effectsben; fiktív karakter social media oldala posztokkal."
         },
         {
           "type": "Kötelező",
@@ -7121,7 +7311,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, konferencia- és kiállításlátogatás meghívott előadókkal; portfólióépítés."
         }
       ]
     },
@@ -7167,7 +7358,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Maya: Mixamo karakteranimáció, camera mapping, bifrost szimuláció, fényelés, render passok, kompozitálás."
         },
         {
           "type": "Kötelező",
@@ -7207,7 +7399,8 @@ export const DEFAULT_DATA: Curriculum = {
             "animáció",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "3D animáció forgatott videóra illesztve (Maya, HDRI, rigging) + 3-5 mp-es mozgó logó After Effectsben."
         },
         {
           "type": "Kötelező",
@@ -7245,7 +7438,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "installáció"
           ],
-          "group": null
+          "group": null,
+          "short": "TouchDesigner + Kinect: audio-reaktív vizuálok, mozgásvezérlés, particle system, DMX/OSC/MIDI, installáció."
         },
         {
           "type": "Kötelező",
@@ -7287,7 +7481,8 @@ export const DEFAULT_DATA: Curriculum = {
             "animáció",
             "3d"
           ],
-          "group": null
+          "group": null,
+          "short": "Filmes VFX-utómunka (tracking, rotoscope, matte paint, Blender, Resolve) + explainer videó After Effectsben."
         },
         {
           "type": "Kötelező",
@@ -7320,7 +7515,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, meghívott előadók, kiállításlátogatás és közös projektek a tanterven túl."
         }
       ]
     },
@@ -7368,7 +7564,8 @@ export const DEFAULT_DATA: Curriculum = {
             "animáció",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "Maya-szimulációk (nCloth, tűz, Bifrost) + 2D utómunka: puppet tool, expression, infografikai animáció."
         },
         {
           "type": "Kötelező",
@@ -7406,7 +7603,8 @@ export const DEFAULT_DATA: Curriculum = {
             "installáció",
             "játék"
           ],
-          "group": null
+          "group": null,
+          "short": "Fényművészet: projection mapping, DMX, robotlámpák, Unreal + game design: GDD, level design, prototípus."
         },
         {
           "type": "Kötelező",
@@ -7439,7 +7637,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Meghívott előadók, mesterkurzusok, workshopok, konferencia- és kiállításlátogatás, portfólióépítés."
         }
       ]
     },
@@ -7482,7 +7681,8 @@ export const DEFAULT_DATA: Curriculum = {
             "diploma/portfólió",
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Diplomafélév három blokkban: játékfejlesztés csapatban, szakdolgozatírás, portfólió és showreel."
         },
         {
           "type": "Kötelező",
@@ -7515,7 +7715,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, meghívott előadók; kiállításlátogatás, konferenciák, közös szakmai projektek."
         }
       ]
     },
@@ -7555,7 +7756,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Művészettörténeti korszakok és irányzatok társadalmi, kulturális és gazdasági összefüggéseikben."
         },
         {
           "type": "Kötelező",
@@ -7587,7 +7789,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "A kommunikáció alapfogalmai, modelljei és folyamatai — elméleti alap a további média design tárgyakhoz."
         },
         {
           "type": "Kötelező",
@@ -7626,7 +7829,8 @@ export const DEFAULT_DATA: Curriculum = {
             "2d",
             "grafika/tipográfia"
           ],
-          "group": null
+          "group": null,
+          "short": "Kompozíció, perspektíva, portré-anatómia, színtan: kézi rajz digitális továbbértelmezéssel, parafrázisok."
         },
         {
           "type": "Kötelező",
@@ -7664,7 +7868,8 @@ export const DEFAULT_DATA: Curriculum = {
             "2d",
             "grafika/tipográfia"
           ],
-          "group": null
+          "group": null,
+          "short": "Vektor- és pixelgrafika: adatvizualizáció, piktogram, logóparafrázis, banner (Illustrator, Photoshop)."
         },
         {
           "type": "Kötelező",
@@ -7701,7 +7906,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "ux/interakció"
           ],
-          "group": null
+          "group": null,
+          "short": "App-tervezés Design Thinking mentén: kutatás, perszóna, customer journey, user flow, prototípus (Figma, Miro)."
         },
         {
           "type": "Kötelező",
@@ -7734,7 +7940,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, meghívott előadók, kiállításlátogatás — szakmán túli tudás, portfólióépítés."
         },
         {
           "type": "Kötelező",
@@ -7766,7 +7973,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Önismereti és karriertervezési tréning: személyes márka és szakmai identitás tudatos építése."
         },
         {
           "type": "Kötelező",
@@ -7803,7 +8011,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "installáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Arduino és elektronika alapok, szenzorok, szervók; anyagkísérletek, saját interaktív objektek építése."
         }
       ]
     },
@@ -7843,7 +8052,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Korszakok, irányzatok és alkotók: a művek társadalmi, kulturális és gazdasági beágyazottsága."
         },
         {
           "type": "Kötelező",
@@ -7875,7 +8085,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Filozófiai és esztétikai alapkérdések, fő irányzatok és fogalmak; kritikai gondolkodás fejlesztése."
         },
         {
           "type": "Kötelező",
@@ -7914,7 +8125,8 @@ export const DEFAULT_DATA: Curriculum = {
             "grafika/tipográfia",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "Betűanatómia, betűtörténet a római kapitálistól a sans serifig; fontterv és kiadvány InDesignban."
         },
         {
           "type": "Kötelező",
@@ -7953,7 +8165,8 @@ export const DEFAULT_DATA: Curriculum = {
             "fotó",
             "film/videó"
           ],
-          "group": null
+          "group": null,
+          "short": "Expozíció, világítás, plánok; Lightroom-képfeldolgozás, vágás, színkezelés — fotósorozat és kisfilm."
         },
         {
           "type": "Kötelező",
@@ -7990,7 +8203,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "installáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Haladó Arduino: szenzorok és aktuátorok programozása; interaktív fénymű tervezése és kivitelezése."
         },
         {
           "type": "Kötelező",
@@ -8028,7 +8242,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "web"
           ],
-          "group": null
+          "group": null,
+          "short": "Design Thinking: app-prototípus Figmában — perszónák, user flow, usability-tesztelés, esettanulmány."
         },
         {
           "type": "Kötelező",
@@ -8062,7 +8277,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Kép, jel, szimbólum: szemiotika, fénykép-ontológia, ikonográfia, bio-art, interaktivitás, hálózatok."
         },
         {
           "type": "Kötelező",
@@ -8094,7 +8310,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, meghívott előadók, kiállításlátogatás; kreatív ipari szemlélet, portfólió."
         }
       ]
     },
@@ -8134,7 +8351,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Műelemzés és esztétika fogalmi keretei: a művészeti alkotások értelmezésének főbb elméleti irányzatai."
         },
         {
           "type": "Kötelező",
@@ -8166,7 +8384,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "A média története, működése és társadalmi-kulturális szerepe: elméleti alap a további tanulmányokhoz."
         },
         {
           "type": "Kötelező",
@@ -8206,7 +8425,8 @@ export const DEFAULT_DATA: Curriculum = {
             "animáció",
             "2d"
           ],
-          "group": null
+          "group": null,
+          "short": "Motion design After Effectsben: kulcskocka, maszk, színkorrekció, AI-videó (Firefly, Runway), branding spot."
         },
         {
           "type": "Kötelező",
@@ -8239,7 +8459,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok és vendégelőadók: közös projektek, kiállítás-látogatás, portfólióépítés."
         },
         {
           "type": "Kötelező",
@@ -8275,7 +8496,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "3d"
           ],
-          "group": null
+          "group": null,
+          "short": "Blender-alapok: 3D modellezés, textúrázás, világítás, kamera, renderelés; saját tárgy modellje, képsorozat."
         },
         {
           "type": "Kötelező",
@@ -8309,7 +8531,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Okoseszközök, közösségi média, VR és videójátékok pszichológiai hatásai; kognitív folyamatok, reziliencia."
         }
       ]
     },
@@ -8349,7 +8572,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Kép fogalma, vizuális ábrázolás és képi jelentésképzés elmélete, a Művészetelmélet kurzusra épülve."
         },
         {
           "type": "Kötelező",
@@ -8389,7 +8613,8 @@ export const DEFAULT_DATA: Curriculum = {
             "animáció",
             "3d"
           ],
-          "group": null
+          "group": null,
+          "short": "Nuke compositing (roto, tracking, keying, VFX) vagy game-ready 3D asset-gyártás (Blender, Substance Painter)."
         },
         {
           "type": "Kötelező",
@@ -8423,7 +8648,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, vendégelőadók, kiállításlátogatás; kreatív ipari szemlélet, portfólióépítés."
         },
         {
           "type": "Kötelező",
@@ -8462,7 +8688,8 @@ export const DEFAULT_DATA: Curriculum = {
             "3d",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "3D animáció: motion design, 12 alapelv, riggelés, motion capture, ruha- és pyro-szimuláció (C4D, Blender, UE)."
         }
       ]
     },
@@ -8502,7 +8729,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Környezeti kérdések művészeti reflexiói: fenntarthatóság szerepe a kortárs alkotói gyakorlatokban."
         },
         {
           "type": "Kötelező",
@@ -8535,7 +8763,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Kreatív szakmák gazdálkodási és jogi keretei: vállalkozás, menedzsment, szerzői jog alapjai."
         },
         {
           "type": "Kötelező",
@@ -8568,7 +8797,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, vendégelőadók, kiállításlátogatás; portfólióépítés."
         },
         {
           "type": "Kötelező",
@@ -8609,7 +8839,8 @@ export const DEFAULT_DATA: Curriculum = {
             "film/videó",
             "installáció"
           ],
-          "group": null
+          "group": null,
+          "short": "VFX-shot és 3D jelenet (Nuke, Maya, Substance Painter) + fényinstalláció, projection mapping (Resolume)."
         }
       ]
     },
@@ -8651,7 +8882,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Újmédia-elmélet kritikai olvasata: gépi kreativitás, MI mint másik intelligencia, algoritmus a művészetben."
         },
         {
           "type": "Kötelező",
@@ -8692,7 +8924,8 @@ export const DEFAULT_DATA: Curriculum = {
             "ux/interakció",
             "animáció"
           ],
-          "group": null
+          "group": null,
+          "short": "Mapping és hang-/mozgásreaktív generatív vizuálok (TouchDesigner, Unreal, C4D, DMX) a METU körépületére."
         },
         {
           "type": "Kötelező",
@@ -8726,7 +8959,8 @@ export const DEFAULT_DATA: Curriculum = {
             "diploma/portfólió",
             "elmélet"
           ],
-          "group": null
+          "group": null,
+          "short": "Témaválasztás, forrásgyűjtés, hivatkozás, kutatásmódszertan, szövegírás és AI."
         },
         {
           "type": "Kötelező",
@@ -8766,7 +9000,8 @@ export const DEFAULT_DATA: Curriculum = {
             "diploma/portfólió",
             "web"
           ],
-          "group": null
+          "group": null,
+          "short": "Diplomához kötődő online médiatermék (Figma/Penpot, HTML/CSS), plusz projektterv, portfólió és showreel."
         },
         {
           "type": "Kötelező",
@@ -8799,7 +9034,8 @@ export const DEFAULT_DATA: Curriculum = {
           "category": [
             "projekt"
           ],
-          "group": null
+          "group": null,
+          "short": "Workshopok, mesterkurzusok, vendégelőadók: innovációs és technikai bemutatók, kiállítás, közös projektek."
         }
       ]
     }
@@ -8854,5 +9090,5 @@ export const GROUP_LABEL: Record<number, string> = {
 };
 
 export function emptyCourse(): Course {
-  return { type: 'Kötelező', name: '', specialization: null, courseType: 'gyakorlat', hours: null, credits: null, active: null, groups: null, instructors: null, institute: 'AMD', note: null, description: null, felelos: null, prerequisite: null, requirement: null, software: [], keywords: [], category: [], cel: null, pdfUrl: null, group: null };
+  return { type: 'Kötelező', name: '', specialization: null, courseType: 'gyakorlat', hours: null, credits: null, active: null, groups: null, instructors: null, institute: 'AMD', note: null, description: null, short: null, felelos: null, prerequisite: null, requirement: null, software: [], keywords: [], category: [], cel: null, pdfUrl: null, group: null };
 }

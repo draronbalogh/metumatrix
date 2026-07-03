@@ -31,7 +31,9 @@ export default function CourseCardStd({ course: x, onDetails, onEdit, onCategory
           ))}
         </div>
       )}
-      {x.description && <div className="cc-desc">{x.description.length > 220 ? x.description.slice(0, 220).trimEnd() + '…' : x.description}</div>}
+      {(x.short || x.description) && (
+        <div className="cc-desc">{x.short || ((x.description as string).length > 220 ? (x.description as string).slice(0, 220).trimEnd() + '…' : x.description)}</div>
+      )}
       {x.keywords.length > 0 && (
         <div className="cc-kws">{x.keywords.slice(0, 5).map((k) => <span key={k} className="cc-kw">{k}</span>)}</div>
       )}

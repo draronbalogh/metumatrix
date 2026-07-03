@@ -27,6 +27,7 @@ const toDraft = (c: Course): Draft => ({
   institute: String(c.institute ?? 'AMD'),
   note: c.note ?? '',
   description: c.description ?? '',
+  short: c.short ?? '',
   felelos: c.felelos ?? '',
   prerequisite: c.prerequisite ?? '',
   requirement: c.requirement ?? '',
@@ -73,6 +74,7 @@ export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete
       institute: d.institute,
       note: d.note.trim() || null,
       description: d.description.trim() || null,
+      short: d.short.trim() || null,
       felelos: d.felelos.trim() || null,
       prerequisite: d.prerequisite.trim() || null,
       requirement: d.requirement.trim() || null,
@@ -166,7 +168,11 @@ export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete
             <textarea rows={2} value={d.cel} onChange={(e) => set('cel', e.target.value)} placeholder="a tárgy célja, tanulási eredmények" />
           </div>
           <div className="field full">
-            <label>Összegzés / rövid leírás</label>
+            <label>Rövid leírás — a kártyán ez látszik (max ~110 karakter)</label>
+            <input maxLength={140} value={d.short} onChange={(e) => set('short', e.target.value)} placeholder="távirati, tartalom-első összefoglaló, pl.: Vektor- és pixelgrafika: piktogram, logó, hibrid grafikák." />
+          </div>
+          <div className="field full">
+            <label>Összegzés — a részletek panelen látszik</label>
             <textarea rows={3} value={d.description} onChange={(e) => set('description', e.target.value)} placeholder="néhány mondatos összefoglaló a tárgyról" />
           </div>
           <div className="field full">

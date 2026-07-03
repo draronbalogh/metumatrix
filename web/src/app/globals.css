@@ -194,7 +194,7 @@ body {
 .spec-zone.zb { border-radius: 0 0 18px 18px; }
 .spec-zone.zt.zb { border-radius: 18px; }
 .spec-zone.g0 { background: color-mix(in srgb, var(--g0) 6%, transparent); }
-.spec-zone.g1 { background: color-mix(in srgb, var(--g1) 10%, transparent); }
+.spec-zone.g1 { background: color-mix(in srgb, var(--g1) 17%, transparent); }
 .spec-zone.g2 { background: color-mix(in srgb, var(--g2) 10%, transparent); }
 .spec-zone.g3 { background: color-mix(in srgb, var(--g3) 11%, transparent); }
 .spec-zone-lbl { position: absolute; top: -11px; left: 16px; z-index: 1; font-size: .62rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; padding: 3px 12px; border-radius: 999px; color: #fff; white-space: nowrap; box-shadow: 0 3px 10px rgba(16, 17, 20, .18); }

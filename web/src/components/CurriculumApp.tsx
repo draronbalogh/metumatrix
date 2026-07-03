@@ -48,6 +48,7 @@ export default function CurriculumApp() {
   const [details, setDetails] = useState<Ref2 | null>(null);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [locked, setLocked] = useState(false);
+  const [catMenu, setCatMenu] = useState<{ ci: number; xi: number; x: number; y: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -203,11 +204,26 @@ export default function CurriculumApp() {
   const onAdd = useCallback((ci: number) => setEditor({ ci, xi: -1 }), []);
   const onInstructor = useCallback((name: string) => setInstr((v) => (v === name ? '' : name)), []);
   const onCategory = useCallback((c: string) => setCat((v) => (v === c ? '' : c)), []);
+  const onCatEdit = useCallback((ci: number, xi: number, x: number, y: number) => setCatMenu({ ci, xi, x, y }), []);
+  const toggleCourseCat = useCallback((ci: number, xi: number, k: string) => {
+    const cur = dataRef.current;
+    commit({
+      ...cur,
+      cohorts: cur.cohorts.map((c, i) => (i !== ci ? c : {
+        ...c,
+        courses: c.courses.map((x, j) => {
+          if (j !== xi) return x;
+          const sel = x.category ?? [];
+          return { ...x, category: sel.includes(k) ? sel.filter((s) => s !== k) : [...sel, k] };
+        }),
+      })),
+    });
+  }, [commit]);
   const toggleLock = useCallback(() => setLocked((v) => {
     try { localStorage.setItem(LOCK_KEY, v ? '0' : '1'); } catch { /* ignore */ }
     return !v;
   }), []);
-  const handlers = useMemo<Handlers>(() => ({ onEdit, onDetails, onAdd, onInstructor, onCategory }), [onEdit, onDetails, onAdd, onInstructor, onCategory]);
+  const handlers = useMemo<Handlers>(() => ({ onEdit, onDetails, onAdd, onInstructor, onCategory, onCatEdit }), [onEdit, onDetails, onAdd, onInstructor, onCategory, onCatEdit]);
 
   const addEdge = useCallback((e: UserEdge) => {
     const cur = dataRef.current;
@@ -350,10 +366,37 @@ export default function CurriculumApp() {
           {view === 'map' ? (
             <MapView data={data} filter={filter} handlers={handlers} persist={persist} theme={theme} view={vp} locked={locked} onToggleLock={toggleLock} />
           ) : (
-            <CatalogView data={data} filter={filter} view={vp} onDetails={onDetails} onEdit={onEdit} onAdd={onAdd} onInstructor={onInstructor} onCategory={onCategory} />
+            <CatalogView data={data} filter={filter} view={vp} onDetails={onDetails} onEdit={onEdit} onAdd={onAdd} onInstructor={onInstructor} onCategory={onCategory} onCatEdit={onCatEdit} />
           )}
         </div>
       </div>
+
+      {catMenu && (() => {
+        const course = data.cohorts[catMenu.ci]?.courses[catMenu.xi];
+        if (!course) return null;
+        const sel = catList(course);
+        return (
+          <>
+            <div className="catmenu-scrim" onClick={() => setCatMenu(null)} />
+            <div
+              className="cat-menu"
+              style={{
+                left: Math.max(8, Math.min(catMenu.x - 150, window.innerWidth - 348)),
+                top: Math.max(8, Math.min(catMenu.y + 10, window.innerHeight - 300)),
+              }}
+            >
+              <div className="cat-menu-h">{course.name} — kategóriák</div>
+              <div className="cat-picker">
+                {CATEGORIES.map((k) => (
+                  <button key={k} className={`chip${sel.includes(k) ? ' is-on' : ''}`}
+                    onClick={() => toggleCourseCat(catMenu.ci, catMenu.xi, k)}>{k}</button>
+                ))}
+              </div>
+              <button className="btn btn--ink cat-menu-done" onClick={() => setCatMenu(null)}>Kész</button>
+            </div>
+          </>
+        );
+      })()}
 
       {detailCourse && details && (() => {
         const c = data.cohorts[details.ci];

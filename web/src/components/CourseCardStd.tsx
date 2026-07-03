@@ -7,9 +7,10 @@ interface Props {
   onDetails: () => void;
   onEdit: () => void;
   onCategory: (cat: string) => void;
+  onCatEdit: (x: number, y: number) => void;
 }
 
-export default function CourseCardStd({ course: x, onDetails, onEdit, onCategory }: Props) {
+export default function CourseCardStd({ course: x, onDetails, onEdit, onCategory, onCatEdit }: Props) {
   const ea = x.courseType === 'előadás';
   return (
     <div className={`cc-card ${groupClass(x)}`} onClick={onDetails}>
@@ -23,14 +24,14 @@ export default function CourseCardStd({ course: x, onDetails, onEdit, onCategory
         {x.specialization && <span className="cc-spec">{specShort(x.specialization)}</span>}
         <span className="cc-kr">{x.credits ?? '–'} kr</span>
       </div>
-      {catList(x).length > 0 && (
-        <div className="cc-cats">
-          {catList(x).map((k) => (
-            <button key={k} className="cc-cat" title={`Szűrés kategóriára: ${k}`}
-              onClick={(e) => { e.stopPropagation(); onCategory(k); }}>{k}</button>
-          ))}
-        </div>
-      )}
+      <div className="cc-cats">
+        {catList(x).map((k) => (
+          <button key={k} className="cc-cat" title={`Szűrés kategóriára: ${k}`}
+            onClick={(e) => { e.stopPropagation(); onCategory(k); }}>{k}</button>
+        ))}
+        <button className="cc-cat cn-cat-add" title="Kategóriák beállítása ehhez a tárgyhoz"
+          onClick={(e) => { e.stopPropagation(); onCatEdit(e.clientX, e.clientY); }}>+</button>
+      </div>
       {(x.short || x.description) && (
         <div className="cc-desc">{x.short || ((x.description as string).length > 220 ? (x.description as string).slice(0, 220).trimEnd() + '…' : x.description)}</div>
       )}

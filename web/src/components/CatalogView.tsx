@@ -14,9 +14,10 @@ interface Props {
   onAdd: (ci: number) => void;
   onInstructor: (name: string) => void;
   onCategory: (cat: string) => void;
+  onCatEdit: (ci: number, xi: number, x: number, y: number) => void;
 }
 
-export default function CatalogView({ data, filter, view, onDetails, onEdit, onAdd, onInstructor, onCategory }: Props) {
+export default function CatalogView({ data, filter, view, onDetails, onEdit, onAdd, onInstructor, onCategory, onCatEdit }: Props) {
   const matches = (x: Course) => {
     if (filter.q) {
       const s = filter.q.toLowerCase();
@@ -95,7 +96,7 @@ export default function CatalogView({ data, filter, view, onDetails, onEdit, onA
                   <div className={`cc-grp g${g}`}>{GROUP_LABEL[g]}</div>
                   <div className="cc-grid">
                     {items.map(({ x, xi }) => (
-                      <CourseCardStd key={xi} course={x} onDetails={() => onDetails(ci, xi)} onEdit={() => onEdit(ci, xi)} onCategory={onCategory} />
+                      <CourseCardStd key={xi} course={x} onDetails={() => onDetails(ci, xi)} onEdit={() => onEdit(ci, xi)} onCategory={onCategory} onCatEdit={(mx, my) => onCatEdit(ci, xi, mx, my)} />
                     ))}
                   </div>
                 </div>

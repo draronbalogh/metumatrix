@@ -13,6 +13,7 @@ interface CourseData {
   onEdit: (ci: number, xi: number) => void;
   onDetails: (ci: number, xi: number) => void;
   onCategory: (cat: string) => void;
+  onCatEdit: (ci: number, xi: number, x: number, y: number) => void;
 }
 
 export const CourseNode = memo(function CourseNode({ data }: { data: CourseData }) {
@@ -40,14 +41,14 @@ export const CourseNode = memo(function CourseNode({ data }: { data: CourseData 
         <span className="cn-kr">{x.credits ?? '–'} kr</span>
         {x.specialization && <span className="cn-spec">{specShort(x.specialization)}</span>}
       </div>
-      {catList(x).length > 0 && (
-        <div className="cn-cats">
-          {catList(x).map((k) => (
-            <button key={k} className="cn-cat nodrag" title={`Szűrés kategóriára: ${k}`}
-              onClick={(e) => { e.stopPropagation(); data.onCategory(k); }}>{k}</button>
-          ))}
-        </div>
-      )}
+      <div className="cn-cats">
+        {catList(x).map((k) => (
+          <button key={k} className="cn-cat nodrag" title={`Szűrés kategóriára: ${k}`}
+            onClick={(e) => { e.stopPropagation(); data.onCategory(k); }}>{k}</button>
+        ))}
+        <button className="cn-cat cn-cat-add nodrag" title="Kategóriák beállítása ehhez a tárgyhoz"
+          onClick={(e) => { e.stopPropagation(); data.onCatEdit(data.ci, data.xi, e.clientX, e.clientY); }}>+</button>
+      </div>
       {(x.short || x.description) && (
         <div className={`cn-desc${x.short ? ' is-short' : ''}`}>{x.short || ((x.description as string).length > 140 ? (x.description as string).slice(0, 140).trimEnd() + '…' : x.description)}</div>
       )}

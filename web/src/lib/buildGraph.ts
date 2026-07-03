@@ -9,6 +9,7 @@ export interface Handlers {
   onAdd: (ci: number) => void;
   onInstructor: (name: string) => void;
   onCategory: (cat: string) => void;
+  onCatEdit: (ci: number, xi: number, x: number, y: number) => void;
 }
 
 export const GRID = 24;
@@ -92,7 +93,7 @@ export function buildGraph(data: Curriculum, filter: Filter, h: Handlers, view: 
       nodes.push({
         id, type: 'course',
         position: { x: COURSE_X0 + col * STEP_X, y: rowTop + CARD_TOP },
-        data: { course, ci, xi, dim: filterActive && !hit, hit, onEdit: h.onEdit, onDetails: h.onDetails, onCategory: h.onCategory },
+        data: { course, ci, xi, dim: filterActive && !hit, hit, onEdit: h.onEdit, onDetails: h.onDetails, onCategory: h.onCategory, onCatEdit: h.onCatEdit },
       });
       const { base, num } = baseAndNum(course.name);
       if (num != null) (series[base] ||= []).push({ id, sem: c.semester || 0, num });

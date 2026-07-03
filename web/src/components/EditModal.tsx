@@ -110,8 +110,15 @@ export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete
             </select>
           </div>
           <div className="field full">
-            <label>Specializáció (ha van)</label>
-            <input value={d.specialization} onChange={(e) => set('specialization', e.target.value)} placeholder="pl. Multimédia specializáció / Játéktervezés specializáció" />
+            <label>Specializáció</label>
+            <select value={d.specialization} onChange={(e) => set('specialization', e.target.value)}>
+              <option value="">Közös tárgy (nincs specializáció)</option>
+              <option value="Multimédia specializáció">Multimédia specializáció — kék zóna</option>
+              <option value="Játéktervezés specializáció">Játéktervezés specializáció — lila zóna</option>
+              {d.specialization && !['Multimédia specializáció', 'Játéktervezés specializáció'].includes(d.specialization) && (
+                <option value={d.specialization}>{d.specialization}</option>
+              )}
+            </select>
           </div>
           <div className="field full">
             <label>Besorolás / szín (kézi felülbírálás)</label>

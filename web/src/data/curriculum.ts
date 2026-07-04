@@ -28,11 +28,26 @@ export interface Course {
 
 // Fix kategória-taxonómia — az adatban CSAK ezek szerepelhetnek (szűrő + kártya-chipek erre épülnek)
 export const CATEGORIES = [
-  '2d', '3d', 'animáció', 'film/videó', 'fotó', 'hang', 'grafika/tipográfia', 'ux/interakció',
-  'web', 'fejlesztés', 'játék', 'installáció', 'ai', 'elmélet', 'diploma/portfólió', 'projekt',
+  '2d', '3d', 'animáció', 'film/videó', 'fotó', 'hang', 'grafika/tipográfia', 'ux/web/fejlesztés',
+  'játék', 'installáció', 'ai', 'elmélet', 'diploma/portfólió', 'projekt',
 ] as const;
 
-export const catList = (c: Course): string[] => c.category ?? [];
+// A korábbi külön ux/web/fejlesztés kategóriák összevonva — a mentett adatban (fájl, localStorage,
+// régi exportok) még a régi nevek szerepelhetnek, ezért minden olvasás ezen a leképezésen megy át.
+const CAT_MERGE: Record<string, string> = {
+  'ux/interakció': 'ux/web/fejlesztés',
+  web: 'ux/web/fejlesztés',
+  fejlesztés: 'ux/web/fejlesztés',
+};
+
+export const catList = (c: Course): string[] => {
+  const out: string[] = [];
+  (c.category ?? []).forEach((k) => {
+    const m = CAT_MERGE[k] ?? k;
+    if (!out.includes(m)) out.push(m);
+  });
+  return out;
+};
 
 export interface Cohort {
   version: string;

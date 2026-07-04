@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CATEGORIES, Course } from '@/data/curriculum';
+import { CATEGORIES, Course, catList } from '@/data/curriculum';
 
 interface Props {
   course: Course;
@@ -33,7 +33,7 @@ const toDraft = (c: Course): Draft => ({
   requirement: c.requirement ?? '',
   software: (c.software ?? []).join(', '),
   keywords: (c.keywords ?? []).join(', '),
-  category: (c.category ?? []).join(', '),
+  category: catList(c).join(', '),
   cel: c.cel ?? '',
   pdfUrl: c.pdfUrl ?? '',
   group: c.group == null ? '' : String(c.group),

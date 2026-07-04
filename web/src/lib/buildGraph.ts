@@ -2,7 +2,8 @@ import { Node, Edge, MarkerType } from 'reactflow';
 import { Course, Curriculum, catList, semLabel, specShort, courseGroup, courseRank } from '@/data/curriculum';
 
 export interface Filter { q: string; spec: string; ctype: string; instr: string; cat: string; }
-export interface View { ver: string; prog: 'BA' | 'MA'; }
+export type Prog = 'BA' | 'MA' | 'ALL';
+export interface View { ver: string; prog: Prog; }
 export interface Handlers {
   onEdit: (ci: number, xi: number) => void;
   onDetails: (ci: number, xi: number) => void;
@@ -39,9 +40,23 @@ function baseAndNum(name: string): { base: string; num: number | null } {
   return { base, num };
 }
 
-export function buildGraph(data: Curriculum, filter: Filter, h: Handlers, view: View): { nodes: Node[]; edges: Edge[] } {
+// BA+MA nézetben a programok blokkjai közé eső üres sáv — elég nagy, hogy a csoport-zónák
+// futamai (MapView buildZones, ROW_H*1.6 küszöb) ne olvadjanak át a programhatáron.
+const PROG_GAP = ROW_H;
+const PROG_ORDER: Record<string, number> = { BA: 0, MA: 1 };
+
+export interface Graph {
+  nodes: Node[];
+  edges: Edge[];
+  // node-id -> y-eltolás: a mentett pozíciók kanonikus tere az egy-programos nézet;
+  // BA+MA nézetben az MA-blokk node-jait ennyivel kell lejjebb tolni (mentéskor visszavonni).
+  offsets: Record<string, number>;
+}
+
+export function buildGraph(data: Curriculum, filter: Filter, h: Handlers, view: View): Graph {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
+  const offsets: Record<string, number> = {};
 
   const filterActive = !!(filter.q || filter.spec || filter.ctype || filter.instr || filter.cat);
   const matches = (c: Course) => {
@@ -58,17 +73,33 @@ export function buildGraph(data: Curriculum, filter: Filter, h: Handlers, view: 
 
   const visible = data.cohorts
     .map((c, ci) => ({ c, ci }))
-    .filter(({ c }) => c.version === view.ver && c.program === view.prog)
-    .sort((a, b) => (a.c.semester || 0) - (b.c.semester || 0));
+    .filter(({ c }) => c.version === view.ver && (view.prog === 'ALL' || c.program === view.prog))
+    .sort((a, b) => (PROG_ORDER[a.c.program] ?? 9) - (PROG_ORDER[b.c.program] ?? 9) || (a.c.semester || 0) - (b.c.semester || 0));
 
-  if (!visible.length) return { nodes, edges };
+  if (!visible.length) return { nodes, edges, offsets };
 
   const series: Record<string, { id: string; sem: number; num: number }[]> = {};
   const hitIds = new Set<string>();
+  const blocks: { program: string; top: number; rows: number }[] = [];
   let y = 0;
+  let rowInProg = 0;
 
   visible.forEach(({ c, ci }) => {
+    const lastBlock = blocks[blocks.length - 1];
+    if (!lastBlock || lastBlock.program !== c.program) {
+      if (lastBlock) y += PROG_GAP;
+      blocks.push({ program: c.program, top: y, rows: 0 });
+      rowInProg = 0;
+    }
+    blocks[blocks.length - 1].rows++;
     const rowTop = y;
+    // a sor eltolása az egy-programos (kanonikus) elrendezéshez képest
+    const off = rowTop - rowInProg * ROW_H;
+    rowInProg++;
+    if (off) {
+      offsets[`sem-${ci}`] = off;
+      c.courses.forEach((_, xi) => { offsets[`c-${ci}-${xi}`] = off; });
+    }
     const headerId = `sem-${ci}`;
     const instrSet = new Set<string>();
     c.courses.forEach((x) => instrList(x).forEach((n) => instrSet.add(n)));
@@ -96,17 +127,20 @@ export function buildGraph(data: Curriculum, filter: Filter, h: Handlers, view: 
         data: { course, ci, xi, dim: filterActive && !hit, hit, onEdit: h.onEdit, onDetails: h.onDetails, onCategory: h.onCategory, onCatEdit: h.onCatEdit },
       });
       const { base, num } = baseAndNum(course.name);
-      if (num != null) (series[base] ||= []).push({ id, sem: c.semester || 0, num });
+      // programonként külön lánc — BA+MA nézetben se kössön át egyik programból a másikba
+      if (num != null) (series[`${c.program}|${base}`] ||= []).push({ id, sem: c.semester || 0, num });
     });
 
     y += ROW_H;
   });
 
-  nodes.push({
-    id: `prog-${view.prog}`, type: 'program',
-    position: { x: PROG_X, y: 0 },
-    data: { program: view.prog, height: visible.length * ROW_H - 40 },
-    draggable: false, selectable: false,
+  blocks.forEach((b) => {
+    nodes.push({
+      id: `prog-${b.program}`, type: 'program',
+      position: { x: PROG_X, y: b.top },
+      data: { program: b.program, height: b.rows * ROW_H - 40 },
+      draggable: false, selectable: false,
+    });
   });
 
   // build-on élek: a korábbi félév a forrás (mindig lefelé mutat), és csak egymást követő sorszámok kötődnek.
@@ -121,5 +155,5 @@ export function buildGraph(data: Curriculum, filter: Filter, h: Handlers, view: 
     }
   });
 
-  return { nodes, edges };
+  return { nodes, edges, offsets };
 }

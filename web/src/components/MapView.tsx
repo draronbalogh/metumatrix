@@ -106,7 +106,13 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
 
   const initNodes = useMemo<Node[]>(
     () => {
-      const positioned = built.nodes.map((n) => (data.positions?.[n.id] ? { ...n, position: data.positions[n.id] } : n));
+      // a mentett pozíciók kanonikus tere az egy-programos nézet — BA+MA nézetben a blokk-eltolással toljuk le
+      const positioned = built.nodes.map((n) => {
+        const p = data.positions?.[n.id];
+        if (!p) return n;
+        const off = built.offsets[n.id] || 0;
+        return { ...n, position: { x: p.x, y: p.y + off } };
+      });
       return [...buildZones(positioned), ...positioned];
     },
     [built, data.positions],
@@ -170,15 +176,17 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
     const defY: Record<string, number> = {};
     built.nodes.forEach((n) => { if (n.type === 'course') defY[n.id] = n.position.y; });
     const snap: Record<string, { x: number; y: number }> = {};
+    const snapStore: Record<string, { x: number; y: number }> = {};
     [c.source, c.target].forEach((id) => {
       const n = nodes.find((nn) => nn.id === id);
       if (n && n.type === 'course') {
         const col = Math.max(0, Math.round((n.position.x - COURSE_X0) / STEP_X));
         snap[id] = { x: COURSE_X0 + col * STEP_X, y: defY[id] ?? n.position.y };
+        snapStore[id] = { x: snap[id].x, y: snap[id].y - (built.offsets[id] || 0) };
       }
     });
     if (Object.keys(snap).length) setNodes((nds) => nds.map((n) => (snap[n.id] ? { ...n, position: snap[n.id] } : n)));
-    persist.applyConnection(edge, snap);
+    persist.applyConnection(edge, snapStore);
   }, [persist, built, nodes, setNodes]);
   const onEdgesDelete = useCallback((eds: Edge[]) => {
     eds.forEach((e) => { if (e.id.startsWith('u-')) persist.deleteEdge(e.id); });
@@ -192,25 +200,27 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
   }, [locked, data.userEdges]);
   useEffect(() => { if (locked) setEdgeMenu(null); }, [locked]);
   const onNodeDragStop = useCallback((_e: React.MouseEvent, node: Node | undefined) => {
-    if (node?.id && node.position) persist.moveNode(node.id, node.position);
-  }, [persist]);
+    if (node?.id && node.position) persist.moveNode(node.id, { x: node.position.x, y: node.position.y - (built.offsets[node.id] || 0) });
+  }, [persist, built]);
   const onSelectionDragStop = useCallback((_e: React.MouseEvent, nds: Node[]) => {
     const map: Record<string, { x: number; y: number }> = {};
-    nds.forEach((n) => { if (n.type === 'course') map[n.id] = n.position; });
+    nds.forEach((n) => { if (n.type === 'course') map[n.id] = { x: n.position.x, y: n.position.y - (built.offsets[n.id] || 0) }; });
     persist.savePositions(map);
-  }, [persist]);
+  }, [persist, built]);
   const onAlign = useCallback(() => {
     const defY: Record<string, number> = {};
     built.nodes.forEach((n) => { if (n.type === 'course') defY[n.id] = n.position.y; });
     const next: Record<string, { x: number; y: number }> = {};
+    const store: Record<string, { x: number; y: number }> = {};
     nodes.forEach((n) => {
       if (n.type !== 'course') return;
       const y = defY[n.id] ?? n.position.y;
       const col = Math.max(0, Math.round((n.position.x - COURSE_X0) / STEP_X));
       next[n.id] = { x: COURSE_X0 + col * STEP_X, y };
+      store[n.id] = { x: next[n.id].x, y: y - (built.offsets[n.id] || 0) };
     });
     setNodes((nds) => nds.map((n) => (next[n.id] ? { ...n, position: next[n.id] } : n)));
-    persist.savePositions(next);
+    persist.savePositions(store);
   }, [built, nodes, persist, setNodes]);
 
   const miniColor = (n: Node) => (n.type === 'frame' ? 'transparent' : n.type === 'program' ? '#ff2d6f' : n.type === 'semester' ? (dark ? '#e9e9e4' : '#0e0f11') : n.data?.dim ? (dark ? '#26272c' : '#e7e7e2') : (dark ? '#3a3d44' : '#ffffff'));

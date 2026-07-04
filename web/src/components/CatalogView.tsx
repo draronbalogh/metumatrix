@@ -32,21 +32,31 @@ export default function CatalogView({ data, filter, view, onDetails, onEdit, onA
 
   const visible = data.cohorts
     .map((c, ci) => ({ c, ci }))
-    .filter(({ c }) => c.version === view.ver && c.program === view.prog)
+    .filter(({ c }) => c.version === view.ver && (view.prog === 'ALL' || c.program === view.prog))
     .sort((a, b) => (a.c.semester || 0) - (b.c.semester || 0));
+
+  // BA+MA nézetben programonként külön blokk (saját fejléccel), egyébként egyetlen blokk
+  const progs = (view.prog === 'ALL' ? (['BA', 'MA'] as const) : [view.prog]).filter((p) => view.prog !== 'ALL' || visible.some(({ c }) => c.program === p));
 
   return (
     <main className="catalog">
-      <div className="cat-block-head">
-        <span className="pl">{view.prog}</span>
-        <span className="nm">Média Design {view.prog} · {view.ver}</span>
-      </div>
-
       {visible.length === 0 && (
-        <div className="cc-empty"><span>Ehhez a verzióhoz / programhoz nincs adat.</span></div>
+        <>
+          <div className="cat-block-head">
+            <span className="pl">{view.prog === 'ALL' ? 'BA+MA' : view.prog}</span>
+            <span className="nm">Média Design {view.prog === 'ALL' ? 'BA + MA' : view.prog} · {view.ver}</span>
+          </div>
+          <div className="cc-empty"><span>Ehhez a verzióhoz / programhoz nincs adat.</span></div>
+        </>
       )}
 
-      {visible.map(({ c, ci }) => {
+      {progs.map((p) => (
+        <div key={p}>
+          <div className="cat-block-head">
+            <span className="pl">{p}</span>
+            <span className="nm">Média Design {p} · {view.ver}</span>
+          </div>
+          {visible.filter(({ c }) => c.program === p).map(({ c, ci }) => {
         const t = cohortTotals(c);
         const isSpring = (c.semester || 0) % 2 === 0;
         const instrSet = new Set<string>();
@@ -104,7 +114,9 @@ export default function CatalogView({ data, filter, view, onDetails, onEdit, onA
             )}
           </section>
         );
-      })}
+          })}
+        </div>
+      ))}
     </main>
   );
 }

@@ -7,7 +7,7 @@ import {
 } from '@/data/curriculum';
 import CatalogView from './CatalogView';
 import EditModal from './EditModal';
-import type { Handlers, Filter, View } from '@/lib/buildGraph';
+import type { Handlers, Filter, View, Prog } from '@/lib/buildGraph';
 import type { Persist } from './MapView';
 
 const MapView = dynamic(() => import('./MapView'), {
@@ -38,7 +38,7 @@ export default function CurriculumApp() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [preset, setPreset] = useState<Preset>('muszerfal');
   const [ver, setVer] = useState<string>('2026/2027');
-  const [prog, setProg] = useState<'BA' | 'MA'>('BA');
+  const [prog, setProg] = useState<Prog>('BA');
   const [q, setQ] = useState('');
   const [spec, setSpec] = useState('');
   const [ctype, setCtype] = useState('');
@@ -134,45 +134,6 @@ export default function CurriculumApp() {
     return () => window.removeEventListener('keydown', onKey);
   }, [undo, redo]);
 
-  // Elrendezés (node-pozíciók + kézi összekötések) átvétele egy másik verzióból az aktuálisba,
-  // tárgynév + félév + program alapján párosítva.
-  const copyLayout = (sourceVer: string) => {
-    if (!sourceVer || sourceVer === ver) return;
-    const cur = dataRef.current;
-    const norm = (s: string) => (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
-    const idToKey: Record<string, string> = {};
-    const keyToTarget: Record<string, string> = {};
-    cur.cohorts.forEach((c, ci) => {
-      const semKey = `sem|${c.program}|${c.semester}`;
-      if (c.version === sourceVer) idToKey[`sem-${ci}`] = semKey;
-      if (c.version === ver) keyToTarget[semKey] = `sem-${ci}`;
-      c.courses.forEach((x, xi) => {
-        const key = `crs|${c.program}|${c.semester}|${norm(x.name)}`;
-        if (c.version === sourceVer) idToKey[`c-${ci}-${xi}`] = key;
-        if (c.version === ver) keyToTarget[key] = `c-${ci}-${xi}`;
-      });
-    });
-    const srcPos = cur.positions || {};
-    const positions = { ...srcPos };
-    let moved = 0;
-    Object.entries(idToKey).forEach(([srcId, key]) => {
-      const tgtId = keyToTarget[key];
-      if (tgtId && srcPos[srcId]) { positions[tgtId] = { ...srcPos[srcId] }; moved++; }
-    });
-    const edges = [...(cur.userEdges || [])];
-    let linked = 0;
-    (cur.userEdges || []).forEach((e) => {
-      const sk = idToKey[e.source], tk = idToKey[e.target];
-      if (!sk || !tk) return;
-      const ns = keyToTarget[sk], nt = keyToTarget[tk];
-      if (!ns || !nt) return;
-      const id = `u-${ns}.${e.sourceHandle || ''}-${nt}.${e.targetHandle || ''}`;
-      if (!edges.some((x) => x.id === id)) { edges.push({ ...e, id, source: ns, target: nt }); linked++; }
-    });
-    if (!moved && !linked) { alert('Ebből a verzióból nincs átvehető egyedi elrendezés/összekötés (a párosítható tárgyakhoz nincs mentett pozíció vagy kézi él).'); return; }
-    commit({ ...cur, positions, userEdges: edges });
-  };
-
   const updateCohort = (ci: number, fn: (c: Cohort) => Cohort) =>
     commit({ ...dataRef.current, cohorts: dataRef.current.cohorts.map((c, i) => (i === ci ? fn(c) : c)) });
   const saveCourse = (ref: Ref2, course: Course) =>
@@ -213,7 +174,7 @@ export default function CurriculumApp() {
         ...c,
         courses: c.courses.map((x, j) => {
           if (j !== xi) return x;
-          const sel = x.category ?? [];
+          const sel = catList(x);
           return { ...x, category: sel.includes(k) ? sel.filter((s) => s !== k) : [...sel, k] };
         }),
       })),
@@ -262,7 +223,7 @@ export default function CurriculumApp() {
   const filter = useMemo<Filter>(() => ({ q, spec, ctype, instr, cat }), [q, spec, ctype, instr, cat]);
   const vp = useMemo<View>(() => ({ ver, prog }), [ver, prog]);
   const versions = useMemo(() => VERSION_ORDER.filter((v) => data.cohorts.some((c) => c.version === v)), [data]);
-  const visibleCohorts = useMemo(() => data.cohorts.filter((c) => c.version === ver && c.program === prog), [data, ver, prog]);
+  const visibleCohorts = useMemo(() => data.cohorts.filter((c) => c.version === ver && (prog === 'ALL' || c.program === prog)), [data, ver, prog]);
 
   const totalCourses = useMemo(() => visibleCohorts.reduce((a, c) => a + c.courses.length, 0), [visibleCohorts]);
   const totalCredits = useMemo(() => visibleCohorts.reduce((a, c) => a + c.courses.reduce((s, x) => s + (x.credits || 0), 0), 0), [visibleCohorts]);
@@ -294,7 +255,7 @@ export default function CurriculumApp() {
             <div className="logo">M</div>
             <div>
               <div className="kicker">METU · Animáció és Média Design Tanszék — Dr. Balogh Áron</div>
-              <h1 className="title">Média Design {prog} · {ver === 'régi (korábbi)' ? 'régi mintatanterv' : ver}</h1>
+              <h1 className="title">Média Design {prog === 'ALL' ? 'BA + MA' : prog} · {ver === 'régi (korábbi)' ? 'régi mintatanterv' : ver}</h1>
               <div className="subtitle">Tanulmányi mátrix — ahogy a félévek és a tárgyak egymásra épülnek · kösd össze, szerkeszd, mentsd</div>
             </div>
           </div>
@@ -315,6 +276,7 @@ export default function CurriculumApp() {
           <div className="viewtoggle">
             <button className={prog === 'BA' ? 'is-on' : ''} onClick={() => setProg('BA')}>BA</button>
             <button className={prog === 'MA' ? 'is-on' : ''} onClick={() => setProg('MA')}>MA</button>
+            <button className={prog === 'ALL' ? 'is-on' : ''} onClick={() => setProg('ALL')} title="BA és MA egyszerre, egymás alatt">BA+MA</button>
           </div>
           <button
             className={`btn tools-toggle${q || spec || ctype || instr || cat ? ' has-f' : ''}`}
@@ -325,12 +287,6 @@ export default function CurriculumApp() {
           <select className="presetsel" value={ver} onChange={(e) => setVer(e.target.value)} title="Tanterv-verzió">
             {versions.map((v) => <option key={v} value={v}>{v === 'régi (korábbi)' ? 'Régi (korábbi)' : v}</option>)}
           </select>
-          {view === 'map' && versions.length > 1 && (
-            <select className="presetsel" value="" onChange={(e) => { const v = e.target.value; e.target.value = ''; if (v) copyLayout(v); }} title="Elrendezés (node-pozíciók + kézi összekötések) átvétele egy másik verzióból az aktuálisba · Ctrl+Z visszavonja">
-              <option value="">⧉ Elrendezés innen…</option>
-              {versions.filter((v) => v !== ver).map((v) => <option key={v} value={v}>{v === 'régi (korábbi)' ? 'Régi' : v}</option>)}
-            </select>
-          )}
           <input className="search" placeholder="Keresés tárgyra, oktatóra…" value={q} onChange={(e) => setQ(e.target.value)} />
           <select className={`presetsel instrsel${instr ? ' is-on' : ''}`} value={instr} onChange={(e) => setInstr(e.target.value)} title="Szűrés oktatóra (mindkét nézetben)">
             <option value="">Minden oktató</option>

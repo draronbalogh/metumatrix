@@ -7,6 +7,10 @@ import {
 } from '@/data/curriculum';
 import CatalogView from './CatalogView';
 import EditModal from './EditModal';
+import AgendaView from './AgendaView';
+import EventsView from './EventsView';
+import { EventModal, IntroModal, TaskModal } from './AgendaModals';
+import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, emptyEvent, emptyTask, nextStatus } from '@/data/agenda';
 import type { Handlers, Filter, View, Prog } from '@/lib/buildGraph';
 import type { Persist } from './MapView';
 
@@ -16,6 +20,7 @@ const MapView = dynamic(() => import('./MapView'), {
 });
 
 const LS_KEY = 'mediadesign-2026-27-v9';
+const AGENDA_LS_KEY = 'md-agenda-v1';
 const THEME_KEY = 'md-theme';
 const PRESET_KEY = 'md-preset';
 const LOCK_KEY = 'md-locked';
@@ -34,7 +39,8 @@ export default function CurriculumApp() {
   const [hydrated, setHydrated] = useState(false);
   const [edited, setEdited] = useState(false);
 
-  const [view, setView] = useState<'map' | 'catalog'>('map');
+  const [view, setView] = useState<'map' | 'catalog' | 'tasks' | 'events'>('map');
+  const [agenda, setAgenda] = useState<Agenda>(DEFAULT_AGENDA);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [preset, setPreset] = useState<Preset>('muszerfal');
   const [ver, setVer] = useState<string>('2026/2027');
@@ -49,6 +55,9 @@ export default function CurriculumApp() {
   const [toolsOpen, setToolsOpen] = useState(false);
   const [locked, setLocked] = useState(false);
   const [catMenu, setCatMenu] = useState<{ ci: number; xi: number; x: number; y: number } | null>(null);
+  const [taskEdit, setTaskEdit] = useState<{ t: AgendaTask; isNew: boolean } | null>(null);
+  const [eventEdit, setEventEdit] = useState<{ e: AgendaEvent; isNew: boolean } | null>(null);
+  const [introEdit, setIntroEdit] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -63,6 +72,16 @@ export default function CurriculumApp() {
       // 2) fallback: helyi vázlat (localStorage), majd a beépített DEFAULT_DATA
       if (!loaded) {
         try { const s = localStorage.getItem(LS_KEY); if (s) { setData(JSON.parse(s) as Curriculum); setEdited(true); } } catch { /* ignore */ }
+      }
+      // feladatok + események ugyanígy: fájl → localStorage → beépített DEFAULT_AGENDA
+      let agendaLoaded = false;
+      try {
+        const r = await fetch('/api/agenda', { cache: 'no-store' });
+        const j = await r.json();
+        if (j?.ok && j.data?.tasks) { setAgenda(j.data as Agenda); agendaLoaded = true; }
+      } catch { /* ignore */ }
+      if (!agendaLoaded) {
+        try { const s = localStorage.getItem(AGENDA_LS_KEY); if (s) setAgenda(JSON.parse(s) as Agenda); } catch { /* ignore */ }
       }
       try {
         const t = localStorage.getItem(THEME_KEY); if (t === 'dark' || t === 'light') setTheme(t);
@@ -99,6 +118,53 @@ export default function CurriculumApp() {
     }, 1000);
     return () => { if (saveTimer.current) window.clearTimeout(saveTimer.current); };
   }, [data, hydrated]);
+  // feladatok + események: automentés a saját fájlba (ugyanaz a minta, mint a tantervnél)
+  const agendaRef = useRef(agenda);
+  agendaRef.current = agenda;
+  const agendaTimer = useRef<number | null>(null);
+  const skipAgendaSave = useRef(true);
+  useEffect(() => {
+    if (!hydrated) return;
+    if (skipAgendaSave.current) { skipAgendaSave.current = false; return; }
+    if (agendaTimer.current) window.clearTimeout(agendaTimer.current);
+    agendaTimer.current = window.setTimeout(() => {
+      fetch('/api/agenda', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(agendaRef.current) }).catch(() => { /* ignore */ });
+    }, 1000);
+    return () => { if (agendaTimer.current) window.clearTimeout(agendaTimer.current); };
+  }, [agenda, hydrated]);
+  const commitAgenda = useCallback((next: Agenda) => {
+    setAgenda(next);
+    try { localStorage.setItem(AGENDA_LS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+  }, []);
+  const saveTask = useCallback((t: AgendaTask) => {
+    const cur = agendaRef.current;
+    const exists = cur.tasks.some((x) => x.id === t.id);
+    commitAgenda({ ...cur, tasks: exists ? cur.tasks.map((x) => (x.id === t.id ? t : x)) : [t, ...cur.tasks] });
+    setTaskEdit(null);
+  }, [commitAgenda]);
+  const deleteTask = useCallback((id: string) => {
+    commitAgenda({ ...agendaRef.current, tasks: agendaRef.current.tasks.filter((x) => x.id !== id) });
+    setTaskEdit(null);
+  }, [commitAgenda]);
+  const cycleTask = useCallback((id: string) => {
+    const cur = agendaRef.current;
+    commitAgenda({ ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, status: nextStatus(x.status) } : x)) });
+  }, [commitAgenda]);
+  const saveEvent = useCallback((e: AgendaEvent) => {
+    const cur = agendaRef.current;
+    const exists = cur.events.some((x) => x.id === e.id);
+    commitAgenda({ ...cur, events: exists ? cur.events.map((x) => (x.id === e.id ? e : x)) : [...cur.events, e] });
+    setEventEdit(null);
+  }, [commitAgenda]);
+  const deleteEvent = useCallback((id: string) => {
+    commitAgenda({ ...agendaRef.current, events: agendaRef.current.events.filter((x) => x.id !== id) });
+    setEventEdit(null);
+  }, [commitAgenda]);
+  const saveIntro = useCallback((s: string) => {
+    commitAgenda({ ...agendaRef.current, intro: s });
+    setIntroEdit(false);
+  }, [commitAgenda]);
+
   const histRef = useRef<Curriculum[]>([]);
   const futRef = useRef<Curriculum[]>([]);
   const persistLS = (d: Curriculum) => { try { localStorage.setItem(LS_KEY, JSON.stringify(d)); } catch { /* ignore */ } };
@@ -242,6 +308,8 @@ export default function CurriculumApp() {
   }, [visibleCohorts]);
 
   const detailCourse = details ? data.cohorts[details.ci]?.courses[details.xi] : null;
+  // tanterv-nézetben (mátrix/katalógus) látszanak a tantervi szűrők és a mentés/betöltés — a feladat/esemény nézetben nem
+  const isCurr = view === 'map' || view === 'catalog';
 
   return (
     <>
@@ -264,22 +332,30 @@ export default function CurriculumApp() {
           <div className="viewtoggle">
             <button className={view === 'map' ? 'is-on' : ''} onClick={() => setView('map')}>◆ Mátrix</button>
             <button className={view === 'catalog' ? 'is-on' : ''} onClick={() => setView('catalog')}>▦ Katalógus</button>
+            <button className={view === 'tasks' ? 'is-on' : ''} onClick={() => setView('tasks')}>☑ Feladatok</button>
+            <button className={view === 'events' ? 'is-on' : ''} onClick={() => setView('events')}>▤ Események</button>
           </div>
+          {isCurr && (
           <div className="viewtoggle">
             <button className={prog === 'BA' ? 'is-on' : ''} onClick={() => setProg('BA')}>BA</button>
             <button className={prog === 'MA' ? 'is-on' : ''} onClick={() => setProg('MA')}>MA</button>
             <button className={prog === 'ALL' ? 'is-on' : ''} onClick={() => setProg('ALL')} title="BA és MA egyszerre, egymás alatt">BA+MA</button>
           </div>
+          )}
           <button
             className={`btn tools-toggle${q || spec || ctype || instr || cat ? ' has-f' : ''}`}
             onClick={() => setToolsOpen((o) => !o)}
             title="Szűrők és eszközök"
           >{toolsOpen ? '✕' : '☰'}{(q || spec || ctype || instr || cat) && !toolsOpen ? ' •' : ''}</button>
           <div className={`toolbar-more${toolsOpen ? ' open' : ''}`}>
+          {isCurr && (
           <select className="presetsel" value={ver} onChange={(e) => setVer(e.target.value)} title="Tanterv-verzió">
             {versions.map((v) => <option key={v} value={v}>{v === 'régi (korábbi)' ? 'Régi (korábbi)' : v}</option>)}
           </select>
-          <input className="search" placeholder="Keresés tárgyra, oktatóra…" value={q} onChange={(e) => setQ(e.target.value)} />
+          )}
+          <input className="search" placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />
+          {isCurr && (
+          <>
           <select className={`presetsel instrsel${instr ? ' is-on' : ''}`} value={instr} onChange={(e) => setInstr(e.target.value)} title="Szűrés oktatóra (mindkét nézetben)">
             <option value="">Minden oktató</option>
             {allInstructors.map((n) => <option key={n} value={n}>{n}</option>)}
@@ -297,15 +373,21 @@ export default function CurriculumApp() {
             <button className={`chip${ctype === 'gyakorlat' ? ' is-on' : ''}`} onClick={() => setCtype((v) => (v === 'gyakorlat' ? '' : 'gyakorlat'))}>gyakorlat</button>
             <button className={`chip${ctype === 'előadás' ? ' is-on' : ''}`} onClick={() => setCtype((v) => (v === 'előadás' ? '' : 'előadás'))}>előadás</button>
           </div>
+          </>
+          )}
           <span className="spacer" />
           <select className="presetsel" value={preset} onChange={(e) => setPreset(e.target.value as Preset)} title="Betűtípus / stílus">
             {PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
           <button className="themebtn" title="Világos / sötét mód" onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}>{theme === 'dark' ? '☀' : '☾'}</button>
+          {isCurr && (
+          <>
           <button className="btn" onClick={exportJSON}>⤓ Mentés</button>
           <button className="btn" onClick={() => fileRef.current?.click()}>⤒ Betöltés</button>
           <button className="btn btn--danger" onClick={resetData}>↺ Alaphelyzet</button>
           <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importJSON(f); e.target.value = ''; }} />
+          </>
+          )}
           </div>
         </div>
       </div>
@@ -313,8 +395,22 @@ export default function CurriculumApp() {
         <div className="viewport">
           {view === 'map' ? (
             <MapView data={data} filter={filter} handlers={handlers} persist={persist} theme={theme} view={vp} locked={locked} onToggleLock={toggleLock} />
-          ) : (
+          ) : view === 'catalog' ? (
             <CatalogView data={data} filter={filter} view={vp} onDetails={onDetails} onEdit={onEdit} onAdd={onAdd} onInstructor={onInstructor} onCategory={onCategory} onCatEdit={onCatEdit} />
+          ) : view === 'tasks' ? (
+            <AgendaView
+              agenda={agenda} q={q}
+              onAdd={() => setTaskEdit({ t: emptyTask(), isNew: true })}
+              onEdit={(id) => { const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
+              onCycle={cycleTask}
+              onEditIntro={() => setIntroEdit(true)}
+            />
+          ) : (
+            <EventsView
+              agenda={agenda} q={q}
+              onAdd={() => setEventEdit({ e: emptyEvent(), isNew: true })}
+              onEdit={(id) => { const e = agendaRef.current.events.find((x) => x.id === id); if (e) setEventEdit({ e, isNew: false }); }}
+            />
           )}
         </div>
       </div>
@@ -403,6 +499,28 @@ export default function CurriculumApp() {
           />
         );
       })()}
+
+      {taskEdit && (
+        <TaskModal
+          task={taskEdit.t}
+          isNew={taskEdit.isNew}
+          onSave={saveTask}
+          onDelete={() => { if (confirm('Törlöd ezt a feladatot?')) deleteTask(taskEdit.t.id); }}
+          onClose={() => setTaskEdit(null)}
+        />
+      )}
+
+      {eventEdit && (
+        <EventModal
+          event={eventEdit.e}
+          isNew={eventEdit.isNew}
+          onSave={saveEvent}
+          onDelete={() => { if (confirm('Törlöd ezt az eseményt?')) deleteEvent(eventEdit.e.id); }}
+          onClose={() => setEventEdit(null)}
+        />
+      )}
+
+      {introEdit && <IntroModal intro={agenda.intro} onSave={saveIntro} onClose={() => setIntroEdit(false)} />}
 
       {hydrated && edited && <div style={{ position: 'fixed', bottom: 8, left: 12, fontSize: '.7rem', color: 'var(--muted)', pointerEvents: 'none', zIndex: 5 }}>helyi módosítások mentve</div>}
     </>

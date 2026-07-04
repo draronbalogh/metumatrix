@@ -38,7 +38,7 @@ export default function CurriculumApp() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [preset, setPreset] = useState<Preset>('muszerfal');
   const [ver, setVer] = useState<string>('2026/2027');
-  const [prog, setProg] = useState<Prog>('BA');
+  const [prog, setProg] = useState<Prog>('ALL');
   const [q, setQ] = useState('');
   const [spec, setSpec] = useState('');
   const [ctype, setCtype] = useState('');
@@ -225,9 +225,6 @@ export default function CurriculumApp() {
   const versions = useMemo(() => VERSION_ORDER.filter((v) => data.cohorts.some((c) => c.version === v)), [data]);
   const visibleCohorts = useMemo(() => data.cohorts.filter((c) => c.version === ver && (prog === 'ALL' || c.program === prog)), [data, ver, prog]);
 
-  const totalCourses = useMemo(() => visibleCohorts.reduce((a, c) => a + c.courses.length, 0), [visibleCohorts]);
-  const totalCredits = useMemo(() => visibleCohorts.reduce((a, c) => a + c.courses.reduce((s, x) => s + (x.credits || 0), 0), 0), [visibleCohorts]);
-  const filledSems = useMemo(() => visibleCohorts.filter((c) => c.courses.length).length, [visibleCohorts]);
   const specs = useMemo(() => {
     const s = new Set<string>();
     visibleCohorts.forEach((c) => c.courses.forEach((x) => { if (x.specialization) s.add(specShort(x.specialization)); }));
@@ -258,11 +255,6 @@ export default function CurriculumApp() {
               <h1 className="title">Média Design {prog === 'ALL' ? 'BA + MA' : prog} · {ver === 'régi (korábbi)' ? 'régi mintatanterv' : ver}</h1>
               <div className="subtitle">Tanulmányi mátrix — ahogy a félévek és a tárgyak egymásra épülnek · kösd össze, szerkeszd, mentsd</div>
             </div>
-          </div>
-          <div className="totstrip">
-            <div><b className="num">{totalCourses}</b><span>kurzus</span></div>
-            <div><b className="num">{filledSems}</b><span>félév</span></div>
-            <div><b className="num">{totalCredits}</b><span>kredit</span></div>
           </div>
         </div>
       </header>

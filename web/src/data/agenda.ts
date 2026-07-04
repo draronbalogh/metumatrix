@@ -21,6 +21,8 @@ export interface AgendaTask {
   status: TaskStatus;
   owner: string | null;
   due: string | null;
+  people: string[];        // résztvevők: oktatók és/vagy hallgatók — bárki hozzárendelhető
+  eventId: string | null;  // ha a feladat egy naptári eseményhez kötődik
 }
 
 export interface AgendaEvent {
@@ -28,9 +30,11 @@ export interface AgendaEvent {
   title: string;
   when: string;          // megjelenített időpont, szabad szöveg
   sort: string | null;   // rendezéshez: ÉÉÉÉ-HH — üresen a lista végére kerül
+  day: string | null;    // pontos nap (ÉÉÉÉ-HH-NN), ha már ismert — a naptárban ezen a napon jelölődik
   note: string | null;
   place: string | null;
   owner: string | null;
+  people: string[];      // résztvevők
 }
 
 export interface Agenda {
@@ -41,16 +45,41 @@ export interface Agenda {
 
 export const emptyTask = (): AgendaTask => ({
   id: `t-${Date.now().toString(36)}`,
-  title: '', summary: '', ideas: [], status: 'todo', owner: null, due: null,
+  title: '', summary: '', ideas: [], status: 'todo', owner: null, due: null, people: [], eventId: null,
 });
 export const emptyEvent = (): AgendaEvent => ({
   id: `e-${Date.now().toString(36)}`,
-  title: '', when: '', sort: null, note: null, place: null, owner: null,
+  title: '', when: '', sort: null, day: null, note: null, place: null, owner: null, people: [],
 });
 
-export const DEFAULT_AGENDA: Agenda = {
-  intro: 'Aktuálisan a 2026/27-es tanév őszi félévében az alábbi feladatok várnak ránk — az oktatói eligazító munkavázlata alapján, szabadon bővíthető és szerkeszthető.\n\nKözös célok: a legmodernebb médiadesign szak Magyarországon · erős szakmai és ipari kapcsolatok · élen járó, tudatos AI-integráció · látható hallgatói munka kifelé · korszerű eszközpark és stúdióháttér · egységes, kiszámítható működés.',
-  tasks: [
+// Korábban mentett (régebbi sémájú) adat kiegészítése az új mezőkkel.
+export const normalizeAgenda = (a: Partial<Agenda>): Agenda => ({
+  intro: a.intro ?? DEFAULT_AGENDA.intro,
+  tasks: (a.tasks ?? []).map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null })),
+  events: (a.events ?? []).map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null })),
+});
+
+// Egy névhez tartozó feladatok/események (felelősként vagy résztvevőként).
+export const taskHasPerson = (t: AgendaTask, name: string): boolean =>
+  !!name && (t.owner === name || t.people.includes(name));
+export const eventHasPerson = (e: AgendaEvent, name: string): boolean =>
+  !!name && (e.owner === name || e.people.includes(name));
+
+// Minden név, ami a feladatokban/eseményekben előfordul (szűrőlistához).
+export const agendaPeople = (a: Agenda): string[] => {
+  const s = new Set<string>();
+  a.tasks.forEach((t) => { if (t.owner) s.add(t.owner); t.people.forEach((p) => s.add(p)); });
+  a.events.forEach((e) => { if (e.owner) s.add(e.owner); e.people.forEach((p) => s.add(p)); });
+  return [...s];
+};
+
+const DEFAULT_INTRO = 'Aktuálisan a 2026/27-es tanév őszi félévében az alábbi feladatok várnak ránk — az oktatói eligazító munkavázlata alapján, szabadon bővíthető és szerkeszthető.\n\nKözös célok: a legmodernebb médiadesign szak Magyarországon · erős szakmai és ipari kapcsolatok · élen járó, tudatos AI-integráció · látható hallgatói munka kifelé · korszerű eszközpark és stúdióháttér · egységes, kiszámítható működés.';
+
+// Az előtöltött tartalom a régi (szűkebb) sémával van felírva; a hiányzó mezőket lentebb pótoljuk.
+type RawTask = Omit<AgendaTask, 'people' | 'eventId'> & { people?: string[]; eventId?: string | null };
+type RawEvent = Omit<AgendaEvent, 'people' | 'day'> & { people?: string[]; day?: string | null };
+
+const RAW_TASKS: RawTask[] = [
     { id: 't1', title: 'Raktárszoftver fejlesztése', status: 'todo', owner: null, due: 'jövő évi cél',
       summary: 'A félév során több gondot okozott, fejlesztésre szorul.',
       ideas: ['Tisztázni, pontosan mi akadt el: nyilvántartás, kivitel–visszahozatal követése, eszköz-elérhetőség', 'Döntés: saját fejlesztés vagy kész eszközkölcsönző / leltárrendszer', 'Saját fejlesztés esetén kiváló hallgatói projekt vagy diplomamunka téma', 'Egyszerű első lépés: QR/vonalkódos ki- és bejelentkeztetés, akár megosztott táblázattal'] },
@@ -141,8 +170,9 @@ export const DEFAULT_AGENDA: Agenda = {
     { id: 't30', title: 'Interaktív film', status: 'todo', owner: null, due: null,
       summary: 'Interaktív film mint irány: oktatás, hallgatói projekt vagy installáció.',
       ideas: ['Cél tisztázása: kurzustéma, diplomaprojekt vagy kiállítási formátum', 'Technológia: elágazó narratíva, valós idejű választás, VR vagy biofeedback bemenet', 'Kapcsolódhat a VR-hez (12.), a publikációs platformhoz (17.) és a biofeedbackhez (27.)'] },
-  ],
-  events: [
+];
+
+const RAW_EVENTS: RawEvent[] = [
     { id: 'e1', title: 'Pótfelvételi', when: '2026. augusztus', sort: '2026-08', place: null, owner: null,
       note: 'Előre készülni: kommunikáció, jelentkezők fogadása.' },
     { id: 'e2', title: 'Kutatók Éjszakája', when: '2026. szeptember', sort: '2026-09', place: null, owner: null,
@@ -161,5 +191,10 @@ export const DEFAULT_AGENDA: Agenda = {
       note: 'Összehangolás a kurzusokkal, hogy a hallgatói munka beleférjen a tanmenetbe.' },
     { id: 'e9', title: 'Projekt hét', when: 'dátum a Tanév rendje szerint', sort: null, place: null, owner: null,
       note: 'Előadók szervezése folyamatban (22. pont).' },
-  ],
+];
+
+export const DEFAULT_AGENDA: Agenda = {
+  intro: DEFAULT_INTRO,
+  tasks: RAW_TASKS.map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null })),
+  events: RAW_EVENTS.map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null })),
 };

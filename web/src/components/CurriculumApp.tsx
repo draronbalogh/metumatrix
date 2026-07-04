@@ -10,8 +10,9 @@ import EditModal from './EditModal';
 import AgendaView from './AgendaView';
 import EventsView from './EventsView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
-import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, emptyEvent, emptyTask, nextStatus } from '@/data/agenda';
+import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, agendaPeople, emptyEvent, emptyTask, nextStatus, normalizeAgenda } from '@/data/agenda';
 import type { Handlers, Filter, View, Prog } from '@/lib/buildGraph';
+import { instrList } from '@/lib/buildGraph';
 import type { Persist } from './MapView';
 
 const MapView = dynamic(() => import('./MapView'), {
@@ -78,10 +79,10 @@ export default function CurriculumApp() {
       try {
         const r = await fetch('/api/agenda', { cache: 'no-store' });
         const j = await r.json();
-        if (j?.ok && j.data?.tasks) { setAgenda(j.data as Agenda); agendaLoaded = true; }
+        if (j?.ok && j.data?.tasks) { setAgenda(normalizeAgenda(j.data as Partial<Agenda>)); agendaLoaded = true; }
       } catch { /* ignore */ }
       if (!agendaLoaded) {
-        try { const s = localStorage.getItem(AGENDA_LS_KEY); if (s) setAgenda(JSON.parse(s) as Agenda); } catch { /* ignore */ }
+        try { const s = localStorage.getItem(AGENDA_LS_KEY); if (s) setAgenda(normalizeAgenda(JSON.parse(s) as Partial<Agenda>)); } catch { /* ignore */ }
       }
       try {
         const t = localStorage.getItem(THEME_KEY); if (t === 'dark' || t === 'light') setTheme(t);
@@ -157,7 +158,13 @@ export default function CurriculumApp() {
     setEventEdit(null);
   }, [commitAgenda]);
   const deleteEvent = useCallback((id: string) => {
-    commitAgenda({ ...agendaRef.current, events: agendaRef.current.events.filter((x) => x.id !== id) });
+    const cur = agendaRef.current;
+    // a törölt eseményre mutató feladat-hivatkozásokat is leválasztjuk
+    commitAgenda({
+      ...cur,
+      events: cur.events.filter((x) => x.id !== id),
+      tasks: cur.tasks.map((t) => (t.eventId === id ? { ...t, eventId: null } : t)),
+    });
     setEventEdit(null);
   }, [commitAgenda]);
   const saveIntro = useCallback((s: string) => {
@@ -306,6 +313,22 @@ export default function CurriculumApp() {
     visibleCohorts.forEach((c) => c.courses.forEach((x) => catList(x).forEach((k) => s.add(k))));
     return CATEGORIES.filter((k) => s.has(k));
   }, [visibleCohorts]);
+  // a feladat/esemény nézet név-szűrőjéhez: minden oktató (aktuális verzió) + a feladatokban/eseményekben szereplő nevek
+  const allPeople = useMemo(() => {
+    const s = new Set<string>();
+    data.cohorts.filter((c) => c.version === ver).forEach((c) => c.courses.forEach((x) => instrList(x).forEach((n) => s.add(n))));
+    agendaPeople(agenda).forEach((n) => s.add(n));
+    return [...s].sort((a, b) => a.localeCompare(b, 'hu'));
+  }, [data, ver, agenda]);
+  // a név-szűrőre illesztett személy tanított tárgyai (a Feladatok nézet összegzőjéhez)
+  const taught = useMemo(() => {
+    if (!instr) return [];
+    const out: string[] = [];
+    data.cohorts.filter((c) => c.version === ver).forEach((c) => c.courses.forEach((x) => {
+      if (instrList(x).includes(instr)) out.push(`${c.program} · ${semLabel(c.semester)} · ${x.name}`);
+    }));
+    return out;
+  }, [data, ver, instr]);
 
   const detailCourse = details ? data.cohorts[details.ci]?.courses[details.xi] : null;
   // tanterv-nézetben (mátrix/katalógus) látszanak a tantervi szűrők és a mentés/betöltés — a feladat/esemény nézetben nem
@@ -354,12 +377,12 @@ export default function CurriculumApp() {
           </select>
           )}
           <input className="search" placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />
+          <select className={`presetsel instrsel${instr ? ' is-on' : ''}`} value={instr} onChange={(e) => setInstr(e.target.value)} title="Szűrés névre — tanterv, feladatok és események is erre szűrődnek">
+            <option value="">{isCurr ? 'Minden oktató' : 'Mindenki'}</option>
+            {(isCurr ? allInstructors : allPeople).map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
           {isCurr && (
           <>
-          <select className={`presetsel instrsel${instr ? ' is-on' : ''}`} value={instr} onChange={(e) => setInstr(e.target.value)} title="Szűrés oktatóra (mindkét nézetben)">
-            <option value="">Minden oktató</option>
-            {allInstructors.map((n) => <option key={n} value={n}>{n}</option>)}
-          </select>
           {allCats.length > 0 && (
             <select className={`presetsel instrsel${cat ? ' is-on' : ''}`} value={cat} onChange={(e) => setCat(e.target.value)} title="Szűrés kategóriára (mindkét nézetben)">
               <option value="">Minden kategória</option>
@@ -399,17 +422,21 @@ export default function CurriculumApp() {
             <CatalogView data={data} filter={filter} view={vp} onDetails={onDetails} onEdit={onEdit} onAdd={onAdd} onInstructor={onInstructor} onCategory={onCategory} onCatEdit={onCatEdit} />
           ) : view === 'tasks' ? (
             <AgendaView
-              agenda={agenda} q={q}
+              agenda={agenda} q={q} instr={instr} taught={taught}
               onAdd={() => setTaskEdit({ t: emptyTask(), isNew: true })}
               onEdit={(id) => { const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
               onCycle={cycleTask}
               onEditIntro={() => setIntroEdit(true)}
+              onPerson={onInstructor}
             />
           ) : (
             <EventsView
-              agenda={agenda} q={q}
+              agenda={agenda} q={q} instr={instr}
               onAdd={() => setEventEdit({ e: emptyEvent(), isNew: true })}
               onEdit={(id) => { const e = agendaRef.current.events.find((x) => x.id === id); if (e) setEventEdit({ e, isNew: false }); }}
+              onEditTask={(id) => { const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
+              onAddTaskFor={(eid) => setTaskEdit({ t: { ...emptyTask(), eventId: eid }, isNew: true })}
+              onPerson={onInstructor}
             />
           )}
         </div>
@@ -504,6 +531,7 @@ export default function CurriculumApp() {
         <TaskModal
           task={taskEdit.t}
           isNew={taskEdit.isNew}
+          events={agenda.events.map((e) => ({ id: e.id, title: e.title }))}
           onSave={saveTask}
           onDelete={() => { if (confirm('Törlöd ezt a feladatot?')) deleteTask(taskEdit.t.id); }}
           onClose={() => setTaskEdit(null)}

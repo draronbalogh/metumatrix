@@ -459,3 +459,64 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
   .ev-card { flex-direction: column; gap: 7px; }
   .ev-when { width: auto; border-right: 0; padding: 0; border-bottom: 1px dashed var(--line-2); padding-bottom: 5px; }
 }
+
+/* ---- nevek, személy-panel, kész-lista ---- */
+.ag-pp { font-family: var(--ff); font-size: .62rem; font-weight: 700; letter-spacing: .03em; padding: 3px 9px; border-radius: 999px; cursor: pointer; background: var(--paper-2); color: var(--ink-2); border: 1px solid var(--line); }
+.ag-pp:hover { border-color: var(--brand); color: var(--brand-text); }
+.ag-pp.is-on { background: var(--brand); border-color: var(--brand); color: #fff; }
+.cc-tag.ev { background: var(--brand-100); color: var(--brand-text); }
+
+.ag-person { background: var(--card); border: 1px solid color-mix(in srgb, var(--brand) 30%, var(--line)); border-left: 3px solid var(--brand); border-radius: var(--r-card); padding: 13px 16px; margin-bottom: 22px; max-width: 1020px; box-shadow: var(--shadow-1); display: flex; flex-direction: column; gap: 9px; }
+.ag-person-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ag-person-name { font-family: var(--ff-display); font-size: 1.2rem; font-weight: 700; letter-spacing: var(--head-ls); }
+.ag-person-sum { font-size: .78rem; color: var(--ink-2); font-weight: 600; }
+.ag-person-head .btn { margin-left: auto; }
+.ag-person-taught { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.ag-person-h { font-size: .6rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-right: 3px; }
+
+.ag-done-list { display: flex; flex-direction: column; gap: 4px; max-width: 920px; }
+.ag-done-row { display: flex; align-items: baseline; gap: 10px; text-align: left; font-family: var(--ff); font-size: .8rem; padding: 7px 12px; border: 1px solid var(--line); border-radius: 7px; background: color-mix(in srgb, var(--paper-2) 55%, var(--card)); color: var(--muted); cursor: pointer; }
+.ag-done-row:hover { border-color: var(--line-2); color: var(--ink-2); }
+.ag-done-row .ck { flex: none; color: var(--g0); font-weight: 900; }
+.ag-done-row .nm { font-weight: 600; text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 55%, transparent); }
+.ag-done-row .pp { font-size: .7rem; }
+.ag-done-row .evt { margin-left: auto; flex: none; font-size: .66rem; font-weight: 700; color: var(--muted); }
+
+/* ---- esemény: kapcsolt feladatok ---- */
+.ev-tasks { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--line); }
+.ev-task { display: inline-flex; align-items: center; gap: 6px; font-family: var(--ff); font-size: .7rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink-2); cursor: pointer; }
+.ev-task:hover { border-color: var(--line-2); color: var(--ink); }
+.ev-task .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brand); }
+.ev-task.st-doing .dot { background: var(--g1); }
+.ev-task.st-done { opacity: .6; } .ev-task.st-done .dot { background: var(--g0); }
+.ev-task.add { border-style: dashed; color: var(--muted); }
+.ev-task.add:hover { color: var(--brand-text); border-color: var(--brand); }
+.ev-when .ev-day { display: block; font-size: 1.05rem; font-weight: 700; color: var(--ink); }
+.ag-mode { margin-left: auto; }
+.cat-block-head .ag-mode + .ag-add { margin-left: 0; }
+
+/* ---- naptár ---- */
+.cal { display: flex; flex-direction: column; gap: 14px; }
+.cal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(235px, 1fr)); gap: 13px; }
+.cal-month { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card); padding: 12px 13px 11px; box-shadow: var(--shadow-1); }
+.cal-month.has-ev { border-color: color-mix(in srgb, var(--brand) 26%, var(--line)); }
+.cal-mh { font-family: var(--ff-display); font-size: .86rem; font-weight: 700; letter-spacing: var(--head-ls); margin-bottom: 8px; }
+.cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
+.cal-days .wd { font-size: .54rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); text-align: center; padding-bottom: 3px; }
+.cal-days .dd { font-family: var(--ff-mono); font-size: .62rem; text-align: center; padding: 2px 0; border-radius: 5px; color: var(--ink-2); }
+.cal-days .dd.ev { background: var(--brand); color: #fff; font-weight: 700; }
+.cal-days .dd.today { outline: 1.5px solid var(--brand); outline-offset: -1.5px; font-weight: 700; }
+.cal-evs { display: flex; flex-direction: column; gap: 3px; margin-top: 9px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.cal-ev { display: flex; align-items: baseline; gap: 7px; text-align: left; font-family: var(--ff); font-size: .72rem; font-weight: 600; color: var(--ink-2); background: transparent; border: 0; padding: 2px 2px; border-radius: 5px; cursor: pointer; }
+.cal-ev:hover { color: var(--brand-text); }
+.cal-ev .d { flex: none; font-family: var(--ff-mono); font-size: .66rem; font-weight: 700; color: var(--brand-text); min-width: 20px; }
+.cal-ev .t { min-width: 0; }
+.cal-ev .w { margin-left: auto; flex: none; font-size: .62rem; color: var(--muted); font-weight: 500; }
+.cal-undated { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 11px 14px; border: 1px dashed var(--line-2); border-radius: var(--r-card); max-width: 1020px; }
+.cal-undated-h { font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.cal-undated .cal-ev.loose { border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; background: var(--card); }
+
+@media (max-width: 720px) {
+  .ag-mode { margin-left: 0; }
+  .ag-person-head .btn { margin-left: 0; }
+}

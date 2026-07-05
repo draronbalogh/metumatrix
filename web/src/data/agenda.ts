@@ -43,13 +43,16 @@ export interface Agenda {
   events: AgendaEvent[];
 }
 
+// Új feladat/esemény alapértelmezett felelőse
+export const DEFAULT_OWNER = 'Balogh Áron';
+
 export const emptyTask = (): AgendaTask => ({
   id: `t-${Date.now().toString(36)}`,
-  title: '', summary: '', ideas: [], status: 'todo', owner: null, due: null, people: [], eventId: null,
+  title: '', summary: '', ideas: [], status: 'todo', owner: DEFAULT_OWNER, due: null, people: [], eventId: null,
 });
 export const emptyEvent = (): AgendaEvent => ({
   id: `e-${Date.now().toString(36)}`,
-  title: '', when: '', sort: null, day: null, note: null, place: null, owner: null, people: [],
+  title: '', when: '', sort: null, day: null, note: null, place: null, owner: DEFAULT_OWNER, people: [],
 });
 
 // Korábban mentett (régebbi sémájú) adat kiegészítése az új mezőkkel.

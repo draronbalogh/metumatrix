@@ -9,8 +9,11 @@
   },
   "dependencies": {
     "@types/dagre": "^0.7.54",
+    "@types/nodemailer": "^8.0.1",
     "dagre": "^0.8.5",
     "next": "15.3.5",
+    "node-cron": "^4.5.0",
+    "nodemailer": "^9.0.3",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "reactflow": "^11.11.4"

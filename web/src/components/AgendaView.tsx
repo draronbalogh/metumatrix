@@ -14,6 +14,7 @@ interface Props {
   onCycle: (id: string) => void;
   onEditIntro: () => void;
   onPerson: (name: string) => void;    // név-szűrő ki/be
+  onNotify: (id: string) => void;      // értesítés küldése a feladat résztvevőinek
 }
 
 export function PersonChip({ name, star, on, kind, onClick }: { name: string; star?: boolean; on: boolean; kind?: PersonKind; onClick: () => void }) {
@@ -28,7 +29,7 @@ export function PersonChip({ name, star, on, kind, onClick }: { name: string; st
 
 const IDEAS_ON_CARD = 3;
 
-export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, onEdit, onCycle, onEditIntro, onPerson }: Props) {
+export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, onEdit, onCycle, onEditIntro, onPerson, onNotify }: Props) {
   const matches = (t: AgendaTask) => {
     if (instr && !taskHasPerson(t, instr)) return false;
     if (!q) return true;
@@ -108,7 +109,7 @@ export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, on
                     </ul>
                   )}
                   {t.ideas.length > IDEAS_ON_CARD && <div className="ag-more">+ {t.ideas.length - IDEAS_ON_CARD} további pont…</div>}
-                  {(t.owner || t.due || t.people.length > 0 || t.eventId) && (
+                  {(t.owner || t.due || t.dueDate || t.people.length > 0 || t.eventId) && (
                     <div className="cc-meta">
                       {t.owner && (
                         <PersonChip name={t.owner} star on={instr === t.owner} kind={kindOf[t.owner]} onClick={() => onPerson(t.owner as string)} />
@@ -116,10 +117,11 @@ export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, on
                       {t.people.map((p) => (
                         <PersonChip key={p} name={p} on={instr === p} kind={kindOf[p]} onClick={() => onPerson(p)} />
                       ))}
-                      {t.due && <span className="cc-tag ea">⏱ {t.due}</span>}
+                      {(t.due || t.dueDate) && <span className="cc-tag ea">⏱ {t.due || t.dueDate}</span>}
                       {t.eventId && eventTitle(t.eventId) && <span className="cc-tag ev">▤ {eventTitle(t.eventId)}</span>}
                     </div>
                   )}
+                  <button className="ag-notify" title="Értesítés küldése a résztvevőknek" onClick={(e) => { e.stopPropagation(); onNotify(t.id); }}>✉ Értesítés</button>
                 </article>
               ))}
             </div>

@@ -13,6 +13,7 @@ import { EventModal, IntroModal, TaskModal } from './AgendaModals';
 import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, agendaPeople, emptyEvent, emptyTask, nextStatus, normalizeAgenda } from '@/data/agenda';
 import { DEFAULT_PEOPLE, PeopleDB, PersonKind, buildRoster, normalizePeople } from '@/data/people';
 import PeopleModal from './PeopleModal';
+import NotifyModal, { NotifyTarget } from './NotifyModal';
 import type { Handlers, Filter, View, Prog } from '@/lib/buildGraph';
 import { instrList } from '@/lib/buildGraph';
 import type { Persist } from './MapView';
@@ -64,6 +65,7 @@ export default function CurriculumApp() {
   const [eventEdit, setEventEdit] = useState<{ e: AgendaEvent; isNew: boolean } | null>(null);
   const [introEdit, setIntroEdit] = useState(false);
   const [peopleEdit, setPeopleEdit] = useState(false);
+  const [notify, setNotify] = useState<NotifyTarget | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -204,6 +206,19 @@ export default function CurriculumApp() {
     setPeopleDB(db);
     try { localStorage.setItem(PEOPLE_LS_KEY, JSON.stringify(db)); } catch { /* ignore */ }
     setPeopleEdit(false);
+  }, []);
+  // Értesítés-cél összeállítása egy feladatból / eseményből (tárgy + szöveg + előre kijelölt címzettek)
+  const notifyTask = useCallback((id: string) => {
+    const t = agendaRef.current.tasks.find((x) => x.id === id);
+    if (!t) return;
+    const lines = [t.summary, (t.due || t.dueDate) ? `Határidő: ${t.due || t.dueDate}` : '', ...t.ideas.map((i) => `• ${i}`)].filter(Boolean);
+    setNotify({ subject: `Feladat: ${t.title}`, body: lines.join('\n'), names: [t.owner, ...t.people].filter((n): n is string => !!n) });
+  }, []);
+  const notifyEvent = useCallback((id: string) => {
+    const e = agendaRef.current.events.find((x) => x.id === id);
+    if (!e) return;
+    const lines = [`Időpont: ${e.when}${e.day ? ` (${e.day})` : ''}`, e.place ? `Helyszín: ${e.place}` : '', e.note || ''].filter(Boolean);
+    setNotify({ subject: `Esemény: ${e.title}`, body: lines.join('\n'), names: [e.owner, ...e.people].filter((n): n is string => !!n) });
   }, []);
 
   const histRef = useRef<Curriculum[]>([]);
@@ -475,6 +490,7 @@ export default function CurriculumApp() {
               onCycle={cycleTask}
               onEditIntro={() => setIntroEdit(true)}
               onPerson={onInstructor}
+              onNotify={notifyTask}
             />
           ) : (
             <EventsView
@@ -484,6 +500,7 @@ export default function CurriculumApp() {
               onEditTask={(id) => { const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
               onAddTaskFor={(eid) => setTaskEdit({ t: { ...emptyTask(), eventId: eid }, isNew: true })}
               onPerson={onInstructor}
+              onNotify={notifyEvent}
             />
           )}
         </div>
@@ -600,6 +617,8 @@ export default function CurriculumApp() {
       {introEdit && <IntroModal intro={agenda.intro} onSave={saveIntro} onClose={() => setIntroEdit(false)} />}
 
       {peopleEdit && <PeopleModal teacherNames={teacherNames} db={peopleDB} onSave={savePeople} onClose={() => setPeopleEdit(false)} />}
+
+      {notify && <NotifyModal target={notify} teacherNames={teacherNames} db={peopleDB} onClose={() => setNotify(null)} />}
 
       {hydrated && edited && <div style={{ position: 'fixed', bottom: 8, left: 12, fontSize: '.7rem', color: 'var(--muted)', pointerEvents: 'none', zIndex: 5 }}>helyi módosítások mentve</div>}
     </>

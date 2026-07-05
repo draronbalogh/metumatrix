@@ -20,7 +20,8 @@ export interface AgendaTask {
   ideas: string[];
   status: TaskStatus;
   owner: string | null;
-  due: string | null;
+  due: string | null;       // szabadszavas határidő a megjelenítéshez (pl. „szeptemberre")
+  dueDate: string | null;   // pontos határidő (ÉÉÉÉ-HH-NN) az automatikus emlékeztetőhöz
   people: string[];        // résztvevők: oktatók és/vagy hallgatók — bárki hozzárendelhető
   eventId: string | null;  // ha a feladat egy naptári eseményhez kötődik
 }
@@ -48,7 +49,7 @@ export const DEFAULT_OWNER = 'Balogh Áron';
 
 export const emptyTask = (): AgendaTask => ({
   id: `t-${Date.now().toString(36)}`,
-  title: '', summary: '', ideas: [], status: 'todo', owner: DEFAULT_OWNER, due: null, people: [], eventId: null,
+  title: '', summary: '', ideas: [], status: 'todo', owner: DEFAULT_OWNER, due: null, dueDate: null, people: [], eventId: null,
 });
 export const emptyEvent = (): AgendaEvent => ({
   id: `e-${Date.now().toString(36)}`,
@@ -58,7 +59,7 @@ export const emptyEvent = (): AgendaEvent => ({
 // Korábban mentett (régebbi sémájú) adat kiegészítése az új mezőkkel.
 export const normalizeAgenda = (a: Partial<Agenda>): Agenda => ({
   intro: a.intro ?? DEFAULT_AGENDA.intro,
-  tasks: (a.tasks ?? []).map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null })),
+  tasks: (a.tasks ?? []).map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null })),
   events: (a.events ?? []).map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null })),
 });
 
@@ -79,7 +80,7 @@ export const agendaPeople = (a: Agenda): string[] => {
 const DEFAULT_INTRO = 'Aktuálisan a 2026/27-es tanév őszi félévében az alábbi feladatok várnak ránk — az oktatói eligazító munkavázlata alapján, szabadon bővíthető és szerkeszthető.\n\nKözös célok: a legmodernebb médiadesign szak Magyarországon · erős szakmai és ipari kapcsolatok · élen járó, tudatos AI-integráció · látható hallgatói munka kifelé · korszerű eszközpark és stúdióháttér · egységes, kiszámítható működés.';
 
 // Az előtöltött tartalom a régi (szűkebb) sémával van felírva; a hiányzó mezőket lentebb pótoljuk.
-type RawTask = Omit<AgendaTask, 'people' | 'eventId'> & { people?: string[]; eventId?: string | null };
+type RawTask = Omit<AgendaTask, 'people' | 'eventId' | 'dueDate'> & { people?: string[]; eventId?: string | null; dueDate?: string | null };
 type RawEvent = Omit<AgendaEvent, 'people' | 'day'> & { people?: string[]; day?: string | null };
 
 const RAW_TASKS: RawTask[] = [
@@ -198,6 +199,6 @@ const RAW_EVENTS: RawEvent[] = [
 
 export const DEFAULT_AGENDA: Agenda = {
   intro: DEFAULT_INTRO,
-  tasks: RAW_TASKS.map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null })),
+  tasks: RAW_TASKS.map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null })),
   events: RAW_EVENTS.map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null })),
 };

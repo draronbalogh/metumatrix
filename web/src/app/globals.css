@@ -549,3 +549,31 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
   .pm-row.pm-head { display: none; }
   .pm-row .pm-name, .pm-row input:first-child { grid-column: 1 / -1; }
 }
+
+/* ---- Értesítés gomb a kártyákon ---- */
+.ag-notify { margin-top: 10px; font-family: var(--ff); font-size: .68rem; font-weight: 700; letter-spacing: .02em; padding: 5px 11px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--brand) 32%, var(--line)); background: var(--card); color: var(--brand-text); cursor: pointer; }
+.ag-notify:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
+.ev-task.notify { border-style: solid; color: var(--brand-text); border-color: color-mix(in srgb, var(--brand) 32%, var(--line)); }
+.ev-task.notify:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+/* ---- NotifyModal ---- */
+.nm-body .field { margin-bottom: 12px; }
+.nm-warn { font-size: .8rem; line-height: 1.5; color: var(--brand-text); background: var(--brand-100); border: 1px solid color-mix(in srgb, var(--brand) 30%, var(--line)); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
+.nm-warn code { font-family: var(--ff-mono); font-size: .92em; }
+.nm-groups { display: flex; flex-wrap: wrap; gap: 6px; }
+.nm-recips { max-height: 150px; overflow: auto; }
+.nm-empty { font-size: .8rem; color: var(--muted); }
+.nm-noemail { opacity: .6; }
+.chip.is-on.nm-noemail { background: var(--muted); border-color: var(--muted); }
+.nm-missing { margin-top: 6px; font-size: .74rem; color: var(--brand-text); }
+.nm-result { margin-top: 4px; font-size: .82rem; font-weight: 600; padding: 8px 11px; border-radius: 7px; }
+.nm-result.ok { color: var(--g0); background: color-mix(in srgb, var(--g0) 12%, var(--card)); }
+.nm-result.err { color: var(--brand-text); background: var(--brand-100); }
+.nm-hint { font-size: .72rem; color: var(--muted); }
+
+/* ---- PeopleModal: egyedi csoportok ---- */
+.pm-groups { display: flex; flex-direction: column; gap: 10px; }
+.pm-group { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.pm-group-head { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+.pm-group-head input { flex: 1; border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; font-size: .86rem; font-family: var(--ff); font-weight: 600; color: var(--ink); background: var(--card); }
+.pm-group-n { font-size: .68rem; color: var(--muted); font-weight: 600; flex: none; }

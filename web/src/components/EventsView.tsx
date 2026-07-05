@@ -16,9 +16,10 @@ interface Props {
   onEditTask: (id: string) => void;       // eseményhez kötött feladat megnyitása
   onAddTaskFor: (eventId: string) => void; // új feladat rögtön ehhez az eseményhez kötve
   onPerson: (name: string) => void;
+  onNotify: (id: string) => void;         // értesítés az esemény résztvevőinek
 }
 
-export default function EventsView({ agenda, q, instr, kindOf, onAdd, onEdit, onEditTask, onAddTaskFor, onPerson }: Props) {
+export default function EventsView({ agenda, q, instr, kindOf, onAdd, onEdit, onEditTask, onAddTaskFor, onPerson, onNotify }: Props) {
   const [mode, setMode] = useState<'list' | 'cal'>('list');
 
   const matches = (e: AgendaEvent) => {
@@ -100,6 +101,8 @@ export default function EventsView({ agenda, q, instr, kindOf, onAdd, onEdit, on
                     ))}
                     <button className="ev-task add" title="Új feladat ehhez az eseményhez"
                       onClick={(ev) => { ev.stopPropagation(); onAddTaskFor(e.id); }}>+ feladat</button>
+                    <button className="ev-task notify" title="Értesítés küldése a résztvevőknek"
+                      onClick={(ev) => { ev.stopPropagation(); onNotify(e.id); }}>✉ értesítés</button>
                   </div>
                 </div>
               </article>

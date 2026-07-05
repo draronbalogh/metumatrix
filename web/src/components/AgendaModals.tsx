@@ -67,7 +67,7 @@ interface TaskProps {
 export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClose }: TaskProps) {
   const [d, setD] = useState(() => ({
     title: task.title, summary: task.summary, ideas: task.ideas.join('\n'),
-    status: task.status as string, owner: task.owner ?? '', due: task.due ?? '',
+    status: task.status as string, owner: task.owner ?? '', due: task.due ?? '', dueDate: task.dueDate ?? '',
     eventId: task.eventId ?? '',
   }));
   const [people, setPeople] = useState<string[]>(task.people);
@@ -84,6 +84,7 @@ export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClo
       status: d.status as TaskStatus,
       owner: d.owner.trim() || null,
       due: d.due.trim() || null,
+      dueDate: d.dueDate.trim() || null,
       people,
       eventId: d.eventId || null,
     });
@@ -109,8 +110,12 @@ export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClo
             <OwnerSelect value={d.owner} roster={roster} onChange={(v) => set('owner', v)} />
           </div>
           <div className="field">
-            <label>Határidő / időzítés</label>
+            <label>Határidő / időzítés (szöveg)</label>
             <input value={d.due} onChange={(e) => set('due', e.target.value)} placeholder="pl. szeptemberre" />
+          </div>
+          <div className="field">
+            <label>Pontos határidő — emlékeztetőhöz</label>
+            <input type="date" value={d.dueDate} onChange={(e) => set('dueDate', e.target.value)} title="Ha megadod, a rendszer automatikusan emlékeztet előtte" />
           </div>
           <div className="field">
             <label>Kapcsolódó esemény</label>

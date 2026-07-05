@@ -14,3 +14,7 @@ next-env.d.ts
 .DS_Store
 *.pem
 npm-debug.log*
+
+# env / secrets (SMTP app password stays out of git)
+.env*.local
+.env

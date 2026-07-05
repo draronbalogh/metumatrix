@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { PeopleDB, Person } from '@/data/people';
+import { PeopleDB, PeopleGroup, Person } from '@/data/people';
 
 interface Props {
   teacherNames: string[]; // a tantervből — itt nem szerkeszthető, csak elérhetőség adható hozzá
@@ -24,6 +24,12 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
     return [...teacherNames.map((n) => toRow(n, byName[n])), ...extra.map((p) => toRow(p.name, p))];
   });
   const [students, setStudents] = useState<Row[]>(() => db.students.map((p) => toRow(p.name, p)));
+  const [groups, setGroups] = useState<PeopleGroup[]>(() => db.groups.map((g) => ({ name: g.name, members: [...g.members] })));
+  // választható tagok: tantervi tanárok + az itt szerkesztett hallgatók
+  const memberPool = [...teacherNames, ...students.map((s) => s.name).filter(Boolean)];
+
+  const setGroupName = (i: number, v: string) => setGroups((gs) => gs.map((g, ix) => (ix === i ? { ...g, name: v } : g)));
+  const toggleMember = (i: number, name: string) => setGroups((gs) => gs.map((g, ix) => (ix === i ? { ...g, members: g.members.includes(name) ? g.members.filter((m) => m !== name) : [...g.members, name] } : g)));
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -41,6 +47,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
       // tanárból csak azt tároljuk, akinek van elérhetősége — a névsor forrása úgyis a tanterv
       teachers: teachers.filter((r) => r.email.trim() || r.phone.trim()).map(toPerson),
       students: students.filter((r) => r.name.trim()).map(toPerson),
+      groups: groups.filter((g) => g.name.trim()).map((g) => ({ name: g.name.trim(), members: g.members })),
     });
   };
 
@@ -75,6 +82,25 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
               </div>
             ))}
             <button className="btn pm-add" onClick={() => setStudents((rows) => [...rows, { name: '', email: '', phone: '' }])}>+ Új hallgató</button>
+          </div>
+          <div className="pm-sec">✉ Egyedi csoportok · {groups.length}</div>
+          <div className="pm-note">Elnevezett email-csoportok (pl. „Kiállítás-csapat") — az Értesítés ablakban egy gombbal hozzáadhatók a címzettekhez.</div>
+          <div className="pm-groups">
+            {groups.map((g, i) => (
+              <div className="pm-group" key={i}>
+                <div className="pm-group-head">
+                  <input value={g.name} placeholder="Csoport neve" onChange={(e) => setGroupName(i, e.target.value)} />
+                  <span className="pm-group-n">{g.members.length} tag</span>
+                  <button className="btn btn--danger pm-del" title="Csoport törlése" onClick={() => setGroups((gs) => gs.filter((_, ix) => ix !== i))}>✕</button>
+                </div>
+                <div className="cat-picker pp-picker">
+                  {[...new Set(memberPool)].map((name) => (
+                    <button type="button" key={name} className={`chip${g.members.includes(name) ? ' is-on' : ''}`} onClick={() => toggleMember(i, name)}>{name}</button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <button className="btn pm-add" onClick={() => setGroups((gs) => [...gs, { name: '', members: [] }])}>+ Új csoport</button>
           </div>
         </div>
         <div className="mfoot">

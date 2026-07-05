@@ -4,7 +4,7 @@ import path from 'path';
 import { Agenda, normalizeAgenda } from '@/data/agenda';
 import { PeopleDB, normalizePeople } from '@/data/people';
 import { resolveNames } from '@/lib/recipients';
-import { sendMail, mailerConfigured } from '@/lib/mailer';
+import { sendBcc, isConfigured } from '@/lib/mailer';
 
 // Automatikus emlékeztető: az ütemező (reminder-cron) hívja a NOTIFY_SECRET fejléccel.
 // Kiszámolja az esedékes emlékeztetőket (esemény `day` / feladat `dueDate` a REMINDER_DAYS_BEFORE
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
   const secret = process.env.NOTIFY_SECRET;
   const given = req.headers.get('x-notify-secret') || new URL(req.url).searchParams.get('secret');
   if (!secret || given !== secret) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
-  if (!mailerConfigured()) return NextResponse.json({ ok: false, error: 'mailer not configured' }, { status: 503 });
+  if (!isConfigured()) return NextResponse.json({ ok: false, error: 'mailer not configured' }, { status: 503 });
 
   const agenda: Agenda = normalizeAgenda(await readJson(AGENDA, {} as Partial<Agenda>));
   const db: PeopleDB = normalizePeople(await readJson(PEOPLE, {} as Partial<PeopleDB>));
@@ -89,13 +89,13 @@ export async function POST(req: Request) {
       + `<p>Időpont: <strong>${esc(d.when)}</strong> (${whenTxt})</p>`
       + (d.place ? `<p>Helyszín: ${esc(d.place)}</p>` : '')
       + `<p style="color:#888;font-size:12px">Automatikus emlékeztető a METU Média Design tanszéki felületről.</p>`;
-    const res = await sendMail({ subject, html, bcc: emails });
-    if (res.ok) {
+    const res = await sendBcc({ subject, html, recipients: emails });
+    if (res.sent > 0) {
       state[d.key] = new Date().toISOString();
-      results.push({ key: d.key, sent: emails.length });
-      logEntries.push({ ts: new Date().toISOString(), subject, count: emails.length, to: emails, kind: 'reminder' });
+      results.push({ key: d.key, sent: res.sent });
+      logEntries.push({ ts: new Date().toISOString(), subject, sent: res.sent, failed: res.failed, kind: 'reminder' });
     } else {
-      results.push({ key: d.key, sent: 0, skipped: res.error });
+      results.push({ key: d.key, sent: 0, skipped: res.batches[0]?.error || 'küldés sikertelen' });
     }
   }
 

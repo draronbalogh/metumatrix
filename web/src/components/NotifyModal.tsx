@@ -67,8 +67,9 @@ export default function NotifyModal({ target, teacherNames, db, onClose }: Props
         body: JSON.stringify({ subject: subject.trim(), text: body, html, bcc: emails }),
       });
       const j = await r.json();
-      if (j.ok) { setResult(`✓ Elküldve ${j.sent} címzettnek.`); setTimeout(onClose, 1200); }
-      else setResult(`Hiba: ${j.error || 'ismeretlen'}`);
+      if (j.ok) { setResult(`✓ Elküldve ${j.sent} címzettnek.`); setTimeout(onClose, 1400); }
+      else if (typeof j.sent === 'number' && j.sent > 0) setResult(`Részben: ${j.sent} elment, ${j.failed} sikertelen.`);
+      else setResult(`Hiba: ${j.error || (j.failed ? `${j.failed} címzettnek nem sikerült` : 'ismeretlen')}`);
     } catch (e) { setResult(`Hiba: ${String(e)}`); }
     setSending(false);
   };

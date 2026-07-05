@@ -520,3 +520,32 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
   .ag-mode { margin-left: 0; }
   .ag-person-head .btn { margin-left: 0; }
 }
+
+/* ---- T/H badge + névjegyzék ---- */
+.pb { display: inline-grid; place-items: center; width: 13px; height: 13px; border-radius: 4px; font-size: .52rem; font-weight: 800; letter-spacing: 0; margin-right: 5px; vertical-align: 1px; }
+.pb.t { background: var(--brand-100); color: var(--brand-text); }
+.pb.h { background: var(--g1-100); color: var(--g1); }
+.ag-pp .pb { margin-right: 4px; }
+.ag-pp.is-on .pb.t, .ag-pp.is-on .pb.h { background: rgba(255, 255, 255, .25); color: #fff; }
+.chip.is-on .pb.t, .chip.is-on .pb.h { background: rgba(255, 255, 255, .25); color: #fff; }
+.pp-picker { max-height: 190px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+
+.modal--wide { width: min(720px, 100%); }
+.pm-body { padding: 14px 20px 6px; }
+.pm-note { font-size: .78rem; color: var(--ink-2); line-height: 1.5; padding: 9px 12px; background: var(--paper-2); border-radius: 8px; margin-bottom: 13px; }
+.pm-sec { display: flex; align-items: center; gap: 7px; font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 14px 0 7px; }
+.pm-sec .pb { width: 15px; height: 15px; font-size: .58rem; margin: 0; }
+.pm-rows { display: flex; flex-direction: column; gap: 5px; }
+.pm-row { display: grid; grid-template-columns: minmax(120px, 1.1fr) 1.4fr 1fr 30px; gap: 7px; align-items: center; }
+.pm-row.pm-head span { font-size: .58rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.pm-name { font-size: .84rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pm-row input { border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; font-size: .82rem; font-family: var(--ff); color: var(--ink); background: var(--card); min-width: 0; }
+.pm-row input:focus { outline: 2px solid color-mix(in srgb, var(--brand) 35%, transparent); outline-offset: 1px; border-color: var(--brand); }
+.pm-del { padding: 5px 8px; }
+.pm-add { align-self: flex-start; margin-top: 4px; }
+
+@media (max-width: 720px) {
+  .pm-row { grid-template-columns: 1fr 1fr; grid-auto-rows: auto; }
+  .pm-row.pm-head { display: none; }
+  .pm-row .pm-name, .pm-row input:first-child { grid-column: 1 / -1; }
+}

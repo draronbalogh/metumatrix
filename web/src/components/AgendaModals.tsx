@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { AgendaEvent, AgendaTask, STATUS_LABEL, STATUS_ORDER, TaskStatus } from '@/data/agenda';
+import { RosterEntry } from '@/data/people';
 
 function useEsc(onClose: () => void) {
   useEffect(() => {
@@ -11,27 +12,68 @@ function useEsc(onClose: () => void) {
   }, [onClose]);
 }
 
-// ---- Feladat ----
+// Felelős-választó: egyetlen név az állandó listából (tanterv-tanárok + hallgatók)
+function OwnerSelect({ value, roster, onChange }: { value: string; roster: RosterEntry[]; onChange: (v: string) => void }) {
+  const teachers = roster.filter((r) => r.kind === 'T');
+  const students = roster.filter((r) => r.kind === 'H');
+  const known = roster.some((r) => r.name === value);
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value)}>
+      <option value="">— nincs —</option>
+      {value && !known && <option value={value}>{value} (régi bejegyzés)</option>}
+      <optgroup label="Tanárok">
+        {teachers.map((r) => <option key={r.name} value={r.name}>{r.name}</option>)}
+      </optgroup>
+      {students.length > 0 && (
+        <optgroup label="Hallgatók">
+          {students.map((r) => <option key={r.name} value={r.name}>{r.name}</option>)}
+        </optgroup>
+      )}
+    </select>
+  );
+}
 
-const toNames = (v: string): string[] => v.split(',').map((s) => s.trim()).filter(Boolean);
+// Résztvevő-választó: több név ugyanabból az állandó listából, T/H badge-dzsel
+function PeoplePicker({ selected, roster, onToggle }: { selected: string[]; roster: RosterEntry[]; onToggle: (name: string) => void }) {
+  const legacy = selected.filter((n) => !roster.some((r) => r.name === n));
+  return (
+    <div className="cat-picker pp-picker">
+      {roster.map((r) => (
+        <button type="button" key={r.name} className={`chip${selected.includes(r.name) ? ' is-on' : ''}`}
+          onClick={() => onToggle(r.name)}>
+          <span className={`pb ${r.kind === 'T' ? 't' : 'h'}`}>{r.kind}</span>{r.name}
+        </button>
+      ))}
+      {legacy.map((n) => (
+        <button type="button" key={n} className="chip is-on" title="Régi, listán kívüli bejegyzés — kattintva lekerül"
+          onClick={() => onToggle(n)}>{n}</button>
+      ))}
+    </div>
+  );
+}
+
+// ---- Feladat ----
 
 interface TaskProps {
   task: AgendaTask;
   isNew: boolean;
   events: { id: string; title: string }[];
+  roster: RosterEntry[];
   onSave: (t: AgendaTask) => void;
   onDelete: () => void;
   onClose: () => void;
 }
 
-export function TaskModal({ task, isNew, events, onSave, onDelete, onClose }: TaskProps) {
+export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClose }: TaskProps) {
   const [d, setD] = useState(() => ({
     title: task.title, summary: task.summary, ideas: task.ideas.join('\n'),
     status: task.status as string, owner: task.owner ?? '', due: task.due ?? '',
-    people: task.people.join(', '), eventId: task.eventId ?? '',
+    eventId: task.eventId ?? '',
   }));
+  const [people, setPeople] = useState<string[]>(task.people);
   useEsc(onClose);
   const set = (k: keyof typeof d, v: string) => setD((p) => ({ ...p, [k]: v }));
+  const togglePerson = (name: string) => setPeople((p) => (p.includes(name) ? p.filter((n) => n !== name) : [...p, name]));
   const save = () => {
     if (!d.title.trim()) return;
     onSave({
@@ -42,7 +84,7 @@ export function TaskModal({ task, isNew, events, onSave, onDelete, onClose }: Ta
       status: d.status as TaskStatus,
       owner: d.owner.trim() || null,
       due: d.due.trim() || null,
-      people: toNames(d.people),
+      people,
       eventId: d.eventId || null,
     });
   };
@@ -63,8 +105,8 @@ export function TaskModal({ task, isNew, events, onSave, onDelete, onClose }: Ta
             </select>
           </div>
           <div className="field">
-            <label>Felelős</label>
-            <input value={d.owner} onChange={(e) => set('owner', e.target.value)} placeholder="pl. Tamás" />
+            <label>Felelős — az állandó listából</label>
+            <OwnerSelect value={d.owner} roster={roster} onChange={(v) => set('owner', v)} />
           </div>
           <div className="field">
             <label>Határidő / időzítés</label>
@@ -78,8 +120,8 @@ export function TaskModal({ task, isNew, events, onSave, onDelete, onClose }: Ta
             </select>
           </div>
           <div className="field full">
-            <label>Résztvevők — oktatók, hallgatók (vesszővel)</label>
-            <input value={d.people} onChange={(e) => set('people', e.target.value)} placeholder="pl. Kiss Lőrinc, Kovács Ajda" />
+            <label>Résztvevők — tanárok (T) és hallgatók (H), többet is választhatsz</label>
+            <PeoplePicker selected={people} roster={roster} onToggle={togglePerson} />
           </div>
           <div className="field full">
             <label>Rövid összefoglaló — a kártyán ez látszik</label>
@@ -106,19 +148,21 @@ export function TaskModal({ task, isNew, events, onSave, onDelete, onClose }: Ta
 interface EventProps {
   event: AgendaEvent;
   isNew: boolean;
+  roster: RosterEntry[];
   onSave: (e: AgendaEvent) => void;
   onDelete: () => void;
   onClose: () => void;
 }
 
-export function EventModal({ event, isNew, onSave, onDelete, onClose }: EventProps) {
+export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: EventProps) {
   const [d, setD] = useState(() => ({
     title: event.title, when: event.when, sort: event.sort ?? '', day: event.day ?? '',
     note: event.note ?? '', place: event.place ?? '', owner: event.owner ?? '',
-    people: event.people.join(', '),
   }));
+  const [people, setPeople] = useState<string[]>(event.people);
   useEsc(onClose);
   const set = (k: keyof typeof d, v: string) => setD((p) => ({ ...p, [k]: v }));
+  const togglePerson = (name: string) => setPeople((p) => (p.includes(name) ? p.filter((n) => n !== name) : [...p, name]));
   const save = () => {
     if (!d.title.trim()) return;
     onSave({
@@ -130,7 +174,7 @@ export function EventModal({ event, isNew, onSave, onDelete, onClose }: EventPro
       note: d.note.trim() || null,
       place: d.place.trim() || null,
       owner: d.owner.trim() || null,
-      people: toNames(d.people),
+      people,
     });
   };
 
@@ -160,12 +204,12 @@ export function EventModal({ event, isNew, onSave, onDelete, onClose }: EventPro
             <input value={d.place} onChange={(e) => set('place', e.target.value)} placeholder="pl. Linz" />
           </div>
           <div className="field">
-            <label>Felelős</label>
-            <input value={d.owner} onChange={(e) => set('owner', e.target.value)} />
+            <label>Felelős — az állandó listából</label>
+            <OwnerSelect value={d.owner} roster={roster} onChange={(v) => set('owner', v)} />
           </div>
-          <div className="field">
-            <label>Résztvevők (vesszővel)</label>
-            <input value={d.people} onChange={(e) => set('people', e.target.value)} placeholder="oktatók, hallgatók" />
+          <div className="field full">
+            <label>Résztvevők — tanárok (T) és hallgatók (H), többet is választhatsz</label>
+            <PeoplePicker selected={people} roster={roster} onToggle={togglePerson} />
           </div>
           <div className="field full">
             <label>Leírás</label>

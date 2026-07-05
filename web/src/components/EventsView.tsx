@@ -2,12 +2,15 @@
 
 import { useState } from 'react';
 import { Agenda, AgendaEvent, STATUS_LABEL, eventHasPerson } from '@/data/agenda';
+import { PersonKind } from '@/data/people';
 import EventsCalendar from './EventsCalendar';
+import { PersonChip } from './AgendaView';
 
 interface Props {
   agenda: Agenda;
   q: string;
   instr: string;                          // aktív név-szűrő — üres = mindenki
+  kindOf: Record<string, PersonKind>;     // név -> Tanár/Hallgató badge
   onAdd: () => void;
   onEdit: (id: string) => void;
   onEditTask: (id: string) => void;       // eseményhez kötött feladat megnyitása
@@ -15,7 +18,7 @@ interface Props {
   onPerson: (name: string) => void;
 }
 
-export default function EventsView({ agenda, q, instr, onAdd, onEdit, onEditTask, onAddTaskFor, onPerson }: Props) {
+export default function EventsView({ agenda, q, instr, kindOf, onAdd, onEdit, onEditTask, onAddTaskFor, onPerson }: Props) {
   const [mode, setMode] = useState<'list' | 'cal'>('list');
 
   const matches = (e: AgendaEvent) => {
@@ -81,12 +84,10 @@ export default function EventsView({ agenda, q, instr, onAdd, onEdit, onEditTask
                     <div className="cc-meta">
                       {e.place && <span className="cc-tag">📍 {e.place}</span>}
                       {e.owner && (
-                        <button className={`ag-pp${instr === e.owner ? ' is-on' : ''}`} title={`Szűrés rá: ${e.owner} (felelős)`}
-                          onClick={(ev) => { ev.stopPropagation(); onPerson(e.owner as string); }}>★ {e.owner}</button>
+                        <PersonChip name={e.owner} star on={instr === e.owner} kind={kindOf[e.owner]} onClick={() => onPerson(e.owner as string)} />
                       )}
                       {e.people.map((p) => (
-                        <button key={p} className={`ag-pp${instr === p ? ' is-on' : ''}`} title={`Szűrés rá: ${p}`}
-                          onClick={(ev) => { ev.stopPropagation(); onPerson(p); }}>{p}</button>
+                        <PersonChip key={p} name={p} on={instr === p} kind={kindOf[p]} onClick={() => onPerson(p)} />
                       ))}
                     </div>
                   )}

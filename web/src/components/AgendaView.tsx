@@ -1,12 +1,14 @@
 'use client';
 
 import { Agenda, AgendaTask, STATUS_LABEL, STATUS_ORDER, taskHasPerson, eventHasPerson } from '@/data/agenda';
+import { PersonKind } from '@/data/people';
 
 interface Props {
   agenda: Agenda;
   q: string;
   instr: string;                       // aktív név-szűrő (oktató vagy hallgató) — üres = mindenki
   taught: string[];                    // a szűrt személy tanított tárgyai (tantervből)
+  kindOf: Record<string, PersonKind>;  // név -> Tanár/Hallgató badge
   onAdd: () => void;
   onEdit: (id: string) => void;
   onCycle: (id: string) => void;
@@ -14,9 +16,19 @@ interface Props {
   onPerson: (name: string) => void;    // név-szűrő ki/be
 }
 
+export function PersonChip({ name, star, on, kind, onClick }: { name: string; star?: boolean; on: boolean; kind?: PersonKind; onClick: () => void }) {
+  return (
+    <button className={`ag-pp${on ? ' is-on' : ''}`} title={`Szűrés rá: ${name}${star ? ' (felelős)' : ''}`}
+      onClick={(e) => { e.stopPropagation(); onClick(); }}>
+      {kind && <span className={`pb ${kind === 'T' ? 't' : 'h'}`}>{kind}</span>}
+      {star ? '★ ' : ''}{name}
+    </button>
+  );
+}
+
 const IDEAS_ON_CARD = 3;
 
-export default function AgendaView({ agenda, q, instr, taught, onAdd, onEdit, onCycle, onEditIntro, onPerson }: Props) {
+export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, onEdit, onCycle, onEditIntro, onPerson }: Props) {
   const matches = (t: AgendaTask) => {
     if (instr && !taskHasPerson(t, instr)) return false;
     if (!q) return true;
@@ -99,12 +111,10 @@ export default function AgendaView({ agenda, q, instr, taught, onAdd, onEdit, on
                   {(t.owner || t.due || t.people.length > 0 || t.eventId) && (
                     <div className="cc-meta">
                       {t.owner && (
-                        <button className={`ag-pp${instr === t.owner ? ' is-on' : ''}`} title={`Szűrés rá: ${t.owner} (felelős)`}
-                          onClick={(e) => { e.stopPropagation(); onPerson(t.owner as string); }}>★ {t.owner}</button>
+                        <PersonChip name={t.owner} star on={instr === t.owner} kind={kindOf[t.owner]} onClick={() => onPerson(t.owner as string)} />
                       )}
                       {t.people.map((p) => (
-                        <button key={p} className={`ag-pp${instr === p ? ' is-on' : ''}`} title={`Szűrés rá: ${p}`}
-                          onClick={(e) => { e.stopPropagation(); onPerson(p); }}>{p}</button>
+                        <PersonChip key={p} name={p} on={instr === p} kind={kindOf[p]} onClick={() => onPerson(p)} />
                       ))}
                       {t.due && <span className="cc-tag ea">⏱ {t.due}</span>}
                       {t.eventId && eventTitle(t.eventId) && <span className="cc-tag ev">▤ {eventTitle(t.eventId)}</span>}

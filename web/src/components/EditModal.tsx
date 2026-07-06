@@ -169,7 +169,7 @@ export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete
           <div className="f-sec">Tartalom</div>
           <div className="field full">
             <label>A tárgy célja</label>
-            <textarea rows={2} value={d.cel} onChange={(e) => set('cel', e.target.value)} placeholder="a tárgy célja, tanulási eredmények" />
+            <textarea rows={4} value={d.cel} onChange={(e) => set('cel', e.target.value)} placeholder="a tárgy célja, tanulási eredmények" />
           </div>
           <div className="field full">
             <label>Rövid leírás — a kártyán ez látszik (max ~110 karakter)</label>
@@ -177,7 +177,7 @@ export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete
           </div>
           <div className="field full">
             <label>Összegzés — a részletek panelen látszik</label>
-            <textarea rows={3} value={d.description} onChange={(e) => set('description', e.target.value)} placeholder="néhány mondatos összefoglaló a tárgyról" />
+            <textarea rows={6} value={d.description} onChange={(e) => set('description', e.target.value)} placeholder="néhány mondatos összefoglaló a tárgyról" />
           </div>
           <div className="field full">
             <label>Szoftverek (vesszővel)</label>

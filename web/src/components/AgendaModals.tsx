@@ -130,11 +130,11 @@ export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClo
           </div>
           <div className="field full">
             <label>Rövid összefoglaló — a kártyán ez látszik</label>
-            <textarea rows={2} value={d.summary} onChange={(e) => set('summary', e.target.value)} placeholder="miről szól a feladat" />
+            <textarea rows={3} value={d.summary} onChange={(e) => set('summary', e.target.value)} placeholder="miről szól a feladat" />
           </div>
           <div className="field full">
             <label>Ötletek / teendők — soronként egy</label>
-            <textarea rows={6} value={d.ideas} onChange={(e) => set('ideas', e.target.value)} placeholder={'első lépés\nmásodik lépés'} />
+            <textarea rows={8} value={d.ideas} onChange={(e) => set('ideas', e.target.value)} placeholder={'első lépés\nmásodik lépés'} />
           </div>
         </form>
         <div className="mfoot">
@@ -218,7 +218,7 @@ export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: 
           </div>
           <div className="field full">
             <label>Leírás</label>
-            <textarea rows={3} value={d.note} onChange={(e) => set('note', e.target.value)} placeholder="mire kell készülni, mi kapcsolódik hozzá" />
+            <textarea rows={4} value={d.note} onChange={(e) => set('note', e.target.value)} placeholder="mire kell készülni, mi kapcsolódik hozzá" />
           </div>
         </form>
         <div className="mfoot">
@@ -250,7 +250,7 @@ export function IntroModal({ intro, onSave, onClose }: IntroProps) {
         <form className="f" onSubmit={(e) => { e.preventDefault(); onSave(v); }}>
           <div className="field full">
             <label>A Feladatok oldal tetején megjelenő szöveg</label>
-            <textarea autoFocus rows={7} value={v} onChange={(e) => setV(e.target.value)} />
+            <textarea autoFocus rows={9} value={v} onChange={(e) => setV(e.target.value)} />
           </div>
         </form>
         <div className="mfoot">

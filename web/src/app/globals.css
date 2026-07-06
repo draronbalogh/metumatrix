@@ -328,6 +328,7 @@ body {
 .field.full { grid-column: 1 / -1; }
 .field label { font-size: .64rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
 .field input, .field select, .field textarea { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: .9rem; font-family: var(--ff); color: var(--ink); background: var(--card); resize: vertical; }
+.field textarea { min-height: 104px; line-height: 1.55; padding: 10px 12px; }
 .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid color-mix(in srgb, var(--brand) 35%, transparent); outline-offset: 1px; border-color: var(--brand); }
 .mfoot { flex: none; display: flex; gap: 8px; padding: 13px 20px 16px; align-items: center; border-top: 1px solid var(--line); background: var(--card); }
 .mfoot .sp { margin-left: auto; }

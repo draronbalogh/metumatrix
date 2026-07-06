@@ -224,6 +224,9 @@ body {
 .map-tools { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
 .map-tools .btn--on { background: var(--brand); color: #fff; border-color: var(--brand); }
 .map-tools .btn--on:hover { background: var(--brand); color: #fff; }
+/* Igazítás gomb: élénk narancs + fekete betű, hogy ne olvadjon a rácsba */
+.map-tools .alignbtn { background: #f5850c; border-color: #c96707; color: #1a1206; font-weight: 800; box-shadow: 0 2px 8px rgba(180, 90, 0, .28); }
+.map-tools .alignbtn:hover { background: #ff9d24; border-color: #c96707; color: #000; }
 
 /* ============================================================
    CATALOG VIEW
@@ -284,7 +287,11 @@ body {
    Details drawer + modal
    ============================================================ */
 .drawer-scrim { position: fixed; inset: 0; background: rgba(21, 23, 26, .3); z-index: 70; }
-.drawer { position: fixed; right: 0; top: 0; bottom: 0; width: min(400px, 92vw); background: var(--paper); border-left: 1px solid var(--line); box-shadow: -16px 0 50px rgba(16, 17, 20, .14); z-index: 75; padding: 22px 22px 30px; overflow: auto; }
+.drawer { position: fixed; right: 0; top: 0; bottom: 0; width: min(460px, 94vw); background: var(--paper); border-left: 1px solid var(--line); box-shadow: -16px 0 50px rgba(16, 17, 20, .14); z-index: 75; display: flex; flex-direction: column; overflow: hidden; }
+.dr-top { flex: none; position: relative; padding: 20px 22px 15px; background: var(--card); border-bottom: 1px solid var(--line); }
+.dr-scroll { flex: 1 1 auto; overflow-y: auto; padding: 16px 22px 12px; }
+.dr-foot { flex: none; padding: 12px 22px 16px; border-top: 1px solid var(--line); background: var(--card); }
+.dr-edit-top { width: 100%; justify-content: center; text-align: center; margin-top: 13px; }
 .drawer-x { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border: 1px solid var(--line); background: var(--card); border-radius: 8px; cursor: pointer; font-size: .9rem; }
 .dr-eyebrow { font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--brand-text); }
 .dr-name { margin: 6px 36px 0 0; font-family: var(--ff-display); font-size: 1.4rem; font-weight: 700; line-height: 1.1; letter-spacing: var(--head-ls); }
@@ -307,18 +314,22 @@ body {
 .cat-picker { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 0; }
 .dr-pdf { display: flex; width: 100%; justify-content: center; text-align: center; margin-bottom: 10px; text-decoration: none; border-color: color-mix(in srgb, var(--brand) 32%, var(--line)); color: var(--brand-text); font-weight: 600; }
 .dr-pdf:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
-.dr-edit { width: 100%; justify-content: center; margin-top: 8px; text-align: center; }
+.dr-edit { width: 100%; justify-content: center; margin: 0; text-align: center; }
 
 .ovl { position: fixed; inset: 0; background: rgba(21, 23, 26, .42); display: flex; z-index: 80; align-items: center; justify-content: center; padding: 20px; }
-.modal { background: var(--card); border: 1px solid var(--line); border-radius: 14px; width: min(560px, 100%); max-height: 90vh; overflow: auto; box-shadow: 0 30px 80px rgba(16, 17, 20, .28); }
-.modal h3 { margin: 0; padding: 17px 20px 14px; font-family: var(--ff-display); font-size: 1.15rem; font-weight: 700; letter-spacing: var(--head-ls); border-bottom: 1px solid var(--line); }
-.f { padding: 16px 20px 4px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+.modal { background: var(--card); border: 1px solid var(--line); border-radius: 14px; width: min(560px, 100%); max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 30px 80px rgba(16, 17, 20, .28); }
+.modal h3 { flex: none; margin: 0; padding: 17px 20px 14px; font-family: var(--ff-display); font-size: 1.15rem; font-weight: 700; letter-spacing: var(--head-ls); border-bottom: 1px solid var(--line); }
+/* a törzs görget, a fejléc és a lábléc rögzített marad — a Mentés mindig elérhető görgetés nélkül */
+.modal > .f, .modal > .pm-body { flex: 1 1 auto; overflow-y: auto; min-height: 0; }
+.f { padding: 16px 20px 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+.f-sec { grid-column: 1 / -1; font-size: .62rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: var(--brand-text); margin: 13px 0 1px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.f-sec:first-child { margin-top: 2px; }
 .field { display: flex; flex-direction: column; gap: 4px; }
 .field.full { grid-column: 1 / -1; }
 .field label { font-size: .64rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
 .field input, .field select, .field textarea { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: .9rem; font-family: var(--ff); color: var(--ink); background: var(--card); resize: vertical; }
 .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid color-mix(in srgb, var(--brand) 35%, transparent); outline-offset: 1px; border-color: var(--brand); }
-.mfoot { display: flex; gap: 8px; padding: 14px 20px 20px; align-items: center; }
+.mfoot { flex: none; display: flex; gap: 8px; padding: 13px 20px 16px; align-items: center; border-top: 1px solid var(--line); background: var(--card); }
 .mfoot .sp { margin-left: auto; }
 
 /* ============================================================

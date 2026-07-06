@@ -17,7 +17,7 @@ const nodeTypes = { program: ProgramNode, semester: SemesterNode, course: Course
 // darabjai függőlegesen összeérnek, így csoportonként EGY összefüggő színes terület rajzolódik ki
 // (Közös / Multimédia / Játéktervezés / külső elméleti). Akkor jelenik meg, ha a nézetben
 // legalább KÉT különböző csoport van (MA-n pl. közös + ELM) — egyetlen csoportnál csak zaj lenne.
-const CARD_W = 248, FR_PADX = 14, FR_PADT = 20, FR_CARDH = 250, FR_PADB = 8;
+const CARD_W = 248, FR_PADX = 14, FR_PADT = 20, FR_CARDH = 288, FR_PADB = 8;
 const ZONE_LABEL: Record<number, string> = { 0: 'Közös tárgyak', 1: GROUP_LABEL[1], 2: GROUP_LABEL[2], 3: GROUP_LABEL[3] };
 function buildZones(nodes: Node[]): Node[] {
   const box: Record<string, { minX: number; maxX: number; minY: number; g: number }> = {};
@@ -266,7 +266,7 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
               onClick={onToggleLock}
               title={locked ? 'Az elrendezés zárolva: a kártyák és kapcsolatok nem mozdulnak, csak pásztázni/zoomolni lehet. Kattints a feloldáshoz.' : 'Az elrendezés szabad: a kártyák húzhatók, kapcsolatok köthetők. Kattints a zároláshoz (nézelődéshez ajánlott).'}
             >{locked ? '🔒 Zárolva' : '🔓 Szabad'}</button>
-            {!locked && <button className="btn" onClick={onAlign} title="A node-okat sorba/oszlopba igazítja (vízszintesen egy vonalba, függőlegesen rácsra), a mozgatásokat megtartva">⌗ Igazítás</button>}
+            {!locked && <button className="btn alignbtn" onClick={onAlign} title="A node-okat sorba/oszlopba igazítja (vízszintesen egy vonalba, függőlegesen rácsra), a mozgatásokat megtartva">⌗ Igazítás</button>}
           </div>
         </Panel>
       </ReactFlow>

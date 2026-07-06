@@ -17,8 +17,8 @@ export const GRID = 24;
 const PROG_X = -288;
 const HEADER_X = 0;
 export const COURSE_X0 = 280;
-export const STEP_X = 320;
-export const ROW_H = 296;
+export const STEP_X = 344;   // kártya-szélesség 248 -> ~96px vízszintes térköz
+export const ROW_H = 352;    // max kártya ~272 -> a felirat és a sor közé ~50px levegő
 const CARD_TOP = 40;
 
 const buildEdge = {

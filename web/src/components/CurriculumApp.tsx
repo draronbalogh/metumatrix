@@ -121,6 +121,10 @@ export default function CurriculumApp() {
     document.documentElement.dataset.preset = preset;
     try { localStorage.setItem(PRESET_KEY, preset); } catch { /* ignore */ }
   }, [preset]);
+  // ha nem a mátrixon vagyunk, az elrendezés-zárolás azonnal bekapcsol (véletlen mozgatás ellen)
+  useEffect(() => {
+    if (view !== 'map') setLocked(true);
+  }, [view]);
 
   const dataRef = useRef(data);
   dataRef.current = data;
@@ -540,10 +544,14 @@ export default function CurriculumApp() {
           <>
             <div className="drawer-scrim" onClick={() => setDetails(null)} />
             <aside className="drawer">
-              <button className="drawer-x" onClick={() => setDetails(null)}>✕</button>
-              <div className="dr-eyebrow">{c.program} · {semLabel(c.semester)} · {x.type}</div>
-              <h2 className="dr-name">{x.name}</h2>
-              {x.specialization && <div className="dr-spec">{x.specialization}</div>}
+              <div className="dr-top">
+                <button className="drawer-x" onClick={() => setDetails(null)}>✕</button>
+                <div className="dr-eyebrow">{c.program} · {semLabel(c.semester)} · {x.type}</div>
+                <h2 className="dr-name">{x.name}</h2>
+                {x.specialization && <div className="dr-spec">{x.specialization}</div>}
+                <button className="btn btn--ink dr-edit-top" onClick={() => { setEditor({ ci: details.ci, xi: details.xi }); setDetails(null); }}>✎ Szerkesztés</button>
+              </div>
+              <div className="dr-scroll">
               {catList(x).length > 0 && (
                 <div className="dr-chips dr-cats">
                   {catList(x).map((k) => (
@@ -569,7 +577,10 @@ export default function CurriculumApp() {
               {x.requirement && <div className="dr-field"><h4>Követelmény</h4><p>{x.requirement}</p></div>}
               {x.note && <div className="dr-field"><h4>Megjegyzés</h4><p>{x.note}</p></div>}
               {x.pdfUrl && <a className="btn dr-pdf" href={x.pdfUrl} target="_blank" rel="noopener noreferrer">📄 Hivatalos tantárgyi leírás (PDF) ↗</a>}
-              <button className="btn btn--ink dr-edit" onClick={() => { setEditor({ ci: details.ci, xi: details.xi }); setDetails(null); }}>✎ Szerkesztés</button>
+              </div>
+              <div className="dr-foot">
+                <button className="btn btn--ink dr-edit" onClick={() => { setEditor({ ci: details.ci, xi: details.xi }); setDetails(null); }}>✎ Szerkesztés</button>
+              </div>
             </aside>
           </>
         );

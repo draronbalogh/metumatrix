@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { PeopleDB, PeopleGroup, Person } from '@/data/people';
+import { PeopleDB, PeopleGroup, Person, normalizePhone } from '@/data/people';
 
 interface Props {
   teacherNames: string[]; // a tantervből — itt nem szerkeszthető, csak elérhetőség adható hozzá
@@ -13,7 +13,7 @@ interface Props {
 interface Row { name: string; email: string; phone: string; }
 
 const toRow = (name: string, p?: Person): Row => ({ name, email: p?.email ?? '', phone: p?.phone ?? '' });
-const toPerson = (r: Row): Person => ({ name: r.name.trim(), email: r.email.trim() || null, phone: r.phone.trim() || null });
+const toPerson = (r: Row): Person => ({ name: r.name.trim(), email: r.email.trim() || null, phone: normalizePhone(r.phone.trim() || null) });
 
 export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props) {
   const [teachers, setTeachers] = useState<Row[]>(() => {

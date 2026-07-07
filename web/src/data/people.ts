@@ -29,9 +29,23 @@ export interface RosterEntry {
 
 export const DEFAULT_PEOPLE: PeopleDB = { teachers: [], students: [], groups: [] };
 
+// Telefonszám-normalizálás: minden magyar szám +36-tal kezdődjön (06/0036/36 helyett).
+export const normalizePhone = (phone: string | null): string | null => {
+  if (!phone) return null;
+  const t = phone.replace(/[\s\-()./]/g, '');
+  if (!t) return null;
+  if (t.startsWith('+36')) return t;
+  if (t.startsWith('0036')) return '+36' + t.slice(4);
+  if (t.startsWith('06')) return '+36' + t.slice(2);
+  if (/^36\d{8,}$/.test(t)) return '+' + t;
+  return t; // külföldi vagy egyéb formátum — hagyjuk békén
+};
+
+const normPerson = (x: Person): Person => ({ name: x.name, email: x.email ?? null, phone: normalizePhone(x.phone ?? null) });
+
 export const normalizePeople = (p: Partial<PeopleDB>): PeopleDB => ({
-  teachers: (p.teachers ?? []).filter((x) => x && x.name),
-  students: (p.students ?? []).filter((x) => x && x.name),
+  teachers: (p.teachers ?? []).filter((x) => x && x.name).map(normPerson),
+  students: (p.students ?? []).filter((x) => x && x.name).map(normPerson),
   groups: (p.groups ?? []).filter((g) => g && g.name).map((g) => ({ name: g.name, members: g.members ?? [] })),
 });
 

@@ -490,9 +490,12 @@ export default function CurriculumApp() {
       </div>
 
         <div className="viewport">
-          {view === 'map' ? (
-            <MapView data={data} filter={filter} handlers={handlers} persist={persist} theme={theme} view={vp} locked={locked} onToggleLock={toggleLock} />
-          ) : view === 'catalog' ? (
+          {/* A Mátrix mindig mountolva marad (csak elrejtjük), hogy nézetváltáskor a zoom/pásztázás
+              megőrződjön és ne igazítson újra — csak betöltéskor / ver-prog váltáskor illesztünk. */}
+          <div className="view-pane" style={{ display: view === 'map' ? 'block' : 'none' }}>
+            <MapView data={data} filter={filter} handlers={handlers} persist={persist} theme={theme} view={vp} locked={locked} onToggleLock={toggleLock} active={view === 'map'} />
+          </div>
+          {view === 'catalog' ? (
             <CatalogView data={data} filter={filter} view={vp} onDetails={onDetails} onEdit={onEdit} onAdd={onAdd} onInstructor={onInstructor} onCategory={onCategory} onCatEdit={onCatEdit} />
           ) : view === 'tasks' ? (
             <AgendaView
@@ -506,7 +509,7 @@ export default function CurriculumApp() {
               onToggleDoing={toggleDoing}
               onCyclePriority={cyclePriority}
             />
-          ) : (
+          ) : view === 'events' ? (
             <EventsView
               agenda={agenda} q={q} instr={instr} kindOf={kindOf}
               onAdd={() => setEventEdit({ e: emptyEvent(), isNew: true })}
@@ -516,7 +519,7 @@ export default function CurriculumApp() {
               onPerson={onInstructor}
               onNotify={notifyEvent}
             />
-          )}
+          ) : null}
         </div>
       </div>
 

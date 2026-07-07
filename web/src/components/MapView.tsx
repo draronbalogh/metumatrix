@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactFlow, {
   Background, BackgroundVariant, Controls, MiniMap, MarkerType, Panel, ConnectionLineType, SelectionMode,
   ReactFlowProvider, useNodesState, useEdgesState, useReactFlow,
@@ -96,9 +96,10 @@ interface Props {
   view: View;
   locked: boolean;
   onToggleLock: () => void;
+  active: boolean;   // a Mátrix épp látszik-e (nézetváltáskor nem mountolunk újra, csak ezt kapcsoljuk)
 }
 
-function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleLock }: Props) {
+function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleLock, active }: Props) {
   const dark = theme === 'dark';
   const [legendOpen, setLegendOpen] = useState(false);
   const [edgeMenu, setEdgeMenu] = useState<{ id: string; x: number; y: number; look: EdgeLook } | null>(null);
@@ -150,10 +151,20 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
     }
     rf.fitView({ padding: 0.1, duration });
   }, [rf]);
+  // Igazítás CSAK az első megjelenítéskor, illetve ha közben verziót/programot váltottunk.
+  // Nézetek közti oda-vissza lépkedésnél (ugyanaz a ver/prog) NEM igazítunk újra, hogy a
+  // felhasználó zoom/pásztázás pozíciója megmaradjon. (A komponens mountolva marad, csak
+  // rejtjük — így a ReactFlow viewport állapota is megőrződik.)
+  const lastFitKey = useRef<string | null>(null);
   useEffect(() => {
-    const t = setTimeout(() => smartFit(300), 90);
+    if (!active) return;
+    const key = `${view.ver}|${view.prog}`;
+    if (lastFitKey.current === key) return;
+    // a kulcsot CSAK a tényleges illesztéskor jegyezzük fel (Strict Mode dupla-mount ellen):
+    // így a nézetváltás nem igazít újra, de a betöltés/ver-prog váltás igen.
+    const t = setTimeout(() => { lastFitKey.current = key; smartFit(300); }, 90);
     return () => clearTimeout(t);
-  }, [smartFit, view.ver, view.prog]);
+  }, [active, smartFit, view.ver, view.prog]);
   // jelentős szélesség-változásnál (pl. telefon elforgatása) újraigazítás — a magasság-változást
   // (mobil billentyűzet felugrása) szándékosan figyelmen kívül hagyjuk
   useEffect(() => {

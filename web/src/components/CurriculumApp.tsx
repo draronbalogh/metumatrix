@@ -28,7 +28,6 @@ const AGENDA_LS_KEY = 'md-agenda-v1';
 const PEOPLE_LS_KEY = 'md-people-v1';
 const THEME_KEY = 'md-theme';
 const PRESET_KEY = 'md-preset';
-const LOCK_KEY = 'md-locked';
 type Preset = 'neue' | 'tordeles' | 'muszerfal' | 'muterem';
 const PRESETS: { id: Preset; label: string }[] = [
   { id: 'muszerfal', label: 'Műszerfal — modern app' },
@@ -59,7 +58,7 @@ export default function CurriculumApp() {
   const [editor, setEditor] = useState<Ref2 | null>(null);
   const [details, setDetails] = useState<Ref2 | null>(null);
   const [toolsOpen, setToolsOpen] = useState(false);
-  const [locked, setLocked] = useState(false);
+  const [locked, setLocked] = useState(true);
   const [catMenu, setCatMenu] = useState<{ ci: number; xi: number; x: number; y: number } | null>(null);
   const [taskEdit, setTaskEdit] = useState<{ t: AgendaTask; isNew: boolean } | null>(null);
   const [eventEdit, setEventEdit] = useState<{ e: AgendaEvent; isNew: boolean } | null>(null);
@@ -105,10 +104,8 @@ export default function CurriculumApp() {
         const t = localStorage.getItem(THEME_KEY); if (t === 'dark' || t === 'light') setTheme(t);
         const p = localStorage.getItem(PRESET_KEY) as Preset | null;
         if (p && PRESETS.some((x) => x.id === p)) setPreset(p);
-        // elrendezés-zárolás: mentett érték, különben érintőkijelzőn alapból zárolva
-        const l = localStorage.getItem(LOCK_KEY);
-        if (l != null) setLocked(l === '1');
-        else if (window.matchMedia('(pointer: coarse)').matches) setLocked(true);
+        // elrendezés-zárolás: mindig zárva indul (betöltéskor/frissítéskor) a véletlen
+        // mozgatás ellen — a mentett értéket szándékosan NEM olvassuk vissza.
       } catch { /* ignore */ }
       setHydrated(true);
     })();
@@ -314,10 +311,8 @@ export default function CurriculumApp() {
       })),
     });
   }, [commit]);
-  const toggleLock = useCallback(() => setLocked((v) => {
-    try { localStorage.setItem(LOCK_KEY, v ? '0' : '1'); } catch { /* ignore */ }
-    return !v;
-  }), []);
+  // a zárolás munkamenetre szól — nem mentjük, hogy frissítéskor mindig zárva induljon
+  const toggleLock = useCallback(() => setLocked((v) => !v), []);
   const handlers = useMemo<Handlers>(() => ({ onEdit, onDetails, onAdd, onInstructor, onCategory, onCatEdit }), [onEdit, onDetails, onAdd, onInstructor, onCategory, onCatEdit]);
 
   const addEdge = useCallback((e: UserEdge) => {

@@ -95,7 +95,7 @@ export const agendaPeople = (a: Agenda): string[] => {
   return [...s];
 };
 
-const DEFAULT_INTRO = 'Aktuálisan a 2026/27-es tanév őszi félévében az alábbi feladatok várnak ránk — az oktatói eligazító munkavázlata alapján, szabadon bővíthető és szerkeszthető.\n\nKözös célok: a legmodernebb médiadesign szak Magyarországon · erős szakmai és ipari kapcsolatok · élen járó, tudatos AI-integráció · látható hallgatói munka kifelé · korszerű eszközpark és stúdióháttér · egységes, kiszámítható működés.';
+const DEFAULT_INTRO = 'Aktuálisan a 2026/27-es tanév őszi félévében az alábbi feladatok várnak ránk — az oktatói eligazító munkavázlata alapján, szabadon bővíthető és szerkeszthető.';
 
 // Az előtöltött tartalom a régi (szűkebb) sémával van felírva; a hiányzó mezőket lentebb pótoljuk.
 type RawTask = Omit<AgendaTask, 'people' | 'eventId' | 'dueDate' | 'priority' | 'category'>

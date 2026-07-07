@@ -133,7 +133,7 @@ export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete
               <option value="3">Elméleti — sárga</option>
             </select>
           </div>
-          <div className="f-sec">Óraszám, létszám, kredit</div>
+          <div className="f-sec c-yellow">Óraszám, létszám, kredit</div>
           <div className="field">
             <label>Heti óraszám</label>
             <input type="number" min={0} value={d.hours} onChange={(e) => set('hours', e.target.value)} />
@@ -150,7 +150,7 @@ export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete
             <label>Tervezett csoportszám</label>
             <input value={d.groups} onChange={(e) => set('groups', e.target.value)} placeholder="pl. 2 vagy ??" />
           </div>
-          <div className="f-sec">Felelős és oktatók</div>
+          <div className="f-sec c-blue">Felelős és oktatók</div>
           <div className="field">
             <label>Intézet</label>
             <select value={d.institute} onChange={(e) => set('institute', e.target.value)}>
@@ -166,7 +166,7 @@ export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete
             <label>Oktató(k)</label>
             <input value={d.instructors} onChange={(e) => set('instructors', e.target.value)} placeholder="oktató neve" />
           </div>
-          <div className="f-sec">Tartalom</div>
+          <div className="f-sec c-green">Tartalom</div>
           <div className="field full">
             <label>A tárgy célja</label>
             <textarea rows={4} value={d.cel} onChange={(e) => set('cel', e.target.value)} placeholder="a tárgy célja, tanulási eredmények" />
@@ -200,7 +200,7 @@ export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete
               })}
             </div>
           </div>
-          <div className="f-sec">Előfeltétel, követelmény, egyéb</div>
+          <div className="f-sec c-purple">Előfeltétel, követelmény, egyéb</div>
           <div className="field">
             <label>Előfeltétel</label>
             <input value={d.prerequisite} onChange={(e) => set('prerequisite', e.target.value)} placeholder="pl. Média design stúdiumok 1." />

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AgendaEvent, AgendaTask, STATUS_LABEL, STATUS_ORDER, TaskStatus, PRIORITY_LABEL, PRIORITY_ORDER, TaskPriority, TASK_CATEGORIES } from '@/data/agenda';
+import { AgendaEvent, AgendaTask, STATUS_LABEL, TaskStatus, PRIORITY_LABEL, TaskPriority, TASK_CATEGORIES } from '@/data/agenda';
 import { RosterEntry } from '@/data/people';
 
 function useEsc(onClose: () => void) {
@@ -30,6 +30,17 @@ function OwnerSelect({ value, roster, onChange }: { value: string; roster: Roste
         </optgroup>
       )}
     </select>
+  );
+}
+
+// Chip-választó (állapot / prioritás / kategória) — select helyett ujjbarát, színes
+function ChipRadio<T extends string>({ value, options, onChange }: { value: T; options: { v: T; label: string; cls?: string }[]; onChange: (v: T) => void }) {
+  return (
+    <div className="chipradio">
+      {options.map((o) => (
+        <button type="button" key={o.v} className={`crx${o.cls ? ` ${o.cls}` : ''}${value === o.v ? ' is-on' : ''}`} onClick={() => onChange(o.v)}>{o.label}</button>
+      ))}
+    </div>
   );
 }
 
@@ -98,52 +109,52 @@ export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClo
       <div className="modal">
         <h3>{isNew ? 'Új feladat' : 'Feladat szerkesztése'}</h3>
         <form className="f" onSubmit={(e) => { e.preventDefault(); save(); }}>
+          <div className="f-sec">Alapok</div>
           <div className="field full">
             <label>Feladat neve</label>
             <input autoFocus value={d.title} onChange={(e) => set('title', e.target.value)} required />
           </div>
-          <div className="field">
+          <div className="field full">
             <label>Állapot</label>
-            <select value={d.status} onChange={(e) => set('status', e.target.value)}>
-              {STATUS_ORDER.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
-            </select>
+            <ChipRadio value={d.status} onChange={(v) => set('status', v)}
+              options={[{ v: 'todo', label: STATUS_LABEL.todo }, { v: 'doing', label: STATUS_LABEL.doing, cls: 'c-blue' }, { v: 'done', label: `✓ ${STATUS_LABEL.done}`, cls: 'c-green' }]} />
           </div>
-          <div className="field">
+          <div className="field full">
             <label>Prioritás</label>
-            <select value={d.priority} onChange={(e) => set('priority', e.target.value)}>
-              {PRIORITY_ORDER.map((p) => <option key={p} value={p}>{PRIORITY_LABEL[p]}</option>)}
-            </select>
+            <ChipRadio value={d.priority} onChange={(v) => set('priority', v)}
+              options={[{ v: 'high', label: `⚑ ${PRIORITY_LABEL.high}` }, { v: 'normal', label: PRIORITY_LABEL.normal, cls: 'c-amber' }, { v: 'low', label: PRIORITY_LABEL.low, cls: 'c-grey' }]} />
           </div>
-          <div className="field">
+          <div className="field full">
             <label>Kategória</label>
-            <select value={d.category} onChange={(e) => set('category', e.target.value)}>
-              <option value="">— nincs —</option>
-              {TASK_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
+            <ChipRadio value={d.category} onChange={(v) => set('category', d.category === v ? '' : v)}
+              options={TASK_CATEGORIES.map((c) => ({ v: c, label: c, cls: 'c-blue' }))} />
           </div>
+          <div className="f-sec c-yellow">Időzítés és kapcsolat</div>
           <div className="field">
-            <label>Felelős — az állandó listából</label>
-            <OwnerSelect value={d.owner} roster={roster} onChange={(v) => set('owner', v)} />
-          </div>
-          <div className="field">
-            <label>Határidő / időzítés (szöveg)</label>
+            <label>Határidő szövegesen</label>
             <input value={d.due} onChange={(e) => set('due', e.target.value)} placeholder="pl. szeptemberre" />
           </div>
           <div className="field">
-            <label>Pontos határidő — emlékeztetőhöz</label>
-            <input type="date" value={d.dueDate} onChange={(e) => set('dueDate', e.target.value)} title="Ha megadod, a rendszer automatikusan emlékeztet előtte" />
+            <label>Pontos határidő</label>
+            <input type="date" value={d.dueDate} onChange={(e) => set('dueDate', e.target.value)} title="Ha megadod, a rendszer emlékeztethet előtte" />
           </div>
-          <div className="field">
+          <div className="field full">
             <label>Kapcsolódó esemény</label>
             <select value={d.eventId} onChange={(e) => set('eventId', e.target.value)}>
               <option value="">— nincs —</option>
               {events.map((ev) => <option key={ev.id} value={ev.id}>{ev.title}</option>)}
             </select>
           </div>
+          <div className="f-sec c-blue">Felelős és résztvevők</div>
+          <div className="field full">
+            <label>Felelős — az állandó listából</label>
+            <OwnerSelect value={d.owner} roster={roster} onChange={(v) => set('owner', v)} />
+          </div>
           <div className="field full">
             <label>Résztvevők — tanárok (T) és hallgatók (H), többet is választhatsz</label>
             <PeoplePicker selected={people} roster={roster} onToggle={togglePerson} />
           </div>
+          <div className="f-sec c-green">Tartalom</div>
           <div className="field full">
             <label>Rövid összefoglaló — a kártyán ez látszik</label>
             <textarea rows={3} value={d.summary} onChange={(e) => set('summary', e.target.value)} placeholder="miről szól a feladat" />
@@ -204,27 +215,30 @@ export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: 
       <div className="modal">
         <h3>{isNew ? 'Új esemény' : 'Esemény szerkesztése'}</h3>
         <form className="f" onSubmit={(e) => { e.preventDefault(); save(); }}>
+          <div className="f-sec">Alapok</div>
           <div className="field full">
             <label>Esemény neve</label>
             <input autoFocus value={d.title} onChange={(e) => set('title', e.target.value)} required />
           </div>
-          <div className="field">
+          <div className="f-sec c-yellow">Időpont és helyszín</div>
+          <div className="field full">
             <label>Mikor — szabad szöveg</label>
             <input value={d.when} onChange={(e) => set('when', e.target.value)} placeholder="pl. szeptember vagy október eleje" />
           </div>
           <div className="field">
-            <label>Pontos nap — ha már ismert</label>
+            <label>Pontos nap — ha ismert</label>
             <input type="date" value={d.day} onChange={(e) => set('day', e.target.value)} title="A naptárban ezen a napon jelölődik" />
           </div>
           <div className="field">
-            <label>Rendezési hónap — ha nincs pontos nap</label>
+            <label>Rendezési hónap</label>
             <input type="month" value={d.sort} onChange={(e) => set('sort', e.target.value)} title="Ez alapján rendeződik a lista; üresen a végére kerül" />
           </div>
-          <div className="field">
+          <div className="field full">
             <label>Helyszín</label>
-            <input value={d.place} onChange={(e) => set('place', e.target.value)} placeholder="pl. Linz" />
+            <input value={d.place} onChange={(e) => set('place', e.target.value)} placeholder="pl. D212, Linz, online…" />
           </div>
-          <div className="field">
+          <div className="f-sec c-blue">Felelős és résztvevők</div>
+          <div className="field full">
             <label>Felelős — az állandó listából</label>
             <OwnerSelect value={d.owner} roster={roster} onChange={(v) => set('owner', v)} />
           </div>
@@ -232,6 +246,7 @@ export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: 
             <label>Résztvevők — tanárok (T) és hallgatók (H), többet is választhatsz</label>
             <PeoplePicker selected={people} roster={roster} onToggle={togglePerson} />
           </div>
+          <div className="f-sec c-green">Leírás</div>
           <div className="field full">
             <label>Leírás</label>
             <textarea rows={4} value={d.note} onChange={(e) => set('note', e.target.value)} placeholder="mire kell készülni, mi kapcsolódik hozzá" />

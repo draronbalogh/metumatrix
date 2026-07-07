@@ -557,7 +557,22 @@ export default function CurriculumApp() {
               onAdd={() => setEventEdit({ e: emptyEvent(), isNew: true })}
               onEdit={(id) => { const e = agendaRef.current.events.find((x) => x.id === id); if (e) setEventEdit({ e, isNew: false }); }}
               onEditTask={(id) => { const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
-              onAddTaskFor={(eid) => setTaskEdit({ t: { ...emptyTask(), eventId: eid }, isNew: true })}
+              onAddTaskFor={(eid) => {
+                // az eseményből nyitott feladat MINDENT örököl — ne kelljen kétszer beírni ugyanazt
+                const e = agendaRef.current.events.find((x) => x.id === eid);
+                setTaskEdit({
+                  t: {
+                    ...emptyTask(),
+                    eventId: eid,
+                    owner: e?.owner ?? emptyTask().owner,
+                    people: e ? [...e.people] : [],
+                    dueDate: e?.day ?? null,
+                    due: e?.when ?? null,
+                    title: e ? `${e.title} — előkészítés` : '',
+                  },
+                  isNew: true,
+                });
+              }}
               onPerson={onInstructor}
               onNotify={notifyEvent}
             />

@@ -688,3 +688,7 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 @media (max-width: 720px) {
   .cat-block-head .ag-mode { margin-left: 0; }
 }
+
+/* esemény készültség-jelző (kapcsolt feladatok) */
+.ev-progress { display: inline-block; margin-left: 9px; vertical-align: 2px; font-family: var(--ff); font-size: .62rem; font-weight: 800; letter-spacing: .03em; padding: 2px 9px; border-radius: 999px; background: var(--brand-100); color: var(--brand-text); }
+.ev-progress.all-done { background: color-mix(in srgb, var(--g0) 14%, var(--card)); color: var(--g0); }

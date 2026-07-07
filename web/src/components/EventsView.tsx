@@ -75,11 +75,19 @@ export default function EventsView({ agenda, q, instr, kindOf, onAdd, onEdit, on
         <div className="ev-list">
           {shown.map((e) => {
             const linked = tasksFor(e.id);
+            const doneN = linked.filter((t) => t.status === 'done').length;
             return (
               <article key={e.id} className="cc-card ev-card" onClick={() => onEdit(e.id)}>
                 <div className="ev-when">{e.when}{e.day && <span className="ev-day">{Number(e.day.slice(8, 10))}.</span>}</div>
                 <div className="ev-body">
-                  <div className="cc-name">{e.title}</div>
+                  <div className="cc-name">
+                    {e.title}
+                    {linked.length > 0 && (
+                      <span className={`ev-progress${doneN === linked.length ? ' all-done' : ''}`} title="Kapcsolt feladatok készültsége">
+                        {doneN}/{linked.length} kész
+                      </span>
+                    )}
+                  </div>
                   {e.note && <div className="cc-desc">{e.note}</div>}
                   {(e.place || e.owner || e.people.length > 0) && (
                     <div className="cc-meta">

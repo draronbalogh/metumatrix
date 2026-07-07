@@ -122,6 +122,10 @@ export default function CurriculumApp() {
   useEffect(() => {
     if (view !== 'map') setLocked(true);
   }, [view]);
+  // program-váltáskor (BA / MA / BA+MA) is zárolunk — ilyenkor a mátrix újraigazít, ne lehessen véletlenül mozgatni
+  useEffect(() => {
+    setLocked(true);
+  }, [prog]);
 
   const dataRef = useRef(data);
   dataRef.current = data;

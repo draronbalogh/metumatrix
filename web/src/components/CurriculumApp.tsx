@@ -282,16 +282,61 @@ export default function CurriculumApp() {
     setData(DEFAULT_DATA); setEdited(false);
     try { localStorage.removeItem(LS_KEY); } catch { /* ignore */ }
   };
+  // KÖZÖS MENTÉS: minden adat (tanterv + feladatok/események + névjegyzék) azonnali fájlba
+  // írása a helyi API-kon át, plusz EGY közös biztonsági másolat letöltése. A mentés sosem
+  // veszélyes (a jelenlegi állapotot írja); a visszatöltés kér megerősítést.
   const exportJSON = () => {
-    // azonnali fájlba mentés (helyi API) + letöltés biztonsági másolatként
-    fetch('/api/curriculum', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).catch(() => { /* ignore */ });
-    const b = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const post = (url: string, body: unknown) =>
+      fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).catch(() => { /* ignore */ });
+    post('/api/curriculum', dataRef.current);
+    post('/api/agenda', agendaRef.current);
+    post('/api/people', peopleRef.current);
+    const payload = {
+      kind: 'metumatrix-backup',
+      savedAt: new Date().toISOString(),
+      curriculum: dataRef.current,
+      agenda: agendaRef.current,
+      people: peopleRef.current,
+    };
+    const b = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(b); a.download = 'media-design-mintatanterv.json'; a.click(); URL.revokeObjectURL(a.href);
+    a.href = URL.createObjectURL(b);
+    a.download = `metumatrix-mentes-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click(); URL.revokeObjectURL(a.href);
   };
+  interface BackupFile { kind?: string; savedAt?: string; curriculum?: Curriculum; agenda?: Partial<Agenda>; people?: Partial<PeopleDB>; cohorts?: unknown; tasks?: unknown; }
   const importJSON = (file: File) => {
     const r = new FileReader();
-    r.onload = () => { try { const d = JSON.parse(String(r.result)) as Curriculum; if (!d.cohorts) throw new Error('bad'); commit(d); } catch { alert('Hibás JSON fájl.'); } };
+    r.onload = () => {
+      try {
+        const d = JSON.parse(String(r.result)) as BackupFile;
+        if (d.kind === 'metumatrix-backup') {
+          const when = d.savedAt ? ` (mentve: ${String(d.savedAt).slice(0, 16).replace('T', ' ')})` : '';
+          if (!confirm(`Teljes mentés visszatöltése${when}: tanterv + feladatok + események + névjegyzék. Ez felülírja a mostani állapotot.`)) return;
+          if (d.curriculum && Array.isArray(d.curriculum.cohorts)) commit(d.curriculum);
+          if (d.agenda && Array.isArray(d.agenda.tasks)) {
+            const a = normalizeAgenda(d.agenda);
+            setAgenda(a);
+            try { localStorage.setItem(AGENDA_LS_KEY, JSON.stringify(a)); } catch { /* ignore */ }
+          }
+          if (d.people && Array.isArray(d.people.students)) {
+            const p = normalizePeople(d.people);
+            setPeopleDB(p);
+            try { localStorage.setItem(PEOPLE_LS_KEY, JSON.stringify(p)); } catch { /* ignore */ }
+          }
+        } else if (Array.isArray(d.cohorts)) {
+          // régi formátum: csak tanterv
+          commit(d as unknown as Curriculum);
+        } else if (Array.isArray(d.tasks)) {
+          // csak feladatok+események mentés
+          const a = normalizeAgenda(d as Partial<Agenda>);
+          setAgenda(a);
+          try { localStorage.setItem(AGENDA_LS_KEY, JSON.stringify(a)); } catch { /* ignore */ }
+        } else {
+          throw new Error('bad');
+        }
+      } catch { alert('Hibás vagy ismeretlen JSON fájl.'); }
+    };
     r.readAsText(file);
   };
 
@@ -476,13 +521,11 @@ export default function CurriculumApp() {
             {PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
           <button className="themebtn" title="Világos / sötét mód" onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}>{theme === 'dark' ? '☀' : '☾'}</button>
-          {isCurr && (
-          <>
-          <button className="btn" onClick={exportJSON}>⤓ Mentés</button>
-          <button className="btn" onClick={() => fileRef.current?.click()}>⤒ Betöltés</button>
-          <button className="btn btn--danger" onClick={resetData}>↺ Alaphelyzet</button>
+          <button className="btn" onClick={exportJSON} title="Minden adat mentése: tanterv + feladatok + események + névjegyzék — fájlba írás és közös biztonsági másolat letöltése">⤓ Mentés</button>
+          <button className="btn" onClick={() => fileRef.current?.click()} title="Mentés visszatöltése (közös mentés vagy régi tanterv-fájl)">⤒ Betöltés</button>
           <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importJSON(f); e.target.value = ''; }} />
-          </>
+          {isCurr && (
+          <button className="btn btn--danger" onClick={resetData} title="CSAK a tantervet állítja alaphelyzetbe — előtte készíts mentést!">↺ Alaphelyzet</button>
           )}
           </div>
         </div>

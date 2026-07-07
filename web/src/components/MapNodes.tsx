@@ -104,12 +104,15 @@ export const SemesterNode = memo(function SemesterNode({ data }: { data: SemData
 
 // Csoport-zóna („swimlane”) a mátrixban — nem interaktív, a kártyák MÖGÖTT ül (pointer-events: none a CSS-ben).
 // zt/zb: a függőleges futam első/utolsó darabja (lekerekítés csak a futam tetején/alján, így a darabok egybeolvadnak)
-export const FrameNode = memo(function FrameNode({ data }: { data: { g: number; label: string | null; w: number; h: number; zt?: boolean; zb?: boolean } }) {
+export const FrameNode = memo(function FrameNode({ data }: { data: { g: number; w: number; h: number; zt?: boolean; zb?: boolean } }) {
   return (
-    <div className={`spec-zone g${data.g}${data.zt ? ' zt' : ''}${data.zb ? ' zb' : ''}`} style={{ width: data.w, height: data.h }}>
-      {data.label && <span className="spec-zone-lbl">{data.label}</span>}
-    </div>
+    <div className={`spec-zone g${data.g}${data.zt ? ' zt' : ''}${data.zb ? ' zb' : ''}`} style={{ width: data.w, height: data.h }} />
   );
+});
+
+// A zóna-felirat KÜLÖN node, magas z-indexszel — így a piros élek (nyilak) NEM takarják ki.
+export const ZoneLabelNode = memo(function ZoneLabelNode({ data }: { data: { g: number; label: string } }) {
+  return <span className={`spec-zone-lbl zln g${data.g}`}>{data.label}</span>;
 });
 
 export const ProgramNode = memo(function ProgramNode({ data }: { data: { program: string; height: number } }) {

@@ -9,9 +9,9 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { Course, Curriculum, EdgeLook, UserEdge, courseGroup, GROUP_LABEL } from '@/data/curriculum';
 import { buildGraph, Filter, Handlers, View, GRID, COURSE_X0, STEP_X, ROW_H } from '@/lib/buildGraph';
-import { ProgramNode, SemesterNode, CourseNode, FrameNode } from './MapNodes';
+import { ProgramNode, SemesterNode, CourseNode, FrameNode, ZoneLabelNode } from './MapNodes';
 
-const nodeTypes = { program: ProgramNode, semester: SemesterNode, course: CourseNode, frame: FrameNode };
+const nodeTypes = { program: ProgramNode, semester: SemesterNode, course: CourseNode, frame: FrameNode, zonelabel: ZoneLabelNode };
 
 // Csoport-zónák („swimlane”): soronként a csoport kártyáinak befoglalója, a szomszédos sorok
 // darabjai függőlegesen összeérnek, így csoportonként EGY összefüggő színes terület rajzolódik ki
@@ -51,9 +51,18 @@ function buildZones(nodes: Node[]): Node[] {
       out.push({
         id: `zone-${g}-${ri}-${i}`, type: 'frame',
         position: { x: p.minX - FR_PADX, y: top },
-        data: { g, label: first ? ZONE_LABEL[g] : null, w: p.maxX - p.minX + CARD_W + FR_PADX * 2, h, zt: first, zb: lastP },
+        data: { g, w: p.maxX - p.minX + CARD_W + FR_PADX * 2, h, zt: first, zb: lastP },
         draggable: false, selectable: false, focusable: false, zIndex: -1,
       });
+      // a felirat külön, magas z-indexű node — a piros élek fölött marad
+      if (first && ZONE_LABEL[g]) {
+        out.push({
+          id: `zonelbl-${g}-${ri}`, type: 'zonelabel',
+          position: { x: p.minX - FR_PADX + 16, y: top - 11 },
+          data: { g, label: ZONE_LABEL[g] },
+          draggable: false, selectable: false, focusable: false, zIndex: 6,
+        });
+      }
     }));
   });
   return out;

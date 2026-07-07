@@ -200,6 +200,13 @@ body {
 .spec-zone.g1 .spec-zone-lbl { background: var(--g1); }
 .spec-zone.g2 .spec-zone-lbl { background: var(--g2); }
 .spec-zone.g3 .spec-zone-lbl { background: var(--g3); }
+/* különálló felirat-node (a piros élek FÖLÖTT) — statikus pozíció, saját háttér, kattintást átereszt */
+.spec-zone-lbl.zln { position: static; top: auto; left: auto; display: inline-block; pointer-events: none; }
+.spec-zone-lbl.zln.g0 { background: var(--g0); }
+.spec-zone-lbl.zln.g1 { background: var(--g1); }
+.spec-zone-lbl.zln.g2 { background: var(--g2); }
+.spec-zone-lbl.zln.g3 { background: var(--g3); }
+.react-flow__node-zonelabel { pointer-events: none; }
 
 .react-flow__handle.hdl { width: 14px; height: 14px; border: 2px solid var(--card); opacity: .6; z-index: 3; transform-origin: center; transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease; }
 .react-flow__handle.hdl.out { background: var(--brand); }

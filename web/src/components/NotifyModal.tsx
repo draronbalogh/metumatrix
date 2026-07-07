@@ -23,12 +23,12 @@ const STANDING: { id: StandingGroup; label: string }[] = [
   { id: 'mindenki', label: 'Mindenki' },
 ];
 
+// A szerveroldali (SMTP) küldés a munkahelyi policy miatt nem járható; ehelyett az app
+// ELŐKÉSZÍTI a levelet, és a saját levelezőben (mailto) nyitja meg, vagy vágólapra másol.
 export default function NotifyModal({ target, teacherNames, db, onClose }: Props) {
   const [subject, setSubject] = useState(target.subject);
   const [body, setBody] = useState(target.body);
   const [selected, setSelected] = useState<string[]>(() => [...new Set(target.names)]);
-  const [configured, setConfigured] = useState<boolean | null>(null);
-  const [sending, setSending] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
   useEffect(() => {
@@ -37,15 +37,8 @@ export default function NotifyModal({ target, teacherNames, db, onClose }: Props
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  useEffect(() => {
-    fetch('/api/notify').then((r) => r.json()).then((j) => setConfigured(!!j.configured)).catch(() => setConfigured(false));
-  }, []);
-
   const toggle = (name: string) => setSelected((s) => (s.includes(name) ? s.filter((n) => n !== name) : [...s, name]));
-  const addGroup = (g: StandingGroup) => {
-    const names = standingGroupNames(g, teacherNames, db);
-    setSelected((s) => [...new Set([...s, ...names])]);
-  };
+  const addGroup = (g: StandingGroup) => setSelected((s) => [...new Set([...s, ...standingGroupNames(g, teacherNames, db)])]);
   const addCustom = (members: string[]) => setSelected((s) => [...new Set([...s, ...members])]);
 
   const { emails, missing } = useMemo(() => {
@@ -57,31 +50,31 @@ export default function NotifyModal({ target, teacherNames, db, onClose }: Props
     return { emails: em, missing: mi };
   }, [selected, db]);
 
-  const send = async () => {
-    if (!emails.length || !subject.trim()) return;
-    setSending(true); setResult(null);
-    try {
-      const html = `<div style="font-family:sans-serif;font-size:14px;line-height:1.5">${body.split('\n').map((l) => l ? `<p>${l.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] as string))}</p>` : '<br>').join('')}</div>`;
-      const r = await fetch('/api/notify', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject: subject.trim(), text: body, html, bcc: emails }),
-      });
-      const j = await r.json();
-      if (j.ok) { setResult(`✓ Elküldve ${j.sent} címzettnek.`); setTimeout(onClose, 1400); }
-      else if (typeof j.sent === 'number' && j.sent > 0) setResult(`Részben: ${j.sent} elment, ${j.failed} sikertelen.`);
-      else setResult(`Hiba: ${j.error || (j.failed ? `${j.failed} címzettnek nem sikerült` : 'ismeretlen')}`);
-    } catch (e) { setResult(`Hiba: ${String(e)}`); }
-    setSending(false);
+  const ready = emails.length > 0 && subject.trim().length > 0;
+
+  const openMail = () => {
+    if (!ready) return;
+    const url = `mailto:?bcc=${encodeURIComponent(emails.join(','))}&subject=${encodeURIComponent(subject.trim())}&body=${encodeURIComponent(body)}`;
+    if (url.length > 1900) {
+      setResult('⚠ Túl sok a címzett a levelező közvetlen megnyitásához — másold a címzetteket és az üzenetet, és illeszd be a webmailbe.');
+      return;
+    }
+    window.location.href = url;
+    setResult('A leveleződ megnyílt — ott küldd el. Ha nem nyílt meg (pl. webmail), használd a másolás gombokat.');
+  };
+
+  const copy = (text: string, label: string) => {
+    navigator.clipboard?.writeText(text)
+      .then(() => setResult(`✓ ${label} a vágólapon`))
+      .catch(() => setResult('Nem sikerült a másolás — jelöld ki kézzel a mezőben.'));
   };
 
   return (
     <div className="ovl" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal modal--wide">
-        <h3>✉ Értesítés küldése</h3>
+        <h3>✉ Értesítés előkészítése</h3>
         <div className="pm-body nm-body">
-          {configured === false && (
-            <div className="nm-warn">Az email-küldés még nincs beállítva. Töltsd ki a <code>web/.env.local</code> fájlt a szakos Gmail app-jelszavával, majd indítsd újra a szervert.</div>
-          )}
+          <div className="nm-info">A saját leveleződben, <strong>BCC-vel</strong> megy (a címzettek nem látják egymást). A „Megnyitás a levelezőben" a beállított levelezőt (Outlook / webmail) nyitja meg előkitöltve — onnan Te küldöd el. Ha nem nyílik meg, másold a címzetteket és az üzenetet a gombokkal.</div>
           <div className="field full">
             <label>Csoportok gyors hozzáadása</label>
             <div className="nm-groups">
@@ -111,15 +104,17 @@ export default function NotifyModal({ target, teacherNames, db, onClose }: Props
             <label>Üzenet</label>
             <textarea rows={7} value={body} onChange={(e) => setBody(e.target.value)} />
           </div>
-          {result && <div className={`nm-result${result.startsWith('✓') ? ' ok' : ' err'}`}>{result}</div>}
+          <div className="nm-copyrow">
+            <button className="btn" disabled={!emails.length} onClick={() => copy(emails.join(', '), 'Címzettek (BCC)')}>⧉ Címzettek másolása</button>
+            <button className="btn" disabled={!subject.trim() && !body} onClick={() => copy(`${subject}\n\n${body}`, 'Tárgy + üzenet')}>⧉ Üzenet másolása</button>
+          </div>
+          {result && <div className={`nm-result${result.startsWith('✓') || result.startsWith('A leveleződ') ? ' ok' : ' err'}`}>{result}</div>}
         </div>
         <div className="mfoot">
-          <span className="nm-hint">BCC-vel megy — a címzettek nem látják egymást.</span>
+          <span className="nm-hint">{emails.length} címzett kiválasztva</span>
           <span className="sp" />
-          <button className="btn" onClick={onClose}>Mégsem</button>
-          <button className="btn btn--ink" disabled={sending || !emails.length || !subject.trim() || configured === false} onClick={send}>
-            {sending ? 'Küldés…' : `Küldés (${emails.length})`}
-          </button>
+          <button className="btn" onClick={onClose}>Bezárás</button>
+          <button className="btn btn--ink" disabled={!ready} onClick={openMail}>✉ Megnyitás a levelezőben</button>
         </div>
       </div>
     </div>

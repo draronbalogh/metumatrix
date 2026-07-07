@@ -580,6 +580,9 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .nm-body .field { margin-bottom: 12px; }
 .nm-warn { font-size: .8rem; line-height: 1.5; color: var(--brand-text); background: var(--brand-100); border: 1px solid color-mix(in srgb, var(--brand) 30%, var(--line)); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
 .nm-warn code { font-family: var(--ff-mono); font-size: .92em; }
+.nm-info { font-size: .82rem; line-height: 1.55; color: var(--ink-2); background: var(--paper-2); border-radius: 8px; padding: 10px 12px; margin-bottom: 13px; }
+.nm-info strong { color: var(--ink); }
+.nm-copyrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .nm-groups { display: flex; flex-wrap: wrap; gap: 6px; }
 .nm-recips { max-height: 150px; overflow: auto; }
 .nm-empty { font-size: .8rem; color: var(--muted); }

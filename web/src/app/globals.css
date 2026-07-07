@@ -589,3 +589,54 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .pm-group-head { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
 .pm-group-head input { flex: 1; border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; font-size: .86rem; font-family: var(--ff); font-weight: 600; color: var(--ink); background: var(--card); }
 .pm-group-n { font-size: .68rem; color: var(--muted); font-weight: 600; flex: none; }
+
+/* ---- Feladatok: pipa, prioritás, kategória, csoportosítás ---- */
+.ag-cardtop { display: flex; align-items: flex-start; gap: 10px; }
+.ag-cardtop .cc-name { flex: 1; padding-right: 22px; }
+.ag-check { flex: none; width: 22px; height: 22px; margin-top: 1px; border: 2px solid var(--line-2); border-radius: 6px; background: var(--card); cursor: pointer; display: grid; place-items: center; font-size: .8rem; font-weight: 900; color: #fff; line-height: 1; }
+.ag-check:hover { border-color: var(--g0); }
+.ag-check.is-on { background: var(--g0); border-color: var(--g0); }
+
+.ag-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 9px 0 2px; }
+.ag-prio { font-family: var(--ff); font-size: .6rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; cursor: pointer; border: 1px solid transparent; }
+.ag-prio.high { background: color-mix(in srgb, var(--brand) 15%, var(--card)); color: var(--brand-text); border-color: color-mix(in srgb, var(--brand) 42%, var(--line)); }
+.ag-prio.normal { background: color-mix(in srgb, var(--yellow) 30%, var(--card)); color: #7a5c14; border-color: color-mix(in srgb, var(--yellow-deep) 55%, var(--line)); }
+.ag-prio.low { background: var(--paper-2); color: var(--muted); border-color: var(--line); }
+.ag-prio:hover { filter: brightness(.97); }
+
+.ag-cat { font-family: var(--ff); font-size: .62rem; font-weight: 700; letter-spacing: .02em; padding: 3px 9px; border-radius: 999px; cursor: pointer; background: var(--paper-2); color: var(--ink-2); border: 1px solid var(--line); }
+.ag-cat:hover { border-color: var(--brand); color: var(--brand-text); }
+.ag-cat.is-on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.ag-cat.on-card { background: color-mix(in srgb, var(--g1) 12%, var(--card)); color: var(--g1); border-color: color-mix(in srgb, var(--g1) 34%, var(--line)); }
+
+.ag-doing { font-family: var(--ff); font-size: .6rem; font-weight: 700; letter-spacing: .03em; padding: 3px 9px; border-radius: 999px; cursor: pointer; background: transparent; color: var(--muted); border: 1px dashed var(--line-2); }
+.ag-doing:hover { border-color: var(--g1); color: var(--g1); }
+.ag-doing.is-on { background: color-mix(in srgb, var(--g1) 15%, var(--card)); color: var(--g1); border: 1px solid color-mix(in srgb, var(--g1) 42%, var(--line)); }
+
+.ag-card.is-doing { box-shadow: inset 3px 0 0 var(--g1), var(--shadow-1); }
+.ag-card.prio-high .cc-accent { background: var(--brand); }
+.ag-card.prio-normal .cc-accent { background: var(--yellow-deep); }
+.ag-card.prio-low .cc-accent { background: var(--g3); }
+
+/* csoportosítás-fejléc színek */
+.ag-grp.prio-high { color: var(--brand-text); } .ag-grp.prio-high::before { background: var(--brand); }
+.ag-grp.prio-normal { color: #7a5c14; } .ag-grp.prio-normal::before { background: var(--yellow-deep); }
+.ag-grp.prio-low { color: var(--muted); } .ag-grp.prio-low::before { background: var(--g3); }
+.ag-grp.cat { color: var(--ink); } .ag-grp.cat::before { background: var(--ink); }
+
+/* kategória-szűrő chipsor */
+.ag-catfilter { display: flex; flex-wrap: wrap; gap: 6px; margin: -6px 0 16px; }
+
+/* kész-lista: pipa + megnyitás */
+.ag-done-row { display: flex; align-items: center; gap: 9px; }
+.ag-done-row .ag-check { width: 19px; height: 19px; margin: 0; }
+.ag-done-open { flex: 1; display: flex; align-items: baseline; gap: 10px; text-align: left; font-family: var(--ff); font-size: .8rem; padding: 7px 12px; border: 1px solid var(--line); border-radius: 7px; background: color-mix(in srgb, var(--paper-2) 55%, var(--card)); color: var(--muted); cursor: pointer; }
+.ag-done-open:hover { border-color: var(--line-2); color: var(--ink-2); }
+.ag-done-open .nm { font-weight: 600; text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 55%, transparent); }
+.ag-done-open .cat { font-size: .64rem; font-weight: 700; color: var(--ink-2); }
+.ag-done-open .pp { font-size: .7rem; }
+.ag-done-open .evt { margin-left: auto; flex: none; font-size: .66rem; font-weight: 700; color: var(--muted); }
+
+@media (max-width: 720px) {
+  .cat-block-head .ag-mode { margin-left: 0; }
+}

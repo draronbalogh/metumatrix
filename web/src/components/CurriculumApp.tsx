@@ -10,7 +10,7 @@ import EditModal from './EditModal';
 import AgendaView from './AgendaView';
 import EventsView from './EventsView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
-import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, agendaPeople, emptyEvent, emptyTask, nextStatus, normalizeAgenda } from '@/data/agenda';
+import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, agendaPeople, emptyEvent, emptyTask, nextPriority, normalizeAgenda } from '@/data/agenda';
 import { DEFAULT_PEOPLE, PeopleDB, PersonKind, buildRoster, normalizePeople } from '@/data/people';
 import PeopleModal from './PeopleModal';
 import NotifyModal, { NotifyTarget } from './NotifyModal';
@@ -168,9 +168,17 @@ export default function CurriculumApp() {
     commitAgenda({ ...agendaRef.current, tasks: agendaRef.current.tasks.filter((x) => x.id !== id) });
     setTaskEdit(null);
   }, [commitAgenda]);
-  const cycleTask = useCallback((id: string) => {
+  const toggleDone = useCallback((id: string) => {
     const cur = agendaRef.current;
-    commitAgenda({ ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, status: nextStatus(x.status) } : x)) });
+    commitAgenda({ ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, status: x.status === 'done' ? 'todo' : 'done' } : x)) });
+  }, [commitAgenda]);
+  const toggleDoing = useCallback((id: string) => {
+    const cur = agendaRef.current;
+    commitAgenda({ ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, status: x.status === 'doing' ? 'todo' : 'doing' } : x)) });
+  }, [commitAgenda]);
+  const cyclePriority = useCallback((id: string) => {
+    const cur = agendaRef.current;
+    commitAgenda({ ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, priority: nextPriority(x.priority) } : x)) });
   }, [commitAgenda]);
   const saveEvent = useCallback((e: AgendaEvent) => {
     const cur = agendaRef.current;
@@ -491,10 +499,12 @@ export default function CurriculumApp() {
               agenda={agenda} q={q} instr={instr} taught={taught} kindOf={kindOf}
               onAdd={() => setTaskEdit({ t: emptyTask(), isNew: true })}
               onEdit={(id) => { const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
-              onCycle={cycleTask}
               onEditIntro={() => setIntroEdit(true)}
               onPerson={onInstructor}
               onNotify={notifyTask}
+              onToggleDone={toggleDone}
+              onToggleDoing={toggleDoing}
+              onCyclePriority={cyclePriority}
             />
           ) : (
             <EventsView

@@ -1,6 +1,10 @@
 'use client';
 
-import { Agenda, AgendaTask, STATUS_LABEL, STATUS_ORDER, taskHasPerson, eventHasPerson } from '@/data/agenda';
+import { useMemo, useState } from 'react';
+import {
+  Agenda, AgendaTask, STATUS_LABEL, PRIORITY_LABEL, PRIORITY_ORDER, TASK_CATEGORIES,
+  TaskPriority, taskHasPerson, eventHasPerson,
+} from '@/data/agenda';
 import { PersonKind } from '@/data/people';
 
 interface Props {
@@ -11,10 +15,12 @@ interface Props {
   kindOf: Record<string, PersonKind>;  // név -> Tanár/Hallgató badge
   onAdd: () => void;
   onEdit: (id: string) => void;
-  onCycle: (id: string) => void;
   onEditIntro: () => void;
   onPerson: (name: string) => void;    // név-szűrő ki/be
   onNotify: (id: string) => void;      // értesítés küldése a feladat résztvevőinek
+  onToggleDone: (id: string) => void;  // pipa: kész / nem kész
+  onToggleDoing: (id: string) => void; // Folyamatban jelölő
+  onCyclePriority: (id: string) => void;
 }
 
 export function PersonChip({ name, star, on, kind, onClick }: { name: string; star?: boolean; on: boolean; kind?: PersonKind; onClick: () => void }) {
@@ -27,16 +33,23 @@ export function PersonChip({ name, star, on, kind, onClick }: { name: string; st
   );
 }
 
+type GroupBy = 'priority' | 'category' | 'status';
 const IDEAS_ON_CARD = 3;
+const UNCAT = 'Besorolatlan';
+const prioRank = (p: TaskPriority) => PRIORITY_ORDER.indexOf(p);
 
-export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, onEdit, onCycle, onEditIntro, onPerson, onNotify }: Props) {
+export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, onEdit, onEditIntro, onPerson, onNotify, onToggleDone, onToggleDoing, onCyclePriority }: Props) {
+  const [groupBy, setGroupBy] = useState<GroupBy>('priority');
+  const [catFilter, setCatFilter] = useState('');
+
   const matches = (t: AgendaTask) => {
     if (instr && !taskHasPerson(t, instr)) return false;
+    if (catFilter && (t.category || UNCAT) !== catFilter) return false;
     if (!q) return true;
     const s = q.toLowerCase();
     return t.title.toLowerCase().includes(s) || t.summary.toLowerCase().includes(s)
       || t.ideas.some((i) => i.toLowerCase().includes(s)) || (t.owner || '').toLowerCase().includes(s)
-      || t.people.some((p) => p.toLowerCase().includes(s));
+      || t.people.some((p) => p.toLowerCase().includes(s)) || (t.category || '').toLowerCase().includes(s);
   };
   const shown = agenda.tasks.filter(matches);
   const open = shown.filter((t) => t.status !== 'done');
@@ -44,11 +57,50 @@ export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, on
   const eventTitle = (id: string | null) => (id ? agenda.events.find((e) => e.id === id)?.title ?? null : null);
   const personEvents = instr ? agenda.events.filter((e) => eventHasPerson(e, instr)) : [];
 
+  // a szűrősorhoz: a jelen lévő kategóriák (a névszűrőn átment feladatokból)
+  const presentCats = useMemo(() => {
+    const set = new Set<string>();
+    agenda.tasks.filter((t) => !instr || taskHasPerson(t, instr)).forEach((t) => set.add(t.category || UNCAT));
+    return [...TASK_CATEGORIES, UNCAT].filter((c) => set.has(c));
+  }, [agenda.tasks, instr]);
+
+  // rendezés egy szekción belül: prioritás, majd határidő, majd cím
+  const byPrioThenDue = (a: AgendaTask, b: AgendaTask) =>
+    prioRank(a.priority) - prioRank(b.priority)
+    || (a.dueDate || 'zzz').localeCompare(b.dueDate || 'zzz')
+    || a.title.localeCompare(b.title, 'hu');
+  const byDue = (a: AgendaTask, b: AgendaTask) =>
+    (a.dueDate || 'zzz').localeCompare(b.dueDate || 'zzz') || a.title.localeCompare(b.title, 'hu');
+
+  // szekciók a csoportosítás szerint
+  const sections: { key: string; label: string; cls: string; items: AgendaTask[] }[] = [];
+  if (groupBy === 'priority') {
+    PRIORITY_ORDER.forEach((p) => {
+      const items = open.filter((t) => t.priority === p).sort(byDue);
+      if (items.length) sections.push({ key: p, label: PRIORITY_LABEL[p], cls: `prio-${p}`, items });
+    });
+  } else if (groupBy === 'category') {
+    [...TASK_CATEGORIES, UNCAT].forEach((c) => {
+      const items = open.filter((t) => (t.category || UNCAT) === c).sort(byPrioThenDue);
+      if (items.length) sections.push({ key: c, label: c, cls: 'cat', items });
+    });
+  } else {
+    (['todo', 'doing'] as const).forEach((st) => {
+      const items = open.filter((t) => t.status === st).sort(byPrioThenDue);
+      if (items.length) sections.push({ key: st, label: STATUS_LABEL[st], cls: `st-${st}`, items });
+    });
+  }
+
   return (
     <main className="catalog agenda">
       <div className="cat-block-head">
         <span className="pl">Feladatok</span>
         <span className="nm">Média Design tanszék · 2026/27 ősz</span>
+        <div className="viewtoggle ag-mode">
+          <button className={groupBy === 'priority' ? 'is-on' : ''} onClick={() => setGroupBy('priority')}>⚑ Prioritás</button>
+          <button className={groupBy === 'category' ? 'is-on' : ''} onClick={() => setGroupBy('category')}>▦ Kategória</button>
+          <button className={groupBy === 'status' ? 'is-on' : ''} onClick={() => setGroupBy('status')}>◔ Állapot</button>
+        </div>
         <button className="btn btn--ink ag-add" onClick={onAdd}>+ Új feladat</button>
       </div>
 
@@ -79,69 +131,74 @@ export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, on
         </div>
       )}
 
-      {shown.length === 0 && (
-        <div className="cc-empty">
-          <span>{q || instr ? 'Nincs a szűrőnek megfelelő feladat.' : 'Még nincs feladat.'}</span>
-          {!q && !instr && <button onClick={onAdd}>+ Feladat felvétele</button>}
+      {presentCats.length > 0 && (
+        <div className="ag-catfilter">
+          <button className={`ag-cat${catFilter === '' ? ' is-on' : ''}`} onClick={() => setCatFilter('')}>Összes</button>
+          {presentCats.map((c) => (
+            <button key={c} className={`ag-cat${catFilter === c ? ' is-on' : ''}`} onClick={() => setCatFilter((v) => (v === c ? '' : c))}>{c}</button>
+          ))}
         </div>
       )}
 
-      {STATUS_ORDER.filter((st) => st !== 'done').map((st) => {
-        const items = open.filter((t) => t.status === st);
-        if (!items.length) return null;
-        return (
-          <section className="cc-section" key={st}>
-            <div className={`cc-grp ag-grp st-${st}`}>{STATUS_LABEL[st]} · {items.length}</div>
-            <div className="cc-grid">
-              {items.map((t) => (
-                <article key={t.id} className={`cc-card ag-card st-${t.status}`} onClick={() => onEdit(t.id)}>
-                  <div className="cc-accent" />
-                  <button
-                    className={`ag-status st-${t.status}`}
-                    title={`Állapot léptetése: ${STATUS_LABEL[t.status]} → ${STATUS_LABEL[STATUS_ORDER[(STATUS_ORDER.indexOf(t.status) + 1) % 3]]}`}
-                    onClick={(e) => { e.stopPropagation(); onCycle(t.id); }}
-                  >{STATUS_LABEL[t.status]}</button>
+      {shown.length === 0 && (
+        <div className="cc-empty">
+          <span>{q || instr || catFilter ? 'Nincs a szűrőnek megfelelő feladat.' : 'Még nincs feladat.'}</span>
+          {!q && !instr && !catFilter && <button onClick={onAdd}>+ Feladat felvétele</button>}
+        </div>
+      )}
+
+      {sections.map((sec) => (
+        <section className="cc-section" key={sec.key}>
+          <div className={`cc-grp ag-grp ${sec.cls}`}>{sec.label} · {sec.items.length}</div>
+          <div className="cc-grid">
+            {sec.items.map((t) => (
+              <article key={t.id} className={`cc-card ag-card prio-${t.priority}${t.status === 'doing' ? ' is-doing' : ''}`} onClick={() => onEdit(t.id)}>
+                <div className="cc-accent" />
+                <div className="ag-cardtop">
+                  <button className="ag-check" title="Kész — pipa" onClick={(e) => { e.stopPropagation(); onToggleDone(t.id); }} />
                   <div className="cc-name">{t.title}</div>
-                  {t.summary && <div className="cc-desc">{t.summary}</div>}
-                  {t.ideas.length > 0 && (
-                    <ul className="ag-ideas">
-                      {t.ideas.slice(0, IDEAS_ON_CARD).map((i, ix) => <li key={ix}>{i}</li>)}
-                    </ul>
-                  )}
-                  {t.ideas.length > IDEAS_ON_CARD && <div className="ag-more">+ {t.ideas.length - IDEAS_ON_CARD} további pont…</div>}
-                  {(t.owner || t.due || t.dueDate || t.people.length > 0 || t.eventId) && (
-                    <div className="cc-meta">
-                      {t.owner && (
-                        <PersonChip name={t.owner} star on={instr === t.owner} kind={kindOf[t.owner]} onClick={() => onPerson(t.owner as string)} />
-                      )}
-                      {t.people.map((p) => (
-                        <PersonChip key={p} name={p} on={instr === p} kind={kindOf[p]} onClick={() => onPerson(p)} />
-                      ))}
-                      {(t.due || t.dueDate) && <span className="cc-tag ea">⏱ {t.due || t.dueDate}</span>}
-                      {t.eventId && eventTitle(t.eventId) && <span className="cc-tag ev">▤ {eventTitle(t.eventId)}</span>}
-                    </div>
-                  )}
-                  <button className="ag-notify" title="Értesítés küldése a résztvevőknek" onClick={(e) => { e.stopPropagation(); onNotify(t.id); }}>✉ Értesítés</button>
-                </article>
-              ))}
-            </div>
-          </section>
-        );
-      })}
+                </div>
+                <div className="ag-badges">
+                  <button className={`ag-prio ${t.priority}`} title={`Prioritás: ${PRIORITY_LABEL[t.priority]} — kattints a váltáshoz`} onClick={(e) => { e.stopPropagation(); onCyclePriority(t.id); }}>⚑ {PRIORITY_LABEL[t.priority]}</button>
+                  {t.category && <button className="ag-cat on-card" title={`Szűrés: ${t.category}`} onClick={(e) => { e.stopPropagation(); setCatFilter((v) => (v === t.category ? '' : (t.category as string))); }}>{t.category}</button>}
+                  <button className={`ag-doing${t.status === 'doing' ? ' is-on' : ''}`} title="Folyamatban jelölő" onClick={(e) => { e.stopPropagation(); onToggleDoing(t.id); }}>▶ Folyamatban</button>
+                </div>
+                {t.summary && <div className="cc-desc">{t.summary}</div>}
+                {t.ideas.length > 0 && (
+                  <ul className="ag-ideas">
+                    {t.ideas.slice(0, IDEAS_ON_CARD).map((i, ix) => <li key={ix}>{i}</li>)}
+                  </ul>
+                )}
+                {t.ideas.length > IDEAS_ON_CARD && <div className="ag-more">+ {t.ideas.length - IDEAS_ON_CARD} további pont…</div>}
+                {(t.owner || t.due || t.dueDate || t.people.length > 0 || t.eventId) && (
+                  <div className="cc-meta">
+                    {t.owner && <PersonChip name={t.owner} star on={instr === t.owner} kind={kindOf[t.owner]} onClick={() => onPerson(t.owner as string)} />}
+                    {t.people.map((p) => <PersonChip key={p} name={p} on={instr === p} kind={kindOf[p]} onClick={() => onPerson(p)} />)}
+                    {(t.due || t.dueDate) && <span className="cc-tag ea">⏱ {t.due || t.dueDate}</span>}
+                    {t.eventId && eventTitle(t.eventId) && <span className="cc-tag ev">▤ {eventTitle(t.eventId)}</span>}
+                  </div>
+                )}
+                <button className="ag-notify" title="Értesítés küldése a résztvevőknek" onClick={(e) => { e.stopPropagation(); onNotify(t.id); }}>✉ Értesítés</button>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
 
       {done.length > 0 && (
         <section className="cc-section">
           <div className="cc-grp ag-grp st-done">Kész · {done.length}</div>
           <div className="ag-done-list">
             {done.map((t) => (
-              <button key={t.id} className="ag-done-row" onClick={() => onEdit(t.id)} title="Megnyitás / visszaállítás">
-                <span className="ck">✓</span>
-                <span className="nm">{t.title}</span>
-                {(t.people.length > 0 || t.owner) && (
-                  <span className="pp">{[t.owner, ...t.people].filter(Boolean).join(', ')}</span>
-                )}
-                {t.eventId && eventTitle(t.eventId) && <span className="evt">▤ {eventTitle(t.eventId)}</span>}
-              </button>
+              <div key={t.id} className="ag-done-row">
+                <button className="ag-check is-on" title="Visszaállítás nyitottra" onClick={() => onToggleDone(t.id)}>✓</button>
+                <button className="ag-done-open" onClick={() => onEdit(t.id)} title="Megnyitás">
+                  <span className="nm">{t.title}</span>
+                  {t.category && <span className="cat">{t.category}</span>}
+                  {(t.people.length > 0 || t.owner) && <span className="pp">{[t.owner, ...t.people].filter(Boolean).join(', ')}</span>}
+                  {t.eventId && eventTitle(t.eventId) && <span className="evt">▤ {eventTitle(t.eventId)}</span>}
+                </button>
+              </div>
             ))}
           </div>
         </section>

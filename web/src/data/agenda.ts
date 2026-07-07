@@ -13,12 +13,30 @@ export const STATUS_ORDER: TaskStatus[] = ['todo', 'doing', 'done'];
 export const nextStatus = (s: TaskStatus): TaskStatus =>
   STATUS_ORDER[(STATUS_ORDER.indexOf(s) + 1) % STATUS_ORDER.length];
 
+// Prioritás — 3 szint, a nyitott feladatok alapból e szerint csoportosulnak
+export type TaskPriority = 'high' | 'normal' | 'low';
+export const PRIORITY_LABEL: Record<TaskPriority, string> = {
+  high: 'Magas', normal: 'Közepes', low: 'Alacsony',
+};
+export const PRIORITY_ORDER: TaskPriority[] = ['high', 'normal', 'low'];
+export const nextPriority = (p: TaskPriority): TaskPriority =>
+  PRIORITY_ORDER[(PRIORITY_ORDER.indexOf(p) + 1) % PRIORITY_ORDER.length];
+
+// Fix kategória-taxonómia a feladatokhoz (egy kategória / feladat)
+export const TASK_CATEGORIES = [
+  'Oktatásszervezés', 'Kurzus & tanterv', 'AI', 'Szoftver & eszköz',
+  'Kommunikáció & PR', 'Kiállítás & esemény', 'Jog', 'Fejlesztés',
+  'Infrastruktúra', 'HR & demonstrátor', 'Web & archívum', 'Egyéb',
+] as const;
+
 export interface AgendaTask {
   id: string;
   title: string;
   summary: string;
   ideas: string[];
   status: TaskStatus;
+  priority: TaskPriority;   // Magas / Közepes / Alacsony
+  category: string | null;  // egy kategória a TASK_CATEGORIES-ból (null = besorolatlan)
   owner: string | null;
   due: string | null;       // szabadszavas határidő a megjelenítéshez (pl. „szeptemberre")
   dueDate: string | null;   // pontos határidő (ÉÉÉÉ-HH-NN) az automatikus emlékeztetőhöz
@@ -49,7 +67,7 @@ export const DEFAULT_OWNER = 'Balogh Áron';
 
 export const emptyTask = (): AgendaTask => ({
   id: `t-${Date.now().toString(36)}`,
-  title: '', summary: '', ideas: [], status: 'todo', owner: DEFAULT_OWNER, due: null, dueDate: null, people: [], eventId: null,
+  title: '', summary: '', ideas: [], status: 'todo', priority: 'normal', category: null, owner: DEFAULT_OWNER, due: null, dueDate: null, people: [], eventId: null,
 });
 export const emptyEvent = (): AgendaEvent => ({
   id: `e-${Date.now().toString(36)}`,
@@ -59,7 +77,7 @@ export const emptyEvent = (): AgendaEvent => ({
 // Korábban mentett (régebbi sémájú) adat kiegészítése az új mezőkkel.
 export const normalizeAgenda = (a: Partial<Agenda>): Agenda => ({
   intro: a.intro ?? DEFAULT_AGENDA.intro,
-  tasks: (a.tasks ?? []).map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null })),
+  tasks: (a.tasks ?? []).map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null, priority: t.priority ?? 'normal', category: t.category ?? null })),
   events: (a.events ?? []).map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null })),
 });
 
@@ -80,8 +98,24 @@ export const agendaPeople = (a: Agenda): string[] => {
 const DEFAULT_INTRO = 'Aktuálisan a 2026/27-es tanév őszi félévében az alábbi feladatok várnak ránk — az oktatói eligazító munkavázlata alapján, szabadon bővíthető és szerkeszthető.\n\nKözös célok: a legmodernebb médiadesign szak Magyarországon · erős szakmai és ipari kapcsolatok · élen járó, tudatos AI-integráció · látható hallgatói munka kifelé · korszerű eszközpark és stúdióháttér · egységes, kiszámítható működés.';
 
 // Az előtöltött tartalom a régi (szűkebb) sémával van felírva; a hiányzó mezőket lentebb pótoljuk.
-type RawTask = Omit<AgendaTask, 'people' | 'eventId' | 'dueDate'> & { people?: string[]; eventId?: string | null; dueDate?: string | null };
+type RawTask = Omit<AgendaTask, 'people' | 'eventId' | 'dueDate' | 'priority' | 'category'>
+  & { people?: string[]; eventId?: string | null; dueDate?: string | null; priority?: TaskPriority; category?: string | null };
 type RawEvent = Omit<AgendaEvent, 'people' | 'day'> & { people?: string[]; day?: string | null };
+
+// A 30 előtöltött feladat kategória-besorolása és időkritikus prioritásai (id szerint).
+const TASK_CATEGORY_BY_ID: Record<string, string> = {
+  t1: 'Infrastruktúra', t2: 'Oktatásszervezés', t3: 'Oktatásszervezés', t4: 'Oktatásszervezés',
+  t5: 'Kommunikáció & PR', t6: 'Kommunikáció & PR', t7: 'HR & demonstrátor', t8: 'AI',
+  t9: 'Szoftver & eszköz', t10: 'Jog', t11: 'Kiállítás & esemény', t12: 'Szoftver & eszköz',
+  t13: 'Kurzus & tanterv', t14: 'Egyéb', t15: 'Oktatásszervezés', t16: 'Fejlesztés',
+  t17: 'Fejlesztés', t18: 'Oktatásszervezés', t19: 'Web & archívum', t20: 'Web & archívum',
+  t21: 'Infrastruktúra', t22: 'Kiállítás & esemény', t23: 'Kommunikáció & PR', t24: 'Kurzus & tanterv',
+  t25: 'Kurzus & tanterv', t26: 'Kiállítás & esemény', t27: 'Fejlesztés', t28: 'Egyéb',
+  t29: 'Oktatásszervezés', t30: 'Kurzus & tanterv',
+};
+const TASK_PRIORITY_BY_ID: Record<string, TaskPriority> = {
+  t8: 'high', t11: 'high', t12: 'high', t25: 'high', t29: 'high',
+};
 
 const RAW_TASKS: RawTask[] = [
     { id: 't1', title: 'Raktárszoftver fejlesztése', status: 'todo', owner: null, due: 'jövő évi cél',
@@ -199,6 +233,11 @@ const RAW_EVENTS: RawEvent[] = [
 
 export const DEFAULT_AGENDA: Agenda = {
   intro: DEFAULT_INTRO,
-  tasks: RAW_TASKS.map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null })),
+  tasks: RAW_TASKS.map((t) => ({
+    ...t,
+    people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null,
+    priority: t.priority ?? TASK_PRIORITY_BY_ID[t.id] ?? 'normal',
+    category: t.category ?? TASK_CATEGORY_BY_ID[t.id] ?? null,
+  })),
   events: RAW_EVENTS.map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null })),
 };

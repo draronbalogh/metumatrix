@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AgendaEvent, AgendaTask, STATUS_LABEL, STATUS_ORDER, TaskStatus } from '@/data/agenda';
+import { AgendaEvent, AgendaTask, STATUS_LABEL, STATUS_ORDER, TaskStatus, PRIORITY_LABEL, PRIORITY_ORDER, TaskPriority, TASK_CATEGORIES } from '@/data/agenda';
 import { RosterEntry } from '@/data/people';
 
 function useEsc(onClose: () => void) {
@@ -67,7 +67,8 @@ interface TaskProps {
 export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClose }: TaskProps) {
   const [d, setD] = useState(() => ({
     title: task.title, summary: task.summary, ideas: task.ideas.join('\n'),
-    status: task.status as string, owner: task.owner ?? '', due: task.due ?? '', dueDate: task.dueDate ?? '',
+    status: task.status as string, priority: task.priority as string, category: task.category ?? '',
+    owner: task.owner ?? '', due: task.due ?? '', dueDate: task.dueDate ?? '',
     eventId: task.eventId ?? '',
   }));
   const [people, setPeople] = useState<string[]>(task.people);
@@ -82,6 +83,8 @@ export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClo
       summary: d.summary.trim(),
       ideas: d.ideas.split('\n').map((s) => s.trim()).filter(Boolean),
       status: d.status as TaskStatus,
+      priority: d.priority as TaskPriority,
+      category: d.category || null,
       owner: d.owner.trim() || null,
       due: d.due.trim() || null,
       dueDate: d.dueDate.trim() || null,
@@ -103,6 +106,19 @@ export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClo
             <label>Állapot</label>
             <select value={d.status} onChange={(e) => set('status', e.target.value)}>
               {STATUS_ORDER.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label>Prioritás</label>
+            <select value={d.priority} onChange={(e) => set('priority', e.target.value)}>
+              {PRIORITY_ORDER.map((p) => <option key={p} value={p}>{PRIORITY_LABEL[p]}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label>Kategória</label>
+            <select value={d.category} onChange={(e) => set('category', e.target.value)}>
+              <option value="">— nincs —</option>
+              {TASK_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div className="field">

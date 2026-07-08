@@ -13,7 +13,7 @@ export async function GET() {
   try {
     const raw = await fs.readFile(FILE, 'utf8');
     const data = JSON.parse(raw);
-    return NextResponse.json({ ok: true, data });
+    return NextResponse.json({ ok: true, data }, { headers: { 'Content-Type': 'application/json; charset=utf-8' } });
   } catch {
     return NextResponse.json({ ok: false, data: null });
   }

@@ -305,7 +305,7 @@ export default function CurriculumApp() {
       agenda: agendaRef.current,
       people: peopleRef.current,
     };
-    const b = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const b = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(b);
     a.download = `metumatrix-mentes-${new Date().toISOString().slice(0, 10)}.json`;

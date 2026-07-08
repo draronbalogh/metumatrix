@@ -188,7 +188,7 @@ interface EventProps {
 
 export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: EventProps) {
   const [d, setD] = useState(() => ({
-    title: event.title, when: event.when, sort: event.sort ?? '', day: event.day ?? '',
+    title: event.title, when: event.when, sort: event.sort ?? '', day: event.day ?? '', dayEnd: event.dayEnd ?? '',
     note: event.note ?? '', place: event.place ?? '', owner: event.owner ?? '',
   }));
   const [people, setPeople] = useState<string[]>(event.people);
@@ -203,6 +203,7 @@ export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: 
       when: d.when.trim() || 'időpont egyeztetés alatt',
       sort: d.day.trim() ? d.day.trim().slice(0, 7) : (d.sort.trim() || null),
       day: d.day.trim() || null,
+      dayEnd: d.dayEnd.trim() && d.day.trim() && d.dayEnd.trim() > d.day.trim() ? d.dayEnd.trim() : null,
       note: d.note.trim() || null,
       place: d.place.trim() || null,
       owner: d.owner.trim() || null,
@@ -226,8 +227,12 @@ export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: 
             <input value={d.when} onChange={(e) => set('when', e.target.value)} placeholder="pl. szeptember vagy október eleje" />
           </div>
           <div className="field">
-            <label>Pontos nap — ha ismert</label>
-            <input type="date" value={d.day} onChange={(e) => set('day', e.target.value)} title="A naptárban ezen a napon jelölődik" />
+            <label>Kezdőnap — ha ismert</label>
+            <input type="date" value={d.day} onChange={(e) => set('day', e.target.value)} title="A naptárban ettől a naptól jelölődik" />
+          </div>
+          <div className="field">
+            <label>Utolsó nap — ha időszak</label>
+            <input type="date" value={d.dayEnd} onChange={(e) => set('dayEnd', e.target.value)} title="Többnapos esemény/időszak záró napja — a naptár a teljes tartományt jelöli" />
           </div>
           <div className="field">
             <label>Rendezési hónap</label>

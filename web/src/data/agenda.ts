@@ -49,7 +49,8 @@ export interface AgendaEvent {
   title: string;
   when: string;          // megjelenített időpont, szabad szöveg
   sort: string | null;   // rendezéshez: ÉÉÉÉ-HH — üresen a lista végére kerül
-  day: string | null;    // pontos nap (ÉÉÉÉ-HH-NN), ha már ismert — a naptárban ezen a napon jelölődik
+  day: string | null;    // kezdőnap (ÉÉÉÉ-HH-NN), ha már ismert — a naptárban ettől jelölődik
+  dayEnd: string | null; // időszak utolsó napja (ÉÉÉÉ-HH-NN) — többnapos eseménynél/időszaknál
   note: string | null;
   place: string | null;
   owner: string | null;
@@ -71,14 +72,14 @@ export const emptyTask = (): AgendaTask => ({
 });
 export const emptyEvent = (): AgendaEvent => ({
   id: `e-${Date.now().toString(36)}`,
-  title: '', when: '', sort: null, day: null, note: null, place: null, owner: DEFAULT_OWNER, people: [],
+  title: '', when: '', sort: null, day: null, dayEnd: null, note: null, place: null, owner: DEFAULT_OWNER, people: [],
 });
 
 // Korábban mentett (régebbi sémájú) adat kiegészítése az új mezőkkel.
 export const normalizeAgenda = (a: Partial<Agenda>): Agenda => ({
   intro: a.intro ?? DEFAULT_AGENDA.intro,
   tasks: (a.tasks ?? []).map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null, priority: t.priority ?? 'normal', category: t.category ?? null })),
-  events: (a.events ?? []).map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null })),
+  events: (a.events ?? []).map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null })),
 });
 
 // Egy névhez tartozó feladatok/események (felelősként vagy résztvevőként).
@@ -100,7 +101,7 @@ const DEFAULT_INTRO = 'Aktuálisan a 2026/27-es tanév őszi félévében az al�
 // Az előtöltött tartalom a régi (szűkebb) sémával van felírva; a hiányzó mezőket lentebb pótoljuk.
 type RawTask = Omit<AgendaTask, 'people' | 'eventId' | 'dueDate' | 'priority' | 'category'>
   & { people?: string[]; eventId?: string | null; dueDate?: string | null; priority?: TaskPriority; category?: string | null };
-type RawEvent = Omit<AgendaEvent, 'people' | 'day'> & { people?: string[]; day?: string | null };
+type RawEvent = Omit<AgendaEvent, 'people' | 'day' | 'dayEnd'> & { people?: string[]; day?: string | null; dayEnd?: string | null };
 
 // A 30 előtöltött feladat kategória-besorolása és időkritikus prioritásai (id szerint).
 const TASK_CATEGORY_BY_ID: Record<string, string> = {
@@ -239,5 +240,5 @@ export const DEFAULT_AGENDA: Agenda = {
     priority: t.priority ?? TASK_PRIORITY_BY_ID[t.id] ?? 'normal',
     category: t.category ?? TASK_CATEGORY_BY_ID[t.id] ?? null,
   })),
-  events: RAW_EVENTS.map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null })),
+  events: RAW_EVENTS.map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null })),
 };

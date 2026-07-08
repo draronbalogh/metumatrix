@@ -33,15 +33,20 @@ const BCC_BATCH_SIZE = Math.max(1, Number(process.env.BCC_BATCH_SIZE || 90));
 // sebességkorlátozásába nagy köröknél.
 const BATCH_DELAY_MS = Math.max(0, Number(process.env.BCC_BATCH_DELAY_MS || 1200));
 
+// Brevo (transactional email, HTTPS API) — 2FA nélkül működik, és a 443-as porton
+// megy, így a munkahelyi SMTP-tiltást is megkerüli. Ha a kulcs be van állítva,
+// ez az elsődleges küldő; a Gmail SMTP csak tartalék.
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+
 let transporter: Transporter | null = null;
 
 /**
- * True, ha a küldéshez szükséges kredenciálok megvannak. A route-ok ezt
- * használják, hogy konfigurálatlan állapotban értelmes hibát adjanak, ne
- * egy homályos nodemailer-exceptiont.
+ * True, ha a küldéshez szükséges kredenciálok megvannak (Brevo API-kulcs VAGY
+ * Gmail SMTP app-jelszó). A route-ok ezt használják, hogy konfigurálatlan
+ * állapotban értelmes hibát adjanak.
  */
 export function isConfigured(): boolean {
-  return Boolean(SMTP_USER && SMTP_PASS && NOTIFY_FROM);
+  return Boolean((BREVO_API_KEY && NOTIFY_FROM) || (SMTP_USER && SMTP_PASS && NOTIFY_FROM));
 }
 
 function getTransporter(): Transporter {
@@ -67,6 +72,11 @@ function getTransporter(): Transporter {
  * lejárt/rossz app-jelszó esetén korán kiderüljön.
  */
 export async function verifyTransport(): Promise<void> {
+  if (BREVO_API_KEY && NOTIFY_FROM) {
+    const res = await fetch('https://api.brevo.com/v3/account', { headers: { 'api-key': BREVO_API_KEY, accept: 'application/json' } });
+    if (!res.ok) throw new Error(`Brevo API-kulcs hibás vagy lejárt (HTTP ${res.status})`);
+    return;
+  }
   await getTransporter().verify();
 }
 
@@ -120,6 +130,26 @@ export interface SendBccResult {
  * Nem dob kivételt egyetlen köteg hibája miatt: végigmegy az összesen, és a
  * hívó döntheti el, mit kezd a részleges sikerrel (pl. notifylog.json).
  */
+// Egy köteg elküldése a Brevo HTTPS API-n át (api.brevo.com, 443-as port).
+async function sendBatchBrevo(batch: string[], subject: string, text?: string, html?: string, replyTo?: string): Promise<{ messageId?: string }> {
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'api-key': BREVO_API_KEY as string, 'Content-Type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({
+      sender: NOTIFY_FROM_NAME ? { name: NOTIFY_FROM_NAME, email: NOTIFY_FROM } : { email: NOTIFY_FROM },
+      to: [{ email: NOTIFY_FROM }],               // érvényes To; a valódi címzettek BCC-ben
+      bcc: batch.map((email) => ({ email })),
+      subject,
+      textContent: text,
+      htmlContent: html,
+      replyTo: (replyTo || NOTIFY_REPLY_TO) ? { email: replyTo || NOTIFY_REPLY_TO } : undefined,
+    }),
+  });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`Brevo ${res.status}: ${j.message || j.code || 'ismeretlen hiba'}`);
+  return { messageId: j.messageId };
+}
+
 export async function sendBcc(input: SendBccInput): Promise<SendBccResult> {
   const { subject, text, html, recipients, replyTo } = input;
 
@@ -148,13 +178,21 @@ export async function sendBcc(input: SendBccInput): Promise<SendBccResult> {
     return result;
   }
 
-  const tx = getTransporter();
+  const useBrevo = Boolean(BREVO_API_KEY && NOTIFY_FROM);
+  const tx = useBrevo ? null : getTransporter();
   const batches = chunk(unique, BCC_BATCH_SIZE);
 
   for (let i = 0; i < batches.length; i++) {
     const batch = batches[i];
     try {
-      const info = await tx.sendMail({
+      if (useBrevo) {
+        const info = await sendBatchBrevo(batch, subject, text, html, replyTo);
+        result.sent += batch.length;
+        result.batches.push({ index: i, size: batch.length, ok: true, messageId: info.messageId });
+        if (i < batches.length - 1 && BATCH_DELAY_MS > 0) await sleep(BATCH_DELAY_MS);
+        continue;
+      }
+      const info = await (tx as Transporter).sendMail({
         // A cím mindig a valós küldő (NOTIFY_FROM); a név csak megjelenítési
         // név. Így a feladó egyértelműen te vagy, álcázás nélkül.
         from: NOTIFY_FROM_NAME

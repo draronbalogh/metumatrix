@@ -58,10 +58,22 @@ export interface AgendaEvent {
   people: string[];      // résztvevők
 }
 
+// Mentett levél (Outlookba másoláshoz készített üzenet) — tételhez (esemény/feladat) köthető
+export interface Letter {
+  id: string;
+  createdAt: string;               // ISO időbélyeg
+  targetType: 'event' | 'task' | null;
+  targetId: string | null;
+  subject: string;
+  body: string;
+  names: string[];                 // a címzett-nevek a mentés pillanatában
+}
+
 export interface Agenda {
   intro: string;
   tasks: AgendaTask[];
   events: AgendaEvent[];
+  letters: Letter[];
 }
 
 // Új feladat/esemény alapértelmezett felelőse
@@ -81,6 +93,7 @@ export const normalizeAgenda = (a: Partial<Agenda>): Agenda => ({
   intro: a.intro ?? DEFAULT_AGENDA.intro,
   tasks: (a.tasks ?? []).map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null, priority: t.priority ?? 'normal', category: t.category ?? null })),
   events: (a.events ?? []).map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null, featured: e.featured ?? false })),
+  letters: a.letters ?? [],
 });
 
 // Egy névhez tartozó feladatok/események (felelősként vagy résztvevőként).
@@ -242,4 +255,5 @@ export const DEFAULT_AGENDA: Agenda = {
     category: t.category ?? TASK_CATEGORY_BY_ID[t.id] ?? null,
   })),
   events: RAW_EVENTS.map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null, featured: e.featured ?? false })),
+  letters: [],
 };

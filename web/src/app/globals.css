@@ -728,3 +728,24 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
   .cal-days .dd.has-feat, .cal-ev.is-feat { animation: none; }
   .cal-ev.is-feat { background: color-mix(in srgb, var(--brand) 10%, transparent); }
 }
+
+/* ---- levél-készítő: 1-2-3 másolás-gombok, szöveg-előnézet, mentett levelek ---- */
+.nm-copyrow.big { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 10px; }
+.nm-copy { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 10px; font-size: .86rem; font-weight: 700; border: 1.5px solid color-mix(in srgb, var(--brand) 30%, var(--line)); color: var(--brand-text); background: var(--card); }
+.nm-copy:hover:not(:disabled) { background: var(--brand); color: #fff; border-color: var(--brand); }
+.nm-copy:disabled { opacity: .45; cursor: default; }
+.nm-copy b { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--brand); color: #fff; font-size: .72rem; flex: none; }
+.nm-copy:hover:not(:disabled) b { background: #fff; color: var(--brand-text); }
+.nm-bodytoggle { margin-left: 8px; font-family: var(--ff); font-size: .64rem; font-weight: 700; color: var(--brand-text); background: var(--brand-100); border: 0; border-radius: 999px; padding: 2px 9px; cursor: pointer; text-transform: none; letter-spacing: 0; }
+.nm-preview { border: 1px dashed var(--line-2); border-radius: 9px; padding: 11px 13px; font-size: .85rem; line-height: 1.5; color: var(--ink-2); cursor: pointer; background: color-mix(in srgb, var(--paper-2) 45%, transparent); }
+.nm-preview:hover { border-color: var(--brand); }
+.nm-preview .more { display: block; margin-top: 6px; font-size: .7rem; font-weight: 700; color: var(--muted); }
+.nm-letters { display: flex; flex-direction: column; gap: 5px; }
+.nm-letter { display: flex; align-items: center; gap: 7px; }
+.nm-letter-load { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; text-align: left; font-family: var(--ff); padding: 7px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); cursor: pointer; }
+.nm-letter-load:hover { border-color: var(--brand); }
+.nm-letter-load .s { font-size: .8rem; font-weight: 700; color: var(--ink); }
+.nm-letter-load .d { font-size: .64rem; color: var(--muted); font-family: var(--ff-mono); }
+@media (max-width: 720px) {
+  .nm-copyrow.big { grid-template-columns: 1fr; }
+}

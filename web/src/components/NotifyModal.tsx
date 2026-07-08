@@ -1,19 +1,26 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { AgendaEvent, AgendaTask, Letter } from '@/data/agenda';
 import { PeopleDB, emailOf } from '@/data/people';
 import { standingGroupNames, StandingGroup } from '@/lib/recipients';
+import { buildLetter, LETTER_KINDS, LetterKind } from '@/lib/letters';
 
 export interface NotifyTarget {
-  subject: string;
-  body: string;
-  names: string[]; // előre kijelölt címzettek (a tétel owner+people)
+  targetType: 'event' | 'task' | null;
+  targetId: string | null;
+  event?: AgendaEvent | null;
+  task?: AgendaTask | null;
+  names: string[]; // előre kijelölt címzettek (a tétel felelőse + résztvevői)
 }
 
 interface Props {
   target: NotifyTarget;
   teacherNames: string[];
   db: PeopleDB;
+  letters: Letter[];                    // a tételhez mentett levelek
+  onSaveLetter: (l: Letter) => void;
+  onDeleteLetter: (id: string) => void;
   onClose: () => void;
 }
 
@@ -23,12 +30,17 @@ const STANDING: { id: StandingGroup; label: string }[] = [
   { id: 'mindenki', label: 'Mindenki' },
 ];
 
-// A szerveroldali (SMTP) küldés a munkahelyi policy miatt nem járható; ehelyett az app
-// ELŐKÉSZÍTI a levelet, és a saját levelezőben (mailto) nyitja meg, vagy vágólapra másol.
-export default function NotifyModal({ target, teacherNames, db, onClose }: Props) {
-  const [subject, setSubject] = useState(target.subject);
-  const [body, setBody] = useState(target.body);
+// Levél-készítő: sablonból generált szöveg + 3 numerikus másolás-gomb (Outlookba illesztéshez).
+// A küldés (Gmail SMTP) opcionális — csak akkor aktív, ha a szerveren be van állítva.
+export default function NotifyModal({ target, teacherNames, db, letters, onSaveLetter, onDeleteLetter, onClose }: Props) {
+  const [kind, setKind] = useState<LetterKind>('felkeres');
+  const initial = useMemo(() => buildLetter('felkeres', { type: target.targetType, event: target.event, task: target.task }, db.signature), [target, db.signature]);
+  const [subject, setSubject] = useState(initial.subject);
+  const [body, setBody] = useState(initial.body);
+  const [bodyOpen, setBodyOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>(() => [...new Set(target.names)]);
+  const [configured, setConfigured] = useState<boolean | null>(null);
+  const [sending, setSending] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,6 +48,17 @@ export default function NotifyModal({ target, teacherNames, db, onClose }: Props
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  useEffect(() => {
+    fetch('/api/notify').then((r) => r.json()).then((j) => setConfigured(!!j.configured)).catch(() => setConfigured(false));
+  }, []);
+
+  const regenerate = (k: LetterKind) => {
+    setKind(k);
+    const gen = buildLetter(k, { type: target.targetType, event: target.event, task: target.task }, db.signature);
+    setSubject(gen.subject);
+    setBody(gen.body);
+  };
 
   const toggle = (name: string) => setSelected((s) => (s.includes(name) ? s.filter((n) => n !== name) : [...s, name]));
   const addGroup = (g: StandingGroup) => setSelected((s) => [...new Set([...s, ...standingGroupNames(g, teacherNames, db)])]);
@@ -50,31 +73,60 @@ export default function NotifyModal({ target, teacherNames, db, onClose }: Props
     return { emails: em, missing: mi };
   }, [selected, db]);
 
-  const ready = emails.length > 0 && subject.trim().length > 0;
-
-  const openMail = () => {
-    if (!ready) return;
-    const url = `mailto:?bcc=${encodeURIComponent(emails.join(','))}&subject=${encodeURIComponent(subject.trim())}&body=${encodeURIComponent(body)}`;
-    if (url.length > 1900) {
-      setResult('⚠ Túl sok a címzett a levelező közvetlen megnyitásához — másold a címzetteket és az üzenetet, és illeszd be a webmailbe.');
-      return;
-    }
-    window.location.href = url;
-    setResult('A leveleződ megnyílt — ott küldd el. Ha nem nyílt meg (pl. webmail), használd a másolás gombokat.');
-  };
-
   const copy = (text: string, label: string) => {
     navigator.clipboard?.writeText(text)
-      .then(() => setResult(`✓ ${label} a vágólapon`))
-      .catch(() => setResult('Nem sikerült a másolás — jelöld ki kézzel a mezőben.'));
+      .then(() => setResult(`✓ ${label} a vágólapon — illeszd be az Outlookba`))
+      .catch(() => setResult('Nem sikerült a másolás — jelöld ki kézzel.'));
   };
+
+  const saveLetter = () => {
+    onSaveLetter({
+      id: `l-${Date.now().toString(36)}`,
+      createdAt: new Date().toISOString(),
+      targetType: target.targetType,
+      targetId: target.targetId,
+      subject, body, names: selected,
+    });
+    setResult('✓ Levél elmentve — lent a listában');
+  };
+
+  const loadLetter = (l: Letter) => {
+    setSubject(l.subject); setBody(l.body); setSelected(l.names);
+    setResult('Mentett levél betöltve.');
+  };
+
+  const send = async () => {
+    if (!emails.length || !subject.trim()) return;
+    setSending(true); setResult(null);
+    try {
+      const html = `<div style="font-family:sans-serif;font-size:14px;line-height:1.5;white-space:pre-wrap">${body.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] as string))}</div>`;
+      const r = await fetch('/api/notify', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: subject.trim(), text: body, html, bcc: emails }),
+      });
+      const j = await r.json();
+      if (j.ok) setResult(`✓ Elküldve ${j.sent} címzettnek.`);
+      else setResult(`Hiba: ${j.error || 'küldés sikertelen'}`);
+    } catch (e) { setResult(`Hiba: ${String(e)}`); }
+    setSending(false);
+  };
+
+  const previewLines = body.split('\n').filter((l) => l.trim()).slice(0, 2);
+  const fmtDate = (iso: string) => iso.slice(0, 16).replace('T', ' ');
 
   return (
     <div className="ovl" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal modal--wide">
-        <h3>✉ Értesítés előkészítése</h3>
+        <h3>✉ Levél készítése{target.event ? ` · ${target.event.title}` : target.task ? ` · ${target.task.title}` : ''}</h3>
         <div className="pm-body nm-body">
-          <div className="nm-info">A saját leveleződben, <strong>BCC-vel</strong> megy (a címzettek nem látják egymást). A „Megnyitás a levelezőben" a beállított levelezőt (Outlook / webmail) nyitja meg előkitöltve — onnan Te küldöd el. Ha nem nyílik meg, másold a címzetteket és az üzenetet a gombokkal.</div>
+          <div className="field full">
+            <label>Sablon — a szöveget ebből generálom, utána szabadon átírhatod</label>
+            <div className="chipradio">
+              {LETTER_KINDS.map((k) => (
+                <button type="button" key={k.id} className={`crx c-blue${kind === k.id ? ' is-on' : ''}`} onClick={() => regenerate(k.id)}>{k.label}</button>
+              ))}
+            </div>
+          </div>
           <div className="field full">
             <label>Csoportok gyors hozzáadása</label>
             <div className="nm-groups">
@@ -85,7 +137,7 @@ export default function NotifyModal({ target, teacherNames, db, onClose }: Props
           <div className="field full">
             <label>Címzettek — {emails.length} email{missing.length ? ` · ${missing.length} névnél nincs cím` : ''}</label>
             <div className="cat-picker pp-picker nm-recips">
-              {selected.length === 0 && <span className="nm-empty">Válassz címzettet a csoportokból, vagy nyisd meg egy feladat/esemény „Értesítés" gombjából.</span>}
+              {selected.length === 0 && <span className="nm-empty">Válassz címzettet a csoportokból, vagy a tétel résztvevői közül.</span>}
               {selected.map((n) => {
                 const has = !!emailOf(db, n);
                 return (
@@ -101,20 +153,48 @@ export default function NotifyModal({ target, teacherNames, db, onClose }: Props
             <input value={subject} onChange={(e) => setSubject(e.target.value)} />
           </div>
           <div className="field full">
-            <label>Üzenet</label>
-            <textarea rows={7} value={body} onChange={(e) => setBody(e.target.value)} />
+            <label>Üzenet — az aláírással együtt <button type="button" className="nm-bodytoggle" onClick={() => setBodyOpen((v) => !v)}>{bodyOpen ? '▲ elrejtés' : '▼ szerkesztés'}</button></label>
+            {bodyOpen ? (
+              <textarea rows={14} value={body} onChange={(e) => setBody(e.target.value)} />
+            ) : (
+              <div className="nm-preview" onClick={() => setBodyOpen(true)} title="Kattints a szerkesztéshez">
+                {previewLines.map((l, i) => <div key={i}>{l}</div>)}
+                <span className="more">… a teljes szöveg az aláírással kész — a 3. gombbal másolható</span>
+              </div>
+            )}
           </div>
-          <div className="nm-copyrow">
-            <button className="btn" disabled={!emails.length} onClick={() => copy(emails.join(', '), 'Címzettek (BCC)')}>⧉ Címzettek másolása</button>
-            <button className="btn" disabled={!subject.trim() && !body} onClick={() => copy(`${subject}\n\n${body}`, 'Tárgy + üzenet')}>⧉ Üzenet másolása</button>
+          <div className="nm-copyrow big">
+            <button className="btn nm-copy" disabled={!emails.length} onClick={() => copy(emails.join('; '), 'Címzettek')}><b>1</b> ⧉ Címzettek ({emails.length})</button>
+            <button className="btn nm-copy" disabled={!subject.trim()} onClick={() => copy(subject.trim(), 'Tárgy')}><b>2</b> ⧉ Tárgy</button>
+            <button className="btn nm-copy" disabled={!body.trim()} onClick={() => copy(body, 'Üzenet')}><b>3</b> ⧉ Üzenet</button>
           </div>
-          {result && <div className={`nm-result${result.startsWith('✓') || result.startsWith('A leveleződ') ? ' ok' : ' err'}`}>{result}</div>}
+          {result && <div className={`nm-result${result.startsWith('✓') || result.startsWith('Mentett') ? ' ok' : ' err'}`}>{result}</div>}
+          {letters.length > 0 && (
+            <div className="field full">
+              <label>Mentett levelek ehhez a tételhez</label>
+              <div className="nm-letters">
+                {letters.map((l) => (
+                  <div key={l.id} className="nm-letter">
+                    <button className="nm-letter-load" onClick={() => loadLetter(l)} title="Betöltés">
+                      <span className="s">{l.subject}</span>
+                      <span className="d">{fmtDate(l.createdAt)} · {l.names.length} címzett</span>
+                    </button>
+                    <button className="btn btn--danger pm-del" title="Levél törlése" onClick={() => onDeleteLetter(l.id)}>✕</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <div className="mfoot">
-          <span className="nm-hint">{emails.length} címzett kiválasztva</span>
+          <button className="btn" onClick={saveLetter} disabled={!subject.trim()}>💾 Levél mentése</button>
           <span className="sp" />
           <button className="btn" onClick={onClose}>Bezárás</button>
-          <button className="btn btn--ink" disabled={!ready} onClick={openMail}>✉ Megnyitás a levelezőben</button>
+          <button className="btn btn--ink" disabled={sending || !emails.length || !subject.trim() || !configured}
+            title={configured ? 'Küldés Gmail SMTP-n (BCC)' : 'A küldéshez töltsd ki a web/.env.local Gmail app-jelszavát és indítsd újra a szervert'}
+            onClick={send}>
+            {sending ? 'Küldés…' : `✉ Küldés (${emails.length})`}
+          </button>
         </div>
       </div>
     </div>

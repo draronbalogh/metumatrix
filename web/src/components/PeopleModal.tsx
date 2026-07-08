@@ -25,6 +25,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
   });
   const [students, setStudents] = useState<Row[]>(() => db.students.map((p) => toRow(p.name, p)));
   const [groups, setGroups] = useState<PeopleGroup[]>(() => db.groups.map((g) => ({ name: g.name, members: [...g.members] })));
+  const [signature, setSignature] = useState(db.signature);
   // választható tagok: tantervi tanárok + az itt szerkesztett hallgatók
   const memberPool = [...teacherNames, ...students.map((s) => s.name).filter(Boolean)];
 
@@ -48,6 +49,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
       teachers: teachers.filter((r) => r.email.trim() || r.phone.trim()).map(toPerson),
       students: students.filter((r) => r.name.trim()).map(toPerson),
       groups: groups.filter((g) => g.name.trim()).map((g) => ({ name: g.name.trim(), members: g.members })),
+      signature,
     });
   };
 
@@ -101,6 +103,10 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
               </div>
             ))}
             <button className="btn pm-add" onClick={() => setGroups((gs) => [...gs, { name: '', members: [] }])}>+ Új csoport</button>
+          </div>
+          <div className="pm-sec">✒ Aláírás — minden levél végére kerül</div>
+          <div className="field full">
+            <textarea rows={9} value={signature} onChange={(e) => setSignature(e.target.value)} />
           </div>
         </div>
         <div className="mfoot">

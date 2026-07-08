@@ -13,68 +13,83 @@ const WDAY = ['H', 'K', 'Sz', 'Cs', 'P', 'Sz', 'V'];
 // A tanév hónapjai: 2026. augusztus – 2027. július
 const MONTHS: { y: number; m: number }[] = [];
 for (let i = 0; i < 12; i++) {
-  const m = 7 + i; // 0-indexelt: aug = 7
+  const m = 7 + i;
   MONTHS.push({ y: 2026 + Math.floor(m / 12), m: m % 12 });
 }
+
+// esemény-színpaletta — egymás mellett futó időszakok jól elkülönülnek
+const EV_COLORS = ['#d7144b', '#2f6fe0', '#17935f', '#7b3fe4', '#e08b00', '#0e9aa7', '#c2185b', '#5d7a12', '#b3541e', '#4b5bd7', '#8e24aa', '#00796b'];
 
 const mkey = (y: number, m: number) => `${y}-${String(m + 1).padStart(2, '0')}`;
 const parseYMD = (s: string) => new Date(Number(s.slice(0, 4)), Number(s.slice(5, 7)) - 1, Number(s.slice(8, 10)));
 
-export default function EventsCalendar({ events, onEdit }: Props) {
-  // hónaphoz rendelés a KEZDŐ hónap szerint: pontos nap (day) vagy hónap (sort); egyik sincs → „egyeztetés alatt" sáv
-  const byMonth: Record<string, AgendaEvent[]> = {};
-  const undated: AgendaEvent[] = [];
-  events.forEach((e) => {
-    const k = e.day ? e.day.slice(0, 7) : e.sort;
-    if (k) (byMonth[k] ||= []).push(e);
-    else undated.push(e);
-  });
+interface DayHit { id: string; color: string; }
+interface MonthRow { e: AgendaEvent; color: string; label: string; }
 
-  // napjelölés: az IDŐSZAK minden napja (day → dayEnd), hónapokon átívelve is.
-  // 'single' = egynapos (teli jelölés), 'range' = időszak napja (halvány sáv).
-  const marked: Record<string, Record<number, 'single' | 'range'>> = {};
-  events.forEach((e) => {
-    if (!e.day) return;
-    const end = e.dayEnd && e.dayEnd > e.day ? e.dayEnd : e.day;
-    const isRange = end !== e.day;
-    const cur = parseYMD(e.day);
+export default function EventsCalendar({ events, onEdit }: Props) {
+  // stabil színkiosztás: a dátumozott események kezdőnap szerint sorban kapják a paletta színeit
+  const dated = events.filter((e) => e.day).slice().sort((a, b) => (a.day as string).localeCompare(b.day as string) || a.id.localeCompare(b.id));
+  const colorOf: Record<string, string> = {};
+  dated.forEach((e, i) => { colorOf[e.id] = EV_COLORS[i % EV_COLORS.length]; });
+
+  // naponkénti találatok + havi sorok (az áthúzódó események MINDEN érintett hónapban listázva)
+  const dayHits: Record<string, Record<number, DayHit[]>> = {};
+  const monthRows: Record<string, MonthRow[]> = {};
+  dated.forEach((e) => {
+    const start = e.day as string;
+    const end = e.dayEnd && e.dayEnd > start ? e.dayEnd : start;
+    const cur = parseYMD(start);
     const endD = parseYMD(end);
     let guard = 0;
+    let curMonth = '';
+    let segStart = 0;
     while (cur <= endD && guard < 400) {
       const k = mkey(cur.getFullYear(), cur.getMonth());
       const day = cur.getDate();
-      const m = (marked[k] ||= {});
-      if (!isRange) m[day] = 'single';
-      else if (m[day] !== 'single') m[day] = 'range';
+      ((dayHits[k] ||= {})[day] ||= []).push({ id: e.id, color: colorOf[e.id] });
+      if (k !== curMonth) {
+        // új hónapba léptünk: az előző hónap sorát lezárjuk, újat nyitunk
+        curMonth = k; segStart = day;
+        (monthRows[k] ||= []).push({ e, color: colorOf[e.id], label: '' });
+      }
+      // a label folyamatosan frissül a szegmens végével
+      const rows = monthRows[k];
+      const row = rows[rows.length - 1];
+      const contBefore = start.slice(0, 7) !== k;
+      const lastOfMonth = new Date(cur.getFullYear(), cur.getMonth() + 1, 0).getDate();
+      const contAfter = end.slice(0, 7) !== k || Number(end.slice(8, 10)) > day ? end.slice(0, 7) !== k && day === lastOfMonth : false;
+      const segEnd = day;
+      row.label = (contBefore ? '…' : '') + (segStart === segEnd ? `${segStart}.` : `${segStart}–${segEnd}.`) + (end.slice(0, 7) > k ? '→' : '');
+      void contAfter;
       cur.setDate(day + 1);
       guard++;
     }
   });
 
+  // dátum nélküli, de hónapra sorolt (sort) események az adott hónap listájába, szín nélkül
+  const fuzzyByMonth: Record<string, AgendaEvent[]> = {};
+  const undated: AgendaEvent[] = [];
+  events.forEach((e) => {
+    if (e.day) return;
+    if (e.sort) (fuzzyByMonth[e.sort] ||= []).push(e);
+    else undated.push(e);
+  });
+
   const today = new Date();
   const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
-  // az esemény dátum-cimkéje a hónap-listában: "26–30." / "7.→" (átlógó) / "26."
-  const dateLabel = (e: AgendaEvent) => {
-    if (!e.day) return '~';
-    const d1 = Number(e.day.slice(8, 10));
-    if (!e.dayEnd || e.dayEnd <= e.day) return `${d1}.`;
-    if (e.dayEnd.slice(0, 7) === e.day.slice(0, 7)) return `${d1}–${Number(e.dayEnd.slice(8, 10))}.`;
-    return `${d1}.→`;
-  };
 
   return (
     <div className="cal">
       <div className="cal-grid">
         {MONTHS.map(({ y, m }) => {
           const k = mkey(y, m);
-          const evs = (byMonth[k] || []).slice().sort((a, b) => (a.day || 'zz').localeCompare(b.day || 'zz'));
+          const rows = monthRows[k] || [];
+          const fuzzy = fuzzyByMonth[k] || [];
           const daysIn = new Date(y, m + 1, 0).getDate();
-          const firstDow = (new Date(y, m, 1).getDay() + 6) % 7; // hétfő-kezdés
-          const mk = marked[k] || {};
-          const hasAny = evs.length > 0 || Object.keys(mk).length > 0;
+          const firstDow = (new Date(y, m, 1).getDay() + 6) % 7;
+          const hits = dayHits[k] || {};
           return (
-            <section className={`cal-month${hasAny ? ' has-ev' : ''}`} key={k}>
+            <section className={`cal-month${rows.length + fuzzy.length ? ' has-ev' : ''}`} key={k}>
               <div className="cal-mh">{y}. {MONTH_NAME[m]}</div>
               <div className="cal-days">
                 {WDAY.map((w, i) => <span key={`w${i}`} className="wd">{w}</span>)}
@@ -82,17 +97,31 @@ export default function EventsCalendar({ events, onEdit }: Props) {
                 {Array.from({ length: daysIn }, (_, i) => {
                   const d = i + 1;
                   const dk = `${k}-${String(d).padStart(2, '0')}`;
-                  const mark = mk[d];
+                  const h = hits[d] || [];
                   return (
-                    <span key={d} className={`dd${mark === 'single' ? ' ev' : mark === 'range' ? ' evr' : ''}${dk === todayKey ? ' today' : ''}`}>{d}</span>
+                    <span key={d} className={`dd${dk === todayKey ? ' today' : ''}`}>
+                      <b>{d}</b>
+                      <span className="bars">
+                        {h.slice(0, 4).map((x, ix) => <i key={ix} style={{ background: x.color }} />)}
+                        {h.length > 4 && <em>+</em>}
+                      </span>
+                    </span>
                   );
                 })}
               </div>
-              {evs.length > 0 && (
+              {(rows.length > 0 || fuzzy.length > 0) && (
                 <div className="cal-evs">
-                  {evs.map((e) => (
-                    <button key={e.id} className="cal-ev" onClick={() => onEdit(e.id)} title={e.when + (e.place ? ` · ${e.place}` : '')}>
-                      <span className="d">{dateLabel(e)}</span>
+                  {rows.map((r) => (
+                    <button key={r.e.id} className="cal-ev" onClick={() => onEdit(r.e.id)} title={r.e.when + (r.e.place ? ` · ${r.e.place}` : '')}>
+                      <span className="cal-dot" style={{ background: r.color }} />
+                      <span className="d">{r.label}</span>
+                      <span className="t">{r.e.title}</span>
+                    </button>
+                  ))}
+                  {fuzzy.map((e) => (
+                    <button key={e.id} className="cal-ev fuzzy" onClick={() => onEdit(e.id)} title={e.when + (e.place ? ` · ${e.place}` : '')}>
+                      <span className="cal-dot hollow" />
+                      <span className="d">~</span>
                       <span className="t">{e.title}</span>
                     </button>
                   ))}

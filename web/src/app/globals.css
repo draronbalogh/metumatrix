@@ -552,22 +552,29 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .ag-mode { margin-left: auto; }
 .cat-block-head .ag-mode + .ag-add { margin-left: 0; }
 
-/* ---- naptár ---- */
-.cal { display: flex; flex-direction: column; gap: 14px; }
-.cal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(235px, 1fr)); gap: 13px; }
-.cal-month { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card); padding: 12px 13px 11px; box-shadow: var(--shadow-1); }
-.cal-month.has-ev { border-color: color-mix(in srgb, var(--brand) 26%, var(--line)); }
-.cal-mh { font-family: var(--ff-display); font-size: .86rem; font-weight: 700; letter-spacing: var(--head-ls); margin-bottom: 8px; }
-.cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
-.cal-days .wd { font-size: .54rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); text-align: center; padding-bottom: 3px; }
-.cal-days .dd { font-family: var(--ff-mono); font-size: .62rem; text-align: center; padding: 2px 0; border-radius: 5px; color: var(--ink-2); }
-.cal-days .dd.ev { background: var(--brand); color: #fff; font-weight: 700; }
-.cal-days .dd.today { outline: 1.5px solid var(--brand); outline-offset: -1.5px; font-weight: 700; }
-.cal-evs { display: flex; flex-direction: column; gap: 3px; margin-top: 9px; padding-top: 8px; border-top: 1px dashed var(--line); }
-.cal-ev { display: flex; align-items: baseline; gap: 7px; text-align: left; font-family: var(--ff); font-size: .72rem; font-weight: 600; color: var(--ink-2); background: transparent; border: 0; padding: 2px 2px; border-radius: 5px; cursor: pointer; }
-.cal-ev:hover { color: var(--brand-text); }
-.cal-ev .d { flex: none; font-family: var(--ff-mono); font-size: .66rem; font-weight: 700; color: var(--brand-text); min-width: 20px; }
+/* ---- naptár: eseményenként saját szín, naponként egymás alatti csíkok ---- */
+.cal { display: flex; flex-direction: column; gap: 16px; }
+.cal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; }
+.cal-month { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card); padding: 15px 16px 13px; box-shadow: var(--shadow-1); }
+.cal-month.has-ev { border-color: var(--line-2); }
+.cal-mh { font-family: var(--ff-display); font-size: 1.02rem; font-weight: 700; letter-spacing: var(--head-ls); margin-bottom: 10px; }
+.cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-days .wd { font-size: .58rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); text-align: center; padding-bottom: 4px; }
+.cal-days .dd { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 34px; padding: 3px 1px; border-radius: 6px; background: color-mix(in srgb, var(--paper-2) 55%, transparent); }
+.cal-days .dd b { font-family: var(--ff-mono); font-size: .68rem; font-weight: 500; color: var(--ink-2); line-height: 1; }
+.cal-days .dd.today { outline: 2px solid var(--brand); outline-offset: -2px; }
+.cal-days .dd.today b { color: var(--brand-text); font-weight: 800; }
+.cal-days .dd .bars { display: flex; flex-direction: column; gap: 1.5px; width: 82%; }
+.cal-days .dd .bars i { display: block; height: 3.5px; border-radius: 2px; }
+.cal-days .dd .bars em { font-style: normal; font-size: .5rem; line-height: 1; color: var(--muted); text-align: center; }
+.cal-evs { display: flex; flex-direction: column; gap: 4px; margin-top: 11px; padding-top: 9px; border-top: 1px dashed var(--line); }
+.cal-ev { display: flex; align-items: baseline; gap: 8px; text-align: left; font-family: var(--ff); font-size: .78rem; font-weight: 600; color: var(--ink); background: transparent; border: 0; padding: 3px; border-radius: 5px; cursor: pointer; }
+.cal-ev:hover { background: var(--paper-2); }
+.cal-dot { flex: none; width: 10px; height: 10px; border-radius: 3px; align-self: center; }
+.cal-dot.hollow { background: transparent; border: 2px dashed var(--line-2); }
+.cal-ev .d { flex: none; font-family: var(--ff-mono); font-size: .68rem; font-weight: 700; color: var(--ink-2); min-width: 46px; }
 .cal-ev .t { min-width: 0; }
+.cal-ev.fuzzy .t { color: var(--ink-2); }
 .cal-ev .w { margin-left: auto; flex: none; font-size: .62rem; color: var(--muted); font-weight: 500; }
 .cal-undated { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 11px 14px; border: 1px dashed var(--line-2); border-radius: var(--r-card); max-width: 1020px; }
 .cal-undated-h { font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
@@ -693,5 +700,3 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .ev-progress { display: inline-block; margin-left: 9px; vertical-align: 2px; font-family: var(--ff); font-size: .62rem; font-weight: 800; letter-spacing: .03em; padding: 2px 9px; border-radius: 999px; background: var(--brand-100); color: var(--brand-text); }
 .ev-progress.all-done { background: color-mix(in srgb, var(--g0) 14%, var(--card)); color: var(--g0); }
 
-/* naptár: időszak-napok (halvány sáv) az egynapos (teli) jelölés mellett */
-.cal-days .dd.evr { background: color-mix(in srgb, var(--brand) 20%, transparent); color: var(--brand-text); font-weight: 700; border-radius: 0; }

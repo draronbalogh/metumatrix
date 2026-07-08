@@ -24,7 +24,10 @@ const mkey = (y: number, m: number) => `${y}-${String(m + 1).padStart(2, '0')}`;
 const parseYMD = (s: string) => new Date(Number(s.slice(0, 4)), Number(s.slice(5, 7)) - 1, Number(s.slice(8, 10)));
 
 interface DayHit { id: string; color: string; }
-interface MonthRow { e: AgendaEvent; color: string; label: string; }
+interface MonthRow { e: AgendaEvent; color: string; label: string; long: boolean; }
+
+// ennél hosszabb tartomány = háttér-időszak: NEM fest napokat, csak a listában jelenik meg
+const LONG_DAYS = 21;
 
 export default function EventsCalendar({ events, onEdit }: Props) {
   // stabil színkiosztás: a dátumozott események kezdőnap szerint sorban kapják a paletta színeit
@@ -38,6 +41,8 @@ export default function EventsCalendar({ events, onEdit }: Props) {
   dated.forEach((e) => {
     const start = e.day as string;
     const end = e.dayEnd && e.dayEnd > start ? e.dayEnd : start;
+    const lenDays = Math.round((parseYMD(end).getTime() - parseYMD(start).getTime()) / 86400000) + 1;
+    const isLong = lenDays > LONG_DAYS;
     const cur = parseYMD(start);
     const endD = parseYMD(end);
     let guard = 0;
@@ -46,21 +51,17 @@ export default function EventsCalendar({ events, onEdit }: Props) {
     while (cur <= endD && guard < 400) {
       const k = mkey(cur.getFullYear(), cur.getMonth());
       const day = cur.getDate();
-      ((dayHits[k] ||= {})[day] ||= []).push({ id: e.id, color: colorOf[e.id] });
+      // hosszú háttér-időszak nem fest napokat — csak a listában szerepel
+      if (!isLong) ((dayHits[k] ||= {})[day] ||= []).push({ id: e.id, color: colorOf[e.id] });
       if (k !== curMonth) {
-        // új hónapba léptünk: az előző hónap sorát lezárjuk, újat nyitunk
         curMonth = k; segStart = day;
-        (monthRows[k] ||= []).push({ e, color: colorOf[e.id], label: '' });
+        (monthRows[k] ||= []).push({ e, color: colorOf[e.id], label: '', long: isLong });
       }
-      // a label folyamatosan frissül a szegmens végével
       const rows = monthRows[k];
       const row = rows[rows.length - 1];
       const contBefore = start.slice(0, 7) !== k;
-      const lastOfMonth = new Date(cur.getFullYear(), cur.getMonth() + 1, 0).getDate();
-      const contAfter = end.slice(0, 7) !== k || Number(end.slice(8, 10)) > day ? end.slice(0, 7) !== k && day === lastOfMonth : false;
       const segEnd = day;
       row.label = (contBefore ? '…' : '') + (segStart === segEnd ? `${segStart}.` : `${segStart}–${segEnd}.`) + (end.slice(0, 7) > k ? '→' : '');
-      void contAfter;
       cur.setDate(day + 1);
       guard++;
     }
@@ -112,8 +113,8 @@ export default function EventsCalendar({ events, onEdit }: Props) {
               {(rows.length > 0 || fuzzy.length > 0) && (
                 <div className="cal-evs">
                   {rows.map((r) => (
-                    <button key={r.e.id} className="cal-ev" onClick={() => onEdit(r.e.id)} title={r.e.when + (r.e.place ? ` · ${r.e.place}` : '')}>
-                      <span className="cal-dot" style={{ background: r.color }} />
+                    <button key={r.e.id} className={`cal-ev${r.long ? ' is-long' : ''}`} onClick={() => onEdit(r.e.id)} title={(r.long ? 'Hosszabb időszak (a napokon nem jelölve) · ' : '') + r.e.when + (r.e.place ? ` · ${r.e.place}` : '')}>
+                      <span className={`cal-dot${r.long ? ' ring' : ''}`} style={r.long ? { borderColor: r.color } : { background: r.color }} />
                       <span className="d">{r.label}</span>
                       <span className="t">{r.e.title}</span>
                     </button>

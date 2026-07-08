@@ -700,3 +700,7 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .ev-progress { display: inline-block; margin-left: 9px; vertical-align: 2px; font-family: var(--ff); font-size: .62rem; font-weight: 800; letter-spacing: .03em; padding: 2px 9px; border-radius: 999px; background: var(--brand-100); color: var(--brand-text); }
 .ev-progress.all-done { background: color-mix(in srgb, var(--g0) 14%, var(--card)); color: var(--g0); }
 
+
+/* hosszú háttér-időszak a hónap-listában: karikás jelölés, halványabb sor */
+.cal-dot.ring { background: transparent; border: 2.5px solid; }
+.cal-ev.is-long .t { color: var(--ink-2); font-weight: 500; font-style: italic; }

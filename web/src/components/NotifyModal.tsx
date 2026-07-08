@@ -64,6 +64,12 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const addGroup = (g: StandingGroup) => setSelected((s) => [...new Set([...s, ...standingGroupNames(g, teacherNames, db)])]);
   const addCustom = (members: string[]) => setSelected((s) => [...new Set([...s, ...members])]);
 
+  // teljes névsor az egyéni hozzáadáshoz: tanárok (a tantervből) + hallgatók (a törzsből)
+  const roster = useMemo(() => [
+    ...teacherNames.map((name) => ({ name, kind: 'T' as const })),
+    ...db.students.map((s) => ({ name: s.name, kind: 'H' as const })),
+  ], [teacherNames, db.students]);
+
   const { emails, missing } = useMemo(() => {
     const em: string[] = []; const mi: string[] = []; const seen = new Set<string>();
     selected.forEach((n) => {
@@ -135,9 +141,25 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             </div>
           </div>
           <div className="field full">
-            <label>Címzettek — {emails.length} email{missing.length ? ` · ${missing.length} névnél nincs cím` : ''}</label>
+            <label>Névsor — koppints a nevekre a hozzáadáshoz/levételhez (T = tanár, H = hallgató, többet is választhatsz)</label>
+            <div className="cat-picker pp-picker">
+              {roster.map((r) => {
+                const on = selected.includes(r.name);
+                const has = !!emailOf(db, r.name);
+                return (
+                  <button key={r.name} type="button" className={`chip${on ? ' is-on' : ''}${on && !has ? ' nm-noemail' : ''}`}
+                    title={has ? (emailOf(db, r.name) as string) : 'nincs email-cím — a Névjegyzékben add meg'}
+                    onClick={() => toggle(r.name)}>
+                    <span className={`pb ${r.kind === 'T' ? 't' : 'h'}`}>{r.kind}</span>{r.name}{on && !has ? ' ⚠' : ''}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="field full">
+            <label>Kiválasztott címzettek — {emails.length} email{missing.length ? ` · ${missing.length} névnél nincs cím` : ''}</label>
             <div className="cat-picker pp-picker nm-recips">
-              {selected.length === 0 && <span className="nm-empty">Válassz címzettet a csoportokból, vagy a tétel résztvevői közül.</span>}
+              {selected.length === 0 && <span className="nm-empty">Válassz a fenti névsorból, a csoportokból, vagy a tétel résztvevői közül.</span>}
               {selected.map((n) => {
                 const has = !!emailOf(db, n);
                 return (

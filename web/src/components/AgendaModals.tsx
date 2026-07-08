@@ -191,6 +191,7 @@ export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: 
     title: event.title, when: event.when, sort: event.sort ?? '', day: event.day ?? '', dayEnd: event.dayEnd ?? '',
     note: event.note ?? '', place: event.place ?? '', owner: event.owner ?? '',
   }));
+  const [featured, setFeatured] = useState(event.featured);
   const [people, setPeople] = useState<string[]>(event.people);
   useEsc(onClose);
   const set = (k: keyof typeof d, v: string) => setD((p) => ({ ...p, [k]: v }));
@@ -204,6 +205,7 @@ export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: 
       sort: d.day.trim() ? d.day.trim().slice(0, 7) : (d.sort.trim() || null),
       day: d.day.trim() || null,
       dayEnd: d.dayEnd.trim() && d.day.trim() && d.dayEnd.trim() > d.day.trim() ? d.dayEnd.trim() : null,
+      featured,
       note: d.note.trim() || null,
       place: d.place.trim() || null,
       owner: d.owner.trim() || null,
@@ -220,6 +222,12 @@ export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: 
           <div className="field full">
             <label>Esemény neve</label>
             <input autoFocus value={d.title} onChange={(e) => set('title', e.target.value)} required />
+          </div>
+          <div className="field full">
+            <label>Kiemelés</label>
+            <div className="chipradio">
+              <button type="button" className={`crx c-amber${featured ? ' is-on' : ''}`} onClick={() => setFeatured((v) => !v)}>★ Kiemelt esemény</button>
+            </div>
           </div>
           <div className="f-sec c-yellow">Időpont és helyszín</div>
           <div className="field full">

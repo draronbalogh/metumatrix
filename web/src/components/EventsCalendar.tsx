@@ -99,8 +99,9 @@ export default function EventsCalendar({ events, onEdit }: Props) {
                   const d = i + 1;
                   const dk = `${k}-${String(d).padStart(2, '0')}`;
                   const h = hits[d] || [];
+                  const hasFeat = h.some((x) => x.featured);
                   return (
-                    <span key={d} className={`dd${dk === todayKey ? ' today' : ''}`}>
+                    <span key={d} className={`dd${dk === todayKey ? ' today' : ''}${hasFeat ? ' has-feat' : ''}`}>
                       <b>{d}</b>
                       <span className="bars">
                         {h.slice(0, 4).map((x, ix) => <i key={ix} className={x.featured ? 'ft' : undefined} style={{ background: x.color }} />)}

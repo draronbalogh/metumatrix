@@ -69,29 +69,6 @@ export default function EventsView({ agenda, q, instr, kindOf, onAdd, onEdit, on
         </div>
       )}
 
-      {(() => {
-        // kiemelt-sáv: a közelgő (vagy dátum nélküli) kiemelt események, visszaszámlálóval
-        const now = new Date();
-        const todayYMD = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        const feats = shown.filter((e) => e.featured && (!e.day || (e.dayEnd || e.day) >= todayYMD));
-        if (!feats.length) return null;
-        const daysUntil = (ymd: string) => Math.round((new Date(+ymd.slice(0, 4), +ymd.slice(5, 7) - 1, +ymd.slice(8, 10)).getTime() - new Date(+todayYMD.slice(0, 4), +todayYMD.slice(5, 7) - 1, +todayYMD.slice(8, 10)).getTime()) / 86400000);
-        return (
-          <div className="ev-featured">
-            {feats.map((e) => {
-              const dleft = e.day ? daysUntil(e.day) : null;
-              return (
-                <button key={e.id} className="ev-feat" onClick={() => onEdit(e.id)}>
-                  <span className="star">★</span>
-                  <span className="tt">{e.title}</span>
-                  <span className="wh">{e.when}</span>
-                  <span className="cd">{dleft == null ? 'egyeztetés alatt' : dleft <= 0 ? 'MOST zajlik' : `${dleft} nap múlva`}</span>
-                </button>
-              );
-            })}
-          </div>
-        );
-      })()}
 
       {mode === 'cal' ? (
         <EventsCalendar events={shown} onEdit={onEdit} />

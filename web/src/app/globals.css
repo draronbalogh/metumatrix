@@ -705,15 +705,26 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .cal-dot.ring { background: transparent; border: 2.5px solid; }
 .cal-ev.is-long .t { color: var(--ink-2); font-weight: 500; font-style: italic; }
 
-/* ---- kiemelt események ---- */
-.ev-featured { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-bottom: 18px; max-width: 1020px; }
-.ev-feat { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left; padding: 12px 15px; border-radius: var(--r-card); cursor: pointer; font-family: var(--ff); background: linear-gradient(135deg, color-mix(in srgb, var(--brand) 9%, var(--card)), var(--card) 65%); border: 1px solid color-mix(in srgb, var(--brand) 34%, var(--line)); box-shadow: var(--shadow-1); transition: transform .12s, box-shadow .12s; }
-.ev-feat:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }
-.ev-feat .star { font-size: .9rem; color: var(--yellow-deep); }
-.ev-feat .tt { font-family: var(--ff-display); font-size: .98rem; font-weight: 700; letter-spacing: var(--head-ls); color: var(--ink); line-height: 1.2; }
-.ev-feat .wh { font-size: .72rem; color: var(--ink-2); font-weight: 500; }
-.ev-feat .cd { margin-top: 4px; font-size: .64rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--brand-text); background: var(--brand-100); padding: 3px 10px; border-radius: 999px; }
+/* ---- kiemelt események: a NAPTÁRBAN lüktetnek, a kártyán csillag ---- */
 .ev-card.is-featured { border-color: color-mix(in srgb, var(--brand) 36%, var(--line)); background: linear-gradient(135deg, color-mix(in srgb, var(--brand) 5%, var(--card)), var(--card) 55%); }
 .ev-star { color: var(--yellow-deep); }
 .cal-days .dd .bars i.ft { height: 5.5px; border-radius: 3px; }
+/* a kiemelt esemény NAPJA: lüktető keret + halvány kiemelő háttér */
+@keyframes featDayPulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand) 55%, transparent); }
+  70% { box-shadow: 0 0 0 7px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.cal-days .dd.has-feat { outline: 2px solid color-mix(in srgb, var(--brand) 65%, transparent); outline-offset: -2px; background: color-mix(in srgb, var(--brand) 10%, var(--card)); animation: featDayPulse 2s ease-out infinite; position: relative; z-index: 1; }
+.cal-days .dd.has-feat b { color: var(--brand-text); font-weight: 800; }
+/* a kiemelt esemény SORA a hónap-listában: finoman villogó háttér + csillag */
+@keyframes featRowGlow {
+  0%, 100% { background: color-mix(in srgb, var(--brand) 5%, transparent); }
+  50% { background: color-mix(in srgb, var(--brand) 16%, transparent); }
+}
+.cal-ev.is-feat { animation: featRowGlow 2.2s ease-in-out infinite; border-radius: 6px; }
 .cal-ev.is-feat .t { font-weight: 800; }
+@media (prefers-reduced-motion: reduce) {
+  .cal-days .dd.has-feat, .cal-ev.is-feat { animation: none; }
+  .cal-ev.is-feat { background: color-mix(in srgb, var(--brand) 10%, transparent); }
+}

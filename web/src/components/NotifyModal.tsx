@@ -79,10 +79,34 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     return { emails: em, missing: mi };
   }, [selected, db]);
 
+  // Robusztus másolás: a Clipboard API csak HTTPS/localhost alatt él — sima HTTP-n
+  // (pl. Tailscale IP-ről) a rejtett-textarea + execCommand tartalék útvonal másol.
+  const copyText = async (text: string): Promise<boolean> => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch { /* tovább a tartalékra */ }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch { return false; }
+  };
   const copy = (text: string, label: string) => {
-    navigator.clipboard?.writeText(text)
-      .then(() => setResult(`✓ ${label} a vágólapon — illeszd be az Outlookba`))
-      .catch(() => setResult('Nem sikerült a másolás — jelöld ki kézzel.'));
+    copyText(text).then((ok) => {
+      if (ok) setResult(`✓ ${label} a vágólapon — illeszd be az Outlookba`);
+      else setResult('Nem sikerült a másolás — nyisd ki a szöveget és jelöld ki kézzel.');
+    });
   };
 
   const saveLetter = () => {

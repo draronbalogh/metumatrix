@@ -368,6 +368,11 @@ body {
 .mfoot .sp { margin-left: auto; }
 .mfoot .btn--ink { padding: 10px 18px; }
 
+/* mobil: nagyobb alapbetű — a rem-alapú méretek (kártyák, listák, űrlapok) együtt nőnek */
+@media (max-width: 720px) {
+  html { font-size: 18px; }
+}
+
 /* mobil: teljes képernyős szerkesztő (Material full-screen dialog minta) —
    nincs elsötétített háttér-sáv, a teljes magasság az űrlapé; a fejléc és a
    Mentés-sáv rögzített, csak a törzs görget */

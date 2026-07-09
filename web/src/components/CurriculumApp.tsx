@@ -46,7 +46,7 @@ export default function CurriculumApp() {
   const [view, setView] = useState<'map' | 'catalog' | 'tasks' | 'events'>('map');
   const [agenda, setAgenda] = useState<Agenda>(DEFAULT_AGENDA);
   const [peopleDB, setPeopleDB] = useState<PeopleDB>(DEFAULT_PEOPLE);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark'); // ideiglenesen: mindig sötét téma az alap
   const [preset, setPreset] = useState<Preset>('muszerfal');
   const [ver, setVer] = useState<string>('2026/2027');
   const [prog, setProg] = useState<Prog>('BA'); // nyitáskor a sima BA nézet aktív
@@ -101,7 +101,9 @@ export default function CurriculumApp() {
         try { const s = localStorage.getItem(PEOPLE_LS_KEY); if (s) setPeopleDB(normalizePeople(JSON.parse(s) as Partial<PeopleDB>)); } catch { /* ignore */ }
       }
       try {
-        const t = localStorage.getItem(THEME_KEY); if (t === 'dark' || t === 'light') setTheme(t);
+        // ideiglenes: mindig sötét témával indulunk (a mentett 'light' beállítást nem töltjük vissza;
+        // a témaváltó gomb továbbra is működik a munkameneten belül)
+        const t = localStorage.getItem(THEME_KEY); if (t === 'dark') setTheme(t);
         const p = localStorage.getItem(PRESET_KEY) as Preset | null;
         if (p && PRESETS.some((x) => x.id === p)) setPreset(p);
         // elrendezés-zárolás: mindig zárva indul (betöltéskor/frissítéskor) a véletlen

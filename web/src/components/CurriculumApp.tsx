@@ -542,7 +542,7 @@ export default function CurriculumApp() {
           {/* A Mátrix mindig mountolva marad (csak elrejtjük), hogy nézetváltáskor a zoom/pásztázás
               megőrződjön és ne igazítson újra — csak betöltéskor / ver-prog váltáskor illesztünk. */}
           <div className="view-pane" style={{ display: view === 'map' ? 'block' : 'none' }}>
-            <MapView data={data} filter={filter} handlers={handlers} persist={persist} theme={theme} view={vp} locked={locked} onToggleLock={toggleLock} active={view === 'map'} />
+            <MapView data={data} filter={filter} handlers={handlers} persist={persist} theme={theme} view={vp} locked={locked} onToggleLock={toggleLock} active={view === 'map'} focusId={details ? `c-${details.ci}-${details.xi}` : null} />
           </div>
           {view === 'catalog' ? (
             <CatalogView data={data} filter={filter} view={vp} onDetails={onDetails} onEdit={onEdit} onAdd={onAdd} onInstructor={onInstructor} onCategory={onCategory} onCatEdit={onCatEdit} />

@@ -740,6 +740,10 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .nm-copy b { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--brand); color: #fff; font-size: .72rem; flex: none; }
 .nm-copy:hover:not(:disabled) b { background: #fff; color: var(--brand-text); }
 .nm-bodytoggle { margin-left: 8px; font-family: var(--ff); font-size: .64rem; font-weight: 700; color: var(--brand-text); background: var(--brand-100); border: 0; border-radius: 999px; padding: 2px 9px; cursor: pointer; text-transform: none; letter-spacing: 0; }
+/* teljes újrafogalmazás: hangsúlyosabb, nagyobb gomb a kis megszólítás-csere mellett */
+.nm-reroll-big { margin-left: 8px; font-family: var(--ff); font-size: .72rem; font-weight: 800; color: #fff; background: var(--brand); border: 0; border-radius: 999px; padding: 4px 12px; cursor: pointer; text-transform: none; letter-spacing: 0; }
+.nm-reroll-big:hover { filter: brightness(1.1); }
+.nm-bodytoggle.nm-off { opacity: .55; text-decoration: line-through; }
 .nm-preview { border: 1px dashed var(--line-2); border-radius: 9px; padding: 11px 13px; font-size: .85rem; line-height: 1.5; color: var(--ink-2); cursor: pointer; background: color-mix(in srgb, var(--paper-2) 45%, transparent); }
 .nm-preview:hover { border-color: var(--brand); }
 .nm-preview .more { display: block; margin-top: 6px; font-size: .7rem; font-weight: 700; color: var(--muted); }

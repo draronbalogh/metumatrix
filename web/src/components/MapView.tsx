@@ -106,9 +106,10 @@ interface Props {
   locked: boolean;
   onToggleLock: () => void;
   active: boolean;   // a Mátrix épp látszik-e (nézetváltáskor nem mountolunk újra, csak ezt kapcsoljuk)
+  focusId: string | null; // a drawerben megnyitott kártya node-id-je (F billentyűs fókuszhoz)
 }
 
-function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleLock, active }: Props) {
+function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleLock, active, focusId }: Props) {
   const dark = theme === 'dark';
   const [legendOpen, setLegendOpen] = useState(false);
   const [edgeMenu, setEdgeMenu] = useState<{ id: string; x: number; y: number; look: EdgeLook } | null>(null);
@@ -174,6 +175,27 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
     const t = setTimeout(() => { lastFitKey.current = key; smartFit(300); }, 90);
     return () => clearTimeout(t);
   }, [active, smartFit, view.ver, view.prog]);
+  // F billentyű: animált fókusz a kijelölt kártyára (ReactFlow-kijelölés, különben a
+  // drawerben megnyitott kártya); kártya nélkül a teljes nézetre igazít. Gépelés közben
+  // (input/textarea fókuszban) és nyitott modálnál nem csinál semmit.
+  useEffect(() => {
+    if (!active) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'f' && e.key !== 'F') return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+      if (document.querySelector('.ovl')) return;
+      const selectedNode = rf.getNodes().find((n) => n.selected && n.type === 'course');
+      const id = selectedNode?.id ?? focusId;
+      const node = id ? rf.getNode(id) : undefined;
+      if (node) rf.fitView({ nodes: [node], duration: 650, padding: 0.35, maxZoom: 1.15 });
+      else smartFit(500);
+      e.preventDefault();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [active, rf, focusId, smartFit]);
   // jelentős szélesség-változásnál (pl. telefon elforgatása) újraigazítás — a magasság-változást
   // (mobil billentyűzet felugrása) szándékosan figyelmen kívül hagyjuk
   useEffect(() => {
@@ -327,7 +349,7 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
             </div>
             <div className="row"><span className="ln build" /> tárgy épül a tárgyra (a nyíl a korábbi félévtől a későbbi felé mutat)</div>
             <div className="row"><span className="dot out" /> kimenet (húzd innen) &nbsp;<span className="dot in" /> bemenet (ide kösd)</div>
-            <div className="row"><span className="hint">Kattints a kártyára a részletekért · koppints a piros élre: vonalstílus / törlés · Shift+húzás = többes kijelölés · Ctrl+Z = visszavonás</span></div>
+            <div className="row"><span className="hint">Kattints a kártyára a részletekért · koppints a piros élre: vonalstílus / törlés · Shift+húzás = többes kijelölés · Ctrl+Z = visszavonás · F = fókusz a kijelölt kártyára</span></div>
           </div>
         )}
       </div>

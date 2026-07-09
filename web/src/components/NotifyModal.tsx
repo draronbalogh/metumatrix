@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { AgendaEvent, AgendaTask, Letter } from '@/data/agenda';
-import { PeopleDB, emailOf } from '@/data/people';
+import { PeopleDB, emailOf, buildFooter } from '@/data/people';
 import { standingGroupNames, StandingGroup } from '@/lib/recipients';
 import { buildLetter, rerollLetter, LETTER_KINDS, LetterKind } from '@/lib/letters';
 import GrowArea from './GrowArea';
@@ -37,7 +37,8 @@ const STANDING: { id: StandingGroup; label: string }[] = [
 // A küldés (Gmail SMTP) opcionális — csak akkor aktív, ha a szerveren be van állítva.
 export default function NotifyModal({ target, teacherNames, db, letters, onSaveLetter, onDeleteLetter, onPlaceChange, onClose }: Props) {
   const [kind, setKind] = useState<LetterKind>('felkeres');
-  const initial = useMemo(() => buildLetter('felkeres', { type: target.targetType, event: target.event, task: target.task }, db.signature), [target, db.signature]);
+  const [sigOn, setSigOn] = useState(true); // hivatalos aláírás a levélben (a link-blokk mindig ott van)
+  const initial = useMemo(() => buildLetter('felkeres', { type: target.targetType, event: target.event, task: target.task }, buildFooter(db, true)), [target, db]);
   const [subject, setSubject] = useState(initial.subject);
   const [body, setBody] = useState(initial.body);
   const [bodyOpen, setBodyOpen] = useState(false);
@@ -58,14 +59,27 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     fetch('/api/notify').then((r) => r.json()).then((j) => setConfigured(!!j.configured)).catch(() => setConfigured(false));
   }, []);
 
-  const regenerate = (k: LetterKind, placeOverride?: string) => {
+  const regenerate = (k: LetterKind, placeOverride?: string, sigOverride?: boolean) => {
     setKind(k);
     const p = (placeOverride ?? place).trim();
     const ev = target.event ? { ...target.event, place: p || null } : target.event;
-    const gen = buildLetter(k, { type: target.targetType, event: ev, task: target.task }, db.signature);
+    const gen = buildLetter(k, { type: target.targetType, event: ev, task: target.task }, buildFooter(db, sigOverride ?? sigOn));
     setSubject(gen.subject);
     setBody(gen.body);
     setBodyDirty(false);
+  };
+
+  // aláírás ki/be: a levél láblécét cseréljük, a törzs (és a kézi szerkesztés) marad
+  const toggleSig = () => {
+    const next = !sigOn;
+    setSigOn(next);
+    const oldF = buildFooter(db, sigOn);
+    const newF = buildFooter(db, next);
+    setBody((b) => {
+      if (b.endsWith(oldF)) return b.slice(0, b.length - oldF.length) + newF;
+      if (!bodyDirty) { regenerate(kind, undefined, next); return b; }
+      return b;
+    });
   };
 
   // helyszín beállítása (chipről vagy kézzel): az eseményre is visszamentjük,
@@ -225,7 +239,10 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           <div className="field full">
             <label>Üzenet (az aláírással együtt)
               <button type="button" className="nm-bodytoggle" onClick={() => setBodyOpen((v) => !v)}>{bodyOpen ? '▲ elrejtés' : '▼ szerkesztés'}</button>
-              <button type="button" className="nm-bodytoggle" title="Csak a megszólítást és az elköszönést cseréli, a törzsszöveg marad" onClick={() => setBody((b) => rerollLetter(b))}>🎲 Átfogalmaz</button>
+              <button type="button" className="nm-reroll-big" title="Teljes újrafogalmazás: tárgy + minden mondat újragenerálódik, az adatok (időpont, helyszín) maradnak"
+                onClick={() => { if (bodyDirty && !confirm('A kézi módosításaid elvesznek. Újrafogalmazzam a levelet?')) return; regenerate(kind); }}>🎲 Átfogalmaz</button>
+              <button type="button" className="nm-bodytoggle" title="Csak a megszólítást és az elköszönést cseréli, a törzsszöveg marad" onClick={() => setBody((b) => rerollLetter(b))}>↺ Megszólítás</button>
+              <button type="button" className={`nm-bodytoggle${sigOn ? '' : ' nm-off'}`} title="A hivatalos aláírás ki-be kapcsolása; a szakos linkek mindig a levél alján maradnak" onClick={toggleSig}>✒ Aláírás: {sigOn ? 'be' : 'ki'}</button>
             </label>
             {bodyOpen ? (
               <GrowArea minRows={8} value={body} onChange={(e) => { setBody(e.target.value); setBodyDirty(true); }} />

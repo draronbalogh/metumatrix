@@ -784,6 +784,10 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .chip--danger { background: transparent; border-color: #d7144b; color: #d7144b; }
 /* névszűrő a névsor felett */
 .nm-search { margin-bottom: 8px; }
+/* új oktató felvétele sor a tárgyszerkesztőben */
+.em-addrow { display: flex; gap: 8px; margin-top: 8px; }
+.em-addrow input { flex: 1; }
+.em-addrow .btn { flex: none; }
 /* email nélküli KIJELÖLT címzett: figyelmeztető sárga, nem "letiltott" szürke */
 .chip.is-on.nm-noemail { opacity: 1; background: var(--yellow-deep); border-color: var(--yellow-deep); color: #241c05; }
 /* mezőcímkék kontrasztja a levél-modálban */

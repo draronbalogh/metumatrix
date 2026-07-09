@@ -8,6 +8,7 @@ interface Props {
   course: Course;
   cohortLabel: string;
   isNew: boolean;
+  teacherNames: string[]; // az egy-forrású oktatói adatbázis (a tanterv oktató-mezőiből)
   onSave: (c: Course) => void;
   onDelete: () => void;
   onClose: () => void;
@@ -49,8 +50,9 @@ const numOrNull = (v: string): number | null => {
   return Number.isNaN(n) ? null : n;
 };
 
-export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete, onClose }: Props) {
+export default function EditModal({ course, cohortLabel, isNew, teacherNames, onSave, onDelete, onClose }: Props) {
   const [d, setD] = useState<Draft>(() => toDraft(course));
+  const [newInstr, setNewInstr] = useState(''); // új (a listában még nem szereplő) oktató felvétele
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -163,12 +165,30 @@ export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete
             </select>
           </div>
           <div className="field">
-            <label>Felelős</label>
-            <input value={d.felelos} onChange={(e) => set('felelos', e.target.value)} placeholder="tárgyfelelős" />
+            <label>Felelős — az oktatói adatbázisból</label>
+            <select value={d.felelos} onChange={(e) => set('felelos', e.target.value)}>
+              <option value="">— nincs —</option>
+              {d.felelos && !teacherNames.includes(d.felelos) && <option value={d.felelos}>{d.felelos} (egyedi név)</option>}
+              {teacherNames.map((n) => <option key={n} value={n}>{n}</option>)}
+            </select>
           </div>
-          <div className="field">
-            <label>Oktató(k)</label>
-            <input value={d.instructors} onChange={(e) => set('instructors', e.target.value)} placeholder="oktató neve" />
+          <div className="field full">
+            <label>Oktató(k) — koppints a nevekre, többet is választhatsz ({toList(d.instructors).length} kiválasztva)</label>
+            <div className="cat-picker pp-picker">
+              {(() => {
+                const sel = toList(d.instructors);
+                const extras = sel.filter((n) => !teacherNames.includes(n));
+                const toggle = (n: string) => set('instructors', (sel.includes(n) ? sel.filter((x) => x !== n) : [...sel, n]).join(', '));
+                return [...extras, ...teacherNames].map((n) => (
+                  <button type="button" key={n} className={`chip${sel.includes(n) ? ' is-on' : ''}`} onClick={() => toggle(n)}>{n}</button>
+                ));
+              })()}
+            </div>
+            <div className="em-addrow">
+              <input value={newInstr} onChange={(e) => setNewInstr(e.target.value)} placeholder="Új oktató neve (ha még nincs a listában)"
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const n = newInstr.trim(); if (n) { set('instructors', [...toList(d.instructors), n].join(', ')); setNewInstr(''); } } }} />
+              <button type="button" className="btn" onClick={() => { const n = newInstr.trim(); if (n) { set('instructors', [...toList(d.instructors), n].join(', ')); setNewInstr(''); } }}>+ Hozzáadás</button>
+            </div>
           </div>
           <div className="f-sec c-green">Tartalom</div>
           <div className="field full">

@@ -680,6 +680,7 @@ export default function CurriculumApp() {
             course={course}
             cohortLabel={`Média Design ${c.program} · ${semLabel(c.semester)}`}
             isNew={isNew}
+            teacherNames={teacherNames}
             onSave={(nc) => { saveCourse(editor, nc); setEditor(null); }}
             onDelete={() => { if (confirm('Törlöd ezt a tárgyat?')) { deleteCourse(editor.ci, editor.xi); setEditor(null); } }}
             onClose={() => setEditor(null)}

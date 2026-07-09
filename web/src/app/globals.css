@@ -758,6 +758,8 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 
 /* ---- levél-készítő: 1-2-3 másolás-gombok, szöveg-előnézet, mentett levelek ---- */
 .nm-copyrow.big { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 10px; }
+/* Outlook webmail gomb a másolósor alján, teljes szélességben */
+.nm-outlook { grid-column: 1 / -1; text-decoration: none; background: var(--brand-100); border-color: color-mix(in srgb, var(--brand) 40%, var(--line)); }
 .nm-copy { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 10px; font-size: .86rem; font-weight: 700; border: 1.5px solid color-mix(in srgb, var(--brand) 30%, var(--line)); color: var(--brand-text); background: var(--card); }
 .nm-copy:hover:not(:disabled) { background: var(--brand); color: #fff; border-color: var(--brand); }
 .nm-copy:disabled { opacity: .45; cursor: default; }

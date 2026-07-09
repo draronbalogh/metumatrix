@@ -353,6 +353,8 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             <button className="btn nm-copy" disabled={!emails.length} onClick={() => copy(emails.join('; '), 'Címzettek')}><b>1</b> ⧉ Címzettek ({emails.length})</button>
             <button className="btn nm-copy" disabled={!subject.trim()} onClick={() => copy(subject.trim(), 'Tárgy')}><b>2</b> ⧉ Tárgy</button>
             <button className="btn nm-copy" disabled={!body.trim()} onClick={() => copy(body, 'Üzenet')}><b>3</b> ⧉ Üzenet</button>
+            <a className="btn nm-copy nm-outlook" href="https://outlook.cloud.microsoft/mail/" target="_blank" rel="noopener noreferrer"
+              title="Az Office 365 Outlook webmail megnyitása új lapon — új levél, majd 1-2-3 beillesztés">✉ Outlook megnyitása ↗</a>
           </div>
           {result && <div aria-live="polite" className={`nm-result${result.startsWith('✓') ? ' ok' : ' err'}`}>{result}</div>}
           {letters.length > 0 && (

@@ -353,8 +353,15 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             <button className="btn nm-copy" disabled={!emails.length} onClick={() => copy(emails.join('; '), 'Címzettek')}><b>1</b> ⧉ Címzettek ({emails.length})</button>
             <button className="btn nm-copy" disabled={!subject.trim()} onClick={() => copy(subject.trim(), 'Tárgy')}><b>2</b> ⧉ Tárgy</button>
             <button className="btn nm-copy" disabled={!body.trim()} onClick={() => copy(body, 'Üzenet')}><b>3</b> ⧉ Üzenet</button>
-            <a className="btn nm-copy nm-outlook" href="https://outlook.cloud.microsoft/mail/" target="_blank" rel="noopener noreferrer"
-              title="Az Office 365 Outlook webmail megnyitása új lapon — új levél, majd 1-2-3 beillesztés">✉ Outlook megnyitása ↗</a>
+            <a className="btn nm-copy nm-outlook" target="_blank" rel="noopener noreferrer"
+              href={emails.length
+                ? `https://outlook.office.com/mail/deeplink/compose?bcc=${encodeURIComponent(emails.join(';'))}&subject=${encodeURIComponent(subject.trim())}`
+                : 'https://outlook.cloud.microsoft/mail/'}
+              title={emails.length
+                ? 'Új Outlook-levél előtöltve: a címzettek (titkos másolatban) és a tárgy már benne vannak, csak a szöveget illeszd be a 3-as gombbal'
+                : 'Az Office 365 Outlook webmail megnyitása új lapon'}>
+              {emails.length ? `✉ Outlook: új levél előtöltve (${emails.length} címzett) ↗` : '✉ Outlook megnyitása ↗'}
+            </a>
           </div>
           {result && <div aria-live="polite" className={`nm-result${result.startsWith('✓') ? ' ok' : ' err'}`}>{result}</div>}
           {letters.length > 0 && (

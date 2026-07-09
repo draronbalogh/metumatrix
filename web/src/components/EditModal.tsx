@@ -91,7 +91,10 @@ export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete
   return (
     <div className="ovl" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal modal--wide">
-        <h3>{isNew ? 'Új tárgy · ' : 'Tárgy szerkesztése · '}{cohortLabel}</h3>
+        <h3>
+          {!isNew && d.name.trim() && <span className="mh-name">{d.name.trim()}</span>}
+          {isNew ? 'Új tárgy · ' : 'Tárgy szerkesztése · '}{cohortLabel}
+        </h3>
         <form className="f" onSubmit={(e) => { e.preventDefault(); save(); }}>
           <div className="f-sec">Alapadatok</div>
           <div className="field full">

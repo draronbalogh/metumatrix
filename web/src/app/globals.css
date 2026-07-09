@@ -331,6 +331,8 @@ body {
 @keyframes modalIn { from { transform: translateY(14px) scale(.985); opacity: 0; } to { transform: none; opacity: 1; } }
 .modal h3 { flex: none; margin: 0; padding: 19px 24px 15px; font-family: var(--ff-display); font-size: 1.2rem; font-weight: 700; letter-spacing: var(--head-ls); border-bottom: 1px solid var(--line); position: relative; }
 .modal h3::after { content: ''; position: absolute; left: 24px; bottom: -1.5px; width: 46px; height: 3px; border-radius: 2px; background: var(--brand); }
+/* a szerkesztett tárgy neve piros (brand) hátterű jelvényben a modál-cím elején */
+.mh-name { display: inline-block; margin-right: 10px; padding: 2px 11px; border-radius: 9px; background: var(--brand); color: #fff; max-width: 100%; overflow-wrap: anywhere; }
 /* a törzs görget, a fejléc és a lábléc rögzített marad — a Mentés mindig elérhető görgetés nélkül */
 .modal > .f, .modal > .pm-body { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; min-height: 0; overscroll-behavior: contain; }
 /* automatikusan növő textarea: nincs belső görgetés, csak a modál törzse görget */

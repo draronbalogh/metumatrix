@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { PeopleDB, PeopleGroup, Person, normalizePhone } from '@/data/people';
+import GrowArea from './GrowArea';
 
 interface Props {
   teacherNames: string[]; // a tantervből — itt nem szerkeszthető, csak elérhetőség adható hozzá
@@ -106,7 +107,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
           </div>
           <div className="pm-sec">✒ Aláírás — minden levél végére kerül</div>
           <div className="field full">
-            <textarea rows={9} value={signature} onChange={(e) => setSignature(e.target.value)} />
+            <GrowArea minRows={6} value={signature} onChange={(e) => setSignature(e.target.value)} />
           </div>
         </div>
         <div className="mfoot">

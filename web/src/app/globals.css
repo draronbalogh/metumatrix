@@ -330,7 +330,9 @@ body {
 .modal h3 { flex: none; margin: 0; padding: 19px 24px 15px; font-family: var(--ff-display); font-size: 1.2rem; font-weight: 700; letter-spacing: var(--head-ls); border-bottom: 1px solid var(--line); position: relative; }
 .modal h3::after { content: ''; position: absolute; left: 24px; bottom: -1.5px; width: 46px; height: 3px; border-radius: 2px; background: var(--brand); }
 /* a törzs görget, a fejléc és a lábléc rögzített marad — a Mentés mindig elérhető görgetés nélkül */
-.modal > .f, .modal > .pm-body { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; min-height: 0; }
+.modal > .f, .modal > .pm-body { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; min-height: 0; overscroll-behavior: contain; }
+/* automatikusan növő textarea: nincs belső görgetés, csak a modál törzse görget */
+.ta-grow { overflow: hidden; resize: none; }
 .f { padding: 18px 24px 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px 16px; }
 /* KRITIKUS: a grid-cellák tudjanak összemenni — enélkül a hosszú select kitolja a modalt (vízszintes scroll) */
 .f > * { min-width: 0; }

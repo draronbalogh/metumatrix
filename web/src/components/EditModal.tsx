@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { CATEGORIES, Course, catList } from '@/data/curriculum';
+import GrowArea from './GrowArea';
 
 interface Props {
   course: Course;
@@ -169,7 +170,7 @@ export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete
           <div className="f-sec c-green">Tartalom</div>
           <div className="field full">
             <label>A tárgy célja</label>
-            <textarea rows={4} value={d.cel} onChange={(e) => set('cel', e.target.value)} placeholder="a tárgy célja, tanulási eredmények" />
+            <GrowArea minRows={4} value={d.cel} onChange={(e) => set('cel', e.target.value)} placeholder="a tárgy célja, tanulási eredmények" />
           </div>
           <div className="field full">
             <label>Rövid leírás — a kártyán ez látszik (max ~110 karakter)</label>
@@ -177,7 +178,7 @@ export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete
           </div>
           <div className="field full">
             <label>Összegzés — a részletek panelen látszik</label>
-            <textarea rows={6} value={d.description} onChange={(e) => set('description', e.target.value)} placeholder="néhány mondatos összefoglaló a tárgyról" />
+            <GrowArea minRows={6} value={d.description} onChange={(e) => set('description', e.target.value)} placeholder="néhány mondatos összefoglaló a tárgyról" />
           </div>
           <div className="field full">
             <label>Szoftverek (vesszővel)</label>

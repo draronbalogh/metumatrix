@@ -5,6 +5,7 @@ import { AgendaEvent, AgendaTask, Letter } from '@/data/agenda';
 import { PeopleDB, emailOf } from '@/data/people';
 import { standingGroupNames, StandingGroup } from '@/lib/recipients';
 import { buildLetter, LETTER_KINDS, LetterKind } from '@/lib/letters';
+import GrowArea from './GrowArea';
 
 export interface NotifyTarget {
   targetType: 'event' | 'task' | null;
@@ -201,7 +202,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           <div className="field full">
             <label>Üzenet (az aláírással együtt) <button type="button" className="nm-bodytoggle" onClick={() => setBodyOpen((v) => !v)}>{bodyOpen ? '▲ elrejtés' : '▼ szerkesztés'}</button></label>
             {bodyOpen ? (
-              <textarea rows={14} value={body} onChange={(e) => setBody(e.target.value)} />
+              <GrowArea minRows={8} value={body} onChange={(e) => setBody(e.target.value)} />
             ) : (
               <div className="nm-preview" onClick={() => setBodyOpen(true)} title="Kattints a szerkesztéshez">
                 {previewLines.map((l, i) => <div key={i}>{l}</div>)}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { AgendaEvent, AgendaTask, STATUS_LABEL, TaskStatus, PRIORITY_LABEL, TaskPriority, TASK_CATEGORIES } from '@/data/agenda';
 import { RosterEntry } from '@/data/people';
+import GrowArea from './GrowArea';
 
 function useEsc(onClose: () => void) {
   useEffect(() => {
@@ -157,11 +158,11 @@ export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClo
           <div className="f-sec c-green">Tartalom</div>
           <div className="field full">
             <label>Rövid összefoglaló — a kártyán ez látszik</label>
-            <textarea rows={3} value={d.summary} onChange={(e) => set('summary', e.target.value)} placeholder="miről szól a feladat" />
+            <GrowArea minRows={3} value={d.summary} onChange={(e) => set('summary', e.target.value)} placeholder="miről szól a feladat" />
           </div>
           <div className="field full">
             <label>Ötletek / teendők — soronként egy</label>
-            <textarea rows={8} value={d.ideas} onChange={(e) => set('ideas', e.target.value)} placeholder={'első lépés\nmásodik lépés'} />
+            <GrowArea minRows={6} value={d.ideas} onChange={(e) => set('ideas', e.target.value)} placeholder={'első lépés\nmásodik lépés'} />
           </div>
         </form>
         <div className="mfoot">
@@ -262,7 +263,7 @@ export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: 
           <div className="f-sec c-green">Leírás</div>
           <div className="field full">
             <label>Leírás</label>
-            <textarea rows={4} value={d.note} onChange={(e) => set('note', e.target.value)} placeholder="mire kell készülni, mi kapcsolódik hozzá" />
+            <GrowArea minRows={4} value={d.note} onChange={(e) => set('note', e.target.value)} placeholder="mire kell készülni, mi kapcsolódik hozzá" />
           </div>
         </form>
         <div className="mfoot">
@@ -294,7 +295,7 @@ export function IntroModal({ intro, onSave, onClose }: IntroProps) {
         <form className="f" onSubmit={(e) => { e.preventDefault(); onSave(v); }}>
           <div className="field full">
             <label>A Feladatok oldal tetején megjelenő szöveg</label>
-            <textarea rows={9} value={v} onChange={(e) => setV(e.target.value)} />
+            <GrowArea minRows={6} value={v} onChange={(e) => setV(e.target.value)} />
           </div>
         </form>
         <div className="mfoot">

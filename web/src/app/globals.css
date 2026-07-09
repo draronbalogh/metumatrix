@@ -443,21 +443,8 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .ag-new { display: inline-block; margin-right: 7px; padding: 1.5px 8px; border-radius: 7px; background: #f5850c; color: #1a1206; font-size: .62rem; font-weight: 800; letter-spacing: .08em; vertical-align: 2px; animation: newBlink 1s ease-in-out infinite; }
 @keyframes newBlink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 @media (prefers-reduced-motion: reduce) { .ag-new { animation: none; } }
-/* a kijelölt kártya jelzése: EGYETLEN, körbefutó szaggatott (marching ants) keret
-   ~20px margóval a kártya körül; a csíkok az óramutató járása szerint vonulnak */
-.react-flow__node-course.selected::after {
-  content: ''; position: absolute; inset: -20px; pointer-events: none; z-index: 3;
-  /* nem piros: semleges tinta-szín 30% átlátszósággal — halvány, de látható, sötét témában is jó */
-  --sel-ring: color-mix(in srgb, var(--ink) 30%, transparent);
-  background:
-    repeating-linear-gradient(90deg, var(--sel-ring) 0 9px, transparent 9px 18px) left top / 18px 3px repeat-x,
-    repeating-linear-gradient(90deg, var(--sel-ring) 0 9px, transparent 9px 18px) left bottom / 18px 3px repeat-x,
-    repeating-linear-gradient(0deg, var(--sel-ring) 0 9px, transparent 9px 18px) left top / 3px 18px repeat-y,
-    repeating-linear-gradient(0deg, var(--sel-ring) 0 9px, transparent 9px 18px) right top / 3px 18px repeat-y;
-  animation: antsRun .6s linear infinite;
-}
-@keyframes antsRun { to { background-position: 18px 0, -18px 100%, 0 -18px, 100% 18px; } }
-@media (prefers-reduced-motion: reduce) { .react-flow__node-course.selected::after { animation: none; } }
+/* a kijelölt kártya jelzése: a vastag piros (brand) keret a kártyán (lásd .react-flow__node.selected
+   .cn-card) — külön külső gyűrű nincs */
 /* a ReactFlow beépített kijelölés-téglalapja ne adjon MÁSODIK keretet a kártyák köré */
 .react-flow__nodesselection-rect { border: none !important; background: transparent !important; }
 /* a húzás közbeni gumiszalag (marquee) viszont látsszon, brand színnel */

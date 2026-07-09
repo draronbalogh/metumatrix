@@ -112,6 +112,8 @@ interface Props {
 function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleLock, active, focusId }: Props) {
   const dark = theme === 'dark';
   const [legendOpen, setLegendOpen] = useState(false);
+  // terület-kijelölés mód: húzásra jelöl (mutatóegér), a pásztázás középső/jobb gombbal marad
+  const [selectMode, setSelectMode] = useState(false);
   const [edgeMenu, setEdgeMenu] = useState<{ id: string; x: number; y: number; look: EdgeLook } | null>(null);
   const built = useMemo(() => buildGraph(data, filter, handlers, view), [data, filter, handlers, view]);
 
@@ -175,8 +177,9 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
     const t = setTimeout(() => { lastFitKey.current = key; smartFit(300); }, 90);
     return () => clearTimeout(t);
   }, [active, smartFit, view.ver, view.prog]);
-  // F billentyű: animált fókusz a kijelölt kártyára (ReactFlow-kijelölés, különben a
-  // drawerben megnyitott kártya); kártya nélkül a teljes nézetre igazít. Gépelés közben
+  // F billentyű: animált fókusz a kijelölésre. Több kijelölt kártyánál (területkijelölés)
+  // a teljes kijelölt területre zoomol, középre igazítva; egy kártyánál arra; különben a
+  // drawerben megnyitott kártyára; kijelölés nélkül a teljes nézetre igazít. Gépelés közben
   // (input/textarea fókuszban) és nyitott modálnál nem csinál semmit.
   useEffect(() => {
     if (!active) return;
@@ -186,11 +189,14 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
       if (document.querySelector('.ovl')) return;
-      const selectedNode = rf.getNodes().find((n) => n.selected && n.type === 'course');
-      const id = selectedNode?.id ?? focusId;
-      const node = id ? rf.getNode(id) : undefined;
-      if (node) rf.fitView({ nodes: [node], duration: 650, padding: 0.35, maxZoom: 1.15 });
-      else smartFit(500);
+      const sel = rf.getNodes().filter((n) => n.selected && n.type === 'course');
+      if (sel.length > 0) {
+        rf.fitView({ nodes: sel, duration: 650, padding: sel.length > 1 ? 0.15 : 0.35, maxZoom: 1.15 });
+      } else {
+        const node = focusId ? rf.getNode(focusId) : undefined;
+        if (node) rf.fitView({ nodes: [node], duration: 650, padding: 0.35, maxZoom: 1.15 });
+        else smartFit(500);
+      }
       e.preventDefault();
     };
     window.addEventListener('keydown', onKey);
@@ -268,7 +274,7 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
   const miniColor = (n: Node) => (n.type === 'frame' ? 'transparent' : n.type === 'program' ? '#ff2d6f' : n.type === 'semester' ? (dark ? '#e9e9e4' : '#0e0f11') : n.data?.dim ? (dark ? '#26272c' : '#e7e7e2') : (dark ? '#3a3d44' : '#ffffff'));
 
   return (
-    <div className={`mapwrap${locked ? ' locked' : ''}`}>
+    <div className={`mapwrap${locked ? ' locked' : ''}${selectMode ? ' selmode' : ''}`}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -284,7 +290,9 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
         defaultEdgeOptions={{ type: 'default' }}
         deleteKeyCode={locked ? null : ['Backspace', 'Delete']}
         nodesDraggable={!locked}
-        elementsSelectable={!locked}
+        elementsSelectable
+        selectionOnDrag={selectMode}
+        panOnDrag={selectMode ? [1, 2] : true}
         snapToGrid
         snapGrid={[GRID, GRID]}
         connectionLineType={ConnectionLineType.Bezier}
@@ -308,6 +316,11 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
               onClick={onToggleLock}
               title={locked ? 'Az elrendezés zárolva: a kártyák és kapcsolatok nem mozdulnak, csak pásztázni/zoomolni lehet. Kattints a feloldáshoz.' : 'Az elrendezés szabad: a kártyák húzhatók, kapcsolatok köthetők. Kattints a zároláshoz (nézelődéshez ajánlott).'}
             >{locked ? '🔒 Zárolva' : '🔓 Szabad'}</button>
+            <button
+              className={`btn selbtn${selectMode ? ' is-on' : ''}`}
+              onClick={() => setSelectMode((v) => !v)}
+              title={selectMode ? 'Terület-kijelölés BE: húzással jelölsz ki kártyákat, F = rázoomolás a területre. Pásztázás a középső/jobb egérgombbal. Kattints a kikapcsoláshoz.' : 'Terület-kijelölés: húzással jelölj ki több kártyát, majd F = rázoomolás a kijelölt területre.'}
+            >⬚ Terület</button>
             {!locked && <button className="btn alignbtn" onClick={onAlign} title="A node-okat sorba/oszlopba igazítja (vízszintesen egy vonalba, függőlegesen rácsra), a mozgatásokat megtartva">⌗ Igazítás</button>}
           </div>
         </Panel>
@@ -349,7 +362,7 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
             </div>
             <div className="row"><span className="ln build" /> tárgy épül a tárgyra (a nyíl a korábbi félévtől a későbbi felé mutat)</div>
             <div className="row"><span className="dot out" /> kimenet (húzd innen) &nbsp;<span className="dot in" /> bemenet (ide kösd)</div>
-            <div className="row"><span className="hint">Kattints a kártyára a részletekért · koppints a piros élre: vonalstílus / törlés · Shift+húzás = többes kijelölés · Ctrl+Z = visszavonás · F = fókusz a kijelölt kártyára</span></div>
+            <div className="row"><span className="hint">Kattints a kártyára a részletekért · koppints a piros élre: vonalstílus / törlés · Shift+húzás vagy ⬚ Terület = többes kijelölés · Ctrl+Z = visszavonás · F = fókusz a kijelölt kártyára/területre</span></div>
           </div>
         )}
       </div>

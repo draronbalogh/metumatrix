@@ -372,6 +372,12 @@ export default function CurriculumApp() {
   // a zárolás munkamenetre szól — nem mentjük, hogy frissítéskor mindig zárva induljon
   const toggleLock = useCallback(() => setLocked((v) => !v), []);
   const handlers = useMemo<Handlers>(() => ({ onEdit, onDetails, onAdd, onInstructor, onCategory, onCatEdit }), [onEdit, onDetails, onAdd, onInstructor, onCategory, onCatEdit]);
+  // a mátrixon feloldott (szerkesztés) módban a kártya-kattintás egyből a szerkesztő
+  // ablakot nyitja (mint a Katalógusban); zárolt módban marad a jobb oldali részletek-sáv
+  const mapHandlers = useMemo<Handlers>(() => ({
+    ...handlers,
+    onDetails: (ci: number, xi: number) => (locked ? setDetails({ ci, xi }) : setEditor({ ci, xi })),
+  }), [handlers, locked]);
 
   const addEdge = useCallback((e: UserEdge) => {
     const cur = dataRef.current;
@@ -544,7 +550,7 @@ export default function CurriculumApp() {
           {/* A Mátrix mindig mountolva marad (csak elrejtjük), hogy nézetváltáskor a zoom/pásztázás
               megőrződjön és ne igazítson újra — csak betöltéskor / ver-prog váltáskor illesztünk. */}
           <div className="view-pane" style={{ display: view === 'map' ? 'block' : 'none' }}>
-            <MapView data={data} filter={filter} handlers={handlers} persist={persist} theme={theme} view={vp} locked={locked} onToggleLock={toggleLock} active={view === 'map'} focusId={details ? `c-${details.ci}-${details.xi}` : null} />
+            <MapView data={data} filter={filter} handlers={mapHandlers} persist={persist} theme={theme} view={vp} locked={locked} onToggleLock={toggleLock} active={view === 'map'} focusId={details ? `c-${details.ci}-${details.xi}` : null} />
           </div>
           {view === 'catalog' ? (
             <CatalogView data={data} filter={filter} view={vp} onDetails={onDetails} onEdit={onEdit} onAdd={onAdd} onInstructor={onInstructor} onCategory={onCategory} onCatEdit={onCatEdit} />

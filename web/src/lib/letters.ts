@@ -147,7 +147,16 @@ function taskFacts(t: AgendaTask): string {
 
 // ---- a levél összerakása ----
 
-export function buildLetter(kind: LetterKind, target: LetterTarget, signature: string): { subject: string; body: string } {
+// a kiválasztott lépések felvezető sora a levélben
+const STEP_HEAD = [
+  'A legfontosabb pontok:',
+  'Amire most fókuszálunk:',
+  'Az aktuális lépések:',
+  'Röviden a teendők:',
+  'Ezekről lesz szó:',
+];
+
+export function buildLetter(kind: LetterKind, target: LetterTarget, signature: string, steps?: string[]): { subject: string; body: string } {
   const e = target.event ?? null;
   const t = target.task ?? null;
   const title = noDash(e?.title || t?.title || '');
@@ -162,10 +171,13 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
   const blocks: string[] = [];
   let closer: string | null = null;
 
-  // adat- és jegyzet-blokk két sorrend-mintában (szerkezeti variálódás)
+  // adat- és jegyzet-blokk két sorrend-mintában (szerkezeti variálódás),
+  // plusz a kiválasztott lépések számozott listaként
   const infoBlocks = (): string[] => {
     const info = [facts, note].filter(Boolean);
     if (info.length === 2 && Math.random() < 0.5) info.reverse();
+    const st = (steps ?? []).map((s) => noDash(s.trim())).filter(Boolean);
+    if (st.length) info.push(`${pickAvoid(STEP_HEAD, 'stephead')}\n${st.map((s, i) => `${i + 1}. ${s}`).join('\n')}`);
     return info;
   };
 
@@ -297,6 +309,8 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
       'Gördülékenyen ment minden, ez a Ti érdemetek is.',
     ], 'koszono.detail') : null;
     blocks.push([thanks, detail].filter(Boolean).join(' '));
+    const st = (steps ?? []).map((s) => noDash(s.trim())).filter(Boolean);
+    if (st.length) blocks.push(`${pick(['Amiben segítettetek:', 'Ami elkészült a közreműködésetekkel:'])}\n${st.map((s, i) => `${i + 1}. ${s}`).join('\n')}`);
     closer = pickAvoid(KOSZONO_CLOSER, 'koszono.closer');
   } else {
     subject = title;

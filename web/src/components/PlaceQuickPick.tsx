@@ -9,10 +9,19 @@ export const PLACE_BUILDINGS = ['D épület', 'I épület'];
 export const PLACE_ROOMS = ['212', '225', '236', '203', '207', 'nagy előadó'];
 const METU_PREFIX = 'METU, Infopark';
 
+// meglévő "METU, Infopark D épület, 212, 225" érték visszafejtése a chipek kezdőállapotához
+const parseValue = (v?: string): { b: string; rooms: string[] } => {
+  if (!v || !v.startsWith('METU')) return { b: '', rooms: [] };
+  const b = PLACE_BUILDINGS.find((x) => v.includes(x)) || '';
+  const rooms = PLACE_ROOMS.filter((x) =>
+    x === 'nagy előadó' ? v.toLowerCase().includes('nagy előadó') : new RegExp(`(^|[ ,])${x}([ ,]|$)`).test(v));
+  return { b, rooms };
+};
+
 export default function PlaceQuickPick({ value, onPick }: { value?: string; onPick: (place: string) => void }) {
   const [mode, setMode] = useState<'metu' | 'kulso'>(() => (!value || value.startsWith('METU') ? 'metu' : 'kulso'));
-  const [b, setB] = useState('');
-  const [rooms, setRooms] = useState<string[]>([]);
+  const [b, setB] = useState(() => parseValue(value).b);
+  const [rooms, setRooms] = useState<string[]>(() => parseValue(value).rooms);
 
   const emit = (nb: string, nr: string[]) => {
     const head = nb ? `${METU_PREFIX} ${nb}` : METU_PREFIX;

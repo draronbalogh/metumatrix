@@ -250,7 +250,7 @@ export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: 
           </div>
           <div className="field full">
             <label>Helyszín</label>
-            <input value={d.place} onChange={(e) => set('place', e.target.value)} placeholder="pl. METU, Infopark D épület, 212 — vagy külső cím" />
+            <input value={d.place} onChange={(e) => set('place', e.target.value)} placeholder="pl. METU, Infopark D épület, 212 vagy külső cím" />
             <PlaceQuickPick value={d.place} onPick={(v) => set('place', v)} />
           </div>
           <div className="f-sec c-blue">Felelős és résztvevők</div>

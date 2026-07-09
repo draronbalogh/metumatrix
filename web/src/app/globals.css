@@ -595,7 +595,8 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .ag-pp .pb { margin-right: 4px; }
 .ag-pp.is-on .pb.t, .ag-pp.is-on .pb.h { background: rgba(255, 255, 255, .25); color: #fff; }
 .chip.is-on .pb.t, .chip.is-on .pb.h { background: rgba(255, 255, 255, .25); color: #fff; }
-.pp-picker { max-height: 190px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+/* NINCS belső görgetés: a lista a tartalommal együtt nő, csak a modál törzse görget */
+.pp-picker { border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
 
 .modal--wide { width: min(720px, 100%); }
 .pm-body { padding: 14px 20px 6px; }
@@ -631,7 +632,7 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .nm-info strong { color: var(--ink); }
 .nm-copyrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .nm-groups { display: flex; flex-wrap: wrap; gap: 6px; }
-.nm-recips { max-height: 150px; overflow: auto; }
+.nm-recips { border-style: dashed; }
 .nm-empty { font-size: .8rem; color: var(--muted); }
 .nm-noemail { opacity: .6; }
 .chip.is-on.nm-noemail { background: var(--muted); border-color: var(--muted); }
@@ -744,7 +745,43 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .nm-reroll-big { margin-left: 8px; font-family: var(--ff); font-size: .72rem; font-weight: 800; color: #fff; background: var(--brand); border: 0; border-radius: 999px; padding: 4px 12px; cursor: pointer; text-transform: none; letter-spacing: 0; }
 .nm-reroll-big:hover { filter: brightness(1.1); }
 .nm-bodytoggle.nm-off { opacity: .55; text-decoration: line-through; }
-.nm-preview { border: 1px dashed var(--line-2); border-radius: 9px; padding: 11px 13px; font-size: .85rem; line-height: 1.5; color: var(--ink-2); cursor: pointer; background: color-mix(in srgb, var(--paper-2) 45%, transparent); }
+.nm-preview { border: 1px dashed var(--line-2); border-radius: 9px; padding: 13px 15px; font-size: .95rem; line-height: 1.55; color: var(--ink); cursor: pointer; background: color-mix(in srgb, var(--paper-2) 45%, transparent); }
+/* a teljes levél egyben látszik, bekezdésekkel */
+.nm-preview-text { white-space: pre-wrap; }
+/* lépés-választó az üzenet mellett: széles kijelzőn jobb oldali oszlop, mobilon az üzenet FELETT */
+@media (min-width: 721px) {
+  .nm-msgrow { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 0 14px; align-items: start; }
+  .nm-msgrow .nm-msg { grid-column: 1; grid-row: 1; }
+  .nm-msgrow .nm-steps { grid-column: 2; grid-row: 1; }
+}
+/* az üzenet eszközsora: a 4 gomb a címke alatt, saját sorban (nem a label-be zsúfolva) */
+.nm-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.nm-tools .nm-bodytoggle, .nm-tools .nm-reroll-big { margin-left: 0; }
+/* az előnézet gombként: teljes szélesség, öröklött betű, balra zárt */
+button.nm-preview { display: block; width: 100%; text-align: left; font: inherit; }
+/* törlő jellegű chip: ránézésre elkülönül az additív chipektől */
+.chip--danger { background: transparent; border-color: #d7144b; color: #d7144b; }
+/* névszűrő a névsor felett */
+.nm-search { margin-bottom: 8px; }
+/* email nélküli KIJELÖLT címzett: figyelmeztető sárga, nem "letiltott" szürke */
+.chip.is-on.nm-noemail { opacity: 1; background: var(--yellow-deep); border-color: var(--yellow-deep); color: #241c05; }
+/* mezőcímkék kontrasztja a levél-modálban */
+.nm-body .field label { color: var(--ink-2); font-size: .68rem; }
+
+/* mobil: a levél szövege SAJÁT, jól elhatárolt sávban görget (nem nyújtja végtelenre a modált);
+   az overscroll-containment miatt a sáv görgetése nem mozgatja a modál külső görgetését */
+@media (max-width: 720px) {
+  .nm-msg .nm-preview, .nm-msg textarea.ta-grow { max-height: 44dvh; overflow-y: auto; overscroll-behavior: contain; }
+  .nm-msg .nm-preview { background: color-mix(in srgb, var(--brand) 4%, var(--card)); border: 1.5px solid color-mix(in srgb, var(--brand) 25%, var(--line)); box-shadow: inset 0 -16px 14px -16px rgba(0, 0, 0, .22); }
+  .nm-body .field { margin-bottom: 16px; }
+  /* érintési célfelületek: chipek és eszköz-gombok legalább ~40px magasak */
+  .nm-body .chip { padding: 10px 14px; font-size: .86rem; }
+  .nm-body .cat-picker, .nm-groups { gap: 8px; }
+  .nm-body .nm-tools .nm-bodytoggle { min-height: 40px; padding: 8px 13px; font-size: .78rem; }
+  .nm-body .nm-tools .nm-reroll-big { min-height: 40px; padding: 10px 16px; font-size: .84rem; }
+  /* az 1-2-3 másolósáv mindig kéznél: a görgető törzs aljára tapad */
+  .nm-copyrow.big { position: sticky; bottom: 0; z-index: 5; background: var(--card); padding: 10px 0 6px; margin-top: 8px; box-shadow: 0 -10px 14px -12px rgba(0, 0, 0, .3); }
+}
 .nm-preview:hover { border-color: var(--brand); }
 .nm-preview .more { display: block; margin-top: 6px; font-size: .7rem; font-weight: 700; color: var(--muted); }
 .nm-letters { display: flex; flex-direction: column; gap: 5px; }

@@ -224,12 +224,14 @@ export default function CurriculumApp() {
   const notifyTask = useCallback((id: string) => {
     const t = agendaRef.current.tasks.find((x) => x.id === id);
     if (!t) return;
-    setNotify({ targetType: 'task', targetId: t.id, task: t, event: null, names: [t.owner, ...t.people].filter((n): n is string => !!n) });
+    setNotify({ targetType: 'task', targetId: t.id, task: t, event: null, names: [t.owner, ...t.people].filter((n): n is string => !!n), steps: t.ideas.filter(Boolean) });
   }, []);
   const notifyEvent = useCallback((id: string) => {
     const e = agendaRef.current.events.find((x) => x.id === id);
     if (!e) return;
-    setNotify({ targetType: 'event', targetId: e.id, event: e, task: null, names: [e.owner, ...e.people].filter((n): n is string => !!n) });
+    // az eseményhez kötött feladatok lépései is választhatók a levélbe
+    const steps = agendaRef.current.tasks.filter((t) => t.eventId === e.id).flatMap((t) => t.ideas).filter(Boolean);
+    setNotify({ targetType: 'event', targetId: e.id, event: e, task: null, names: [e.owner, ...e.people].filter((n): n is string => !!n), steps });
   }, []);
   // mentett levelek kezelése (a levelek az agenda részei, az automentés viszi fájlba)
   const saveLetter = useCallback((l: Letter) => {

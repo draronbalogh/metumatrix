@@ -145,6 +145,48 @@ function taskFacts(t: AgendaTask): string {
   return lines.join('\n');
 }
 
+// ---- meeting-javaslat a levélben ----
+
+export type MeetingMode = 'online' | 'szemelyes' | 'hibrid';
+export interface MeetingPlan {
+  mode: MeetingMode;
+  date?: string; // ÉÉÉÉ-HH-NN
+  time?: string; // ÓÓ:PP
+  link?: string; // Meet-link; üresen hagyva a levélben kitöltendő hely marad
+}
+
+const HU_MONTHS = ['január', 'február', 'március', 'április', 'május', 'június', 'július', 'augusztus', 'szeptember', 'október', 'november', 'december'];
+const fmtMeetDate = (m: MeetingPlan): string | null => {
+  if (!m.date) return null;
+  const [y, mo, d] = m.date.split('-');
+  const month = HU_MONTHS[parseInt(mo, 10) - 1] ?? mo;
+  return `${y}. ${month} ${parseInt(d, 10)}.${m.time ? ` ${m.time}` : ''}`;
+};
+
+function meetingBlock(m: MeetingPlan): string {
+  const dt = fmtMeetDate(m);
+  const tail = dt ? `: ${dt}` : '';
+  const propose = m.mode === 'online'
+    ? pickAvoid([
+        `Online meetinget javasolnék hozzá${tail}.`,
+        `Beszéljük meg egy rövid online meetingen${tail}.`,
+        `Erre egy online egyeztetést javaslok${tail}.`,
+      ], 'meet.online')
+    : m.mode === 'szemelyes'
+      ? pickAvoid([
+          `Személyes megbeszélést javasolnék${tail}.`,
+          `Üljünk össze személyesen${tail}.`,
+          `Erre egy személyes egyeztetést javaslok${tail}.`,
+        ], 'meet.szemelyes')
+      : pickAvoid([
+          `Hibrid megbeszélést javasolnék, személyesen és online is lehet csatlakozni${tail}.`,
+          `Az egyeztetés hibrid formában lesz, helyben és online is várunk${tail}.`,
+        ], 'meet.hibrid');
+  const lines = [propose];
+  if (m.mode !== 'szemelyes') lines.push(`Link: ${noDash((m.link || '').trim())}`);
+  return lines.join('\n');
+}
+
 // ---- a levél összerakása ----
 
 // a kiválasztott lépések felvezető sora a levélben
@@ -156,7 +198,7 @@ const STEP_HEAD = [
   'Ezekről lesz szó:',
 ];
 
-export function buildLetter(kind: LetterKind, target: LetterTarget, signature: string, steps?: string[]): { subject: string; body: string } {
+export function buildLetter(kind: LetterKind, target: LetterTarget, signature: string, steps?: string[], meeting?: MeetingPlan | null): { subject: string; body: string } {
   const e = target.event ?? null;
   const t = target.task ?? null;
   const title = noDash(e?.title || t?.title || '');
@@ -172,12 +214,13 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
   let closer: string | null = null;
 
   // adat- és jegyzet-blokk két sorrend-mintában (szerkezeti variálódás),
-  // plusz a kiválasztott lépések számozott listaként
+  // plusz a kiválasztott lépések számozott listaként és a meeting-javaslat
   const infoBlocks = (): string[] => {
     const info = [facts, note].filter(Boolean);
     if (info.length === 2 && Math.random() < 0.5) info.reverse();
     const st = (steps ?? []).map((s) => noDash(s.trim())).filter(Boolean);
     if (st.length) info.push(`${pickAvoid(STEP_HEAD, 'stephead')}\n${st.map((s, i) => `${i + 1}. ${s}`).join('\n')}`);
+    if (meeting) info.push(meetingBlock(meeting));
     return info;
   };
 

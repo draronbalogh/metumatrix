@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AgendaEvent, AgendaTask, Letter } from '@/data/agenda';
 import { PeopleDB, emailOf, buildFooter } from '@/data/people';
 import { standingGroupNames, StandingGroup } from '@/lib/recipients';
-import { buildLetter, rerollLetter, LETTER_KINDS, LetterKind } from '@/lib/letters';
+import { buildLetter, rerollLetter, LETTER_KINDS, LetterKind, MeetingMode, MeetingPlan } from '@/lib/letters';
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
 
@@ -65,6 +65,11 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const [place, setPlace] = useState(target.event?.place ?? '');
   const [bodyDirty, setBodyDirty] = useState(false);
   const [selSteps, setSelSteps] = useState<string[]>([]); // a levélbe kerülő lépések (üres = nincs lista)
+  // meeting-javaslat a levélben: nincs / online / személyes / hibrid + időpont + link
+  const [meetMode, setMeetMode] = useState<MeetingMode | 'nincs'>('nincs');
+  const [meetDate, setMeetDate] = useState('');
+  const [meetTime, setMeetTime] = useState('');
+  const [meetLink, setMeetLink] = useState('');
   const [selected, setSelected] = useState<string[]>(() => [...new Set(target.names)]);
   const [recipOpen, setRecipOpen] = useState(false); // a teljes névsor/csoportok csak kérésre nyílnak ki
   const [rq, setRq] = useState(''); // névszűrő a névsorhoz
@@ -82,15 +87,23 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     fetch('/api/notify').then((r) => r.json()).then((j) => setConfigured(!!j.configured)).catch(() => setConfigured(false));
   }, []);
 
-  const regenerate = (k: LetterKind, placeOverride?: string, sigOverride?: boolean, stepsOverride?: string[]) => {
+  const regenerate = (k: LetterKind, placeOverride?: string, sigOverride?: boolean, stepsOverride?: string[], meetOverride?: MeetingPlan | null) => {
     setKind(k);
     saveUi(k, sigOverride ?? sigOn);
     const p = (placeOverride ?? place).trim();
     const ev = target.event ? { ...target.event, place: p || null } : target.event;
-    const gen = buildLetter(k, { type: target.targetType, event: ev, task: target.task }, buildFooter(db, sigOverride ?? sigOn), stepsOverride ?? selSteps);
+    const meet = meetOverride !== undefined ? meetOverride
+      : (meetMode === 'nincs' ? null : { mode: meetMode, date: meetDate, time: meetTime, link: meetLink });
+    const gen = buildLetter(k, { type: target.targetType, event: ev, task: target.task }, buildFooter(db, sigOverride ?? sigOn), stepsOverride ?? selSteps, meet);
     setSubject(gen.subject);
     setBody(gen.body);
     setBodyDirty(false);
+  };
+
+  // meeting-beállítás változása: ha a levél nincs kézzel átírva, azonnal újragenerálunk
+  const applyMeet = (mode: MeetingMode | 'nincs', date: string, time: string, link: string) => {
+    setMeetMode(mode); setMeetDate(date); setMeetTime(time); setMeetLink(link);
+    if (!bodyDirty) regenerate(kind, undefined, undefined, undefined, mode === 'nincs' ? null : { mode, date, time, link });
   };
 
   // kézi szerkesztés védelme: felülírás előtt rákérdezünk
@@ -276,6 +289,28 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               </div>
             </div>
           )}
+          <div className="field full">
+            <label>Meeting-javaslat a levélben
+              <a className="nm-bodytoggle nm-meetlink" href="https://meet.google.com/new" target="_blank" rel="noopener noreferrer"
+                title="Új Google Meet indítása új lapon — a létrejött linket másold be ide">▶ Google Meet ↗</a>
+            </label>
+            <div className="chipradio">
+              {([['nincs', 'Nincs'], ['online', 'Online'], ['szemelyes', 'Személyes'], ['hibrid', 'Hibrid']] as const).map(([id, label]) => (
+                <button type="button" key={id} aria-pressed={meetMode === id} className={`crx c-green${meetMode === id ? ' is-on' : ''}`}
+                  onClick={() => applyMeet(id, meetDate, meetTime, meetLink)}>{label}</button>
+              ))}
+            </div>
+            {meetMode !== 'nincs' && (
+              <div className="nm-meetrow">
+                <input type="date" value={meetDate} onChange={(e) => applyMeet(meetMode, e.target.value, meetTime, meetLink)} title="A meeting napja" />
+                <input type="time" value={meetTime} onChange={(e) => applyMeet(meetMode, meetDate, e.target.value, meetLink)} title="A meeting időpontja" />
+                {meetMode !== 'szemelyes' && (
+                  <input className="nm-meeturl" value={meetLink} placeholder="Meet-link (üresen hagyva a levélben kitöltendő hely marad)"
+                    onChange={(e) => applyMeet(meetMode, meetDate, meetTime, e.target.value)} />
+                )}
+              </div>
+            )}
+          </div>
           <div className="field full">
             <label>Tárgy</label>
             <input value={subject} onChange={(e) => setSubject(e.target.value)} />

@@ -789,6 +789,10 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .chip--danger { background: transparent; border-color: #d7144b; color: #d7144b; }
 /* névszűrő a névsor felett */
 .nm-search { margin-bottom: 8px; }
+/* meeting-javaslat sor a levél-készítőben */
+.nm-meetrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.nm-meetrow .nm-meeturl { flex: 1 1 220px; }
+.nm-meetlink { text-decoration: none; display: inline-block; }
 /* új oktató felvétele sor a tárgyszerkesztőben */
 .em-addrow { display: flex; gap: 8px; margin-top: 8px; }
 .em-addrow input { flex: 1; }

@@ -747,6 +747,10 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .nm-letter-load:hover { border-color: var(--brand); }
 .nm-letter-load .s { font-size: .8rem; font-weight: 700; color: var(--ink); }
 .nm-letter-load .d { font-size: .64rem; color: var(--muted); font-family: var(--ff-mono); }
+/* helyszín-gyorskitöltő: épület + terem chipek az input alatt */
+.place-quick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 7px; }
+.pq-sep { width: 1px; height: 18px; background: var(--line-2); margin: 0 3px; flex: none; }
+
 @media (max-width: 720px) {
   .nm-copyrow.big { grid-template-columns: 1fr; }
 }

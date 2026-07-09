@@ -41,6 +41,46 @@ const CLOSER = [
   'Köszönöm a közreműködést.',
 ];
 
+// köszönő levél saját zárásai
+const KOSZONO_CLOSER = [
+  'Még egyszer köszönöm mindenkinek.',
+  'Még egyszer hálásan köszönöm.',
+  'Köszönöm Nektek.',
+  'Nagyon köszönöm a munkátokat.',
+];
+
+// Relatív időzítés az emlékeztetőhöz: "ma", "holnap", "2 nap múlva", "egy hét múlva"…
+export function relativePhrase(day: string | null | undefined): string | null {
+  if (!day || !/^\d{4}-\d{2}-\d{2}/.test(day)) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const target = new Date(`${day.slice(0, 10)}T00:00:00`);
+  const diff = Math.round((target.getTime() - today.getTime()) / 86400000);
+  if (diff < 0) return null;
+  if (diff === 0) return 'ma';
+  if (diff === 1) return 'holnap';
+  if (diff === 2) return 'holnapután';
+  if (diff === 7) return 'egy hét múlva';
+  if (diff === 14) return 'két hét múlva';
+  if (diff === 21) return 'három hét múlva';
+  return `${diff} nap múlva`;
+}
+
+// A meglévő levélben csak a megszólítást és a záró fordulatot cseréli másik
+// változatra; a törzsszöveg (és minden kézi szerkesztés) érintetlen marad.
+export function rerollLetter(body: string): string {
+  const lines = body.split('\n');
+  const gi = lines.findIndex((l) => l.trim() !== '');
+  if (gi >= 0 && GREET.includes(lines[gi].trim())) {
+    lines[gi] = pick(GREET.filter((g) => g !== lines[gi].trim()));
+  }
+  for (let i = gi + 1; i < lines.length; i++) {
+    const cur = lines[i].trim();
+    if (CLOSER.includes(cur)) lines[i] = pick(CLOSER.filter((c) => c !== cur));
+    else if (KOSZONO_CLOSER.includes(cur)) lines[i] = pick(KOSZONO_CLOSER.filter((c) => c !== cur));
+  }
+  return lines.join('\n');
+}
+
 function eventFacts(e: AgendaEvent): string {
   const lines: string[] = [];
   if (e.when) lines.push(`Időpont: ${e.when}`);
@@ -94,12 +134,25 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
         'Egy sorban jelezzétek kérlek, ha ott lesztek.',
       ]);
   } else if (kind === 'emlekezteto') {
-    subject = pick([`Emlékeztető: ${title}`, `${title}: közeledik`, `Ne feledjétek: ${title}`]);
-    core = pick([
-      `Szeretnélek emlékeztetni Titeket: ${title}.`,
-      `Rövid emlékeztető: közeledik a(z) ${title}.`,
-      `Gyors jelzés: a(z) ${title} hamarosan aktuális.`,
-    ]) + '\n\n'
+    const rel = relativePhrase(e?.day ?? t?.dueDate);
+    subject = pick(rel
+      ? [`Emlékeztető: ${title} ${rel}`, `${title}: ${rel}`, `Ne feledjétek: ${title} ${rel}`]
+      : [`Emlékeztető: ${title}`, `${title}: közeledik`, `Ne feledjétek: ${title}`]);
+    core = pick(rel
+      ? (e ? [
+          `Szeretnélek emlékeztetni Titeket: a(z) ${title} ${rel} lesz.`,
+          `Rövid emlékeztető: a(z) ${title} ${rel} lesz.`,
+          `Gyors jelzés: a(z) ${title} ${rel} lesz.`,
+        ] : [
+          `Szeretnélek emlékeztetni Titeket: a(z) ${title} határideje ${rel} esedékes.`,
+          `Rövid emlékeztető: a(z) ${title} határideje ${rel} jár le.`,
+          `Gyors jelzés: a(z) ${title} határideje ${rel} esedékes.`,
+        ])
+      : [
+          `Szeretnélek emlékeztetni Titeket: ${title}.`,
+          `Rövid emlékeztető: közeledik a(z) ${title}.`,
+          `Gyors jelzés: a(z) ${title} hamarosan aktuális.`,
+        ]) + '\n\n'
       + (facts ? facts + '\n\n' : '')
       + (note ? note + '\n\n' : '')
       + pick([
@@ -121,12 +174,7 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
         'Köszönöm a ráfordított időt és energiát.',
         'A közös munkának köszönhetően rendben lezajlott.',
       ]);
-    closer = pick([
-      'Még egyszer köszönöm mindenkinek.',
-      'Még egyszer hálásan köszönöm.',
-      'Köszönöm Nektek.',
-      'Nagyon köszönöm a munkátokat.',
-    ]);
+    closer = pick(KOSZONO_CLOSER);
   } else {
     subject = title;
     core = '';

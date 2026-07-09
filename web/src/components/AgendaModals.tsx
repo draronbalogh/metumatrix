@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { AgendaEvent, AgendaTask, STATUS_LABEL, TaskStatus, PRIORITY_LABEL, TaskPriority, TASK_CATEGORIES } from '@/data/agenda';
 import { RosterEntry } from '@/data/people';
 import GrowArea from './GrowArea';
+import PlaceQuickPick from './PlaceQuickPick';
 
 function useEsc(onClose: () => void) {
   useEffect(() => {
@@ -250,6 +251,7 @@ export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: 
           <div className="field full">
             <label>Helyszín</label>
             <input value={d.place} onChange={(e) => set('place', e.target.value)} placeholder="pl. D212, Linz, online…" />
+            <PlaceQuickPick onPick={(v) => set('place', v)} />
           </div>
           <div className="f-sec c-blue">Felelős és résztvevők</div>
           <div className="field full">

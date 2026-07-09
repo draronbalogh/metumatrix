@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { AgendaEvent, AgendaTask, Letter } from '@/data/agenda';
 import { PeopleDB, emailOf } from '@/data/people';
 import { standingGroupNames, StandingGroup } from '@/lib/recipients';
-import { buildLetter, LETTER_KINDS, LetterKind } from '@/lib/letters';
+import { buildLetter, rerollLetter, LETTER_KINDS, LetterKind } from '@/lib/letters';
 import GrowArea from './GrowArea';
+import PlaceQuickPick from './PlaceQuickPick';
 
 export interface NotifyTarget {
   targetType: 'event' | 'task' | null;
@@ -22,6 +23,7 @@ interface Props {
   letters: Letter[];                    // a tételhez mentett levelek
   onSaveLetter: (l: Letter) => void;
   onDeleteLetter: (id: string) => void;
+  onPlaceChange?: (place: string) => void; // esemény helyszínének visszamentése az eseményre
   onClose: () => void;
 }
 
@@ -33,12 +35,14 @@ const STANDING: { id: StandingGroup; label: string }[] = [
 
 // Levél-készítő: sablonból generált szöveg + 3 numerikus másolás-gomb (Outlookba illesztéshez).
 // A küldés (Gmail SMTP) opcionális — csak akkor aktív, ha a szerveren be van állítva.
-export default function NotifyModal({ target, teacherNames, db, letters, onSaveLetter, onDeleteLetter, onClose }: Props) {
+export default function NotifyModal({ target, teacherNames, db, letters, onSaveLetter, onDeleteLetter, onPlaceChange, onClose }: Props) {
   const [kind, setKind] = useState<LetterKind>('felkeres');
   const initial = useMemo(() => buildLetter('felkeres', { type: target.targetType, event: target.event, task: target.task }, db.signature), [target, db.signature]);
   const [subject, setSubject] = useState(initial.subject);
   const [body, setBody] = useState(initial.body);
   const [bodyOpen, setBodyOpen] = useState(false);
+  const [place, setPlace] = useState(target.event?.place ?? '');
+  const [bodyDirty, setBodyDirty] = useState(false);
   const [selected, setSelected] = useState<string[]>(() => [...new Set(target.names)]);
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [sending, setSending] = useState(false);
@@ -54,11 +58,22 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     fetch('/api/notify').then((r) => r.json()).then((j) => setConfigured(!!j.configured)).catch(() => setConfigured(false));
   }, []);
 
-  const regenerate = (k: LetterKind) => {
+  const regenerate = (k: LetterKind, placeOverride?: string) => {
     setKind(k);
-    const gen = buildLetter(k, { type: target.targetType, event: target.event, task: target.task }, db.signature);
+    const p = (placeOverride ?? place).trim();
+    const ev = target.event ? { ...target.event, place: p || null } : target.event;
+    const gen = buildLetter(k, { type: target.targetType, event: ev, task: target.task }, db.signature);
     setSubject(gen.subject);
     setBody(gen.body);
+    setBodyDirty(false);
+  };
+
+  // helyszín beállítása (chipről vagy kézzel): az eseményre is visszamentjük,
+  // és ha a levél még nincs kézzel átírva, azonnal újrageneráljuk vele
+  const applyPlace = (v: string, regen: boolean) => {
+    setPlace(v);
+    onPlaceChange?.(v);
+    if (regen && !bodyDirty) regenerate(kind, v);
   };
 
   const toggle = (name: string) => setSelected((s) => (s.includes(name) ? s.filter((n) => n !== name) : [...s, name]));
@@ -156,8 +171,16 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               {LETTER_KINDS.map((k) => (
                 <button type="button" key={k.id} className={`crx c-blue${kind === k.id ? ' is-on' : ''}`} onClick={() => regenerate(k.id)}>{k.label}</button>
               ))}
+              <button type="button" className="crx c-amber" title="Csak a megszólítást és az elköszönést cseréli, a törzsszöveg marad" onClick={() => setBody((b) => rerollLetter(b))}>🎲 Átfogalmaz</button>
             </div>
           </div>
+          {target.event && (
+            <div className="field full">
+              <label>Helyszín: a levélbe és az eseményre is bekerül (külső helyszínnél írd be a címet)</label>
+              <input value={place} onChange={(e) => applyPlace(e.target.value, false)} onBlur={() => { if (!bodyDirty) regenerate(kind); }} placeholder="pl. D épület 212, vagy külső cím" />
+              <PlaceQuickPick onPick={(v) => applyPlace(v, true)} />
+            </div>
+          )}
           <div className="field full">
             <label>Csoportok gyors hozzáadása</label>
             <div className="nm-groups">
@@ -202,7 +225,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           <div className="field full">
             <label>Üzenet (az aláírással együtt) <button type="button" className="nm-bodytoggle" onClick={() => setBodyOpen((v) => !v)}>{bodyOpen ? '▲ elrejtés' : '▼ szerkesztés'}</button></label>
             {bodyOpen ? (
-              <GrowArea minRows={8} value={body} onChange={(e) => setBody(e.target.value)} />
+              <GrowArea minRows={8} value={body} onChange={(e) => { setBody(e.target.value); setBodyDirty(true); }} />
             ) : (
               <div className="nm-preview" onClick={() => setBodyOpen(true)} title="Kattints a szerkesztéshez">
                 {previewLines.map((l, i) => <div key={i}>{l}</div>)}

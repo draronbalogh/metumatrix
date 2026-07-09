@@ -714,6 +714,10 @@ export default function CurriculumApp() {
           letters={(agenda.letters || []).filter((l) => l.targetId === notify.targetId)}
           onSaveLetter={saveLetter}
           onDeleteLetter={deleteLetter}
+          onPlaceChange={notify.targetType === 'event' && notify.targetId ? (p: string) => {
+            const cur = agendaRef.current;
+            commitAgenda({ ...cur, events: cur.events.map((ev) => (ev.id === notify.targetId ? { ...ev, place: p.trim() || null } : ev)) });
+          } : undefined}
           onClose={() => setNotify(null)}
         />
       )}

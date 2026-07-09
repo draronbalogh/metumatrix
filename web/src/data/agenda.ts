@@ -42,6 +42,7 @@ export interface AgendaTask {
   dueDate: string | null;   // pontos határidő (ÉÉÉÉ-HH-NN) az automatikus emlékeztetőhöz
   people: string[];        // résztvevők: oktatók és/vagy hallgatók — bárki hozzárendelhető
   eventId: string | null;  // ha a feladat egy naptári eseményhez kötődik
+  createdAt: string | null; // létrehozás időpontja (ISO) — dátum szerinti rendezéshez és az ÚJ jelzéshez
 }
 
 export interface AgendaEvent {
@@ -77,11 +78,12 @@ export interface Agenda {
 }
 
 // Új feladat/esemény alapértelmezett felelőse
-export const DEFAULT_OWNER = 'Balogh Áron';
+export const DEFAULT_OWNER = 'Dr. Balogh Áron';
 
 export const emptyTask = (): AgendaTask => ({
   id: `t-${Date.now().toString(36)}`,
   title: '', summary: '', ideas: [], status: 'todo', priority: 'normal', category: null, owner: DEFAULT_OWNER, due: null, dueDate: null, people: [], eventId: null,
+  createdAt: new Date().toISOString(),
 });
 export const emptyEvent = (): AgendaEvent => ({
   id: `e-${Date.now().toString(36)}`,
@@ -91,7 +93,7 @@ export const emptyEvent = (): AgendaEvent => ({
 // Korábban mentett (régebbi sémájú) adat kiegészítése az új mezőkkel.
 export const normalizeAgenda = (a: Partial<Agenda>): Agenda => ({
   intro: a.intro ?? DEFAULT_AGENDA.intro,
-  tasks: (a.tasks ?? []).map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null, priority: t.priority ?? 'normal', category: t.category ?? null })),
+  tasks: (a.tasks ?? []).map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null, priority: t.priority ?? 'normal', category: t.category ?? null, createdAt: t.createdAt ?? null })),
   events: (a.events ?? []).map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null, featured: e.featured ?? false })),
   letters: a.letters ?? [],
 });
@@ -113,8 +115,8 @@ export const agendaPeople = (a: Agenda): string[] => {
 const DEFAULT_INTRO = 'Aktuálisan a 2026/27-es tanév őszi félévében az alábbi feladatok várnak ránk — az oktatói eligazító munkavázlata alapján, szabadon bővíthető és szerkeszthető.';
 
 // Az előtöltött tartalom a régi (szűkebb) sémával van felírva; a hiányzó mezőket lentebb pótoljuk.
-type RawTask = Omit<AgendaTask, 'people' | 'eventId' | 'dueDate' | 'priority' | 'category'>
-  & { people?: string[]; eventId?: string | null; dueDate?: string | null; priority?: TaskPriority; category?: string | null };
+type RawTask = Omit<AgendaTask, 'people' | 'eventId' | 'dueDate' | 'priority' | 'category' | 'createdAt'>
+  & { people?: string[]; eventId?: string | null; dueDate?: string | null; priority?: TaskPriority; category?: string | null; createdAt?: string | null };
 type RawEvent = Omit<AgendaEvent, 'people' | 'day' | 'dayEnd' | 'featured'> & { people?: string[]; day?: string | null; dayEnd?: string | null; featured?: boolean };
 
 // A 30 előtöltött feladat kategória-besorolása és időkritikus prioritásai (id szerint).
@@ -253,6 +255,7 @@ export const DEFAULT_AGENDA: Agenda = {
     people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null,
     priority: t.priority ?? TASK_PRIORITY_BY_ID[t.id] ?? 'normal',
     category: t.category ?? TASK_CATEGORY_BY_ID[t.id] ?? null,
+    createdAt: t.createdAt ?? null,
   })),
   events: RAW_EVENTS.map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null, featured: e.featured ?? false })),
   letters: [],

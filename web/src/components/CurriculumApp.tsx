@@ -49,7 +49,7 @@ export default function CurriculumApp() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [preset, setPreset] = useState<Preset>('muszerfal');
   const [ver, setVer] = useState<string>('2026/2027');
-  const [prog, setProg] = useState<Prog>('ALL');
+  const [prog, setProg] = useState<Prog>('BA'); // nyitáskor a sima BA nézet aktív
   const [q, setQ] = useState('');
   const [spec, setSpec] = useState('');
   const [ctype, setCtype] = useState('');

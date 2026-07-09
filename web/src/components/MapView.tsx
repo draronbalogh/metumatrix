@@ -112,8 +112,10 @@ interface Props {
 function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleLock, active, focusId }: Props) {
   const dark = theme === 'dark';
   const [legendOpen, setLegendOpen] = useState(false);
-  // terület-kijelölés mód: húzásra jelöl (mutatóegér), a pásztázás középső/jobb gombbal marad
-  const [selectMode, setSelectMode] = useState(false);
+  // terület-kijelölés mód: húzásra jelöl (mutatóegér), a pásztázás középső/jobb gombbal marad.
+  // Egeres (asztali) gépen ez az alapértelmezés; érintőkijelzőn a pásztázás marad az alap.
+  const [selectMode, setSelectMode] = useState<boolean>(() =>
+    typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches);
   const [edgeMenu, setEdgeMenu] = useState<{ id: string; x: number; y: number; look: EdgeLook } | null>(null);
   const built = useMemo(() => buildGraph(data, filter, handlers, view), [data, filter, handlers, view]);
 
@@ -285,6 +287,7 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
         onEdgesDelete={onEdgesDelete}
         onEdgeClick={onEdgeClick}
         onPaneClick={() => setEdgeMenu(null)}
+        zoomOnDoubleClick={false}
         onNodeDragStop={onNodeDragStop}
         onSelectionDragStop={onSelectionDragStop}
         defaultEdgeOptions={{ type: 'default' }}

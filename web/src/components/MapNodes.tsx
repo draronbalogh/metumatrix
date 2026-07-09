@@ -1,6 +1,6 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useRef } from 'react';
 import { Handle, Position } from 'reactflow';
 import { Course, catList, specShort, groupClass } from '@/data/curriculum';
 
@@ -19,10 +19,19 @@ interface CourseData {
 export const CourseNode = memo(function CourseNode({ data }: { data: CourseData }) {
   const x = data.course;
   const ea = x.courseType === 'előadás';
+  // saját dupla-kattintás felismerés: a natív dblclick-et a d3-drag elnyeli húzható node-okon,
+  // a click viszont mindkét (zárolt/feloldott) módban megbízhatóan megérkezik
+  const lastClick = useRef(0);
+  const onCardClick = () => {
+    const now = Date.now();
+    if (now - lastClick.current < 350) { lastClick.current = 0; data.onDetails(data.ci, data.xi); }
+    else lastClick.current = now;
+  };
   return (
     <div
       className={`cn-card ${groupClass(x)}${data.dim ? ' dim' : ''}${data.hit ? ' hit' : ''}`}
-      onClick={() => data.onDetails(data.ci, data.xi)}
+      onClick={onCardClick}
+      title="Egy kattintás: kijelölés (F = fókusz) · dupla kattintás: részletek/szerkesztés"
     >
       <Handle type="target" position={Position.Top} id="tt" className="hdl in hdl-v" />
       <Handle type="target" position={Position.Left} id="tl" className="hdl in hdl-h" />

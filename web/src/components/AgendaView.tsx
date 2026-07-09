@@ -33,13 +33,23 @@ export function PersonChip({ name, star, on, kind, onClick }: { name: string; st
   );
 }
 
-type GroupBy = 'priority' | 'category' | 'status';
+type GroupBy = 'newest' | 'oldest' | 'priority' | 'category' | 'status';
 const IDEAS_ON_CARD = 3;
 const UNCAT = 'Besorolatlan';
 const prioRank = (p: TaskPriority) => PRIORITY_ORDER.indexOf(p);
+// keletkezési sorrend-kulcs: az ISO createdAt (ms), enélkül a folytatólagos id sorszáma
+// (t53 → 53) — így a dátum nélküli, régi kártyák a lista végére (legrégebbinek) sorolódnak
+const createdKey = (t: AgendaTask): number => {
+  if (t.createdAt) { const ms = Date.parse(t.createdAt); if (!Number.isNaN(ms)) return ms; }
+  const n = parseInt((t.id.match(/\d+/) || ['0'])[0], 10);
+  return Number.isNaN(n) ? 0 : n;
+};
+// ÚJ jelzés: a 72 órán belül keletkezett feladat villogó narancs címkét kap
+export const isNewTask = (t: AgendaTask): boolean =>
+  !!t.createdAt && Date.now() - Date.parse(t.createdAt) < 72 * 3600 * 1000;
 
 export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, onEdit, onEditIntro, onPerson, onNotify, onToggleDone, onToggleDoing, onCyclePriority }: Props) {
-  const [groupBy, setGroupBy] = useState<GroupBy>('priority');
+  const [groupBy, setGroupBy] = useState<GroupBy>('newest');
   const [catFilter, setCatFilter] = useState('');
 
   const matches = (t: AgendaTask) => {
@@ -74,7 +84,10 @@ export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, on
 
   // szekciók a csoportosítás szerint
   const sections: { key: string; label: string; cls: string; items: AgendaTask[] }[] = [];
-  if (groupBy === 'priority') {
+  if (groupBy === 'newest' || groupBy === 'oldest') {
+    const items = [...open].sort((a, b) => (groupBy === 'newest' ? createdKey(b) - createdKey(a) : createdKey(a) - createdKey(b)));
+    if (items.length) sections.push({ key: groupBy, label: groupBy === 'newest' ? 'Legújabb elöl' : 'Legrégebbi elöl', cls: 'bydate', items });
+  } else if (groupBy === 'priority') {
     PRIORITY_ORDER.forEach((p) => {
       const items = open.filter((t) => t.priority === p).sort(byDue);
       if (items.length) sections.push({ key: p, label: PRIORITY_LABEL[p], cls: `prio-${p}`, items });
@@ -97,6 +110,8 @@ export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, on
         <span className="pl">Feladatok</span>
         <span className="nm">Média Design tanszék · 2026/27 ősz</span>
         <div className="viewtoggle ag-mode">
+          <button className={groupBy === 'newest' ? 'is-on' : ''} onClick={() => setGroupBy('newest')} title="Dátum szerint: a legújabb feladat legelöl">📅 Új elöl</button>
+          <button className={groupBy === 'oldest' ? 'is-on' : ''} onClick={() => setGroupBy('oldest')} title="Dátum szerint: a legrégebbi feladat legelöl">📅 Régi elöl</button>
           <button className={groupBy === 'priority' ? 'is-on' : ''} onClick={() => setGroupBy('priority')}>⚑ Prioritás</button>
           <button className={groupBy === 'category' ? 'is-on' : ''} onClick={() => setGroupBy('category')}>▦ Kategória</button>
           <button className={groupBy === 'status' ? 'is-on' : ''} onClick={() => setGroupBy('status')}>◔ Állapot</button>
@@ -156,7 +171,7 @@ export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, on
                 <div className="cc-accent" />
                 <div className="ag-cardtop">
                   <button className="ag-check" title="Kész — pipa" onClick={(e) => { e.stopPropagation(); onToggleDone(t.id); }} />
-                  <div className="cc-name">{t.title}</div>
+                  <div className="cc-name">{isNewTask(t) && <span className="ag-new">ÚJ</span>}{t.title}</div>
                 </div>
                 <div className="ag-badges">
                   <button className={`ag-prio ${t.priority}`} title={`Prioritás: ${PRIORITY_LABEL[t.priority]} — kattints a váltáshoz`} onClick={(e) => { e.stopPropagation(); onCyclePriority(t.id); }}>⚑ {PRIORITY_LABEL[t.priority]}</button>

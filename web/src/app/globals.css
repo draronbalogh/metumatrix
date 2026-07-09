@@ -327,7 +327,7 @@ body {
 .dr-edit { width: 100%; justify-content: center; margin: 0; text-align: center; }
 
 .ovl { position: fixed; inset: 0; background: rgba(21, 23, 26, .46); backdrop-filter: blur(3px); display: flex; z-index: 80; align-items: center; justify-content: center; padding: 22px; }
-.modal { background: var(--card); border: 1px solid var(--line); border-radius: 16px; width: min(560px, 100%); max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 30px 80px rgba(16, 17, 20, .30); animation: modalIn .22s cubic-bezier(.2, .8, .25, 1) both; }
+.modal { background: var(--card); border: 1px solid var(--line); border-radius: 16px; width: min(760px, 100%); max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 30px 80px rgba(16, 17, 20, .30); animation: modalIn .22s cubic-bezier(.2, .8, .25, 1) both; }
 @keyframes modalIn { from { transform: translateY(14px) scale(.985); opacity: 0; } to { transform: none; opacity: 1; } }
 .modal h3 { flex: none; margin: 0; padding: 19px 24px 15px; font-family: var(--ff-display); font-size: 1.2rem; font-weight: 700; letter-spacing: var(--head-ls); border-bottom: 1px solid var(--line); position: relative; }
 .modal h3::after { content: ''; position: absolute; left: 24px; bottom: -1.5px; width: 46px; height: 3px; border-radius: 2px; background: var(--brand); }
@@ -598,7 +598,7 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 /* NINCS belső görgetés: a lista a tartalommal együtt nő, csak a modál törzse görget */
 .pp-picker { border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
 
-.modal--wide { width: min(720px, 100%); }
+.modal--wide { width: min(1080px, 100%); }
 .pm-body { padding: 14px 20px 6px; }
 .pm-note { font-size: .78rem; color: var(--ink-2); line-height: 1.5; padding: 9px 12px; background: var(--paper-2); border-radius: 8px; margin-bottom: 13px; }
 .pm-sec { display: flex; align-items: center; gap: 7px; font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 14px 0 7px; }
@@ -750,7 +750,7 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .nm-preview-text { white-space: pre-wrap; }
 /* lépés-választó az üzenet mellett: széles kijelzőn jobb oldali oszlop, mobilon az üzenet FELETT */
 @media (min-width: 721px) {
-  .nm-msgrow { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 0 14px; align-items: start; }
+  .nm-msgrow { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0 16px; align-items: start; }
   .nm-msgrow .nm-msg { grid-column: 1; grid-row: 1; }
   .nm-msgrow .nm-steps { grid-column: 2; grid-row: 1; }
 }

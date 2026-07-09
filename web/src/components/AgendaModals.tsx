@@ -112,7 +112,7 @@ export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClo
           <div className="f-sec">Alapok</div>
           <div className="field full">
             <label>Feladat neve</label>
-            <input autoFocus value={d.title} onChange={(e) => set('title', e.target.value)} required />
+            <input value={d.title} onChange={(e) => set('title', e.target.value)} required />
           </div>
           <div className="field full">
             <label>Állapot</label>
@@ -221,7 +221,7 @@ export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: 
           <div className="f-sec">Alapok</div>
           <div className="field full">
             <label>Esemény neve</label>
-            <input autoFocus value={d.title} onChange={(e) => set('title', e.target.value)} required />
+            <input value={d.title} onChange={(e) => set('title', e.target.value)} required />
           </div>
           <div className="field full">
             <label>Kiemelés</label>
@@ -294,7 +294,7 @@ export function IntroModal({ intro, onSave, onClose }: IntroProps) {
         <form className="f" onSubmit={(e) => { e.preventDefault(); onSave(v); }}>
           <div className="field full">
             <label>A Feladatok oldal tetején megjelenő szöveg</label>
-            <textarea autoFocus rows={9} value={v} onChange={(e) => setV(e.target.value)} />
+            <textarea rows={9} value={v} onChange={(e) => setV(e.target.value)} />
           </div>
         </form>
         <div className="mfoot">

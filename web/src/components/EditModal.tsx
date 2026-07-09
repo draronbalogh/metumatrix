@@ -95,7 +95,7 @@ export default function EditModal({ course, cohortLabel, isNew, onSave, onDelete
           <div className="f-sec">Alapadatok</div>
           <div className="field full">
             <label>Tárgy neve</label>
-            <input autoFocus value={d.name} onChange={(e) => set('name', e.target.value)} required />
+            <input value={d.name} onChange={(e) => set('name', e.target.value)} required />
           </div>
           <div className="field">
             <label>Tárgy típusa</label>

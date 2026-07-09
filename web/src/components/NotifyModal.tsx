@@ -150,7 +150,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
         <h3>✉ Levél készítése{target.event ? ` · ${target.event.title}` : target.task ? ` · ${target.task.title}` : ''}</h3>
         <div className="pm-body nm-body">
           <div className="field full">
-            <label>Sablon — a szöveget ebből generálom, utána szabadon átírhatod</label>
+            <label>Sablon — a szöveget ebből generálom; ugyanarra újra koppintva más megfogalmazást kapsz</label>
             <div className="chipradio">
               {LETTER_KINDS.map((k) => (
                 <button type="button" key={k.id} className={`crx c-blue${kind === k.id ? ' is-on' : ''}`} onClick={() => regenerate(k.id)}>{k.label}</button>

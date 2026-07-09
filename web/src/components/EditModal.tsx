@@ -9,6 +9,7 @@ interface Props {
   cohortLabel: string;
   isNew: boolean;
   teacherNames: string[]; // az egy-forrású oktatói adatbázis (a tanterv oktató-mezőiből)
+  students: string[]; // hallgatói (demonstrátor) adatbázis a people.json-ból
   onSave: (c: Course) => void;
   onDelete: () => void;
   onClose: () => void;
@@ -26,6 +27,7 @@ const toDraft = (c: Course): Draft => ({
   active: c.active == null ? '' : String(c.active),
   groups: c.groups ?? '',
   instructors: c.instructors ?? '',
+  demonstrators: (c.demonstrators ?? []).join(', '),
   institute: String(c.institute ?? 'AMD'),
   note: c.note ?? '',
   description: c.description ?? '',
@@ -50,7 +52,7 @@ const numOrNull = (v: string): number | null => {
   return Number.isNaN(n) ? null : n;
 };
 
-export default function EditModal({ course, cohortLabel, isNew, teacherNames, onSave, onDelete, onClose }: Props) {
+export default function EditModal({ course, cohortLabel, isNew, teacherNames, students, onSave, onDelete, onClose }: Props) {
   const [d, setD] = useState<Draft>(() => toDraft(course));
   const [newInstr, setNewInstr] = useState(''); // új (a listában még nem szereplő) oktató felvétele
 
@@ -74,6 +76,7 @@ export default function EditModal({ course, cohortLabel, isNew, teacherNames, on
       active: numOrNull(d.active),
       groups: d.groups.trim() || null,
       instructors: d.instructors.trim() || null,
+      demonstrators: toList(d.demonstrators),
       institute: d.institute,
       note: d.note.trim() || null,
       description: d.description.trim() || null,
@@ -188,6 +191,23 @@ export default function EditModal({ course, cohortLabel, isNew, teacherNames, on
               <input value={newInstr} onChange={(e) => setNewInstr(e.target.value)} placeholder="Új oktató neve (ha még nincs a listában)"
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const n = newInstr.trim(); if (n) { set('instructors', [...toList(d.instructors), n].join(', ')); setNewInstr(''); } } }} />
               <button type="button" className="btn" onClick={() => { const n = newInstr.trim(); if (n) { set('instructors', [...toList(d.instructors), n].join(', ')); setNewInstr(''); } }}>+ Hozzáadás</button>
+            </div>
+          </div>
+          <div className="field full">
+            <label>Hallgatói demonstrátor — a hallgatói adatbázisból, többet is választhatsz ({toList(d.demonstrators).length} kiválasztva)</label>
+            <div className="cat-picker pp-picker">
+              {(() => {
+                const sel = toList(d.demonstrators);
+                const extras = sel.filter((n) => !students.includes(n));
+                const toggle = (n: string) => set('demonstrators', (sel.includes(n) ? sel.filter((x) => x !== n) : [...sel, n]).join(', '));
+                const all = [...extras, ...students];
+                if (all.length === 0) return <span className="nm-empty">Még nincs hallgató a Névjegyzékben — a ☎ Névjegyzék „Hallgatók” részében vehetsz fel.</span>;
+                return all.map((n) => (
+                  <button type="button" key={n} className={`chip${sel.includes(n) ? ' is-on' : ''}`} onClick={() => toggle(n)}>
+                    <span className="pb h">H</span>{n}
+                  </button>
+                ));
+              })()}
             </div>
           </div>
           <div className="f-sec c-green">Tartalom</div>

@@ -11,6 +11,7 @@ export interface Course {
   active: number | null;
   groups: string | null;
   instructors: string | null;
+  demonstrators?: string[]; // hallgatói demonstrátorok — a hallgatói adatbázisból (people.json) választva
   institute: string;
   note: string | null;
   description: string | null;

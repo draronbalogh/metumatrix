@@ -654,6 +654,7 @@ export default function CurriculumApp() {
               </div>
               {x.felelos && <div className="dr-field"><h4>Felelős</h4><p>{x.felelos}</p></div>}
               <div className="dr-field"><h4>Oktató</h4><p className={x.instructors ? '' : 'none'}>{x.instructors || 'még nincs megadva'}</p></div>
+              {(x.demonstrators ?? []).length > 0 && <div className="dr-field"><h4>Hallgatói demonstrátor</h4><p>{(x.demonstrators ?? []).join(', ')}</p></div>}
               {x.cel && <div className="dr-field"><h4>A tárgy célja</h4><p>{x.cel}</p></div>}
               <div className="dr-field"><h4>Összegzés</h4><p className={x.description ? '' : 'none'}>{x.description || 'még nincs megadva'}</p></div>
               {x.software.length > 0 && <div className="dr-field"><h4>Szoftverek</h4><div className="dr-chips">{x.software.map((s) => <span key={s} className="dr-chip sw">{s}</span>)}</div></div>}
@@ -681,6 +682,7 @@ export default function CurriculumApp() {
             cohortLabel={`Média Design ${c.program} · ${semLabel(c.semester)}`}
             isNew={isNew}
             teacherNames={teacherNames}
+            students={peopleDB.students.map((s) => s.name)}
             onSave={(nc) => { saveCourse(editor, nc); setEditor(null); }}
             onDelete={() => { if (confirm('Törlöd ezt a tárgyat?')) { deleteCourse(editor.ci, editor.xi); setEditor(null); } }}
             onClose={() => setEditor(null)}

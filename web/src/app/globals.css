@@ -447,11 +447,13 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
    ~20px margóval a kártya körül; a csíkok az óramutató járása szerint vonulnak */
 .react-flow__node-course.selected::after {
   content: ''; position: absolute; inset: -20px; pointer-events: none; z-index: 3;
+  /* nem piros: semleges tinta-szín 30% átlátszósággal — halvány, de látható, sötét témában is jó */
+  --sel-ring: color-mix(in srgb, var(--ink) 30%, transparent);
   background:
-    repeating-linear-gradient(90deg, var(--brand) 0 9px, transparent 9px 18px) left top / 18px 3px repeat-x,
-    repeating-linear-gradient(90deg, var(--brand) 0 9px, transparent 9px 18px) left bottom / 18px 3px repeat-x,
-    repeating-linear-gradient(0deg, var(--brand) 0 9px, transparent 9px 18px) left top / 3px 18px repeat-y,
-    repeating-linear-gradient(0deg, var(--brand) 0 9px, transparent 9px 18px) right top / 3px 18px repeat-y;
+    repeating-linear-gradient(90deg, var(--sel-ring) 0 9px, transparent 9px 18px) left top / 18px 3px repeat-x,
+    repeating-linear-gradient(90deg, var(--sel-ring) 0 9px, transparent 9px 18px) left bottom / 18px 3px repeat-x,
+    repeating-linear-gradient(0deg, var(--sel-ring) 0 9px, transparent 9px 18px) left top / 3px 18px repeat-y,
+    repeating-linear-gradient(0deg, var(--sel-ring) 0 9px, transparent 9px 18px) right top / 3px 18px repeat-y;
   animation: antsRun .6s linear infinite;
 }
 @keyframes antsRun { to { background-position: 18px 0, -18px 100%, 0 -18px, 100% 18px; } }

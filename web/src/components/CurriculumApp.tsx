@@ -466,7 +466,7 @@ export default function CurriculumApp() {
           <div className="brandmark">
             <div className="logo">M</div>
             <div>
-              <div className="kicker">METU · Animáció és Média Design Tanszék — Dr. Balogh Áron</div>
+              <div className="kicker">METU · Animáció és Média Design Tanszék <span className="kicker-name">Dr. Balogh Áron</span></div>
               <h1 className="title">Média Design {prog === 'ALL' ? 'BA + MA' : prog} · {ver === 'régi (korábbi)' ? 'régi mintatanterv' : ver}</h1>
               <div className="subtitle">Tanulmányi mátrix — ahogy a félévek és a tárgyak egymásra épülnek · kösd össze, szerkeszd, mentsd</div>
             </div>

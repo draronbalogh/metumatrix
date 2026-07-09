@@ -63,6 +63,8 @@ body {
 .brandmark { display: flex; align-items: center; gap: 13px; min-width: 0; }
 .brandmark .logo { width: 38px; height: 38px; border: 1.5px solid var(--brand); color: var(--brand-text); border-radius: 9px; display: grid; place-items: center; font-family: var(--ff-display); font-weight: 700; font-size: 19px; flex: none; }
 .kicker { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--brand-text); }
+/* a név hangsúlyos jelvényben a fejléc első sorában */
+.kicker-name { display: inline-block; margin-left: 7px; padding: 2.5px 10px; border-radius: 999px; background: var(--brand); color: #fff; font-weight: 800; letter-spacing: .1em; }
 .title { margin: 1px 0 0; font-family: var(--ff-display); font-weight: 700; font-size: clamp(1.25rem, .9rem + 1.4vw, 1.85rem); line-height: 1.08; letter-spacing: var(--head-ls); color: var(--ink); }
 .subtitle { margin-top: 2px; font-size: .86rem; color: var(--ink-2); }
 

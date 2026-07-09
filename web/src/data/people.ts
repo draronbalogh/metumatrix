@@ -22,9 +22,16 @@ export interface PeopleDB {
 }
 
 // Alapértelmezett aláírás — a szakos linkekkel; a Névjegyzékben bármikor átírható.
-export const DEFAULT_SIGNATURE = `Üdvözlettel:
-Balogh Áron
-Média Design szakvezető · Budapesti Metropolitan Egyetem
+export const DEFAULT_SIGNATURE = `Üdvözlettel,
+Dr. Balogh Áron
+
+Szakvezető | Média Design szak
+(magyar nyelvű BA és MA képzések)
+Főiskolai docens, Animáció és Média Design Tanszék
++36 30 115 0594
+abalogh@metropolitan.hu
+Infopark D, 1117 Budapest, Neumann János utca 2.
+Budapesti Metropolitan Egyetem | metropolitan.hu
 
 Web: https://www.metumediadesign.hu
 Facebook oktatói csoport: https://www.facebook.com/groups/metumediadesign

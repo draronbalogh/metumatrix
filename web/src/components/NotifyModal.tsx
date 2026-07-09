@@ -171,20 +171,20 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               {LETTER_KINDS.map((k) => (
                 <button type="button" key={k.id} className={`crx c-blue${kind === k.id ? ' is-on' : ''}`} onClick={() => regenerate(k.id)}>{k.label}</button>
               ))}
-              <button type="button" className="crx c-amber" title="Csak a megszólítást és az elköszönést cseréli, a törzsszöveg marad" onClick={() => setBody((b) => rerollLetter(b))}>🎲 Átfogalmaz</button>
             </div>
           </div>
           {target.event && (
             <div className="field full">
               <label>Helyszín: a levélbe és az eseményre is bekerül (külső helyszínnél írd be a címet)</label>
-              <input value={place} onChange={(e) => applyPlace(e.target.value, false)} onBlur={() => { if (!bodyDirty) regenerate(kind); }} placeholder="pl. D épület 212, vagy külső cím" />
-              <PlaceQuickPick onPick={(v) => applyPlace(v, true)} />
+              <input value={place} onChange={(e) => applyPlace(e.target.value, false)} onBlur={() => { if (!bodyDirty) regenerate(kind); }} placeholder="pl. METU, Infopark D épület, 212 — vagy külső cím" />
+              <PlaceQuickPick value={place} onPick={(v) => applyPlace(v, true)} />
             </div>
           )}
           <div className="field full">
             <label>Csoportok gyors hozzáadása</label>
             <div className="nm-groups">
               {STANDING.map((g) => <button key={g.id} type="button" className="chip" onClick={() => addGroup(g.id)}>+ {g.label}</button>)}
+              <button type="button" className="chip" title="Minden címzett törlése egy lépésben" onClick={() => setSelected([])}>✕ Senki</button>
               {db.groups.map((g) => <button key={g.name} type="button" className="chip" title={g.members.join(', ')} onClick={() => addCustom(g.members)}>+ {g.name}</button>)}
             </div>
           </div>
@@ -223,7 +223,10 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             <input value={subject} onChange={(e) => setSubject(e.target.value)} />
           </div>
           <div className="field full">
-            <label>Üzenet (az aláírással együtt) <button type="button" className="nm-bodytoggle" onClick={() => setBodyOpen((v) => !v)}>{bodyOpen ? '▲ elrejtés' : '▼ szerkesztés'}</button></label>
+            <label>Üzenet (az aláírással együtt)
+              <button type="button" className="nm-bodytoggle" onClick={() => setBodyOpen((v) => !v)}>{bodyOpen ? '▲ elrejtés' : '▼ szerkesztés'}</button>
+              <button type="button" className="nm-bodytoggle" title="Csak a megszólítást és az elköszönést cseréli, a törzsszöveg marad" onClick={() => setBody((b) => rerollLetter(b))}>🎲 Átfogalmaz</button>
+            </label>
             {bodyOpen ? (
               <GrowArea minRows={8} value={body} onChange={(e) => { setBody(e.target.value); setBodyDirty(true); }} />
             ) : (

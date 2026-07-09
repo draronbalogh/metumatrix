@@ -104,8 +104,8 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   };
   const copy = (text: string, label: string) => {
     copyText(text).then((ok) => {
-      if (ok) setResult(`✓ ${label} a vágólapon — illeszd be az Outlookba`);
-      else setResult('Nem sikerült a másolás — nyisd ki a szöveget és jelöld ki kézzel.');
+      if (ok) setResult(`✓ ${label} a vágólapon, illeszd be az Outlookba`);
+      else setResult('Nem sikerült a másolás. Nyisd ki a szöveget és jelöld ki kézzel.');
     });
   };
 
@@ -117,7 +117,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       targetId: target.targetId,
       subject, body, names: selected,
     });
-    setResult('✓ Levél elmentve — lent a listában');
+    setResult('✓ Levél elmentve, lent a listában');
   };
 
   const loadLetter = (l: Letter) => {
@@ -150,7 +150,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
         <h3>✉ Levél készítése{target.event ? ` · ${target.event.title}` : target.task ? ` · ${target.task.title}` : ''}</h3>
         <div className="pm-body nm-body">
           <div className="field full">
-            <label>Sablon — a szöveget ebből generálom; ugyanarra újra koppintva más megfogalmazást kapsz</label>
+            <label>Sablon: a szöveget ebből generálom; ugyanarra újra koppintva más megfogalmazást kapsz</label>
             <div className="chipradio">
               {LETTER_KINDS.map((k) => (
                 <button type="button" key={k.id} className={`crx c-blue${kind === k.id ? ' is-on' : ''}`} onClick={() => regenerate(k.id)}>{k.label}</button>
@@ -165,14 +165,14 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             </div>
           </div>
           <div className="field full">
-            <label>Névsor — koppints a nevekre a hozzáadáshoz/levételhez (T = tanár, H = hallgató, többet is választhatsz)</label>
+            <label>Névsor: koppints a nevekre a hozzáadáshoz/levételhez (T = tanár, H = hallgató, többet is választhatsz)</label>
             <div className="cat-picker pp-picker">
               {roster.map((r) => {
                 const on = selected.includes(r.name);
                 const has = !!emailOf(db, r.name);
                 return (
                   <button key={r.name} type="button" className={`chip${on ? ' is-on' : ''}${on && !has ? ' nm-noemail' : ''}`}
-                    title={has ? (emailOf(db, r.name) as string) : 'nincs email-cím — a Névjegyzékben add meg'}
+                    title={has ? (emailOf(db, r.name) as string) : 'nincs email-cím, a Névjegyzékben add meg'}
                     onClick={() => toggle(r.name)}>
                     <span className={`pb ${r.kind === 'T' ? 't' : 'h'}`}>{r.kind}</span>{r.name}{on && !has ? ' ⚠' : ''}
                   </button>
@@ -181,31 +181,31 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             </div>
           </div>
           <div className="field full">
-            <label>Kiválasztott címzettek — {emails.length} email{missing.length ? ` · ${missing.length} névnél nincs cím` : ''}</label>
+            <label>Kiválasztott címzettek: {emails.length} email{missing.length ? ` · ${missing.length} névnél nincs cím` : ''}</label>
             <div className="cat-picker pp-picker nm-recips">
               {selected.length === 0 && <span className="nm-empty">Válassz a fenti névsorból, a csoportokból, vagy a tétel résztvevői közül.</span>}
               {selected.map((n) => {
                 const has = !!emailOf(db, n);
                 return (
-                  <button key={n} type="button" className={`chip is-on${has ? '' : ' nm-noemail'}`} title={has ? emailOf(db, n) as string : 'nincs email-cím — a Névjegyzékben add meg'}
+                  <button key={n} type="button" className={`chip is-on${has ? '' : ' nm-noemail'}`} title={has ? emailOf(db, n) as string : 'nincs email-cím, a Névjegyzékben add meg'}
                     onClick={() => toggle(n)}>{n}{has ? '' : ' ⚠'}</button>
                 );
               })}
             </div>
-            {missing.length > 0 && <div className="nm-missing">⚠ Nincs email-címük (kimaradnak): {missing.join(', ')} — a ☎ Névjegyzékben pótolható.</div>}
+            {missing.length > 0 && <div className="nm-missing">⚠ Nincs email-címük (kimaradnak): {missing.join(', ')}. A ☎ Névjegyzékben pótolható.</div>}
           </div>
           <div className="field full">
             <label>Tárgy</label>
             <input value={subject} onChange={(e) => setSubject(e.target.value)} />
           </div>
           <div className="field full">
-            <label>Üzenet — az aláírással együtt <button type="button" className="nm-bodytoggle" onClick={() => setBodyOpen((v) => !v)}>{bodyOpen ? '▲ elrejtés' : '▼ szerkesztés'}</button></label>
+            <label>Üzenet (az aláírással együtt) <button type="button" className="nm-bodytoggle" onClick={() => setBodyOpen((v) => !v)}>{bodyOpen ? '▲ elrejtés' : '▼ szerkesztés'}</button></label>
             {bodyOpen ? (
               <textarea rows={14} value={body} onChange={(e) => setBody(e.target.value)} />
             ) : (
               <div className="nm-preview" onClick={() => setBodyOpen(true)} title="Kattints a szerkesztéshez">
                 {previewLines.map((l, i) => <div key={i}>{l}</div>)}
-                <span className="more">… a teljes szöveg az aláírással kész — a 3. gombbal másolható</span>
+                <span className="more">… a teljes szöveg az aláírással kész, a 3. gombbal másolható</span>
               </div>
             )}
           </div>

@@ -824,6 +824,10 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .viewer .ag-intro-edit, .viewer .editonly { display: none !important; }
 .viewer-badge { position: fixed; bottom: 10px; right: 12px; z-index: 60; font-size: .72rem; font-weight: 800; letter-spacing: .04em; padding: 6px 12px; border-radius: 999px; background: var(--brand); color: #fff; box-shadow: 0 4px 14px rgba(16, 17, 20, .25); pointer-events: none; }
 
+/* félév-szűrő a katalógus tetején */
+.cat-semfilter { display: inline-flex; flex-wrap: wrap; margin-bottom: 12px; row-gap: 4px; }
+.cat-semfilter button.is-on { background: var(--brand); color: #fff; }
+
 /* ---- pillanatkép-betöltő ---- */
 .snap-latest { width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 10px; }
 .snap-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; max-width: 100%; }

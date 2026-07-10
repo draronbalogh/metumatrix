@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Course, Curriculum, catList, cohortTotals, semLabel, specShort, courseGroup, courseRank, GROUP_LABEL } from '@/data/curriculum';
 import type { Filter, View } from '@/lib/buildGraph';
 import { instrList } from '@/lib/buildGraph';
@@ -18,6 +19,8 @@ interface Props {
 }
 
 export default function CatalogView({ data, filter, view, onDetails, onEdit, onAdd, onInstructor, onCategory, onCatEdit }: Props) {
+  // félév-szűrő: 0 = mind, egyébként a kiválasztott félév blokkja látszik csak
+  const [sem, setSem] = useState(0);
   const matches = (x: Course) => {
     if (filter.q) {
       const s = filter.q.toLowerCase();
@@ -30,16 +33,29 @@ export default function CatalogView({ data, filter, view, onDetails, onEdit, onA
     return true;
   };
 
-  const visible = data.cohorts
+  const allVisible = data.cohorts
     .map((c, ci) => ({ c, ci }))
     .filter(({ c }) => c.version === view.ver && (view.prog === 'ALL' || c.program === view.prog))
     .sort((a, b) => (a.c.semester || 0) - (b.c.semester || 0));
+
+  // a jelen lévő félévek (verzió/program-váltásnál a nem létező kiválasztás = mind)
+  const sems = [...new Set(allVisible.map(({ c }) => c.semester || 0))].sort((a, b) => a - b);
+  const semActive = sems.includes(sem) ? sem : 0;
+  const visible = semActive ? allVisible.filter(({ c }) => (c.semester || 0) === semActive) : allVisible;
 
   // BA+MA nézetben programonként külön blokk (saját fejléccel), egyébként egyetlen blokk
   const progs = (view.prog === 'ALL' ? (['BA', 'MA'] as const) : [view.prog]).filter((p) => view.prog !== 'ALL' || visible.some(({ c }) => c.program === p));
 
   return (
     <main className="catalog">
+      {allVisible.length > 0 && (
+        <div className="viewtoggle cat-semfilter">
+          <button className={!semActive ? 'is-on' : ''} onClick={() => setSem(0)}>Mind</button>
+          {sems.map((s) => (
+            <button key={s} className={semActive === s ? 'is-on' : ''} onClick={() => setSem(s)}>{semLabel(s)}</button>
+          ))}
+        </div>
+      )}
       {visible.length === 0 && (
         <>
           <div className="cat-block-head">

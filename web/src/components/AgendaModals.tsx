@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { AgendaEvent, AgendaTask, STATUS_LABEL, TaskStatus, PRIORITY_LABEL, TaskPriority, TASK_CATEGORIES } from '@/data/agenda';
-import { RosterEntry } from '@/data/people';
+import { RosterEntry, PersonKind, KIND_LABEL } from '@/data/people';
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
 
@@ -14,23 +14,22 @@ function useEsc(onClose: () => void) {
   }, [onClose]);
 }
 
-// Felelős-választó: egyetlen név az állandó listából (tanterv-tanárok + hallgatók)
+// Felelős-választó: egyetlen név az öt állandó listából
 function OwnerSelect({ value, roster, onChange }: { value: string; roster: RosterEntry[]; onChange: (v: string) => void }) {
-  const teachers = roster.filter((r) => r.kind === 'T');
-  const students = roster.filter((r) => r.kind === 'H');
   const known = roster.some((r) => r.name === value);
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)}>
       <option value="">— nincs —</option>
       {value && !known && <option value={value}>{value} (régi bejegyzés)</option>}
-      <optgroup label="Tanárok">
-        {teachers.map((r) => <option key={r.name} value={r.name}>{r.name}</option>)}
-      </optgroup>
-      {students.length > 0 && (
-        <optgroup label="Hallgatók">
-          {students.map((r) => <option key={r.name} value={r.name}>{r.name}</option>)}
-        </optgroup>
-      )}
+      {(['T', 'H', 'I', 'A', 'P'] as PersonKind[]).map((k) => {
+        const items = roster.filter((r) => r.kind === k);
+        if (!items.length) return null;
+        return (
+          <optgroup key={k} label={KIND_LABEL[k]}>
+            {items.map((r) => <option key={`${k}-${r.name}`} value={r.name}>{r.name}</option>)}
+          </optgroup>
+        );
+      })}
     </select>
   );
 }
@@ -46,21 +45,44 @@ function ChipRadio<T extends string>({ value, options, onChange }: { value: T; o
   );
 }
 
-// Résztvevő-választó: több név ugyanabból az állandó listából, T/H badge-dzsel
-function PeoplePicker({ selected, roster, onToggle }: { selected: string[]; roster: RosterEntry[]; onToggle: (name: string) => void }) {
+// Résztvevő-választó: több név az ÖT állandó listából (T/H/I/A/P badge-dzsel),
+// a levél-címzettválasztóval azonos gyorsműveletekkel: Senki / Mindenki / kategóriánkénti
+// hozzáadás + névszűrő. Az onSet a teljes lista cseréjéhez kell (gyorsgombok).
+const normName = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+function PeoplePicker({ selected, roster, onToggle, onSet }: { selected: string[]; roster: RosterEntry[]; onToggle: (name: string) => void; onSet?: (names: string[]) => void }) {
+  const [q, setQ] = useState('');
   const legacy = selected.filter((n) => !roster.some((r) => r.name === n));
+  const uniq = (arr: string[]) => [...new Set(arr)];
+  const kindNames = (k: PersonKind) => roster.filter((r) => r.kind === k).map((r) => r.name);
   return (
-    <div className="cat-picker pp-picker">
-      {roster.map((r) => (
-        <button type="button" key={r.name} className={`chip${selected.includes(r.name) ? ' is-on' : ''}`}
-          onClick={() => onToggle(r.name)}>
-          <span className={`pb ${r.kind === 'T' ? 't' : 'h'}`}>{r.kind}</span>{r.name}
-        </button>
-      ))}
-      {legacy.map((n) => (
-        <button type="button" key={n} className="chip is-on" title="Régi, listán kívüli bejegyzés — kattintva lekerül"
-          onClick={() => onToggle(n)}>{n}</button>
-      ))}
+    <div className="pp-wrap">
+      {onSet && (
+        <div className="nm-groups pp-quick">
+          <button type="button" className="chip chip--danger" title="Minden résztvevő törlése" onClick={() => onSet([])}>✕ Senki</button>
+          <button type="button" className="chip" title="Mindenki hozzáadása az öt listából" onClick={() => onSet(uniq([...selected, ...roster.map((r) => r.name)]))}>+ Mindenki</button>
+          {(['T', 'H', 'I', 'A', 'P'] as PersonKind[]).map((k) => (
+            kindNames(k).length > 0 && (
+              <button key={k} type="button" className="chip" title={`${KIND_LABEL[k]} lista hozzáadása`}
+                onClick={() => onSet(uniq([...selected, ...kindNames(k)]))}>
+                + <span className={`pb ${k.toLowerCase()}`}>{k}</span>{KIND_LABEL[k]}
+              </button>
+            )
+          ))}
+        </div>
+      )}
+      <input className="nm-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szűrés névre…" />
+      <div className="cat-picker pp-picker">
+        {roster.filter((r) => !q.trim() || normName(r.name).includes(normName(q))).map((r) => (
+          <button type="button" key={`${r.kind}-${r.name}`} className={`chip${selected.includes(r.name) ? ' is-on' : ''}`}
+            onClick={() => onToggle(r.name)}>
+            <span className={`pb ${r.kind.toLowerCase()}`}>{r.kind}</span>{r.name}
+          </button>
+        ))}
+        {legacy.map((n) => (
+          <button type="button" key={n} className="chip is-on" title="Régi, listán kívüli bejegyzés — kattintva lekerül"
+            onClick={() => onToggle(n)}>{n}</button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -165,7 +187,7 @@ export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onNot
           </div>
           <div className="field full">
             <label>Résztvevők — tanárok (T) és hallgatók (H), többet is választhatsz</label>
-            <PeoplePicker selected={people} roster={roster} onToggle={togglePerson} />
+            <PeoplePicker selected={people} roster={roster} onToggle={togglePerson} onSet={setPeople} />
           </div>
           <div className="field">
             <label>Feladó neve — ha emailből jött a feladat</label>
@@ -288,7 +310,7 @@ export function EventModal({ event, isNew, roster, onSave, onDelete, onNotify, o
           </div>
           <div className="field full">
             <label>Résztvevők — tanárok (T) és hallgatók (H), többet is választhatsz</label>
-            <PeoplePicker selected={people} roster={roster} onToggle={togglePerson} />
+            <PeoplePicker selected={people} roster={roster} onToggle={togglePerson} onSet={setPeople} />
           </div>
           <div className="f-sec c-green">Leírás</div>
           <div className="field full">

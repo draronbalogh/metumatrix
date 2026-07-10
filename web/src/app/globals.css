@@ -380,8 +380,13 @@ body {
   .ovl { padding: 0; align-items: stretch; }
   .modal, .modal.modal--wide { width: 100%; height: 100dvh; max-height: 100dvh; border: 0; border-radius: 0; animation: sheetUp .26s cubic-bezier(.2, .8, .25, 1) both; }
   @keyframes sheetUp { from { transform: translateY(36px); opacity: .5; } to { transform: none; opacity: 1; } }
-  .modal h3 { padding: 16px 18px 13px; }
+  /* a cím mobilon EGY kompakt sor (ellipszissel): billentyűzet mellett is maradjon hely a tartalomnak */
+  .modal h3 { padding: 10px 16px 9px; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .modal h3::after { left: 18px; }
+  /* gépelés közben (fókuszban lévő mező = nyitott billentyűzet) a rátapadó sávok elengednek,
+     hogy a szűk látótér a szerkesztett tartalomé legyen */
+  .nm-body:has(input:focus, textarea:focus) .nm-copyrow.big { position: static; box-shadow: none; padding: 10px 0 0; }
+  .modal:has(input:focus, textarea:focus) .mfoot { display: none; }
   .f { grid-template-columns: 1fr; padding: 14px 18px 12px; gap: 14px; }
   .f-sec { margin-left: -6px; margin-right: -6px; }
   .field input, .field select, .field textarea { font-size: 16px; padding: 11px 13px; }

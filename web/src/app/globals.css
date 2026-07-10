@@ -806,6 +806,8 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .nm-copy { justify-content: flex-start; }
 /* törlő jellegű chip: ránézésre elkülönül az additív chipektől */
 .chip--danger { background: transparent; border-color: #d7144b; color: #d7144b; }
+/* üres listájú gyorsgomb: látszik, de jelzi, hogy előbb fel kell tölteni */
+.chip:disabled { opacity: .45; cursor: not-allowed; }
 /* névszűrő a névsor felett */
 .nm-search { margin-bottom: 8px; }
 /* ötoszlopos kapcsolat-sorok a Névjegyzékben (intézményi / alumni / piaci) */

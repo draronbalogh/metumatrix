@@ -60,14 +60,16 @@ function PeoplePicker({ selected, roster, onToggle, onSet }: { selected: string[
         <div className="nm-groups pp-quick">
           <button type="button" className="chip chip--danger" title="Minden résztvevő törlése" onClick={() => onSet([])}>✕ Senki</button>
           <button type="button" className="chip" title="Mindenki hozzáadása az öt listából" onClick={() => onSet(uniq([...selected, ...roster.map((r) => r.name)]))}>+ Mindenki</button>
-          {(['T', 'H', 'I', 'A', 'P'] as PersonKind[]).map((k) => (
-            kindNames(k).length > 0 && (
-              <button key={k} type="button" className="chip" title={`${KIND_LABEL[k]} lista hozzáadása`}
+          {(['T', 'H', 'I', 'A', 'P'] as PersonKind[]).map((k) => {
+            const n = kindNames(k).length;
+            return (
+              <button key={k} type="button" className="chip" disabled={!n}
+                title={n ? `${KIND_LABEL[k]} lista hozzáadása (${n} név)` : `A(z) ${KIND_LABEL[k]} lista még üres. A ☎ Névjegyzékben tudod feltölteni.`}
                 onClick={() => onSet(uniq([...selected, ...kindNames(k)]))}>
-                + <span className={`pb ${k.toLowerCase()}`}>{k}</span>{KIND_LABEL[k]}
+                + <span className={`pb ${k.toLowerCase()}`}>{k}</span>{KIND_LABEL[k]}{n ? ` (${n})` : ''}
               </button>
-            )
-          ))}
+            );
+          })}
         </div>
       )}
       <input className="nm-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szűrés névre…" />

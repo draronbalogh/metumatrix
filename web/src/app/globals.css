@@ -71,10 +71,10 @@ body {
 /* ---- toolbar ---- */
 .toolbar { flex: none; background: var(--card); border-bottom: 1px solid var(--line); }
 .toolbar__inner { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; padding: 9px 0; }
-.viewtoggle { display: inline-flex; background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; }
-.viewtoggle button { border: 0; background: transparent; font-family: var(--ff); font-size: .82rem; font-weight: 600; padding: 6px 15px; border-radius: 999px; cursor: pointer; color: var(--ink-2); }
+.viewtoggle { display: inline-flex; background: var(--paper-2); border: 1px solid var(--line); border-radius: 11px; padding: 3px; gap: 2px; }
+.viewtoggle button { border: 0; background: transparent; font-family: var(--ff); font-size: .82rem; font-weight: 600; padding: 6px 15px; border-radius: 8px; cursor: pointer; color: var(--ink-2); }
 .viewtoggle button.is-on { background: var(--card); color: var(--ink); box-shadow: var(--shadow-1); }
-.search { flex: 1 1 200px; max-width: 300px; padding: 8px 12px 8px 32px; font-family: var(--ff); font-size: .9rem; color: var(--ink); background: var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%239a9ca2' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.6' y2='16.6'/%3E%3C/svg%3E") no-repeat 11px center; border: 1px solid var(--line); border-radius: 999px; }
+.search { flex: 1 1 200px; max-width: 300px; padding: 8px 12px 8px 32px; font-family: var(--ff); font-size: .9rem; color: var(--ink); background: var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%239a9ca2' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.6' y2='16.6'/%3E%3C/svg%3E") no-repeat 11px center; border: 1px solid var(--line); border-radius: 10px; }
 .search:focus { outline: 2px solid color-mix(in srgb, var(--brand) 35%, transparent); outline-offset: 1px; border-color: var(--brand); }
 .filters { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { font-family: var(--ff); font-size: .8rem; font-weight: 500; padding: 6px 11px; border-radius: 11px; cursor: pointer; color: var(--ink-2); background: var(--card); border: 1px solid var(--line); }
@@ -108,7 +108,7 @@ body {
 .legend { position: absolute; left: 14px; bottom: 14px; z-index: 6; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; font-size: .72rem; color: var(--ink-2); }
 .legend-toggle { font-family: var(--ff); font-weight: 700; color: var(--ink-2); background: color-mix(in srgb, var(--card) 94%, transparent); border: 1px solid var(--line); cursor: pointer; box-shadow: var(--shadow-1); }
 .legend:not(.open) .legend-toggle { width: 34px; height: 34px; padding: 0; font-size: 1.05rem; border-radius: 50%; }
-.legend.open .legend-toggle { align-self: flex-start; font-size: .72rem; padding: 5px 10px; border-radius: 999px; }
+.legend.open .legend-toggle { align-self: flex-start; font-size: .72rem; padding: 5px 10px; border-radius: 8px; }
 .legend-toggle:hover { border-color: var(--brand); color: var(--brand-text); }
 .legend-body { background: color-mix(in srgb, var(--card) 92%, transparent); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow-1); }
 .legend .row { display: flex; align-items: center; gap: 7px; }
@@ -136,7 +136,7 @@ body {
 .sem-head { width: 252px; padding: 6px 8px; }
 .sem-instr { margin-top: 9px; display: flex; flex-wrap: wrap; gap: 4px; }
 .sem-instr-h { width: 100%; font-size: .56rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
-.sem-ichip { font-family: var(--ff); font-size: .64rem; font-weight: 500; color: var(--ink-2); background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; cursor: pointer; transition: background .12s, color .12s, border-color .12s; }
+.sem-ichip { font-family: var(--ff); font-size: .64rem; font-weight: 500; color: var(--ink-2); background: var(--paper-2); border: 1px solid var(--line); border-radius: 8px; padding: 2px 8px; cursor: pointer; transition: background .12s, color .12s, border-color .12s; }
 .sem-ichip:hover { border-color: var(--brand); color: var(--brand-text); }
 .sem-ichip.on { background: var(--brand); color: #fff; border-color: var(--brand); }
 .sem-head .sem-prog { font-size: .68rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--brand-text); }
@@ -186,7 +186,7 @@ body {
 .cn-cat:hover { border-color: var(--brand); color: var(--brand-text); }
 .cn-foot { display: flex; align-items: center; gap: 8px; margin-top: 9px; }
 .cn-soft { min-width: 0; font-family: var(--ff-mono); font-size: .63rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cn-pdf { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 3px; font-size: .64rem; font-weight: 700; letter-spacing: .02em; color: var(--brand-text); text-decoration: none; padding: 3px 9px; border: 1px solid color-mix(in srgb, var(--brand) 32%, var(--line)); border-radius: 999px; }
+.cn-pdf { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 3px; font-size: .64rem; font-weight: 700; letter-spacing: .02em; color: var(--brand-text); text-decoration: none; padding: 3px 9px; border: 1px solid color-mix(in srgb, var(--brand) 32%, var(--line)); border-radius: 8px; }
 .cn-pdf:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
 
 /* Csoport-zónák („swimlane”, mátrix): nem interaktív színes területek a kártyák mögött.
@@ -281,7 +281,7 @@ body {
 .cc-cat:hover { border-color: var(--brand); color: var(--brand-text); }
 .cc-foot { display: flex; align-items: center; gap: 9px; margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--line); }
 .cc-soft { min-width: 0; font-family: var(--ff-mono); font-size: .67rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cc-pdf { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 4px; font-size: .68rem; font-weight: 700; letter-spacing: .02em; color: var(--brand-text); text-decoration: none; padding: 4px 10px; border: 1px solid color-mix(in srgb, var(--brand) 32%, var(--line)); border-radius: 999px; }
+.cc-pdf { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 4px; font-size: .68rem; font-weight: 700; letter-spacing: .02em; color: var(--brand-text); text-decoration: none; padding: 4px 10px; border: 1px solid color-mix(in srgb, var(--brand) 32%, var(--line)); border-radius: 8px; }
 .cc-pdf:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
 .cc-empty { border: 1px dashed var(--line-2); border-radius: var(--r-card); padding: 20px; display: flex; align-items: center; justify-content: center; gap: 14px; color: var(--muted); }
 .cc-empty span { font-weight: 500; }
@@ -532,7 +532,7 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .ag-card.st-doing .cc-accent { background: var(--g1); }
 .ag-card.st-done .cc-accent { background: var(--g0); }
 .ag-card.st-done { opacity: .68; }
-.ag-status { position: absolute; top: 10px; right: 10px; font-family: var(--ff); font-size: .58rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; cursor: pointer; border: 1px solid transparent; }
+.ag-status { position: absolute; top: 10px; right: 10px; font-family: var(--ff); font-size: .58rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; }
 .ag-status.st-todo { background: var(--brand-100); color: var(--brand-text); border-color: color-mix(in srgb, var(--brand) 28%, var(--line)); }
 .ag-status.st-doing { background: color-mix(in srgb, var(--g1) 15%, var(--card)); color: var(--g1); border-color: color-mix(in srgb, var(--g1) 40%, var(--line)); }
 .ag-status.st-done { background: color-mix(in srgb, var(--g0) 14%, var(--card)); color: var(--g0); border-color: color-mix(in srgb, var(--g0) 40%, var(--line)); }
@@ -557,7 +557,7 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 }
 
 /* ---- nevek, személy-panel, kész-lista ---- */
-.ag-pp { font-family: var(--ff); font-size: .62rem; font-weight: 700; letter-spacing: .03em; padding: 3px 9px; border-radius: 999px; cursor: pointer; background: var(--paper-2); color: var(--ink-2); border: 1px solid var(--line); }
+.ag-pp { font-family: var(--ff); font-size: .62rem; font-weight: 700; letter-spacing: .03em; padding: 3px 9px; border-radius: 8px; cursor: pointer; background: var(--paper-2); color: var(--ink-2); border: 1px solid var(--line); }
 .ag-pp:hover { border-color: var(--brand); color: var(--brand-text); }
 .ag-pp.is-on { background: var(--brand); border-color: var(--brand); color: #fff; }
 .cc-tag.ev { background: var(--brand-100); color: var(--brand-text); }
@@ -580,7 +580,7 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 
 /* ---- esemény: kapcsolt feladatok ---- */
 .ev-tasks { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--line); }
-.ev-task { display: inline-flex; align-items: center; gap: 6px; font-family: var(--ff); font-size: .7rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink-2); cursor: pointer; }
+.ev-task { display: inline-flex; align-items: center; gap: 6px; font-family: var(--ff); font-size: .7rem; font-weight: 600; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink-2); cursor: pointer; }
 .ev-task:hover { border-color: var(--line-2); color: var(--ink); }
 .ev-task .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brand); }
 .ev-task.st-doing .dot { background: var(--g1); }
@@ -617,7 +617,7 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .cal-ev .w { margin-left: auto; flex: none; font-size: .62rem; color: var(--muted); font-weight: 500; }
 .cal-undated { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 11px 14px; border: 1px dashed var(--line-2); border-radius: var(--r-card); max-width: 1020px; }
 .cal-undated-h { font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.cal-undated .cal-ev.loose { border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; background: var(--card); }
+.cal-undated .cal-ev.loose { border: 1px solid var(--line); border-radius: 8px; padding: 4px 11px; background: var(--card); }
 
 @media (max-width: 720px) {
   .ag-mode { margin-left: 0; }
@@ -659,7 +659,7 @@ html[data-theme='dark'] .pb.p { color: var(--yellow-deep); }
 }
 
 /* ---- Értesítés gomb a kártyákon ---- */
-.ag-notify { margin-top: 10px; font-family: var(--ff); font-size: .68rem; font-weight: 700; letter-spacing: .02em; padding: 5px 11px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--brand) 32%, var(--line)); background: var(--card); color: var(--brand-text); cursor: pointer; }
+.ag-notify { margin-top: 10px; font-family: var(--ff); font-size: .68rem; font-weight: 700; letter-spacing: .02em; padding: 5px 11px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--brand) 32%, var(--line)); background: var(--card); color: var(--brand-text); cursor: pointer; }
 .ag-notify:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
 .ev-task.notify { border-style: solid; color: var(--brand-text); border-color: color-mix(in srgb, var(--brand) 32%, var(--line)); }
 .ev-task.notify:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
@@ -697,18 +697,18 @@ html[data-theme='dark'] .pb.p { color: var(--yellow-deep); }
 .ag-check.is-on { background: var(--g0); border-color: var(--g0); }
 
 .ag-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 9px 0 2px; }
-.ag-prio { font-family: var(--ff); font-size: .6rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; cursor: pointer; border: 1px solid transparent; }
+.ag-prio { font-family: var(--ff); font-size: .6rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 3px 9px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; }
 .ag-prio.high { background: color-mix(in srgb, var(--brand) 15%, var(--card)); color: var(--brand-text); border-color: color-mix(in srgb, var(--brand) 42%, var(--line)); }
 .ag-prio.normal { background: color-mix(in srgb, var(--yellow) 30%, var(--card)); color: #7a5c14; border-color: color-mix(in srgb, var(--yellow-deep) 55%, var(--line)); }
 .ag-prio.low { background: var(--paper-2); color: var(--muted); border-color: var(--line); }
 .ag-prio:hover { filter: brightness(.97); }
 
-.ag-cat { font-family: var(--ff); font-size: .62rem; font-weight: 700; letter-spacing: .02em; padding: 3px 9px; border-radius: 999px; cursor: pointer; background: var(--paper-2); color: var(--ink-2); border: 1px solid var(--line); }
+.ag-cat { font-family: var(--ff); font-size: .62rem; font-weight: 700; letter-spacing: .02em; padding: 3px 9px; border-radius: 8px; cursor: pointer; background: var(--paper-2); color: var(--ink-2); border: 1px solid var(--line); }
 .ag-cat:hover { border-color: var(--brand); color: var(--brand-text); }
 .ag-cat.is-on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .ag-cat.on-card { background: color-mix(in srgb, var(--g1) 12%, var(--card)); color: var(--g1); border-color: color-mix(in srgb, var(--g1) 34%, var(--line)); }
 
-.ag-doing { font-family: var(--ff); font-size: .6rem; font-weight: 700; letter-spacing: .03em; padding: 3px 9px; border-radius: 999px; cursor: pointer; background: transparent; color: var(--muted); border: 1px dashed var(--line-2); }
+.ag-doing { font-family: var(--ff); font-size: .6rem; font-weight: 700; letter-spacing: .03em; padding: 3px 9px; border-radius: 8px; cursor: pointer; background: transparent; color: var(--muted); border: 1px dashed var(--line-2); }
 .ag-doing:hover { border-color: var(--g1); color: var(--g1); }
 .ag-doing.is-on { background: color-mix(in srgb, var(--g1) 15%, var(--card)); color: var(--g1); border: 1px solid color-mix(in srgb, var(--g1) 42%, var(--line)); }
 

@@ -698,6 +698,7 @@ export default function CurriculumApp() {
           roster={roster}
           onSave={saveTask}
           onDelete={() => { if (confirm('Törlöd ezt a feladatot?')) deleteTask(taskEdit.t.id); }}
+          onNotify={taskEdit.isNew ? undefined : () => notifyTask(taskEdit.t.id)}
           onClose={() => setTaskEdit(null)}
         />
       )}
@@ -709,6 +710,7 @@ export default function CurriculumApp() {
           roster={roster}
           onSave={saveEvent}
           onDelete={() => { if (confirm('Törlöd ezt az eseményt?')) deleteEvent(eventEdit.e.id); }}
+          onNotify={eventEdit.isNew ? undefined : () => notifyEvent(eventEdit.e.id)}
           onClose={() => setEventEdit(null)}
         />
       )}

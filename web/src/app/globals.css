@@ -815,6 +815,9 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .nm-kindrow { margin-bottom: 8px; }
 /* letiltott preset-gomb: látszik, de jelzi, hogy előfeltétele van */
 .crx:disabled { opacity: .45; cursor: not-allowed; }
+/* felső akciósor a feladat/esemény szerkesztőben: ugrás a levélíróra */
+.m-topact { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
+.nm-jump { border-color: color-mix(in srgb, var(--brand) 40%, var(--line)); color: var(--brand-text); background: var(--brand-100); font-weight: 700; }
 /* feladó-megadás sor a levél-készítőben */
 .nm-srcrow { display: flex; flex-wrap: wrap; gap: 8px; }
 .nm-srcrow input { flex: 1 1 160px; }

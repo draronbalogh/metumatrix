@@ -74,10 +74,11 @@ interface TaskProps {
   roster: RosterEntry[];
   onSave: (t: AgendaTask) => void;
   onDelete: () => void;
+  onNotify?: () => void; // mentés után egyből a levélíró nyílik erre a feladatra
   onClose: () => void;
 }
 
-export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClose }: TaskProps) {
+export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onNotify, onClose }: TaskProps) {
   const [d, setD] = useState(() => ({
     title: task.title, summary: task.summary, ideas: task.ideas.join('\n'),
     status: task.status as string, priority: task.priority as string, category: task.category ?? '',
@@ -115,6 +116,12 @@ export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClo
       <div className="modal">
         <h3>{isNew ? 'Új feladat' : 'Feladat szerkesztése'}</h3>
         <form className="f" onSubmit={(e) => { e.preventDefault(); save(); }}>
+          {onNotify && (
+            <div className="m-topact">
+              <button type="button" className="btn nm-jump" title="Menti a feladatot, és megnyitja a levélírót (értesítés, felkérés, válasz a feladónak)"
+                onClick={() => { if (!d.title.trim()) return; save(); onNotify(); }}>✉ Mentés és levélírás</button>
+            </div>
+          )}
           <div className="f-sec">Alapok</div>
           <div className="field full">
             <label>Feladat neve</label>
@@ -180,6 +187,8 @@ export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClo
         </form>
         <div className="mfoot">
           {!isNew && <button className="btn btn--danger" onClick={onDelete}>Törlés</button>}
+          {onNotify && <button className="btn" title="Menti a feladatot, és megnyitja a levélírót"
+            onClick={() => { if (!d.title.trim()) return; save(); onNotify(); }}>✉ Levél</button>}
           <span className="sp" />
           <button className="btn" onClick={onClose}>Mégsem</button>
           <button className="btn btn--ink" onClick={save}>Mentés</button>
@@ -197,10 +206,11 @@ interface EventProps {
   roster: RosterEntry[];
   onSave: (e: AgendaEvent) => void;
   onDelete: () => void;
+  onNotify?: () => void; // mentés után egyből a levélíró nyílik erre az eseményre
   onClose: () => void;
 }
 
-export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: EventProps) {
+export function EventModal({ event, isNew, roster, onSave, onDelete, onNotify, onClose }: EventProps) {
   const [d, setD] = useState(() => ({
     title: event.title, when: event.when, sort: event.sort ?? '', day: event.day ?? '', dayEnd: event.dayEnd ?? '',
     note: event.note ?? '', place: event.place ?? '', owner: event.owner ?? '',
@@ -232,6 +242,12 @@ export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: 
       <div className="modal">
         <h3>{isNew ? 'Új esemény' : 'Esemény szerkesztése'}</h3>
         <form className="f" onSubmit={(e) => { e.preventDefault(); save(); }}>
+          {onNotify && (
+            <div className="m-topact">
+              <button type="button" className="btn nm-jump" title="Menti az eseményt, és megnyitja a levélírót (meghívó, emlékeztető, válasz a feladónak)"
+                onClick={() => { if (!d.title.trim()) return; save(); onNotify(); }}>✉ Mentés és levélírás</button>
+            </div>
+          )}
           <div className="f-sec">Alapok</div>
           <div className="field full">
             <label>Esemény neve</label>
@@ -282,6 +298,8 @@ export function EventModal({ event, isNew, roster, onSave, onDelete, onClose }: 
         </form>
         <div className="mfoot">
           {!isNew && <button className="btn btn--danger" onClick={onDelete}>Törlés</button>}
+          {onNotify && <button className="btn" title="Menti a feladatot, és megnyitja a levélírót"
+            onClick={() => { if (!d.title.trim()) return; save(); onNotify(); }}>✉ Levél</button>}
           <span className="sp" />
           <button className="btn" onClick={onClose}>Mégsem</button>
           <button className="btn btn--ink" onClick={save}>Mentés</button>

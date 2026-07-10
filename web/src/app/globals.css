@@ -860,6 +860,12 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .place-quick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 7px; }
 .pq-sep { width: 1px; height: 18px; background: var(--line-2); margin: 0 3px; flex: none; }
 
+/* mobil: KOMPAKT másolósáv — a 3 gomb egy sorban, az Outlook vékony sávként alatta,
+   így a szerkesztő felület kap minél több magasságot */
 @media (max-width: 720px) {
-  .nm-copyrow.big { grid-template-columns: 1fr; }
+  .nm-copyrow.big { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .nm-copy { padding: 8px 6px; font-size: .72rem; gap: 5px; white-space: nowrap; overflow: hidden; }
+  .nm-copy b { width: 16px; height: 16px; font-size: .6rem; }
+  .nm-cnt { display: none; }
+  .nm-outlook { padding: 7px 10px; font-size: .72rem; }
 }

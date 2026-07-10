@@ -395,7 +395,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             </div>
           </div>
           <div className="nm-copyrow big">
-            <button className="btn nm-copy" disabled={!emails.length} onClick={() => copy(emails.join('; '), 'Címzettek')}><b>1</b> ⧉ Címzettek ({emails.length})</button>
+            <button className="btn nm-copy" disabled={!emails.length} onClick={() => copy(emails.join('; '), 'Címzettek')}><b>1</b> ⧉ Címzettek<span className="nm-cnt"> ({emails.length})</span></button>
             <button className="btn nm-copy" disabled={!subject.trim()} onClick={() => copy(subject.trim(), 'Tárgy')}><b>2</b> ⧉ Tárgy</button>
             <button className="btn nm-copy" disabled={!body.trim()} onClick={() => copy(body, 'Üzenet')}><b>3</b> ⧉ Üzenet</button>
             <a className="btn nm-copy nm-outlook" target="_blank" rel="noopener noreferrer"

@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AgendaEvent, AgendaTask, Letter } from '@/data/agenda';
 import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster } from '@/data/people';
-import { standingGroupNames } from '@/lib/recipients';
 import { buildLetter, rerollLetter, LETTER_KINDS, LetterKind, MeetingMode, MeetingPlan } from '@/lib/letters';
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
@@ -238,9 +237,23 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                 onClick={() => { if (!src) return; setSelected([]); setAdhoc([src.email]); if (confirmIfDirty()) regenerate('valasz'); }}>↩ A feladónak (válasz)</button>
               <button type="button" className="crx c-blue" title="A kártya felelőse és résztvevői"
                 onClick={() => { setSelected([...new Set(target.names)]); setAdhoc([]); }}>Résztvevőknek</button>
-              <button type="button" className="crx c-blue" onClick={() => { setSelected(standingGroupNames('minden-tanar', teacherNames, db)); setAdhoc([]); }}>Minden tanárnak</button>
-              <button type="button" className="crx c-blue" onClick={() => { setSelected(standingGroupNames('minden-hallgato', teacherNames, db)); setAdhoc([]); }}>Minden hallgatónak</button>
-              <button type="button" className="crx c-blue" onClick={() => { setSelected(standingGroupNames('mindenki', teacherNames, db)); setAdhoc([]); }}>Mindenkinek</button>
+              {([
+                { label: 'Minden tanárnak', kinds: ['T'] as PersonKind[] },
+                { label: 'Minden hallgatónak', kinds: ['H'] as PersonKind[] },
+                { label: 'Intézményieknek', kinds: ['I'] as PersonKind[] },
+                { label: 'Alumninak', kinds: ['A'] as PersonKind[] },
+                { label: 'Piaci partnereknek', kinds: ['P'] as PersonKind[] },
+                { label: 'Mindenkinek (T+H)', kinds: ['T', 'H'] as PersonKind[] },
+              ]).map((p) => {
+                const names = roster.filter((r) => p.kinds.includes(r.kind)).map((r) => r.name);
+                return (
+                  <button key={p.label} type="button" className="crx c-blue" disabled={!names.length}
+                    title={names.length ? `${p.label}: ${names.length} név` : 'A lista még üres. A ☎ Névjegyzékben töltheted fel.'}
+                    onClick={() => { setSelected([...new Set(names)]); setAdhoc([]); }}>
+                    {p.label}{names.length ? ` (${names.length})` : ''}
+                  </button>
+                );
+              })}
               <button type="button" className="crx c-grey" title="Minden címzett törlése" onClick={() => { setSelected([]); setAdhoc([]); }}>✕ Senki</button>
             </div>
           </div>

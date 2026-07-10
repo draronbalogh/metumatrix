@@ -408,6 +408,11 @@ html[data-theme='dark'] body {
 }
 html[data-theme='dark'] .masthead, html[data-theme='dark'] .toolbar { background: rgba(23, 24, 27, .9); backdrop-filter: blur(8px); }
 html[data-theme='dark'] .brandmark .logo { border-color: var(--brand); color: var(--brand); }
+/* sötét módban a sárga árnyalatú szövegek fehéren, hogy olvashatók legyenek */
+html[data-theme='dark'] .cn-tag.ea, html[data-theme='dark'] .cc-tag.ea { color: #fff; }
+html[data-theme='dark'] .ag-prio.normal { color: #fff; }
+html[data-theme='dark'] .ag-grp.prio-normal { color: #fff; }
+html[data-theme='dark'] .f-sec.c-yellow { color: #fff; }
 html[data-theme='dark'] .cn-card:hover, html[data-theme='dark'] .cc-card:hover { box-shadow: 0 0 0 1px var(--line-2), 0 0 26px rgba(255, 45, 111, .18); }
 html[data-theme='dark'] .react-flow__node.selected .cn-card, html[data-theme='dark'] .cn-card.hit { box-shadow: 0 0 0 2px var(--brand), 0 0 24px rgba(255, 45, 111, .3); }
 html[data-theme='dark'] .prog-rail { box-shadow: 0 0 26px rgba(255, 45, 111, .22); }

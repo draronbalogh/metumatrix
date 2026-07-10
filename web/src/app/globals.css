@@ -625,6 +625,10 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .pb { display: inline-grid; place-items: center; width: 13px; height: 13px; border-radius: 4px; font-size: .52rem; font-weight: 800; letter-spacing: 0; margin-right: 5px; vertical-align: 1px; }
 .pb.t { background: var(--brand-100); color: var(--brand-text); }
 .pb.h { background: var(--g1-100); color: var(--g1); }
+.pb.i { background: var(--g0-100); color: var(--g0); }   /* intézményi */
+.pb.a { background: var(--g2-100); color: var(--g2); }   /* alumni */
+.pb.p { background: color-mix(in srgb, var(--yellow-deep) 22%, transparent); color: #8a6d1c; } /* piaci */
+html[data-theme='dark'] .pb.p { color: var(--yellow-deep); }
 .ag-pp .pb { margin-right: 4px; }
 .ag-pp.is-on .pb.t, .ag-pp.is-on .pb.h { background: rgba(255, 255, 255, .25); color: #fff; }
 .chip.is-on .pb.t, .chip.is-on .pb.h { background: rgba(255, 255, 255, .25); color: #fff; }
@@ -801,6 +805,13 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .chip--danger { background: transparent; border-color: #d7144b; color: #d7144b; }
 /* névszűrő a névsor felett */
 .nm-search { margin-bottom: 8px; }
+/* ötoszlopos kapcsolat-sorok a Névjegyzékben (intézményi / alumni / piaci) */
+.pm-row5 { display: grid; grid-template-columns: 1.2fr 1.3fr 1fr 1fr 1fr auto; gap: 6px; align-items: center; }
+@media (max-width: 720px) { .pm-row5 { grid-template-columns: 1fr 1fr; } .pm-row5.pm-head { display: none; } }
+/* kategória-szűrő a névsor felett */
+.nm-kindrow { margin-bottom: 8px; }
+/* letiltott preset-gomb: látszik, de jelzi, hogy előfeltétele van */
+.crx:disabled { opacity: .45; cursor: not-allowed; }
 /* feladó-megadás sor a levél-készítőben */
 .nm-srcrow { display: flex; flex-wrap: wrap; gap: 8px; }
 .nm-srcrow input { flex: 1 1 160px; }
@@ -832,8 +843,10 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
   .nm-body .cat-picker, .nm-groups { gap: 8px; }
   .nm-body .nm-tools .nm-bodytoggle { min-height: 40px; padding: 8px 13px; font-size: .78rem; }
   .nm-body .nm-tools .nm-reroll-big { min-height: 40px; padding: 10px 16px; font-size: .84rem; }
-  /* az 1-2-3 másolósáv mindig kéznél: a görgető törzs aljára tapad */
-  .nm-copyrow.big { position: sticky; bottom: 0; z-index: 5; background: var(--card); padding: 10px 0 6px; margin-top: 8px; box-shadow: 0 -10px 14px -12px rgba(0, 0, 0, .3); }
+  /* az 1-2-3 másolósáv mindig kéznél: a görgető törzs aljára tapad, teljes szélességben
+     (nincs átlátszó rés a lábléc és a tartalom között) */
+  .nm-body { padding-bottom: 0; }
+  .nm-copyrow.big { position: sticky; bottom: 0; z-index: 5; background: var(--card); margin: 8px -20px 0; padding: 10px 20px 10px; box-shadow: 0 -10px 14px -12px rgba(0, 0, 0, .3); }
 }
 .nm-preview:hover { border-color: var(--brand); }
 .nm-preview .more { display: block; margin-top: 6px; font-size: .7rem; font-weight: 700; color: var(--muted); }

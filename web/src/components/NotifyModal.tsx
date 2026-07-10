@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { AgendaEvent, AgendaTask, Letter } from '@/data/agenda';
-import { PeopleDB, emailOf, buildFooter } from '@/data/people';
+import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster } from '@/data/people';
 import { standingGroupNames } from '@/lib/recipients';
 import { buildLetter, rerollLetter, LETTER_KINDS, LetterKind, MeetingMode, MeetingPlan } from '@/lib/letters';
 import GrowArea from './GrowArea';
@@ -144,11 +144,10 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const toggle = (name: string) => setSelected((s) => (s.includes(name) ? s.filter((n) => n !== name) : [...s, name]));
   const addCustom = (members: string[]) => setSelected((s) => [...new Set([...s, ...members])]);
 
-  // teljes névsor az egyéni hozzáadáshoz: tanárok (a tantervből) + hallgatók (a törzsből)
-  const roster = useMemo(() => [
-    ...teacherNames.map((name) => ({ name, kind: 'T' as const })),
-    ...db.students.map((s) => ({ name: s.name, kind: 'H' as const })),
-  ], [teacherNames, db.students]);
+  // teljes névsor az egyéni hozzáadáshoz: az ÖSSZES állandó lista (tanár, hallgató,
+  // intézményi, alumni, piaci) — a badge-szűrővel kategóriára szűkíthető
+  const roster = useMemo(() => buildRoster(teacherNames, db), [teacherNames, db]);
+  const [kindFilter, setKindFilter] = useState<PersonKind | ''>('');
 
   const { emails, missing } = useMemo(() => {
     const em: string[] = []; const mi: string[] = []; const seen = new Set<string>();
@@ -234,10 +233,9 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           <div className="field full">
             <label>Válassz egy koppintással (felülírja a címzett-listát)</label>
             <div className="chipradio">
-              {src && (
-                <button type="button" className="crx c-amber" title={`Válasz a feladónak: ${src.email}`}
-                  onClick={() => { setSelected([]); setAdhoc([src.email]); if (confirmIfDirty()) regenerate('valasz'); }}>↩ A feladónak (válasz)</button>
-              )}
+              <button type="button" className="crx c-amber" disabled={!src}
+                title={src ? `Válasz a feladónak: ${src.email}` : 'Előbb add meg a feladót az alábbi mezőben (név + email), utána egy koppintás a válasz'}
+                onClick={() => { if (!src) return; setSelected([]); setAdhoc([src.email]); if (confirmIfDirty()) regenerate('valasz'); }}>↩ A feladónak (válasz)</button>
               <button type="button" className="crx c-blue" title="A kártya felelőse és résztvevői"
                 onClick={() => { setSelected([...new Set(target.names)]); setAdhoc([]); }}>Résztvevőknek</button>
               <button type="button" className="crx c-blue" onClick={() => { setSelected(standingGroupNames('minden-tanar', teacherNames, db)); setAdhoc([]); }}>Minden tanárnak</button>
@@ -293,20 +291,30 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             </div>
           )}
           <div className="field full">
-            <label>Vagy válassz név szerint, hozzáadással (T tanár, H hallgató)</label>
+            <label>Vagy válassz név szerint, hozzáadással</label>
+            <div className="nm-groups nm-kindrow">
+              {(['T', 'H', 'I', 'A', 'P'] as PersonKind[]).map((k) => (
+                <button key={k} type="button" aria-pressed={kindFilter === k} className={`chip${kindFilter === k ? ' is-on' : ''}`}
+                  onClick={() => setKindFilter((v) => (v === k ? '' : k))}>
+                  <span className={`pb ${k.toLowerCase()}`}>{k}</span>{KIND_LABEL[k]}
+                </button>
+              ))}
+            </div>
             <input className="nm-search" value={rq} onChange={(e) => setRq(e.target.value)} placeholder="Szűrés névre…" />
             <div className="cat-picker pp-picker">
-              {roster.filter((r) => !rq.trim() || norm(r.name).includes(norm(rq))).map((r) => {
-                const on = selected.includes(r.name);
-                const has = !!emailOf(db, r.name);
-                return (
-                  <button key={r.name} type="button" aria-pressed={on} className={`chip${on ? ' is-on' : ''}${on && !has ? ' nm-noemail' : ''}`}
-                    title={has ? (emailOf(db, r.name) as string) : 'nincs email-cím, a Névjegyzékben add meg'}
-                    onClick={() => toggle(r.name)}>
-                    <span className={`pb ${r.kind === 'T' ? 't' : 'h'}`}>{r.kind}</span>{r.name}{on && !has ? ' ⚠' : ''}
-                  </button>
-                );
-              })}
+              {roster
+                .filter((r) => (!kindFilter || r.kind === kindFilter) && (!rq.trim() || norm(r.name).includes(norm(rq))))
+                .map((r) => {
+                  const on = selected.includes(r.name);
+                  const has = !!emailOf(db, r.name);
+                  return (
+                    <button key={`${r.kind}-${r.name}`} type="button" aria-pressed={on} className={`chip${on ? ' is-on' : ''}${on && !has ? ' nm-noemail' : ''}`}
+                      title={has ? (emailOf(db, r.name) as string) : 'nincs email-cím, a Névjegyzékben add meg'}
+                      onClick={() => toggle(r.name)}>
+                      <span className={`pb ${r.kind.toLowerCase()}`}>{r.kind}</span>{r.name}{on && !has ? ' ⚠' : ''}
+                    </button>
+                  );
+                })}
             </div>
           </div>
           <div className="f-sec c-green">2 · Miről szóljon?</div>

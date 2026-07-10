@@ -6,6 +6,8 @@ export interface Person {
   name: string;
   email: string | null;
   phone: string | null;
+  title?: string | null; // titulus / beosztás (intézményi, alumni, piaci kapcsolatoknál)
+  field?: string | null; // terület, ahol dolgozik / amiért kereshető
 }
 
 // Egyedi email-csoport (pl. „Kiállítás-csapat") — a tagok az állandó listából (tanár/hallgató nevek).
@@ -17,6 +19,9 @@ export interface PeopleGroup {
 export interface PeopleDB {
   teachers: Person[]; // csak elérhetőség-kiegészítés a tantervi nevekhez
   students: Person[]; // hallgatók / demonstrátorok — itt az egyetlen listájuk
+  institution: Person[]; // intézményi kapcsolatok: marketing, PR, továbbképzési központ, más tanszékek
+  alumni: Person[]; // METU-t végzett volt hallgatók (titulus + terület)
+  market: Person[]; // piaci / ipari kapcsolatok (titulus + terület)
   groups: PeopleGroup[]; // egyedi email-csoportok
   signature: string; // hivatalos aláírás-blokk — a levélben KI-BE kapcsolható
   signatureLinks: string; // szakos linkek — MINDIG a levél legaljára kerül, elválasztó vonallal
@@ -49,14 +54,17 @@ export const SIGNATURE_SEPARATOR = '---------------------';
 export const buildFooter = (db: PeopleDB, withSignature: boolean): string =>
   `${withSignature ? db.signature + '\n\n' : ''}${SIGNATURE_SEPARATOR}\n${db.signatureLinks}`;
 
-export type PersonKind = 'T' | 'H'; // Tanár | Hallgató
+export type PersonKind = 'T' | 'H' | 'I' | 'A' | 'P'; // Tanár | Hallgató | Intézményi | Alumni | Piaci
+export const KIND_LABEL: Record<PersonKind, string> = {
+  T: 'Tanár', H: 'Hallgató', I: 'Intézményi', A: 'Alumni', P: 'Piaci',
+};
 
 export interface RosterEntry {
   name: string;
   kind: PersonKind;
 }
 
-export const DEFAULT_PEOPLE: PeopleDB = { teachers: [], students: [], groups: [], signature: DEFAULT_SIGNATURE, signatureLinks: DEFAULT_SIGNATURE_LINKS };
+export const DEFAULT_PEOPLE: PeopleDB = { teachers: [], students: [], institution: [], alumni: [], market: [], groups: [], signature: DEFAULT_SIGNATURE, signatureLinks: DEFAULT_SIGNATURE_LINKS };
 
 // Telefonszám-normalizálás: minden magyar szám +36-tal kezdődjön (06/0036/36 helyett).
 export const normalizePhone = (phone: string | null): string | null => {
@@ -70,7 +78,7 @@ export const normalizePhone = (phone: string | null): string | null => {
   return t; // külföldi vagy egyéb formátum — hagyjuk békén
 };
 
-const normPerson = (x: Person): Person => ({ name: x.name, email: x.email ?? null, phone: normalizePhone(x.phone ?? null) });
+const normPerson = (x: Person): Person => ({ name: x.name, email: x.email ?? null, phone: normalizePhone(x.phone ?? null), title: x.title ?? null, field: x.field ?? null });
 
 export const normalizePeople = (p: Partial<PeopleDB>): PeopleDB => {
   // régi, egyben tárolt aláírás szétválasztása: a "Web: ..."-tól kezdődő rész a link-blokk
@@ -81,20 +89,31 @@ export const normalizePeople = (p: Partial<PeopleDB>): PeopleDB => {
   return {
     teachers: (p.teachers ?? []).filter((x) => x && x.name).map(normPerson),
     students: (p.students ?? []).filter((x) => x && x.name).map(normPerson),
+    institution: (p.institution ?? []).filter((x) => x && x.name).map(normPerson),
+    alumni: (p.alumni ?? []).filter((x) => x && x.name).map(normPerson),
+    market: (p.market ?? []).filter((x) => x && x.name).map(normPerson),
     groups: (p.groups ?? []).filter((g) => g && g.name).map((g) => ({ name: g.name, members: g.members ?? [] })),
     signature: sig || DEFAULT_SIGNATURE,
     signatureLinks: (p.signatureLinks ?? '').trim() || inheritedLinks || DEFAULT_SIGNATURE_LINKS,
   };
 };
 
-// Egy név elérhetőségének feloldása a törzsből (tanár vagy hallgató).
+// Egy név elérhetőségének feloldása a törzsből (bármelyik állandó listából).
 export const emailOf = (db: PeopleDB, name: string): string | null => {
-  const p = db.teachers.find((x) => x.name === name) || db.students.find((x) => x.name === name);
+  const p = db.teachers.find((x) => x.name === name)
+    || db.students.find((x) => x.name === name)
+    || db.institution.find((x) => x.name === name)
+    || db.alumni.find((x) => x.name === name)
+    || db.market.find((x) => x.name === name);
   return p?.email ?? null;
 };
 
-// Egységes választólista: tantervi tanárnevek + hallgatók, badge-hez való típussal.
+// Egységes választólista: minden állandó lista egyben, badge-hez való típussal.
+// Címzettet, felelőst, résztvevőt MINDIG ezekből választunk (a listák a Névjegyzékben bővíthetők).
 export const buildRoster = (teacherNames: string[], db: PeopleDB): RosterEntry[] => [
   ...teacherNames.map((name) => ({ name, kind: 'T' as const })),
   ...db.students.map((s) => ({ name: s.name, kind: 'H' as const })),
+  ...db.institution.map((s) => ({ name: s.name, kind: 'I' as const })),
+  ...db.alumni.map((s) => ({ name: s.name, kind: 'A' as const })),
+  ...db.market.map((s) => ({ name: s.name, kind: 'P' as const })),
 ];

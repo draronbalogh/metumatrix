@@ -11,10 +11,36 @@ interface Props {
   onClose: () => void;
 }
 
-interface Row { name: string; email: string; phone: string; }
+interface Row { name: string; email: string; phone: string; title: string; field: string; }
 
-const toRow = (name: string, p?: Person): Row => ({ name, email: p?.email ?? '', phone: p?.phone ?? '' });
-const toPerson = (r: Row): Person => ({ name: r.name.trim(), email: r.email.trim() || null, phone: normalizePhone(r.phone.trim() || null) });
+const toRow = (name: string, p?: Person): Row => ({ name, email: p?.email ?? '', phone: p?.phone ?? '', title: p?.title ?? '', field: p?.field ?? '' });
+const toPerson = (r: Row): Person => ({ name: r.name.trim(), email: r.email.trim() || null, phone: normalizePhone(r.phone.trim() || null), title: r.title.trim() || null, field: r.field.trim() || null });
+const EMPTY_ROW: Row = { name: '', email: '', phone: '', title: '', field: '' };
+
+// Kibővített kapcsolat-lista (intézményi / alumni / piaci): név + email + telefon + titulus + terület
+function ContactSection({ label, note, rows, setRows }: { label: string; note: string; rows: Row[]; setRows: (f: (r: Row[]) => Row[]) => void }) {
+  const set = (i: number, k: keyof Row, v: string) => setRows((rs) => rs.map((r, ix) => (ix === i ? { ...r, [k]: v } : r)));
+  return (
+    <>
+      <div className="pm-sec">{label} · {rows.length}</div>
+      <div className="pm-note">{note}</div>
+      <div className="pm-rows">
+        {rows.length > 0 && <div className="pm-row pm-row5 pm-head"><span>Név</span><span>Email</span><span>Telefon</span><span>Titulus</span><span>Terület</span><span /></div>}
+        {rows.map((r, i) => (
+          <div className="pm-row pm-row5" key={i}>
+            <input value={r.name} placeholder="Név" onChange={(e) => set(i, 'name', e.target.value)} />
+            <input type="email" value={r.email} placeholder="email" onChange={(e) => set(i, 'email', e.target.value)} />
+            <input type="tel" value={r.phone} placeholder="+36…" onChange={(e) => set(i, 'phone', e.target.value)} />
+            <input value={r.title} placeholder="titulus" onChange={(e) => set(i, 'title', e.target.value)} />
+            <input value={r.field} placeholder="terület" onChange={(e) => set(i, 'field', e.target.value)} />
+            <button className="btn btn--danger pm-del" title="Törlés a listából" onClick={() => setRows((rs) => rs.filter((_, ix) => ix !== i))}>✕</button>
+          </div>
+        ))}
+        <button className="btn pm-add" onClick={() => setRows((rs) => [...rs, { ...EMPTY_ROW }])}>+ Új kapcsolat</button>
+      </div>
+    </>
+  );
+}
 
 export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props) {
   const [teachers, setTeachers] = useState<Row[]>(() => {
@@ -25,11 +51,18 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
     return [...teacherNames.map((n) => toRow(n, byName[n])), ...extra.map((p) => toRow(p.name, p))];
   });
   const [students, setStudents] = useState<Row[]>(() => db.students.map((p) => toRow(p.name, p)));
+  const [institution, setInstitution] = useState<Row[]>(() => db.institution.map((p) => toRow(p.name, p)));
+  const [alumni, setAlumni] = useState<Row[]>(() => db.alumni.map((p) => toRow(p.name, p)));
+  const [market, setMarket] = useState<Row[]>(() => db.market.map((p) => toRow(p.name, p)));
   const [groups, setGroups] = useState<PeopleGroup[]>(() => db.groups.map((g) => ({ name: g.name, members: [...g.members] })));
   const [signature, setSignature] = useState(db.signature);
   const [signatureLinks, setSignatureLinks] = useState(db.signatureLinks);
-  // választható tagok: tantervi tanárok + az itt szerkesztett hallgatók
-  const memberPool = [...teacherNames, ...students.map((s) => s.name).filter(Boolean)];
+  // választható tagok: tantervi tanárok + az itt szerkesztett összes lista
+  const memberPool = [
+    ...teacherNames,
+    ...students.map((s) => s.name), ...institution.map((s) => s.name),
+    ...alumni.map((s) => s.name), ...market.map((s) => s.name),
+  ].filter(Boolean);
 
   const setGroupName = (i: number, v: string) => setGroups((gs) => gs.map((g, ix) => (ix === i ? { ...g, name: v } : g)));
   const toggleMember = (i: number, name: string) => setGroups((gs) => gs.map((g, ix) => (ix === i ? { ...g, members: g.members.includes(name) ? g.members.filter((m) => m !== name) : [...g.members, name] } : g)));
@@ -50,6 +83,9 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
       // tanárból csak azt tároljuk, akinek van elérhetősége — a névsor forrása úgyis a tanterv
       teachers: teachers.filter((r) => r.email.trim() || r.phone.trim()).map(toPerson),
       students: students.filter((r) => r.name.trim()).map(toPerson),
+      institution: institution.filter((r) => r.name.trim()).map(toPerson),
+      alumni: alumni.filter((r) => r.name.trim()).map(toPerson),
+      market: market.filter((r) => r.name.trim()).map(toPerson),
       groups: groups.filter((g) => g.name.trim()).map((g) => ({ name: g.name.trim(), members: g.members })),
       signature,
       signatureLinks,
@@ -86,8 +122,11 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
                   onClick={() => setStudents((rows) => rows.filter((_, ix) => ix !== i))}>✕</button>
               </div>
             ))}
-            <button className="btn pm-add" onClick={() => setStudents((rows) => [...rows, { name: '', email: '', phone: '' }])}>+ Új hallgató</button>
+            <button className="btn pm-add" onClick={() => setStudents((rows) => [...rows, { ...EMPTY_ROW }])}>+ Új hallgató</button>
           </div>
+          <ContactSection label="🏛 Intézményi kapcsolatok" note="Marketing, PR, továbbképzési központ, más tanszékek elérhetőségei — címzettként mindenhol választhatók." rows={institution} setRows={setInstitution} />
+          <ContactSection label="🎓 Alumni" note="METU-t végzett volt hallgatók: titulus és terület, ahol dolgoznak." rows={alumni} setRows={setAlumni} />
+          <ContactSection label="🤝 Piaci kapcsolatok" note="Ipari, céges és egyéb külső partnerek." rows={market} setRows={setMarket} />
           <div className="pm-sec">✉ Egyedi csoportok · {groups.length}</div>
           <div className="pm-note">Elnevezett email-csoportok (pl. „Kiállítás-csapat") — az Értesítés ablakban egy gombbal hozzáadhatók a címzettekhez.</div>
           <div className="pm-groups">

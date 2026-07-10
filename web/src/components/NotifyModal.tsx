@@ -6,6 +6,7 @@ import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster } f
 import { buildLetter, rerollLetter, LETTER_KINDS, LetterKind, MeetingMode, MeetingPlan } from '@/lib/letters';
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
+import { editHeaders } from '@/lib/editkey';
 
 export interface NotifyTarget {
   targetType: 'event' | 'task' | null;
@@ -211,7 +212,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     try {
       const html = `<div style="font-family:sans-serif;font-size:14px;line-height:1.5;white-space:pre-wrap">${body.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] as string))}</div>`;
       const r = await fetch('/api/notify', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
         body: JSON.stringify({ subject: subject.trim(), text: body, html, bcc: emails }),
       });
       const j = await r.json();

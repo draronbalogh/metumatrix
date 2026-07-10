@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { canWrite, writeDenied } from '@/lib/editauth';
 
 // Személyi törzs (hallgatólista + elérhetőségek). A tanárNEVEK forrása a tanterv, nem ez a fájl.
 const FILE = process.env.PEOPLE_FILE
@@ -19,6 +20,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  if (!canWrite(req)) return writeDenied();
   try {
     const body = await req.json();
     if (!body || !Array.isArray(body.teachers) || !Array.isArray(body.students)) {

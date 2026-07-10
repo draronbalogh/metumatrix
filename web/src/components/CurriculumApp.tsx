@@ -15,6 +15,7 @@ import { DEFAULT_PEOPLE, PeopleDB, PersonKind, buildRoster, normalizePeople } fr
 import PeopleModal from './PeopleModal';
 import NotifyModal, { NotifyTarget } from './NotifyModal';
 import type { Handlers, Filter, View, Prog } from '@/lib/buildGraph';
+import { getEditKey, setEditKey, editHeaders } from '@/lib/editkey';
 import { instrList } from '@/lib/buildGraph';
 import type { Persist } from './MapView';
 
@@ -47,6 +48,10 @@ export default function CurriculumApp() {
   const [agenda, setAgenda] = useState<Agenda>(DEFAULT_AGENDA);
   const [peopleDB, setPeopleDB] = useState<PeopleDB>(DEFAULT_PEOPLE);
   const [theme, setTheme] = useState<'light' | 'dark'>('light'); // alapértelmezés: világos téma
+  const [canEdit, setCanEdit] = useState(true); // bemutató mód: érvényes kulcs nélkül csak olvasás
+  const canEditRef = useRef(true);
+  const [loadOpen, setLoadOpen] = useState(false); // pillanatkép-betöltő ablak
+  const [snaps, setSnaps] = useState<{ name: string; mtime: number; size: number }[] | null>(null);
   const [preset, setPreset] = useState<Preset>('muszerfal');
   const [ver, setVer] = useState<string>('2026/2027');
   const [prog, setProg] = useState<Prog>('BA'); // nyitáskor a sima BA nézet aktív
@@ -114,6 +119,24 @@ export default function CurriculumApp() {
     document.documentElement.dataset.theme = theme;
     try { localStorage.setItem(THEME_KEY, theme); } catch { /* ignore */ }
   }, [theme]);
+  // Szerkesztési kulcs (bemutató mód): a ?admin=<kulcs> eltárolja az eszközön (és a
+  // címsorból azonnal eltűnik), a ?admin=ki törli. Ezután a szerverrel ellenőrizzük:
+  // ha az EDIT_KEY be van állítva és nincs (jó) kulcsunk, az app csak-olvasásra vált.
+  useEffect(() => {
+    try {
+      const u = new URL(window.location.href);
+      const a = u.searchParams.get('admin');
+      if (a) {
+        setEditKey(a === 'ki' ? null : a);
+        u.searchParams.delete('admin');
+        window.history.replaceState(null, '', u.toString());
+      }
+    } catch { /* ignore */ }
+    fetch('/api/auth', { headers: editHeaders(), cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => { setCanEdit(!!j.ok); canEditRef.current = !!j.ok; })
+      .catch(() => { /* offline: marad az alapérték */ });
+  }, []);
   useEffect(() => {
     document.documentElement.dataset.preset = preset;
     try { localStorage.setItem(PRESET_KEY, preset); } catch { /* ignore */ }
@@ -137,7 +160,7 @@ export default function CurriculumApp() {
     if (skipFileSave.current) { skipFileSave.current = false; return; }
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
     saveTimer.current = window.setTimeout(() => {
-      fetch('/api/curriculum', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataRef.current) }).catch(() => { /* ignore */ });
+      fetch('/api/curriculum', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(dataRef.current) }).catch(() => { /* ignore */ });
     }, 1000);
     return () => { if (saveTimer.current) window.clearTimeout(saveTimer.current); };
   }, [data, hydrated]);
@@ -151,7 +174,7 @@ export default function CurriculumApp() {
     if (skipAgendaSave.current) { skipAgendaSave.current = false; return; }
     if (agendaTimer.current) window.clearTimeout(agendaTimer.current);
     agendaTimer.current = window.setTimeout(() => {
-      fetch('/api/agenda', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(agendaRef.current) }).catch(() => { /* ignore */ });
+      fetch('/api/agenda', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(agendaRef.current) }).catch(() => { /* ignore */ });
     }, 1000);
     return () => { if (agendaTimer.current) window.clearTimeout(agendaTimer.current); };
   }, [agenda, hydrated]);
@@ -170,14 +193,17 @@ export default function CurriculumApp() {
     setTaskEdit(null);
   }, [commitAgenda]);
   const toggleDone = useCallback((id: string) => {
+    if (!canEditRef.current) return;
     const cur = agendaRef.current;
     commitAgenda({ ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, status: x.status === 'done' ? 'todo' : 'done' } : x)) });
   }, [commitAgenda]);
   const toggleDoing = useCallback((id: string) => {
+    if (!canEditRef.current) return;
     const cur = agendaRef.current;
     commitAgenda({ ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, status: x.status === 'doing' ? 'todo' : 'doing' } : x)) });
   }, [commitAgenda]);
   const cyclePriority = useCallback((id: string) => {
+    if (!canEditRef.current) return;
     const cur = agendaRef.current;
     commitAgenda({ ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, priority: nextPriority(x.priority) } : x)) });
   }, [commitAgenda]);
@@ -211,7 +237,7 @@ export default function CurriculumApp() {
     if (skipPeopleSave.current) { skipPeopleSave.current = false; return; }
     if (peopleTimer.current) window.clearTimeout(peopleTimer.current);
     peopleTimer.current = window.setTimeout(() => {
-      fetch('/api/people', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(peopleRef.current) }).catch(() => { /* ignore */ });
+      fetch('/api/people', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(peopleRef.current) }).catch(() => { /* ignore */ });
     }, 1000);
     return () => { if (peopleTimer.current) window.clearTimeout(peopleTimer.current); };
   }, [peopleDB, hydrated]);
@@ -222,11 +248,13 @@ export default function CurriculumApp() {
   }, []);
   // Levél-készítő megnyitása egy feladatból / eseményből — a sablon-szöveget a modál generálja
   const notifyTask = useCallback((id: string) => {
+    if (!canEditRef.current) return;
     const t = agendaRef.current.tasks.find((x) => x.id === id);
     if (!t) return;
     setNotify({ targetType: 'task', targetId: t.id, task: t, event: null, names: [t.owner, ...t.people].filter((n): n is string => !!n), steps: t.ideas.filter(Boolean), source: t.source ?? null });
   }, []);
   const notifyEvent = useCallback((id: string) => {
+    if (!canEditRef.current) return;
     const e = agendaRef.current.events.find((x) => x.id === id);
     if (!e) return;
     // az eseményhez kötött feladatok lépései is választhatók a levélbe
@@ -296,7 +324,7 @@ export default function CurriculumApp() {
   // veszélyes (a jelenlegi állapotot írja); a visszatöltés kér megerősítést.
   const exportJSON = () => {
     const post = (url: string, body: unknown) =>
-      fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).catch(() => { /* ignore */ });
+      fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(body) }).catch(() => { /* ignore */ });
     post('/api/curriculum', dataRef.current);
     post('/api/agenda', agendaRef.current);
     post('/api/people', peopleRef.current);
@@ -307,6 +335,7 @@ export default function CurriculumApp() {
       agenda: agendaRef.current,
       people: peopleRef.current,
     };
+    post('/api/snapshots', payload); // idobelyeges pillanatkep a szerveren (grid/backups)
     const b = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(b);
@@ -314,11 +343,10 @@ export default function CurriculumApp() {
     a.click(); URL.revokeObjectURL(a.href);
   };
   interface BackupFile { kind?: string; savedAt?: string; curriculum?: Curriculum; agenda?: Partial<Agenda>; people?: Partial<PeopleDB>; cohorts?: unknown; tasks?: unknown; }
-  const importJSON = (file: File) => {
-    const r = new FileReader();
-    r.onload = () => {
-      try {
-        const d = JSON.parse(String(r.result)) as BackupFile;
+  // egy mentés (fájlból vagy szerveri pillanatképből) visszatöltése — megerősítéssel
+  const applyBackup = (d: BackupFile) => {
+    {
+      {
         if (d.kind === 'metumatrix-backup') {
           const when = d.savedAt ? ` (mentve: ${String(d.savedAt).slice(0, 16).replace('T', ' ')})` : '';
           if (!confirm(`Teljes mentés visszatöltése${when}: tanterv + feladatok + események + névjegyzék. Ez felülírja a mostani állapotot.`)) return;
@@ -344,14 +372,37 @@ export default function CurriculumApp() {
         } else {
           throw new Error('bad');
         }
-      } catch { alert('Hibás vagy ismeretlen JSON fájl.'); }
+      }
+    }
+  };
+  const importJSON = (file: File) => {
+    const r = new FileReader();
+    r.onload = () => {
+      try { applyBackup(JSON.parse(String(r.result)) as BackupFile); setLoadOpen(false); }
+      catch { alert('Hibás vagy ismeretlen JSON fájl.'); }
     };
     r.readAsText(file);
   };
+  // pillanatkép-lista + visszaállítás a szerveri backups mappából
+  const openLoad = () => {
+    setLoadOpen(true); setSnaps(null);
+    fetch('/api/snapshots', { cache: 'no-store' }).then((r) => r.json())
+      .then((j) => setSnaps(j?.ok ? j.list : [])).catch(() => setSnaps([]));
+  };
+  const restoreSnap = (name: string) => {
+    fetch(`/api/snapshots?name=${encodeURIComponent(name)}`, { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => {
+        if (!j?.ok || !j.data) { alert('A pillanatkép nem olvasható.'); return; }
+        try { applyBackup(j.data as BackupFile); setLoadOpen(false); }
+        catch { alert('Hibás pillanatkép-fájl.'); }
+      })
+      .catch(() => alert('A pillanatkép nem érhető el.'));
+  };
 
-  const onEdit = useCallback((ci: number, xi: number) => setEditor({ ci, xi }), []);
+  const onEdit = useCallback((ci: number, xi: number) => { if (!canEditRef.current) return; setEditor({ ci, xi }); }, []);
   const onDetails = useCallback((ci: number, xi: number) => setDetails({ ci, xi }), []);
-  const onAdd = useCallback((ci: number) => setEditor({ ci, xi: -1 }), []);
+  const onAdd = useCallback((ci: number) => { if (!canEditRef.current) return; setEditor({ ci, xi: -1 }); }, []);
   const onInstructor = useCallback((name: string) => setInstr((v) => (v === name ? '' : name)), []);
   const onCategory = useCallback((c: string) => setCat((v) => (v === c ? '' : c)), []);
   const onCatEdit = useCallback((ci: number, xi: number, x: number, y: number) => setCatMenu({ ci, xi, x, y }), []);
@@ -468,7 +519,7 @@ export default function CurriculumApp() {
 
   return (
     <>
-      <div className="app-shell">
+      <div className={`app-shell${canEdit ? '' : ' viewer'}`}>
       <header className="masthead">
         <div className="wrap">
           <div className="brandmark">
@@ -514,7 +565,7 @@ export default function CurriculumApp() {
             <option value="">{isCurr ? 'Minden oktató' : 'Mindenki'}</option>
             {(isCurr ? allInstructors : allPeople).map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
-          {!isCurr && <button className="btn" onClick={() => setPeopleEdit(true)} title="Tanár-elérhetőségek és hallgatólista — email, telefon">☎ Névjegyzék</button>}
+          {!isCurr && <button className="btn editonly" onClick={() => { if (!canEdit) return; setPeopleEdit(true); }} title="Elérhetőségek: tanárok, hallgatók, intézményi/alumni/piaci kapcsolatok">☎ Névjegyzék</button>}
           {isCurr && (
           <>
           {allCats.length > 0 && (
@@ -536,8 +587,8 @@ export default function CurriculumApp() {
           <select className="presetsel" value={preset} onChange={(e) => setPreset(e.target.value as Preset)} title="Betűtípus / stílus">
             {PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
-          <button className="btn" onClick={exportJSON} title="Minden adat mentése: tanterv + feladatok + események + névjegyzék — fájlba írás és közös biztonsági másolat letöltése">⤓ Mentés</button>
-          <button className="btn" onClick={() => fileRef.current?.click()} title="Mentés visszatöltése (közös mentés vagy régi tanterv-fájl)">⤒ Betöltés</button>
+          <button className="btn editonly" onClick={exportJSON} title="Minden adat mentése: tanterv + feladatok + események + névjegyzék — fájlba írás, időbélyeges pillanatkép a szerveren, és biztonsági másolat letöltése">⤓ Mentés</button>
+          <button className="btn editonly" onClick={openLoad} title="Mentett pillanatkép visszatöltése (alapból a legutolsó), vagy fájl a gépről">⤒ Betöltés</button>
           <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importJSON(f); e.target.value = ''; }} />
           {isCurr && (
           <button className="btn btn--danger" onClick={resetData} title="CSAK a tantervet állítja alaphelyzetbe — előtte készíts mentést!">↺ Alaphelyzet</button>
@@ -550,16 +601,16 @@ export default function CurriculumApp() {
           {/* A Mátrix mindig mountolva marad (csak elrejtjük), hogy nézetváltáskor a zoom/pásztázás
               megőrződjön és ne igazítson újra — csak betöltéskor / ver-prog váltáskor illesztünk. */}
           <div className="view-pane" style={{ display: view === 'map' ? 'block' : 'none' }}>
-            <MapView data={data} filter={filter} handlers={mapHandlers} persist={persist} theme={theme} view={vp} locked={locked} onToggleLock={toggleLock} active={view === 'map'} focusId={details ? `c-${details.ci}-${details.xi}` : null} />
+            <MapView data={data} filter={filter} handlers={mapHandlers} persist={persist} theme={theme} view={vp} locked={locked || !canEdit} onToggleLock={canEdit ? toggleLock : () => { /* bemutató mód */ }} active={view === 'map'} focusId={details ? `c-${details.ci}-${details.xi}` : null} />
           </div>
           {view === 'catalog' ? (
             <CatalogView data={data} filter={filter} view={vp} onDetails={onDetails} onEdit={onEdit} onAdd={onAdd} onInstructor={onInstructor} onCategory={onCategory} onCatEdit={onCatEdit} />
           ) : view === 'tasks' ? (
             <AgendaView
               agenda={agenda} q={q} instr={instr} taught={taught} kindOf={kindOf}
-              onAdd={() => setTaskEdit({ t: emptyTask(), isNew: true })}
-              onEdit={(id) => { const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
-              onEditIntro={() => setIntroEdit(true)}
+              onAdd={() => { if (!canEdit) return; setTaskEdit({ t: emptyTask(), isNew: true }); }}
+              onEdit={(id) => { if (!canEdit) return; const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
+              onEditIntro={() => { if (!canEdit) return; setIntroEdit(true); }}
               onPerson={onInstructor}
               onNotify={notifyTask}
               onToggleDone={toggleDone}
@@ -569,9 +620,9 @@ export default function CurriculumApp() {
           ) : view === 'events' ? (
             <EventsView
               agenda={agenda} q={q} instr={instr} kindOf={kindOf}
-              onAdd={() => setEventEdit({ e: emptyEvent(), isNew: true })}
-              onEdit={(id) => { const e = agendaRef.current.events.find((x) => x.id === id); if (e) setEventEdit({ e, isNew: false }); }}
-              onEditTask={(id) => { const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
+              onAdd={() => { if (!canEdit) return; setEventEdit({ e: emptyEvent(), isNew: true }); }}
+              onEdit={(id) => { if (!canEdit) return; const e = agendaRef.current.events.find((x) => x.id === id); if (e) setEventEdit({ e, isNew: false }); }}
+              onEditTask={(id) => { if (!canEdit) return; const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
               onAddTaskFor={(eid) => {
                 // az eseményből nyitott feladat MINDENT örököl — ne kelljen kétszer beírni ugyanazt
                 const e = agendaRef.current.events.find((x) => x.id === eid);
@@ -740,7 +791,39 @@ export default function CurriculumApp() {
         />
       )}
 
+      {loadOpen && (
+        <div className="ovl" onMouseDown={(e) => { if (e.target === e.currentTarget) setLoadOpen(false); }}>
+          <div className="modal">
+            <h3>⤒ Betöltés — mentett pillanatképek</h3>
+            <div className="pm-body">
+              {snaps === null && <div className="pm-note">Pillanatképek betöltése…</div>}
+              {snaps && snaps.length === 0 && <div className="pm-note">Még nincs szerveren tárolt pillanatkép. A ⤓ Mentés mostantól minden alkalommal eltesz ide egy időbélyeges teljes mentést.</div>}
+              {snaps && snaps.length > 0 && (
+                <>
+                  <button className="btn btn--ink snap-latest" onClick={() => restoreSnap(snaps[0].name)}
+                    title="A perc szerint legutolsó mentés visszaállítása">
+                    ⤒ Legutóbbi visszaállítása · {new Date(snaps[0].mtime).toLocaleString('hu-HU', { dateStyle: 'short', timeStyle: 'short' })}
+                  </button>
+                  <div className="snap-list">
+                    {snaps.map((s) => (
+                      <button key={s.name} className="snap-row" onClick={() => restoreSnap(s.name)} title="Visszaállítás erre az állapotra">
+                        <span className="s">{new Date(s.mtime).toLocaleString('hu-HU', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                        <span className="d">{s.name} · {(s.size / 1024).toFixed(0)} kB</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              <div className="pm-note">Vagy tölts be korábban letöltött mentés-fájlt a gépről:</div>
+              <button className="btn" onClick={() => fileRef.current?.click()}>📁 Fájl kiválasztása…</button>
+            </div>
+            <div className="mfoot"><span className="sp" /><button className="btn" onClick={() => setLoadOpen(false)}>Bezárás</button></div>
+          </div>
+        </div>
+      )}
+
       {hydrated && edited && <div style={{ position: 'fixed', bottom: 8, left: 12, fontSize: '.7rem', color: 'var(--muted)', pointerEvents: 'none', zIndex: 5 }}>helyi módosítások mentve</div>}
+      {!canEdit && <div className="viewer-badge" title="Bemutató mód: az adatok védettek, szerkesztéshez a ?admin=<kulcs> címmel lépj be">👁 Bemutató mód</div>}
     </>
   );
 }

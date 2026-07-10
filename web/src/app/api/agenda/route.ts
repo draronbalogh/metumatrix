@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { canWrite, writeDenied } from '@/lib/editauth';
 
 // A feladatok + események egyetlen forrása — a tanterv-fájl mintájára.
 // Hiányzó fájlnál az app a beépített DEFAULT_AGENDA-ra esik vissza, az első mentés hozza létre.
@@ -20,6 +21,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  if (!canWrite(req)) return writeDenied();
   try {
     const body = await req.json();
     if (!body || !Array.isArray(body.tasks) || !Array.isArray(body.events)) {

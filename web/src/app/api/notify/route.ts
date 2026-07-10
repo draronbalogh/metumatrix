@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { sendBcc, isConfigured, verifyTransport } from '@/lib/mailer';
+import { canWrite, writeDenied } from '@/lib/editauth';
 
 // Kézi email-küldés a NotifyModalból. A kliens oldja fel a neveket/csoportokat email-lé,
 // és a végleges címlistát küldi ide; a szerver BCC-vel, kötegelve küld (Gmail keret) és naplóz.
@@ -20,6 +21,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  if (!canWrite(req)) return writeDenied();
   try {
     const body = await req.json();
     const subject: string = (body?.subject || '').trim();

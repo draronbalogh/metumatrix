@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { canWrite, writeDenied } from '@/lib/editauth';
 
 // A tanterv egyetlen forrása. Ezt tölti be az app elsőként, és ide ment.
 // Windows dev-környezet; a böngésző maga nem tud ide írni, ezért kell ez a szerveroldali route.
@@ -21,6 +22,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  if (!canWrite(req)) return writeDenied();
   try {
     const body = await req.json();
     if (!body || !Array.isArray(body.cohorts)) {

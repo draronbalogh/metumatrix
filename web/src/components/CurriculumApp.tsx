@@ -179,6 +179,9 @@ export default function CurriculumApp() {
     return () => { if (agendaTimer.current) window.clearTimeout(agendaTimer.current); };
   }, [agenda, hydrated]);
   const commitAgenda = useCallback((next: Agenda) => {
+    // a ref-et AZONNAL frissítjük, hogy a mentés utáni közvetlen olvasás (pl. a
+    // szerkesztő ✉ „Mentés és levélírás" gombja) már a friss állapotot lássa
+    agendaRef.current = next;
     setAgenda(next);
     try { localStorage.setItem(AGENDA_LS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
   }, []);
@@ -242,6 +245,7 @@ export default function CurriculumApp() {
     return () => { if (peopleTimer.current) window.clearTimeout(peopleTimer.current); };
   }, [peopleDB, hydrated]);
   const savePeople = useCallback((db: PeopleDB) => {
+    peopleRef.current = db; // azonnali ref-frissítés a mentés utáni közvetlen olvasásokhoz
     setPeopleDB(db);
     try { localStorage.setItem(PEOPLE_LS_KEY, JSON.stringify(db)); } catch { /* ignore */ }
     setPeopleEdit(false);
@@ -277,6 +281,7 @@ export default function CurriculumApp() {
   const commit = useCallback((next: Curriculum) => {
     histRef.current = [...histRef.current, dataRef.current].slice(-100);
     futRef.current = [];
+    dataRef.current = next; // azonnali ref-frissítés a mentés utáni közvetlen olvasásokhoz
     setData(next); setEdited(true); persistLS(next);
   }, []);
   const undo = useCallback(() => {

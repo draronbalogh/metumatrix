@@ -479,6 +479,7 @@ export default function CurriculumApp() {
               <div className="subtitle">Tanulmányi mátrix — ahogy a félévek és a tárgyak egymásra épülnek · kösd össze, szerkeszd, mentsd</div>
             </div>
           </div>
+          <button className="themebtn themebtn--head" title="Világos / sötét mód" onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}>{theme === 'dark' ? '☀' : '☾'}</button>
         </div>
       </header>
 
@@ -535,7 +536,6 @@ export default function CurriculumApp() {
           <select className="presetsel" value={preset} onChange={(e) => setPreset(e.target.value as Preset)} title="Betűtípus / stílus">
             {PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
-          <button className="themebtn" title="Világos / sötét mód" onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}>{theme === 'dark' ? '☀' : '☾'}</button>
           <button className="btn" onClick={exportJSON} title="Minden adat mentése: tanterv + feladatok + események + névjegyzék — fájlba írás és közös biztonsági másolat letöltése">⤓ Mentés</button>
           <button className="btn" onClick={() => fileRef.current?.click()} title="Mentés visszatöltése (közös mentés vagy régi tanterv-fájl)">⤒ Betöltés</button>
           <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importJSON(f); e.target.value = ''; }} />

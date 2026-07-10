@@ -94,6 +94,9 @@ body {
 .btn--danger:hover { border-color: var(--brand); background: var(--brand-100); }
 .themebtn { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; cursor: pointer; font-size: 1rem; }
 .themebtn:hover { border-color: var(--brand); }
+/* témaváltó a fejléc jobb felső sarkában: minden nézetben és mobilon is mindig látszik */
+.masthead .wrap { position: relative; }
+.themebtn--head { position: absolute; top: 12px; right: 14px; z-index: 6; }
 
 /* ============================================================
    MAP / NODE VIEW

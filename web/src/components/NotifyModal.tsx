@@ -15,6 +15,7 @@ export interface NotifyTarget {
   task?: AgendaTask | null;
   names: string[]; // előre kijelölt címzettek (a tétel felelőse + résztvevői)
   steps?: string[]; // a kártya (ill. eseménynél a kötött feladatok) lépései — választhatóan a levélbe
+  source?: { name: string; email: string; subject?: string | null } | null; // a kiváltó email feladója
 }
 
 interface Props {
@@ -58,7 +59,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const ui0 = useMemo(loadUi, []);
   const [kind, setKind] = useState<LetterKind>(ui0.kind);
   const [sigOn, setSigOn] = useState(ui0.sigOn); // hivatalos aláírás a levélben (a link-blokk mindig ott van)
-  const initial = useMemo(() => buildLetter(ui0.kind, { type: target.targetType, event: target.event, task: target.task }, buildFooter(db, ui0.sigOn), []), [target, db, ui0]);
+  const initial = useMemo(() => buildLetter(ui0.kind, { type: target.targetType, event: target.event, task: target.task, source: target.source }, buildFooter(db, ui0.sigOn), []), [target, db, ui0]);
   const [subject, setSubject] = useState(initial.subject);
   const [body, setBody] = useState(initial.body);
   const [bodyOpen, setBodyOpen] = useState(false);
@@ -71,6 +72,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const [meetTime, setMeetTime] = useState('');
   const [meetLink, setMeetLink] = useState('');
   const [selected, setSelected] = useState<string[]>(() => [...new Set(target.names)]);
+  const [adhoc, setAdhoc] = useState<string[]>([]); // egyedi email-címzettek (pl. a levél feladója)
   const [recipOpen, setRecipOpen] = useState(false); // a teljes névsor/csoportok csak kérésre nyílnak ki
   const [rq, setRq] = useState(''); // névszűrő a névsorhoz
   const [configured, setConfigured] = useState<boolean | null>(null);
@@ -94,7 +96,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     const ev = target.event ? { ...target.event, place: p || null } : target.event;
     const meet = meetOverride !== undefined ? meetOverride
       : (meetMode === 'nincs' ? null : { mode: meetMode, date: meetDate, time: meetTime, link: meetLink });
-    const gen = buildLetter(k, { type: target.targetType, event: ev, task: target.task }, buildFooter(db, sigOverride ?? sigOn), stepsOverride ?? selSteps, meet);
+    const gen = buildLetter(k, { type: target.targetType, event: ev, task: target.task, source: target.source }, buildFooter(db, sigOverride ?? sigOn), stepsOverride ?? selSteps, meet);
     setSubject(gen.subject);
     setBody(gen.body);
     setBodyDirty(false);
@@ -156,8 +158,9 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       const e = emailOf(db, n);
       if (e) { if (!seen.has(e)) { seen.add(e); em.push(e); } } else mi.push(n);
     });
+    adhoc.forEach((e) => { if (!seen.has(e)) { seen.add(e); em.push(e); } });
     return { emails: em, missing: mi };
-  }, [selected, db]);
+  }, [selected, adhoc, db]);
 
   // Robusztus másolás: a Clipboard API csak HTTPS/localhost alatt él — sima HTTP-n
   // (pl. Tailscale IP-ről) a rejtett-textarea + execCommand tartalék útvonal másol.
@@ -195,7 +198,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       createdAt: new Date().toISOString(),
       targetType: target.targetType,
       targetId: target.targetId,
-      subject, body, names: selected,
+      subject, body, names: [...selected, ...adhoc],
     });
     setResult('✓ Levél elmentve, lent a listában');
   };
@@ -237,6 +240,18 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               ))}
             </div>
           </div>
+          {target.source?.email && (
+            <div className="field full">
+              <label>A levél feladója — neki külön válasz jár</label>
+              <div className="nm-groups">
+                <span className="chip is-on" title={target.source.email}>✉ {target.source.name || target.source.email}</span>
+                <button type="button" className="chip" title="Csak a feladó lesz a címzett, és Válasz-sablon készül (Re: az eredeti tárggyal)"
+                  onClick={() => { const em = target.source?.email as string; setSelected([]); setAdhoc([em]); if (confirmIfDirty()) regenerate('valasz'); }}>↩ Válasz a feladónak</button>
+                <button type="button" className="chip" title="A feladó hozzáadása a mostani címzettekhez"
+                  onClick={() => { const em = target.source?.email as string; setAdhoc((a) => (a.includes(em) ? a : [...a, em])); }}>+ címzettnek</button>
+              </div>
+            </div>
+          )}
           {target.event && (
             <div className="field full">
               <label>Helyszín (a levélbe és az eseményre is bekerül)</label>
@@ -245,11 +260,14 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             </div>
           )}
           <div className="field full">
-            <label>Címzettek: {selected.length} név · {emails.length} email{missing.length ? ` · ${missing.length} címe hiányzik` : ''}
+            <label>Címzettek: {selected.length + adhoc.length} címzett · {emails.length} email{missing.length ? ` · ${missing.length} címe hiányzik` : ''}
               <button type="button" className="nm-bodytoggle" onClick={() => setRecipOpen((v) => !v)}>{recipOpen ? '▲ kész' : '± címzettek szerkesztése'}</button>
             </label>
             <div className="cat-picker pp-picker nm-recips">
-              {selected.length === 0 && <span className="nm-empty">Nincs címzett. Koppints a „± címzettek szerkesztése” gombra.</span>}
+              {selected.length === 0 && adhoc.length === 0 && <span className="nm-empty">Nincs címzett. Koppints a „± címzettek szerkesztése” gombra.</span>}
+              {adhoc.map((e) => (
+                <button key={e} type="button" className="chip is-on" title="Egyedi email-címzett — kattints a levételhez" onClick={() => setAdhoc((a) => a.filter((x) => x !== e))}>@ {e}</button>
+              ))}
               {selected.map((n) => {
                 const has = !!emailOf(db, n);
                 return (
@@ -265,7 +283,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               <label>Csoportok gyors hozzáadása</label>
               <div className="nm-groups">
                 {STANDING.map((g) => <button key={g.id} type="button" className="chip" onClick={() => addGroup(g.id)}>+ {g.label}</button>)}
-                <button type="button" className="chip chip--danger" title="Minden címzett törlése egy lépésben" onClick={() => setSelected([])}>✕ Senki</button>
+                <button type="button" className="chip chip--danger" title="Minden címzett törlése egy lépésben" onClick={() => { setSelected([]); setAdhoc([]); }}>✕ Senki</button>
                 {db.groups.map((g) => <button key={g.name} type="button" className="chip" title={g.members.join(', ')} onClick={() => addCustom(g.members)}>+ {g.name}</button>)}
               </div>
             </div>

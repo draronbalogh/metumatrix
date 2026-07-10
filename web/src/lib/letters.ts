@@ -3,13 +3,14 @@
 // Hangvétel: korrekt, kollegiális. A hosszú gondolatjel (—) használata TILOS a szövegekben.
 import { AgendaEvent, AgendaTask } from '@/data/agenda';
 
-export type LetterKind = 'felkeres' | 'meghivo' | 'emlekezteto' | 'koszono' | 'ures';
+export type LetterKind = 'felkeres' | 'meghivo' | 'emlekezteto' | 'koszono' | 'valasz' | 'ures';
 
 export const LETTER_KINDS: { id: LetterKind; label: string }[] = [
   { id: 'felkeres', label: 'Felkérés' },
   { id: 'meghivo', label: 'Meghívó' },
   { id: 'emlekezteto', label: 'Emlékeztető' },
   { id: 'koszono', label: 'Köszönő' },
+  { id: 'valasz', label: 'Válasz' },
   { id: 'ures', label: 'Üres' },
 ];
 
@@ -17,7 +18,14 @@ export interface LetterTarget {
   type: 'event' | 'task' | null;
   event?: AgendaEvent | null;
   task?: AgendaTask | null;
+  source?: { name: string; email: string; subject?: string | null } | null; // a kiváltó email feladója
 }
+
+// magyar névsorrend: a keresztnév az utolsó tag (a Dr./habil előtagokat leválasztva)
+const givenName = (full: string): string => {
+  const parts = full.trim().split(/\s+/).filter((p) => !/^dr\.?$/i.test(p) && !/^habil\.?$/i.test(p));
+  return parts[parts.length - 1] || full.trim();
+};
 
 // ---- segédek ----
 
@@ -355,12 +363,41 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
     const st = (steps ?? []).map((s) => noDash(s.trim())).filter(Boolean);
     if (st.length) blocks.push(`${pick(['Amiben segítettetek:', 'Ami elkészült a közreműködésetekkel:'])}\n${st.map((s, i) => `${i + 1}. ${s}`).join('\n')}`);
     closer = pickAvoid(KOSZONO_CLOSER, 'koszono.closer');
+  } else if (kind === 'valasz') {
+    const src = target.source ?? null;
+    const orig = noDash((src?.subject || '').trim());
+    subject = orig
+      ? (orig.toLowerCase().startsWith('re:') ? orig : `Re: ${orig}`)
+      : pickAvoid([`Válasz: ${title}`, `${title}: válasz a megkeresésedre`], 'valasz.subj');
+    const ack = pickAvoid([
+      'Köszönöm a megkeresést.',
+      'Köszönöm a leveledet.',
+      'Köszönöm, hogy írtál, és hogy hozzám fordultál ezzel.',
+    ], 'valasz.ack');
+    const bodyLine = pickAvoid([
+      `${aTC} kapcsán utánanézek a részleteknek, és hamarosan érdemben jelentkezem.`,
+      `Átnézem ${aT} kérdését, és rövid időn belül válaszolok.`,
+      `A témát megnézem, és visszajelzek a lehetőségekről.`,
+      `${aTC} ügyében egyeztetek a kollégákkal, és utána pontos választ adok.`,
+    ], 'valasz.body');
+    const cta = pickAvoid([
+      'Ha közben bármi kiegészítés eszedbe jut, írd meg nyugodtan.',
+      'Ha sürgős, keress bátran telefonon.',
+      'Kérdés esetén állok rendelkezésre.',
+    ], 'valasz.cta');
+    blocks.push([ack, bodyLine].join(' '));
+    blocks.push(...infoBlocks());
+    blocks.push(cta);
+    closer = pickAvoid(CLOSER, 'closer');
   } else {
     subject = title;
     closer = null;
   }
 
-  const greet = pickAvoid(GREET, 'greet');
+  // válasz-levélnél a feladót név szerint szólítjuk meg
+  const greet = kind === 'valasz' && target.source?.name
+    ? `Kedves ${givenName(target.source.name)}!`
+    : pickAvoid(GREET, 'greet');
   const core = blocks.filter(Boolean).join('\n\n');
   const body = `${greet}\n\n${core ? core + '\n\n' : ''}${closer ? closer + '\n\n' : ''}${signature}`;
   return { subject, body };

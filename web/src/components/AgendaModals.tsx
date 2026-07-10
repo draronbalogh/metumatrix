@@ -83,6 +83,7 @@ export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClo
     status: task.status as string, priority: task.priority as string, category: task.category ?? '',
     owner: task.owner ?? '', due: task.due ?? '', dueDate: task.dueDate ?? '',
     eventId: task.eventId ?? '',
+    srcName: task.source?.name ?? '', srcEmail: task.source?.email ?? '',
   }));
   const [people, setPeople] = useState<string[]>(task.people);
   useEsc(onClose);
@@ -103,6 +104,9 @@ export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClo
       dueDate: d.dueDate.trim() || null,
       people,
       eventId: d.eventId || null,
+      source: d.srcName.trim() || d.srcEmail.trim()
+        ? { name: d.srcName.trim(), email: d.srcEmail.trim(), subject: task.source?.subject ?? null }
+        : null,
     });
   };
 
@@ -155,6 +159,14 @@ export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onClo
           <div className="field full">
             <label>Résztvevők — tanárok (T) és hallgatók (H), többet is választhatsz</label>
             <PeoplePicker selected={people} roster={roster} onToggle={togglePerson} />
+          </div>
+          <div className="field">
+            <label>Feladó neve — ha emailből jött a feladat</label>
+            <input value={d.srcName} onChange={(e) => set('srcName', e.target.value)} placeholder="pl. Rizmajer Andrea" />
+          </div>
+          <div className="field">
+            <label>Feladó email-címe</label>
+            <input type="email" value={d.srcEmail} onChange={(e) => set('srcEmail', e.target.value)} placeholder="valaki@metropolitan.hu" />
           </div>
           <div className="f-sec c-green">Tartalom</div>
           <div className="field full">

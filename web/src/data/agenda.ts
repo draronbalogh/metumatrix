@@ -29,6 +29,13 @@ export const TASK_CATEGORIES = [
   'Infrastruktúra', 'HR & demonstrátor', 'Web & archívum', 'Egyéb',
 ] as const;
 
+// A tételt kiváltó bejövő email feladója — neki külön válasz-levél írható.
+export interface AgendaSource {
+  name: string;
+  email: string;
+  subject?: string | null; // az eredeti levél tárgya (a Re: válaszhoz)
+}
+
 export interface AgendaTask {
   id: string;
   title: string;
@@ -43,6 +50,7 @@ export interface AgendaTask {
   people: string[];        // résztvevők: oktatók és/vagy hallgatók — bárki hozzárendelhető
   eventId: string | null;  // ha a feladat egy naptári eseményhez kötődik
   createdAt: string | null; // létrehozás időpontja (ISO) — dátum szerinti rendezéshez és az ÚJ jelzéshez
+  source?: AgendaSource | null; // a kiváltó email feladója (válasz-levélhez)
 }
 
 export interface AgendaEvent {
@@ -57,6 +65,7 @@ export interface AgendaEvent {
   place: string | null;
   owner: string | null;
   people: string[];      // résztvevők
+  source?: AgendaSource | null; // a kiváltó email feladója (válasz-levélhez)
 }
 
 // Mentett levél (Outlookba másoláshoz készített üzenet) — tételhez (esemény/feladat) köthető
@@ -93,8 +102,8 @@ export const emptyEvent = (): AgendaEvent => ({
 // Korábban mentett (régebbi sémájú) adat kiegészítése az új mezőkkel.
 export const normalizeAgenda = (a: Partial<Agenda>): Agenda => ({
   intro: a.intro ?? DEFAULT_AGENDA.intro,
-  tasks: (a.tasks ?? []).map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null, priority: t.priority ?? 'normal', category: t.category ?? null, createdAt: t.createdAt ?? null })),
-  events: (a.events ?? []).map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null, featured: e.featured ?? false })),
+  tasks: (a.tasks ?? []).map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null, priority: t.priority ?? 'normal', category: t.category ?? null, createdAt: t.createdAt ?? null, source: t.source ?? null })),
+  events: (a.events ?? []).map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null, featured: e.featured ?? false, source: e.source ?? null })),
   letters: a.letters ?? [],
 });
 

@@ -731,6 +731,11 @@ export default function CurriculumApp() {
             const cur = agendaRef.current;
             commitAgenda({ ...cur, events: cur.events.map((ev) => (ev.id === notify.targetId ? { ...ev, place: p.trim() || null } : ev)) });
           } : undefined}
+          onSourceChange={notify.targetId ? (s) => {
+            const cur = agendaRef.current;
+            if (notify.targetType === 'task') commitAgenda({ ...cur, tasks: cur.tasks.map((t) => (t.id === notify.targetId ? { ...t, source: s } : t)) });
+            else if (notify.targetType === 'event') commitAgenda({ ...cur, events: cur.events.map((ev) => (ev.id === notify.targetId ? { ...ev, source: s } : ev)) });
+          } : undefined}
           onClose={() => setNotify(null)}
         />
       )}

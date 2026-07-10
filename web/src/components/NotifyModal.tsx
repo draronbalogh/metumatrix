@@ -26,6 +26,7 @@ interface Props {
   onSaveLetter: (l: Letter) => void;
   onDeleteLetter: (id: string) => void;
   onPlaceChange?: (place: string) => void; // esemény helyszínének visszamentése az eseményre
+  onSourceChange?: (s: { name: string; email: string; subject?: string | null } | null) => void; // feladó visszamentése a kártyára
   onClose: () => void;
 }
 
@@ -55,7 +56,7 @@ const norm = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[�
 
 // Levél-készítő: sablonból generált szöveg + 3 numerikus másolás-gomb (Outlookba illesztéshez).
 // A küldés (Brevo/SMTP) opcionális — csak akkor jelenik meg, ha a szerveren be van állítva.
-export default function NotifyModal({ target, teacherNames, db, letters, onSaveLetter, onDeleteLetter, onPlaceChange, onClose }: Props) {
+export default function NotifyModal({ target, teacherNames, db, letters, onSaveLetter, onDeleteLetter, onPlaceChange, onSourceChange, onClose }: Props) {
   const ui0 = useMemo(loadUi, []);
   const [kind, setKind] = useState<LetterKind>(ui0.kind);
   const [sigOn, setSigOn] = useState(ui0.sigOn); // hivatalos aláírás a levélben (a link-blokk mindig ott van)
@@ -73,8 +74,11 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const [meetLink, setMeetLink] = useState('');
   const [selected, setSelected] = useState<string[]>(() => [...new Set(target.names)]);
   const [adhoc, setAdhoc] = useState<string[]>([]); // egyedi email-címzettek (pl. a levél feladója)
-  const [recipOpen, setRecipOpen] = useState(false); // a teljes névsor/csoportok csak kérésre nyílnak ki
   const [rq, setRq] = useState(''); // névszűrő a névsorhoz
+  // a levél feladója: a kártyáról jön, de itt helyben is megadható (vissza is mentjük a kártyára)
+  const [src, setSrc] = useState(target.source ?? null);
+  const [srcName, setSrcName] = useState('');
+  const [srcEmail, setSrcEmail] = useState('');
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -96,7 +100,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     const ev = target.event ? { ...target.event, place: p || null } : target.event;
     const meet = meetOverride !== undefined ? meetOverride
       : (meetMode === 'nincs' ? null : { mode: meetMode, date: meetDate, time: meetTime, link: meetLink });
-    const gen = buildLetter(k, { type: target.targetType, event: ev, task: target.task, source: target.source }, buildFooter(db, sigOverride ?? sigOn), stepsOverride ?? selSteps, meet);
+    const gen = buildLetter(k, { type: target.targetType, event: ev, task: target.task, source: src }, buildFooter(db, sigOverride ?? sigOn), stepsOverride ?? selSteps, meet);
     setSubject(gen.subject);
     setBody(gen.body);
     setBodyDirty(false);
@@ -232,39 +236,32 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       <div className="modal modal--wide" role="dialog" aria-modal="true" aria-label="Levél készítése">
         <h3>✉ Levél készítése{target.event ? ` · ${target.event.title}` : target.task ? ` · ${target.task.title}` : ''}</h3>
         <div className="pm-body nm-body">
+          <div className="f-sec c-blue">1 · Kinek megy a levél?</div>
           <div className="field full">
-            <label>Sablon (ugyanarra újra koppintva új megfogalmazás)</label>
-            <div className="chipradio">
-              {LETTER_KINDS.map((k) => (
-                <button type="button" key={k.id} aria-pressed={kind === k.id} className={`crx c-blue${kind === k.id ? ' is-on' : ''}`} onClick={() => { if (confirmIfDirty()) regenerate(k.id); }}>{k.label}</button>
-              ))}
-            </div>
-          </div>
-          {target.source?.email && (
-            <div className="field full">
-              <label>A levél feladója — neki külön válasz jár</label>
+            <label>A levél feladója (neki egy gombbal válaszolhatsz)</label>
+            {src ? (
               <div className="nm-groups">
-                <span className="chip is-on" title={target.source.email}>✉ {target.source.name || target.source.email}</span>
+                <span className="chip is-on" title={src.email}>✉ {src.name || src.email}</span>
                 <button type="button" className="chip" title="Csak a feladó lesz a címzett, és Válasz-sablon készül (Re: az eredeti tárggyal)"
-                  onClick={() => { const em = target.source?.email as string; setSelected([]); setAdhoc([em]); if (confirmIfDirty()) regenerate('valasz'); }}>↩ Válasz a feladónak</button>
+                  onClick={() => { setSelected([]); setAdhoc([src.email]); if (confirmIfDirty()) regenerate('valasz'); }}>↩ Válasz a feladónak</button>
                 <button type="button" className="chip" title="A feladó hozzáadása a mostani címzettekhez"
-                  onClick={() => { const em = target.source?.email as string; setAdhoc((a) => (a.includes(em) ? a : [...a, em])); }}>+ címzettnek</button>
+                  onClick={() => setAdhoc((a) => (a.includes(src.email) ? a : [...a, src.email]))}>+ címzettnek</button>
+                <button type="button" className="chip chip--danger" title="Feladó törlése a kártyáról"
+                  onClick={() => { setSrc(null); onSourceChange?.(null); }}>✕</button>
               </div>
-            </div>
-          )}
-          {target.event && (
-            <div className="field full">
-              <label>Helyszín (a levélbe és az eseményre is bekerül)</label>
-              <input value={place} onChange={(e) => applyPlace(e.target.value, false)} onBlur={() => { if (!bodyDirty) regenerate(kind); }} placeholder="pl. METU, Infopark D épület, 212 vagy külső cím" />
-              <PlaceQuickPick value={place} onPick={(v) => applyPlace(v, true)} />
-            </div>
-          )}
+            ) : (
+              <div className="nm-srcrow">
+                <input value={srcName} onChange={(e) => setSrcName(e.target.value)} placeholder="Feladó neve (pl. Rizmajer Andrea)" />
+                <input type="email" value={srcEmail} onChange={(e) => setSrcEmail(e.target.value)} placeholder="email@cim.hu" />
+                <button type="button" className="btn" disabled={!srcEmail.trim()}
+                  onClick={() => { const s = { name: srcName.trim(), email: srcEmail.trim() }; setSrc(s); onSourceChange?.(s); }}>✓ Feladó mentése</button>
+              </div>
+            )}
+          </div>
           <div className="field full">
-            <label>Címzettek: {selected.length + adhoc.length} címzett · {emails.length} email{missing.length ? ` · ${missing.length} címe hiányzik` : ''}
-              <button type="button" className="nm-bodytoggle" onClick={() => setRecipOpen((v) => !v)}>{recipOpen ? '▲ kész' : '± címzettek szerkesztése'}</button>
-            </label>
+            <label>Kiválasztott címzettek: {selected.length + adhoc.length} címzett · {emails.length} email{missing.length ? ` · ${missing.length} címe hiányzik` : ''}</label>
             <div className="cat-picker pp-picker nm-recips">
-              {selected.length === 0 && adhoc.length === 0 && <span className="nm-empty">Nincs címzett. Koppints a „± címzettek szerkesztése” gombra.</span>}
+              {selected.length === 0 && adhoc.length === 0 && <span className="nm-empty">Nincs címzett. Válassz lentről a csoportokból vagy a névsorból.</span>}
               {adhoc.map((e) => (
                 <button key={e} type="button" className="chip is-on" title="Egyedi email-címzett — kattints a levételhez" onClick={() => setAdhoc((a) => a.filter((x) => x !== e))}>@ {e}</button>
               ))}
@@ -278,33 +275,45 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             </div>
             {missing.length > 0 && <div className="nm-missing">⚠ Nincs email-címük (kimaradnak): {missing.join(', ')}. A ☎ Névjegyzékben pótolható.</div>}
           </div>
-          {recipOpen && (
-            <div className="field full">
-              <label>Csoportok gyors hozzáadása</label>
-              <div className="nm-groups">
-                {STANDING.map((g) => <button key={g.id} type="button" className="chip" onClick={() => addGroup(g.id)}>+ {g.label}</button>)}
-                <button type="button" className="chip chip--danger" title="Minden címzett törlése egy lépésben" onClick={() => { setSelected([]); setAdhoc([]); }}>✕ Senki</button>
-                {db.groups.map((g) => <button key={g.name} type="button" className="chip" title={g.members.join(', ')} onClick={() => addCustom(g.members)}>+ {g.name}</button>)}
-              </div>
+          <div className="field full">
+            <label>Csoportok gyors hozzáadása</label>
+            <div className="nm-groups">
+              {STANDING.map((g) => <button key={g.id} type="button" className="chip" onClick={() => addGroup(g.id)}>+ {g.label}</button>)}
+              <button type="button" className="chip chip--danger" title="Minden címzett törlése egy lépésben" onClick={() => { setSelected([]); setAdhoc([]); }}>✕ Senki</button>
+              {db.groups.map((g) => <button key={g.name} type="button" className="chip" title={g.members.join(', ')} onClick={() => addCustom(g.members)}>+ {g.name}</button>)}
             </div>
-          )}
-          {recipOpen && (
+          </div>
+          <div className="field full">
+            <label>Névsor (T tanár, H hallgató, többet is választhatsz)</label>
+            <input className="nm-search" value={rq} onChange={(e) => setRq(e.target.value)} placeholder="Szűrés névre…" />
+            <div className="cat-picker pp-picker">
+              {roster.filter((r) => !rq.trim() || norm(r.name).includes(norm(rq))).map((r) => {
+                const on = selected.includes(r.name);
+                const has = !!emailOf(db, r.name);
+                return (
+                  <button key={r.name} type="button" aria-pressed={on} className={`chip${on ? ' is-on' : ''}${on && !has ? ' nm-noemail' : ''}`}
+                    title={has ? (emailOf(db, r.name) as string) : 'nincs email-cím, a Névjegyzékben add meg'}
+                    onClick={() => toggle(r.name)}>
+                    <span className={`pb ${r.kind === 'T' ? 't' : 'h'}`}>{r.kind}</span>{r.name}{on && !has ? ' ⚠' : ''}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="f-sec c-green">2 · Miről szóljon?</div>
+          <div className="field full">
+            <label>Sablon (ugyanarra újra koppintva új megfogalmazás)</label>
+            <div className="chipradio">
+              {LETTER_KINDS.map((k) => (
+                <button type="button" key={k.id} aria-pressed={kind === k.id} className={`crx c-blue${kind === k.id ? ' is-on' : ''}`} onClick={() => { if (confirmIfDirty()) regenerate(k.id); }}>{k.label}</button>
+              ))}
+            </div>
+          </div>
+          {target.event && (
             <div className="field full">
-              <label>Névsor (T tanár, H hallgató, többet is választhatsz)</label>
-              <input className="nm-search" value={rq} onChange={(e) => setRq(e.target.value)} placeholder="Szűrés névre…" />
-              <div className="cat-picker pp-picker">
-                {roster.filter((r) => !rq.trim() || norm(r.name).includes(norm(rq))).map((r) => {
-                  const on = selected.includes(r.name);
-                  const has = !!emailOf(db, r.name);
-                  return (
-                    <button key={r.name} type="button" aria-pressed={on} className={`chip${on ? ' is-on' : ''}${on && !has ? ' nm-noemail' : ''}`}
-                      title={has ? (emailOf(db, r.name) as string) : 'nincs email-cím, a Névjegyzékben add meg'}
-                      onClick={() => toggle(r.name)}>
-                      <span className={`pb ${r.kind === 'T' ? 't' : 'h'}`}>{r.kind}</span>{r.name}{on && !has ? ' ⚠' : ''}
-                    </button>
-                  );
-                })}
-              </div>
+              <label>Helyszín (a levélbe és az eseményre is bekerül)</label>
+              <input value={place} onChange={(e) => applyPlace(e.target.value, false)} onBlur={() => { if (!bodyDirty) regenerate(kind); }} placeholder="pl. METU, Infopark D épület, 212 vagy külső cím" />
+              <PlaceQuickPick value={place} onPick={(v) => applyPlace(v, true)} />
             </div>
           )}
           <div className="field full">
@@ -329,6 +338,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               </div>
             )}
           </div>
+          <div className="f-sec">3 · A levél szövege és küldése</div>
           <div className="field full">
             <label>Tárgy</label>
             <input value={subject} onChange={(e) => setSubject(e.target.value)} />

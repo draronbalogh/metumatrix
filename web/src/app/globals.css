@@ -796,6 +796,13 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .chip--danger { background: transparent; border-color: #d7144b; color: #d7144b; }
 /* névszűrő a névsor felett */
 .nm-search { margin-bottom: 8px; }
+/* feladó-megadás sor a levél-készítőben */
+.nm-srcrow { display: flex; flex-wrap: wrap; gap: 8px; }
+.nm-srcrow input { flex: 1 1 160px; }
+.nm-srcrow .btn { flex: none; }
+/* a számozott szekciófejek a levél-modálban is tagolnak */
+.nm-body .f-sec { margin: 16px 0 10px; }
+.nm-body .f-sec:first-child { margin-top: 2px; }
 /* meeting-javaslat sor a levél-készítőben */
 .nm-meetrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .nm-meetrow .nm-meeturl { flex: 1 1 220px; }

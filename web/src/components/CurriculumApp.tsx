@@ -26,7 +26,7 @@ const MapView = dynamic(() => import('./MapView'), {
 const LS_KEY = 'mediadesign-2026-27-v9';
 const AGENDA_LS_KEY = 'md-agenda-v1';
 const PEOPLE_LS_KEY = 'md-people-v1';
-const THEME_KEY = 'md-theme';
+const THEME_KEY = 'md-theme2'; // új kulcs: az ideiglenes sötét-alap időszak mentett 'dark' értékei ne ragadjanak be
 const PRESET_KEY = 'md-preset';
 type Preset = 'neue' | 'tordeles' | 'muszerfal' | 'muterem';
 const PRESETS: { id: Preset; label: string }[] = [
@@ -46,7 +46,7 @@ export default function CurriculumApp() {
   const [view, setView] = useState<'map' | 'catalog' | 'tasks' | 'events'>('map');
   const [agenda, setAgenda] = useState<Agenda>(DEFAULT_AGENDA);
   const [peopleDB, setPeopleDB] = useState<PeopleDB>(DEFAULT_PEOPLE);
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark'); // ideiglenesen: mindig sötét téma az alap
+  const [theme, setTheme] = useState<'light' | 'dark'>('light'); // alapértelmezés: világos téma
   const [preset, setPreset] = useState<Preset>('muszerfal');
   const [ver, setVer] = useState<string>('2026/2027');
   const [prog, setProg] = useState<Prog>('BA'); // nyitáskor a sima BA nézet aktív
@@ -101,9 +101,7 @@ export default function CurriculumApp() {
         try { const s = localStorage.getItem(PEOPLE_LS_KEY); if (s) setPeopleDB(normalizePeople(JSON.parse(s) as Partial<PeopleDB>)); } catch { /* ignore */ }
       }
       try {
-        // ideiglenes: mindig sötét témával indulunk (a mentett 'light' beállítást nem töltjük vissza;
-        // a témaváltó gomb továbbra is működik a munkameneten belül)
-        const t = localStorage.getItem(THEME_KEY); if (t === 'dark') setTheme(t);
+        const t = localStorage.getItem(THEME_KEY); if (t === 'dark' || t === 'light') setTheme(t);
         const p = localStorage.getItem(PRESET_KEY) as Preset | null;
         if (p && PRESETS.some((x) => x.id === p)) setPreset(p);
         // elrendezés-zárolás: mindig zárva indul (betöltéskor/frissítéskor) a véletlen

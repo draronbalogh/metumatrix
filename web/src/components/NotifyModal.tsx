@@ -7,6 +7,7 @@ import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, 
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
 import { editHeaders } from '@/lib/editkey';
+import { TOPIC_TEMPLATES, TOPIC_GROUPS } from '@/lib/topics';
 
 export interface NotifyTarget {
   targetType: 'event' | 'task' | null;
@@ -368,6 +369,31 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                 <button type="button" key={k.id} aria-pressed={kind === k.id} className={`crx c-blue${kind === k.id ? ' is-on' : ''}`} onClick={() => { if (confirmIfDirty()) regenerate(k.id); }}>{k.label}</button>
               ))}
             </div>
+          </div>
+          <div className="field full">
+            <label>Vagy témasablon a tavalyi leveleid mintáiból (a [szögletes] mezőket töltsd ki)</label>
+            <select value="" onChange={(e) => {
+              const t = TOPIC_TEMPLATES.find((x) => x.id === e.target.value);
+              e.target.value = '';
+              if (!t || !confirmIfDirty()) return;
+              const ctx = {
+                title: target.event?.title || target.task?.title || '',
+                when: target.event?.when, place: place || target.event?.place,
+                due: target.task?.due || target.task?.dueDate,
+              };
+              setSubject(t.subject(ctx));
+              setBody(`${t.body(ctx)}\n\n${buildFooter(db, sigOn)}`);
+              setBodyDirty(true); // kész vázlat: a sablon-chipek / 🎲 csak rákérdezés után írhatják felül
+            }}>
+              <option value="">Válassz témasablont…</option>
+              {TOPIC_GROUPS.map((g) => (
+                <optgroup key={g} label={g}>
+                  {TOPIC_TEMPLATES.filter((t) => t.group === g).map((t) => (
+                    <option key={t.id} value={t.id}>{t.label}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
           {target.event && (
             <div className="field full">

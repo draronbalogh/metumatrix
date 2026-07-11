@@ -14,6 +14,8 @@ import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, Letter, agendaPeople, 
 import { DEFAULT_PEOPLE, PeopleDB, PersonKind, buildRoster, normalizePeople } from '@/data/people';
 import PeopleModal from './PeopleModal';
 import NotifyModal, { NotifyTarget } from './NotifyModal';
+import TopicsView from './TopicsView';
+import { TopicTemplate } from '@/lib/topics';
 import type { Handlers, Filter, View, Prog } from '@/lib/buildGraph';
 import { getEditKey, setEditKey, editHeaders } from '@/lib/editkey';
 import { instrList } from '@/lib/buildGraph';
@@ -44,7 +46,7 @@ export default function CurriculumApp() {
   const [hydrated, setHydrated] = useState(false);
   const [edited, setEdited] = useState(false);
 
-  const [view, setView] = useState<'map' | 'catalog' | 'tasks' | 'events'>('map');
+  const [view, setView] = useState<'map' | 'catalog' | 'tasks' | 'events' | 'topics'>('map');
   const [agenda, setAgenda] = useState<Agenda>(DEFAULT_AGENDA);
   const [peopleDB, setPeopleDB] = useState<PeopleDB>(DEFAULT_PEOPLE);
   const [theme, setTheme] = useState<'light' | 'dark'>('light'); // alapértelmezés: világos téma
@@ -264,6 +266,10 @@ export default function CurriculumApp() {
     // az eseményhez kötött feladatok lépései is választhatók a levélbe
     const steps = agendaRef.current.tasks.filter((t) => t.eventId === e.id).flatMap((t) => t.ideas).filter(Boolean);
     setNotify({ targetType: 'event', targetId: e.id, event: e, task: null, names: [e.owner, ...e.people].filter((n): n is string => !!n), steps, source: e.source ?? null });
+  }, []);
+  // levélírás a Sablonok nézetből: kártya nélkül, a kiválasztott sablon előtöltve
+  const composeFromTopic = useCallback((t: TopicTemplate) => {
+    setNotify({ targetType: null, targetId: null, task: null, event: null, names: [], steps: [], source: null, topicId: t.id });
   }, []);
   // mentett levelek kezelése (a levelek az agenda részei, az automentés viszi fájlba)
   const saveLetter = useCallback((l: Letter) => {
@@ -546,6 +552,7 @@ export default function CurriculumApp() {
             <button className={view === 'catalog' ? 'is-on' : ''} onClick={() => setView('catalog')}>▦ Katalógus</button>
             <button className={view === 'tasks' ? 'is-on' : ''} onClick={() => setView('tasks')}>☑ Feladatok</button>
             <button className={view === 'events' ? 'is-on' : ''} onClick={() => setView('events')}>▤ Események</button>
+            <button className={view === 'topics' ? 'is-on' : ''} onClick={() => setView('topics')}>✉ Sablonok</button>
           </div>
           {isCurr && (
           <div className="viewtoggle">
@@ -647,6 +654,8 @@ export default function CurriculumApp() {
               onPerson={onInstructor}
               onNotify={notifyEvent}
             />
+          ) : view === 'topics' ? (
+            <TopicsView onCompose={composeFromTopic} />
           ) : null}
         </div>
       </div>

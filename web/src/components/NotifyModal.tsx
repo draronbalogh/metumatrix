@@ -7,7 +7,7 @@ import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, 
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
 import { editHeaders } from '@/lib/editkey';
-import { TOPIC_TEMPLATES, TOPIC_GROUPS } from '@/lib/topics';
+import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate } from '@/lib/topics';
 
 export interface NotifyTarget {
   targetType: 'event' | 'task' | null;
@@ -17,6 +17,7 @@ export interface NotifyTarget {
   names: string[]; // előre kijelölt címzettek (a tétel felelőse + résztvevői)
   steps?: string[]; // a kártya (ill. eseménynél a kötött feladatok) lépései — választhatóan a levélbe
   source?: { name: string; email: string; subject?: string | null } | null; // a kiváltó email feladója
+  topicId?: string | null; // a Sablonok nézetből indított levél előtöltött témasablonja
 }
 
 interface Props {
@@ -78,6 +79,29 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [tq, setTq] = useState(''); // keresés a jobb oldali sablonpanelben
+
+  // témasablon alkalmazása: a kártya adatai (cím, időpont, helyszín, határidő) beíródnak,
+  // a lábléc a levél végére kerül, és a kész vázlatot csak rákérdezés után írja felül más
+  const applyTopic = (t: TopicTemplate) => {
+    const ctx = {
+      title: target.event?.title || target.task?.title || '',
+      when: target.event?.when, place: place || target.event?.place,
+      due: target.task?.due || target.task?.dueDate,
+    };
+    setSubject(t.subject(ctx));
+    setBody(`${t.body(ctx)}\n\n${buildFooter(db, sigOn)}`);
+    setBodyDirty(true);
+    setResult(`✓ Sablon betöltve: ${t.label}. A [szögletes] mezőket töltsd ki.`);
+  };
+
+  // a Sablonok nézetből indított levél: a kiválasztott sablon azonnal betöltődik
+  useEffect(() => {
+    if (!target.topicId) return;
+    const t = TOPIC_TEMPLATES.find((x) => x.id === target.topicId);
+    if (t) applyTopic(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -387,14 +411,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               const t = TOPIC_TEMPLATES.find((x) => x.id === e.target.value);
               e.target.value = '';
               if (!t || !confirmIfDirty()) return;
-              const ctx = {
-                title: target.event?.title || target.task?.title || '',
-                when: target.event?.when, place: place || target.event?.place,
-                due: target.task?.due || target.task?.dueDate,
-              };
-              setSubject(t.subject(ctx));
-              setBody(`${t.body(ctx)}\n\n${buildFooter(db, sigOn)}`);
-              setBodyDirty(true); // kész vázlat: a sablon-chipek / 🎲 csak rákérdezés után írhatják felül
+              applyTopic(t);
             }}>
               <option value="">Válassz témasablont…</option>
               {TOPIC_GROUPS.map((g) => (
@@ -441,20 +458,41 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             <input value={subject} onChange={(e) => setSubject(e.target.value)} />
           </div>
           <div className="nm-msgrow">
-            {allSteps.length > 0 && (
-              <div className="field full nm-steps">
-                <label>Miről szóljon a levél? ({selSteps.length ? `${selSteps.length} lépés kiválasztva` : 'nincs lépés a levélben'})</label>
-                <div className="cat-picker pp-picker">
-                  <button type="button" className="chip" onClick={() => setSteps(allSteps)}>✓ Mind</button>
-                  <button type="button" className="chip" onClick={() => setSteps([])}>✕ Egyik sem</button>
-                  {allSteps.map((s, i) => (
-                    <button type="button" key={i} className={`chip${selSteps.includes(s) ? ' is-on' : ''}`} title={s} onClick={() => toggleStep(s)}>
-                      {s.length > 48 ? s.slice(0, 48) + '…' : s}
-                    </button>
-                  ))}
+            <div className="nm-side">
+              {allSteps.length > 0 && (
+                <div className="field full nm-steps">
+                  <label>Miről szóljon a levél? ({selSteps.length ? `${selSteps.length} lépés kiválasztva` : 'nincs lépés a levélben'})</label>
+                  <div className="cat-picker pp-picker">
+                    <button type="button" className="chip" onClick={() => setSteps(allSteps)}>✓ Mind</button>
+                    <button type="button" className="chip" onClick={() => setSteps([])}>✕ Egyik sem</button>
+                    {allSteps.map((s, i) => (
+                      <button type="button" key={i} className={`chip${selSteps.includes(s) ? ' is-on' : ''}`} title={s} onClick={() => toggleStep(s)}>
+                        {s.length > 48 ? s.slice(0, 48) + '…' : s}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+              <aside className="field full nm-topicpanel">
+                <label>Témasablonok ({TOPIC_TEMPLATES.length}) — koppints, és betöltődik</label>
+                <input value={tq} onChange={(e) => setTq(e.target.value)} placeholder="Keresés a sablonok között…" />
+                <div className="nm-topiclist">
+                  {TOPIC_GROUPS.map((g) => {
+                    const items = TOPIC_TEMPLATES.filter((t) => t.group === g && (!tq.trim() || norm(`${t.label} ${t.group}`).includes(norm(tq))));
+                    if (!items.length) return null;
+                    return (
+                      <div key={g}>
+                        <div className="nm-tgh">{g}</div>
+                        {items.map((t) => (
+                          <button key={t.id} type="button" className="nm-titem" title={`Tárgy: ${t.subject({ title: '', when: null, place: null, due: null })}`}
+                            onClick={() => { if (confirmIfDirty()) applyTopic(t); }}>{t.label}</button>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              </aside>
+            </div>
             <div className="field full nm-msg">
               <label>Üzenet</label>
               <div className="nm-tools">

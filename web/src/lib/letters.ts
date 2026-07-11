@@ -84,10 +84,10 @@ const GREET = [
   'Sziasztok!',
   'Kedves Munkatársak!',
 ];
-const GREET_H = ['Kedves Hallgatóink!', 'Kedves Hallgatók!', 'Kedves Diákok!', 'Sziasztok!'];
-const GREET_A = ['Kedves Alumnusok!', 'Kedves Volt Hallgatóink!', 'Kedves Öregdiákjaink!'];
-const GREET_I = ['Kedves Kollégák!', 'Kedves Munkatársak!', 'Kedves Mindenki!'];
-const GREET_P = ['Kedves Partnereink!', 'Kedves Partnerek!'];
+const GREET_H = ['Kedves Hallgatóink!', 'Kedves Hallgatók!', 'Kedves Diákjaink!', 'Kedves Diákok!', 'Sziasztok!'];
+const GREET_A = ['Kedves Alumnusok!', 'Kedves Alumnusaink!', 'Kedves Volt Hallgatóink!', 'Kedves Volt Diákjaink!', 'Kedves Öregdiákjaink!', 'Kedves Média Design szakos Alumnusaink!'];
+const GREET_I = ['Kedves Kollégák!', 'Kedves Kolléga!', 'Kedves Munkatársak!', 'Kedves Mind!', 'Kedves Mindenki!'];
+const GREET_P = ['Kedves Partnereink!', 'Kedves Partnerünk!', 'Kedves Szakmai Partnerünk!', 'Kedves Partnerek!', 'Kedves Mind!'];
 const GREET_TH = ['Kedves Oktatók és Hallgatók!', 'Kedves Mindenki!', 'Kedves Kollégák és Hallgatók!'];
 const GREET_MIX = ['Kedves Mindenki!', 'Kedves Mindannyian!'];
 const GREET_POOLS = [GREET, GREET_H, GREET_A, GREET_I, GREET_P, GREET_TH, GREET_MIX];

@@ -890,6 +890,47 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
     subject: (c) => `Előzetes jelzés: ${or(c.title, '[kiállítás]')}, ${or(c.when, '[dátum]')}`,
     body: (c) => `Kedves Krisztina és Nóra!\n\nIdőben szeretnék szólni egy közelgő eseményről: a Média Design [évfolyam] [kiállítás típusa] kiállítása ${or(c.when, '[dátum]')}-kor lesz${c.place ? ` (${nd(c.place)})` : ' a [helyszín]-en'}. Egyelőre a végleges anyagok készülnek, de szerettem volna minél előbb jelezni, hogy legyen időtök felkészülni és rendesen beharangozni. A részletes tartalmakat (képek, szövegek, névsor) ${or(c.due, '[dátum]')}-ig küldöm; addig is jelezzétek, ha valamire már most szükségetek van.\n\nKöszönöm, hogy segítitek a szakunk láthatóságát!`,
   },
+  // a 163-170. tételek: kiállítás-folyamatok (kurátori brief, üzemeltetés, kellékek, LED-fal)
+  {
+    id: 'kuratori-briefing', group: '17 · Rendezvények / hallgatói élet', label: 'Kurátori briefing: engedélyeztetési dokumentum',
+    subject: (c) => `${or(c.title, '[kiállítás]')}: az engedélyeztetéshez szükséges dokumentum`,
+    body: () => `Szia [Név]!\n\nÖrülök a kezdeményezésnek, és támogatom, hogy a kurátori feladatokat kézbe veszed! Ahhoz, hogy az engedélyeztetést el tudjam indítani az üzemeltetésnél, egy pontosan szerkesztett dokumentumra van szükségem, amely kitér az alábbiakra: rövid eseményleírás (cél, koncepció, és miért éri meg befogadni), a helyszín pontosítása (konkrét terem / aularész), a felelősök és a kurátor neve-elérhetősége, a felügyelő oktatók, a várható kiállítói és látogatói létszám, a zaj- és fényterhelés (irodai környezetben a hangos installáció csak fülhallgatóval), a térhasználat / alaprajz, a kábelezés és botlásvédelem, az eszközigény (áramvételi pontok, asztalok, paravánok; hosszabbítót nektek kell hozni), néhány kép a munkákról, valamint az építés / látogathatóság / bontás pontos idősávjai és az akadálymentesítés.\n\nKérlek, ezt állítsd össze Word-ben, és küldd vissza; csak ennek birtokában tudok a foglalásról egyeztetni. Köszönöm, várom a dokumentációt!`,
+  },
+  {
+    id: 'kiallitas-eloterjesztes', group: '17 · Rendezvények / hallgatói élet', label: 'Kiállítás előterjesztése az üzemeltetésnek',
+    subject: (c) => `[Évfolyam] kiállítás, helyszínkérés: ${or(c.place, '[helyszín]')}`,
+    body: (c) => `Kedves [István / Üzemeltetés]!\n\nDr. Balogh Áron vagyok, a Média Design szak vezetője. A szak [évfolyam] hallgatói egy kiállítást szeretnének megvalósítani a(z) ${or(c.place, '[pontos helyszín]')}-en, tervezett időszak: ${or(c.when, '[dátumok]')}. A csatolt dokumentumban összefoglaltuk a koncepciót, a helyszínt, a felelősöket, a terhelési (zaj-fény) és technikai (kábelezés, áram) kereteket, valamint az idősávokat. Kérlek, jelezd, hogy a helyszín a megadott napokra jóváhagyható-e, illetve kivel kell még egyeztetnem a programütközés elkerülése érdekében.\n\nKöszönettel várom a döntésedet!`,
+  },
+  {
+    id: 'kiallitas-kellekek', group: '17 · Rendezvények / hallgatói élet', label: 'Kellék- és technikaigény a rendezvényszervezésnek',
+    subject: (c) => `${or(c.title, '[kiállítás]')}: kellék- és technikaigény`,
+    body: (c) => `Kedves [Patrícia / Rendezvényszervezés]!\n\nA(z) ${or(c.title, '[kiállítás neve]')} kapcsán (${or(c.when, '[dátum]')}${c.place ? `, ${nd(c.place)}` : ', [helyszín]'}) szeretnénk leadni a kellék- és technikaigényünket: [pl. X db könyöklő + huzat, Y db posztamens, Z szék, puffok, papírpohár, 2 db hosszabbító], valamint a LED-fal használata. Kérlek, jelezd, hogy ezeket tudjátok-e biztosítani, és hova / mikorra kell leadnom a ticketet. A LED-fal tartalmát a technikussal egyeztetjük külön. Az építést [dátum] reggel [idő]-tól kezdenénk; ha ez hangzavarral jár, jelezd, kivel egyeztessek.\n\nKöszönöm a segítséget!`,
+  },
+  {
+    id: 'ledfal-tartalom', group: '17 · Rendezvények / hallgatói élet', label: 'LED-fal / vetítés tartalmának egyeztetése',
+    subject: (c) => `${or(c.title, '[kiállítás]')}: LED-fal tartalom`,
+    body: (c) => `Kedves [Gábor]!\n\nA(z) ${or(c.title, '[kiállítás neve]')} (${or(c.when, '[dátum]')}${c.place ? `, ${nd(c.place)}` : ', [helyszín]'}) kapcsán szeretnénk igénybe venni a LED-falat. A vetítendő tartalom [rövid leírás: a kiállítás infói + saját anyagok, az installációkat bemutató vagy a hangulathoz illő absztrakt animációk] lenne. Kérlek, jelezd, milyen formátumban és felbontásban készítsük az anyagot, és mikor tudjuk feltölteni / tesztelni a helyszínen. A rendezvényszervezés a ticketet leadja az igényre.\n\nKöszönöm, hogy segítesz a beállításban!`,
+  },
+  {
+    id: 'kulso-galeria', group: '17 · Rendezvények / hallgatói élet', label: 'Külső galéria / társszervező egyeztetése',
+    subject: (c) => `${or(c.title, '[kiállítás címe]')}: megjelenés és társszervezés`,
+    body: (c) => `Kedves [Galéria kontakt / Konzulens]!\n\nKöszönöm, hogy a(z) ${or(c.title, '[kiállítás címe]')} diplomakiállítás a [galéria neve]-ben valósul meg, a szak részéről nagyra értékeljük a munkátokat. A kommunikációt az egyetem hivatalos felületein a marketingünk indítja, ezért kérlek, egyeztessünk arról, hogy az esemény a METU eseményeként jelenjen meg, a galéria pedig társszervező (co-host) szerepben. Az anyagokhoz kérünk [jogtiszta képek, plakát, sajtószöveg], és jelezzétek, ha a plakáton a METU logó elhelyezésével kapcsolatban van kérésetek. A megnyitó ${or(c.when, '[dátum, óra]')}, a kiállítás [dátumokig] látogatható.\n\nKöszönöm az együttműködést, jó közös munkát!`,
+  },
+  {
+    id: 'kiallitas-meghivo-oktatoknak', group: '17 · Rendezvények / hallgatói élet', label: 'Hallgatói meghívó továbbítása az oktatóknak (körlevél)',
+    subject: (c) => `Meghívó: ${or(c.title, '[kiállítás címe]')} megnyitója, ${or(c.when, '[dátum]')}`,
+    body: (c) => `Kedves Kollégák!\n\nTovábbítom a hallgatóink meghívóját: szeretettel várnak Benneteket a(z) ${or(c.title, '[kiállítás címe]')} megnyitójára. A kiállítás a Média Design [évfolyam] hallgatóinak közös projektje, amely [rövid koncepció] a [kurzus neve] keretében. Megnyitó: ${or(c.when, '[dátum, óra]')}, helyszín: ${or(c.place, '[helyszín, cím]')}; a kiállítást megnyitja [nevek]. Látogatható: [dátumok]; további infó: [FB-esemény / webhír linkek].\n\nMegtisztelő lenne, ha jelenléteddel támogatnád a hallgatóinkat. Találkozzunk a megnyitón!`,
+  },
+  {
+    id: 'kiallitas-idozites', group: '17 · Rendezvények / hallgatói élet', label: 'Kiállítás-időpont rugalmas kezelése (hallgatónak)',
+    subject: (c) => `${or(c.title, '[kiállítás]')}: időzítés`,
+    body: (c) => `Szia [Név]!\n\nÁttekintettem a lehetőségeket: a helyszín és az engedélyeztetés még egyeztetés alatt van, ezért lehet, hogy az eredeti ${or(c.when, '[dátum]')} időpontot érdemes rugalmasan kezelnünk. Ha csúszik is pár nappal, az nem baj; így nem kell kapkodnunk, és rendesen, időben meg tudjuk hirdetni a kiállítást. Amint megkapom az üzemeltetés és a társterületek jóváhagyását, azonnal jelzem Nektek a végleges dátumot.\n\nAddig is köszönöm a türelmet és a kurátori munkát, jó úton haladunk!`,
+  },
+  {
+    id: 'installacios-adatok', group: '17 · Rendezvények / hallgatói élet', label: 'Installációs adattábla bekérése (körlevél, hallgatók)',
+    subject: (c) => `${or(c.title, '[kiállítás]')}: installációs adatok bekérése`,
+    body: (c) => `Kedves [Évfolyam] Hallgatók!\n\nA kiállítás előkészítéséhez kérlek, mindenki töltse ki a közös táblázatban a saját munkájának alapadatait: cím, típus, méret, technikai igény (áram, hang, fény), rövid leírás. Erre azért van szükség, hogy pontosan meg tudjuk tervezni a térfelosztást, az áramvételi pontokat és a technikai hátteret. Kérlek, ${or(c.due, '[határidő]')}-ig töltsétek ki, mert ez alapján adjuk le az igényeket az üzemeltetésnek. Ha bármi kérdés van a saját installációtok technikai feltételeivel kapcsolatban, jelezzétek.\n\nKöszönöm a pontos munkát!`,
+  },
 ];
 
 export const TOPIC_GROUPS: string[] = [...new Set(TOPIC_TEMPLATES.map((t) => t.group))];

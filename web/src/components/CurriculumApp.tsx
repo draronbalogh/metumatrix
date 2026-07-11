@@ -592,6 +592,8 @@ export default function CurriculumApp() {
             <button className={view === 'tasks' ? 'is-on' : ''} onClick={() => setView('tasks')}>☑ Feladatok</button>
             <button className={view === 'events' ? 'is-on' : ''} onClick={() => setView('events')}>▤ Események</button>
             <button className={view === 'topics' ? 'is-on' : ''} onClick={() => setView('topics')}>✉ Levelek</button>
+            <button className={`editonly${peopleEdit ? ' is-on' : ''}`} title="Elérhetőségek: tanárok, hallgatók, intézményi / alumni / piaci kapcsolatok"
+              onClick={() => { if (!canEdit) return; setPeopleEdit(true); }}>☎ Névjegyzék</button>
           </div>
           {isCurr && (
           <div className="viewtoggle">
@@ -616,7 +618,6 @@ export default function CurriculumApp() {
             <option value="">{isCurr ? 'Minden oktató' : 'Mindenki'}</option>
             {(isCurr ? allInstructors : allPeople).map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
-          {!isCurr && <button className="btn editonly" onClick={() => { if (!canEdit) return; setPeopleEdit(true); }} title="Elérhetőségek: tanárok, hallgatók, intézményi/alumni/piaci kapcsolatok">☎ Névjegyzék</button>}
           {isCurr && (
           <>
           {allCats.length > 0 && (
@@ -708,6 +709,8 @@ export default function CurriculumApp() {
                   target={inlineTarget}
                   topicReq={topicReq}
                   letterReq={letterReq}
+                  ctxEvents={agenda.events}
+                  ctxTasks={agenda.tasks}
                   teacherNames={teacherNames}
                   db={peopleDB}
                   letters={(agenda.letters || []).filter((l) => l.targetId === null)}
@@ -848,6 +851,8 @@ export default function CurriculumApp() {
       {notify && (
         <NotifyModal
           target={notify}
+          ctxEvents={agenda.events}
+          ctxTasks={agenda.tasks}
           teacherNames={teacherNames}
           db={peopleDB}
           letters={(agenda.letters || []).filter((l) => l.targetId === notify.targetId)}

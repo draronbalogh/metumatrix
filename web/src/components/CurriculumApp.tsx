@@ -15,6 +15,7 @@ import { DEFAULT_PEOPLE, PeopleDB, PersonKind, buildRoster, normalizePeople } fr
 import PeopleModal from './PeopleModal';
 import NotifyModal, { NotifyTarget } from './NotifyModal';
 import TopicsView from './TopicsView';
+import OrarendView from './OrarendView';
 import { TopicTemplate } from '@/lib/topics';
 import type { Handlers, Filter, View, Prog } from '@/lib/buildGraph';
 import { getEditKey, setEditKey, editHeaders } from '@/lib/editkey';
@@ -46,7 +47,7 @@ export default function CurriculumApp() {
   const [hydrated, setHydrated] = useState(false);
   const [edited, setEdited] = useState(false);
 
-  const [view, setView] = useState<'map' | 'catalog' | 'tasks' | 'events' | 'topics'>('map');
+  const [view, setView] = useState<'map' | 'catalog' | 'tasks' | 'events' | 'topics' | 'orarend' | 'it'>('map');
   const [agenda, setAgenda] = useState<Agenda>(DEFAULT_AGENDA);
   const [peopleDB, setPeopleDB] = useState<PeopleDB>(DEFAULT_PEOPLE);
   const [theme, setTheme] = useState<'light' | 'dark'>('light'); // alapértelmezés: világos téma
@@ -592,8 +593,10 @@ export default function CurriculumApp() {
             <button className={view === 'tasks' ? 'is-on' : ''} onClick={() => setView('tasks')}>☑ Feladatok</button>
             <button className={view === 'events' ? 'is-on' : ''} onClick={() => setView('events')}>▤ Események</button>
             <button className={view === 'topics' ? 'is-on' : ''} onClick={() => setView('topics')}>✉ Levelek</button>
-            <button className={`editonly${peopleEdit ? ' is-on' : ''}`} title="Elérhetőségek: tanárok, hallgatók, intézményi / alumni / piaci kapcsolatok"
+            <button className={`editonly${peopleEdit ? ' is-on' : ''}`} title="Elérhetőségek: oktatók, hallgatók, intézményi / alumni / opponens / piaci kapcsolatok"
               onClick={() => { if (!canEdit) return; setPeopleEdit(true); }}>☎ Névjegyzék</button>
+            <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>🕒 Órarend</button>
+            <button className={view === 'it' ? 'is-on' : ''} onClick={() => setView('it')}>🖥 IT és szoftverek</button>
           </div>
           {isCurr && (
           <div className="viewtoggle">
@@ -694,6 +697,13 @@ export default function CurriculumApp() {
               onPerson={onInstructor}
               onNotify={notifyEvent}
             />
+          ) : view === 'orarend' ? (
+            <OrarendView knownNames={[...teacherNames, ...peopleDB.teachers.map((p) => p.name), ...peopleDB.institution.map((p) => p.name), ...peopleDB.alumni.map((p) => p.name)]} />
+          ) : view === 'it' ? (
+            <section className="wrap orv">
+              <div className="tp-headrow"><h2 className="tp-title">🖥 IT, szoftverek és teremkiosztás</h2></div>
+              <p className="tp-empty">Ez a nézet elő van készítve: ide kerül a szoftver-lista és a teremkiosztás táblázata. Küldd el az anyagot (xlsx vagy lista), és ugyanolyan kereshető, MD-re szűrt táblázat lesz belőle, mint az Órarend.</p>
+            </section>
           ) : null}
           {/* A Levelek nézet mindig mountolva marad (csak elrejtjük), hogy a beágyazott
               szerkesztőben írt piszkozat nézetváltáskor NE vesszen el. */}

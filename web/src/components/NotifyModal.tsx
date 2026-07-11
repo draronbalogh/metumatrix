@@ -245,16 +245,17 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     H: new Set(db.students.map((s) => s.name)),
     I: new Set(db.institution.map((s) => s.name)),
     A: new Set(db.alumni.map((s) => s.name)),
+    O: new Set(db.opponents.map((s) => s.name)),
     P: new Set(db.market.map((s) => s.name)),
   }), [teacherNames, db]);
   const audience = useMemo<PersonKind[]>(() => {
     if (!selected.length) return [];
     const has = (k: PersonKind, n: string) => kindSets[k].has(n);
-    for (const k of ['A', 'P', 'I', 'H', 'T'] as PersonKind[]) {
+    for (const k of ['O', 'A', 'P', 'I', 'H', 'T'] as PersonKind[]) {
       if (selected.every((n) => has(k, n))) return [k];
     }
     if (selected.every((n) => has('T', n) || has('H', n))) return ['T', 'H'];
-    const union = (['T', 'H', 'I', 'A', 'P'] as PersonKind[]).filter((k) => selected.some((n) => has(k, n)));
+    const union = (['T', 'H', 'I', 'A', 'O', 'P'] as PersonKind[]).filter((k) => selected.some((n) => has(k, n)));
     return union;
   }, [selected, kindSets]);
   // Címzett-információ a levélgenerátornak: EGY címzettnél név szerinti, egyes számú
@@ -436,8 +437,9 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                   { label: 'Minden hallgató', names: db.students.map((p) => p.name), hint: 'A teljes hallgatói lista' },
                   { label: 'Minden intézményi', names: db.institution.map((p) => p.name), hint: 'A teljes intézményi kontaktlista' },
                   { label: 'Minden alumni', names: db.alumni.map((p) => p.name), hint: 'A teljes alumni lista' },
+                  { label: 'Minden opponens', names: db.opponents.map((p) => p.name), hint: 'Opponensek és diploma-opponensek' },
                   { label: 'Minden piaci', names: db.market.map((p) => p.name), hint: 'A teljes piaci / külső partnerlista' },
-                  { label: 'Mindenki', names: [...teacherNames, ...formerTeacherNames(teacherNames, db), ...db.students.map((p) => p.name), ...db.institution.map((p) => p.name), ...db.alumni.map((p) => p.name), ...db.market.map((p) => p.name)], hint: 'Az összes lista együtt' },
+                  { label: 'Mindenki', names: [...teacherNames, ...formerTeacherNames(teacherNames, db), ...db.students.map((p) => p.name), ...db.institution.map((p) => p.name), ...db.alumni.map((p) => p.name), ...db.opponents.map((p) => p.name), ...db.market.map((p) => p.name)], hint: 'Az összes lista együtt' },
                 ]).map((p) => {
                   const names = [...new Set(p.names)];
                   return (
@@ -462,7 +464,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             <div className="nm-row">
               <span className="nm-hint" title="Koppints a nevekre a hozzáadáshoz / levételhez">Névsor:</span>
               <div className="nm-groups nm-kindrow">
-                {(['T', 'H', 'I', 'A', 'P'] as PersonKind[]).map((k) => (
+                {(['T', 'H', 'I', 'A', 'O', 'P'] as PersonKind[]).map((k) => (
                   <button key={k} type="button" aria-pressed={kindFilter === k} className={`chip${kindFilter === k ? ' is-on' : ''}`}
                     onClick={() => setKindFilter((v) => (v === k ? '' : k))}>
                     <span className={`pb ${k.toLowerCase()}`}>{k}</span>{KIND_LABEL[k]}

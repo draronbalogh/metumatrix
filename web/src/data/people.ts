@@ -37,6 +37,7 @@ export interface PeopleDB {
   students: Person[]; // hallgatók / demonstrátorok — itt az egyetlen listájuk
   institution: Person[]; // intézményi kapcsolatok: marketing, PR, továbbképzési központ, más tanszékek
   alumni: Person[]; // METU-t végzett volt hallgatók (titulus + terület)
+  opponents: Person[]; // opponensek és diploma-opponensek — külön címzett-kör
   market: Person[]; // piaci / ipari kapcsolatok (titulus + terület)
   groups: PeopleGroup[]; // egyedi email-csoportok
   signature: string; // hivatalos aláírás-blokk — a levélben KI-BE kapcsolható
@@ -70,9 +71,9 @@ export const SIGNATURE_SEPARATOR = '---------------------';
 export const buildFooter = (db: PeopleDB, withSignature: boolean): string =>
   `${withSignature ? db.signature + '\n\n' : ''}${SIGNATURE_SEPARATOR}\n${db.signatureLinks}`;
 
-export type PersonKind = 'T' | 'H' | 'I' | 'A' | 'P'; // Tanár | Hallgató | Intézményi | Alumni | Piaci
+export type PersonKind = 'T' | 'H' | 'I' | 'A' | 'O' | 'P'; // Tanár | Hallgató | Intézményi | Alumni | Opponens | Piaci
 export const KIND_LABEL: Record<PersonKind, string> = {
-  T: 'Tanár', H: 'Hallgató', I: 'Intézményi', A: 'Alumni', P: 'Piaci',
+  T: 'Tanár', H: 'Hallgató', I: 'Intézményi', A: 'Alumni', O: 'Opponens', P: 'Piaci',
 };
 
 export interface RosterEntry {
@@ -80,7 +81,7 @@ export interface RosterEntry {
   kind: PersonKind;
 }
 
-export const DEFAULT_PEOPLE: PeopleDB = { teachers: [], students: [], institution: [], alumni: [], market: [], groups: [], signature: DEFAULT_SIGNATURE, signatureLinks: DEFAULT_SIGNATURE_LINKS };
+export const DEFAULT_PEOPLE: PeopleDB = { teachers: [], students: [], institution: [], alumni: [], opponents: [], market: [], groups: [], signature: DEFAULT_SIGNATURE, signatureLinks: DEFAULT_SIGNATURE_LINKS };
 
 // Telefonszám-normalizálás: minden magyar szám +36-tal kezdődjön (06/0036/36 helyett).
 export const normalizePhone = (phone: string | null): string | null => {
@@ -107,6 +108,7 @@ export const normalizePeople = (p: Partial<PeopleDB>): PeopleDB => {
     students: (p.students ?? []).filter((x) => x && x.name).map(normPerson),
     institution: (p.institution ?? []).filter((x) => x && x.name).map(normPerson),
     alumni: (p.alumni ?? []).filter((x) => x && x.name).map(normPerson),
+    opponents: (p.opponents ?? []).filter((x) => x && x.name).map(normPerson),
     market: (p.market ?? []).filter((x) => x && x.name).map(normPerson),
     groups: (p.groups ?? []).filter((g) => g && g.name).map((g) => ({ name: g.name, members: g.members ?? [] })),
     signature: sig || DEFAULT_SIGNATURE,
@@ -120,6 +122,7 @@ export const emailOf = (db: PeopleDB, name: string): string | null => {
     || db.students.find((x) => x.name === name)
     || db.institution.find((x) => x.name === name)
     || db.alumni.find((x) => x.name === name)
+    || db.opponents.find((x) => x.name === name)
     || db.market.find((x) => x.name === name);
   return p?.email ?? null;
 };
@@ -135,5 +138,6 @@ export const buildRoster = (teacherNames: string[], db: PeopleDB): RosterEntry[]
   ...db.students.map((s) => ({ name: s.name, kind: 'H' as const })),
   ...db.institution.map((s) => ({ name: s.name, kind: 'I' as const })),
   ...db.alumni.map((s) => ({ name: s.name, kind: 'A' as const })),
+  ...db.opponents.map((s) => ({ name: s.name, kind: 'O' as const })),
   ...db.market.map((s) => ({ name: s.name, kind: 'P' as const })),
 ];

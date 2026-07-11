@@ -88,14 +88,15 @@ const GREET_H = ['Kedves Hallgatóink!', 'Kedves Hallgatók!', 'Kedves Diákjain
 const GREET_A = ['Kedves Alumnusok!', 'Kedves Alumnusaink!', 'Kedves Volt Hallgatóink!', 'Kedves Volt Diákjaink!', 'Kedves Öregdiákjaink!', 'Kedves Média Design szakos Alumnusaink!'];
 const GREET_I = ['Kedves Kollégák!', 'Kedves Kolléga!', 'Kedves Munkatársak!', 'Kedves Mind!', 'Kedves Mindenki!'];
 const GREET_P = ['Kedves Partnereink!', 'Kedves Partnerünk!', 'Kedves Szakmai Partnerünk!', 'Kedves Partnerek!', 'Kedves Mind!'];
+const GREET_O = ['Kedves Opponensünk!', 'Kedves Opponenseink!', 'Tisztelt Opponens!', 'Kedves Kolléga!', 'Kedves Mind!'];
 const GREET_TH = ['Kedves Oktatók és Hallgatók!', 'Kedves Mindenki!', 'Kedves Kollégák és Hallgatók!'];
 const GREET_MIX = ['Kedves Mindenki!', 'Kedves Mindannyian!'];
-const GREET_POOLS = [GREET, GREET_H, GREET_A, GREET_I, GREET_P, GREET_TH, GREET_MIX];
+const GREET_POOLS = [GREET, GREET_H, GREET_A, GREET_I, GREET_P, GREET_O, GREET_TH, GREET_MIX];
 
 function greetPool(kinds?: PersonKind[]): string[] {
   if (!kinds || kinds.length === 0) return GREET;
   const set = new Set(kinds);
-  if (set.size === 1) return ({ T: GREET, H: GREET_H, A: GREET_A, I: GREET_I, P: GREET_P } as Record<PersonKind, string[]>)[kinds[0]];
+  if (set.size === 1) return ({ T: GREET, H: GREET_H, A: GREET_A, I: GREET_I, P: GREET_P, O: GREET_O } as Record<PersonKind, string[]>)[kinds[0]];
   if (set.size === 2 && set.has('T') && set.has('H')) return GREET_TH;
   return GREET_MIX;
 }

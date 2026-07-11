@@ -262,12 +262,13 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                 <button type="button" className="crx c-blue" title="A kártya felelőse és résztvevői"
                   onClick={() => { setSelected([...new Set(target.names)]); setAdhoc([]); }}>Résztvevők</button>
                 {([
-                  { label: 'Tanárok', kinds: ['T'] as PersonKind[] },
-                  { label: 'Hallgatók', kinds: ['H'] as PersonKind[] },
-                  { label: 'Intézményiek', kinds: ['I'] as PersonKind[] },
-                  { label: 'Alumni', kinds: ['A'] as PersonKind[] },
-                  { label: 'Piaciak', kinds: ['P'] as PersonKind[] },
+                  { label: 'Minden tanár', kinds: ['T'] as PersonKind[] },
+                  { label: 'Minden hallgató', kinds: ['H'] as PersonKind[] },
+                  { label: 'Minden intézményi', kinds: ['I'] as PersonKind[] },
+                  { label: 'Minden alumni', kinds: ['A'] as PersonKind[] },
+                  { label: 'Minden piaci', kinds: ['P'] as PersonKind[] },
                   { label: 'Mindenki (T+H)', kinds: ['T', 'H'] as PersonKind[] },
+                  { label: 'Közös (összes lista)', kinds: ['T', 'H', 'I', 'A', 'P'] as PersonKind[] },
                 ]).map((p) => {
                   const names = roster.filter((r) => p.kinds.includes(r.kind)).map((r) => r.name);
                   return (

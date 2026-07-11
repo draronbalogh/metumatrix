@@ -777,6 +777,57 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
     subject: (c) => `Re: ${or(c.title, '[esemény]')}, lemondás`,
     body: () => `Szia [Név]!\n\nKöszönöm a jelzést, megértem, és természetesen elfogadjuk a lemondást. Egy következő alkalommal szívesen dolgozunk együtt. Kérlek, keress velem egy időpontot egy rövid személyes vagy online egyeztetésre, hogy a fontosabb pontokat azért átvegyük.\n\nJó munkát a projektjeidhez!`,
   },
+  // a 141-150. tételek: HiFeszt, szakest, Educatio, Kutatók Éjszakája, hallgatói kiállítás
+  {
+    id: 'hifeszt-felkeres', group: '12 · Nyílt nap / Educatio', label: 'HiFeszt: hallgatói nagyköveti felkérés',
+    subject: (c) => `HiFeszt nagyköveti felkérés, ${or(c.when, '[dátum]')}, gyors visszajelzés`,
+    body: (c) => `Kedves Nagykövet-jelöltünk!\n\nIdén is lehetőségünk van megjelenni a HiFeszt Pályaválasztási Fesztiválon: ${or(c.when, '[dátum]')}-án [időtartam] között lesz jelen a METU Média Design${c.place ? ` (${nd(c.place)})` : ' a [helyszín]-en'}. Több oktatóddal egyeztettem, és a javasolt nagykövetek listájára kerültél, mert hitelesen és magabiztosan képviseled a szakunk gondolkodásmódját. Kérlek, röviden jelezd, vállalod-e a részvételt: elég egy "alkalmas" vagy "nem alkalmas", illetve ha csak részidőben tudsz jönni, írd meg a vállalt idősávot. A visszajelzési határidő: ${or(c.due, '[dátum, óra]')}, a végleges beosztást ezután küldöm.\n\nKöszönöm az együttműködésed, és gratulálok, amiért az oktatóid ilyen mértékben számítanak Rád!`,
+  },
+  {
+    id: 'hifeszt-beosztas', group: '12 · Nyílt nap / Educatio', label: 'HiFeszt: beosztás és tudnivalók',
+    subject: (c) => `HiFeszt ${or(c.when, '[dátum]')}, beosztás és tudnivalók`,
+    body: (c) => `Kedves [Név]!\n\nKöszönöm a visszajelzésed, örülök, hogy ott leszel a HiFeszten! A helyszín ${or(c.place, '[helyszín]')}, gyülekező [idő]-kor a [találkozási pont]-nál; a standnál [kapcsolattartó] segít az eligazodásban. Kérlek, [öltözet / eszköz tudnivaló], és lehetőség szerint maradj a teljes idősávban, mert minél többen vagyunk, annál erősebb a szakmai jelenlét.\n\nHa bármi közbejön vagy kérdésed van, hívj vagy írj nyugodtan. Számítok Rád, jó lesz együtt képviselni a szakot!`,
+  },
+  {
+    id: 'educatio-beosztas', group: '12 · Nyílt nap / Educatio', label: 'Educatio: beosztás és tudnivalók (körlevél)',
+    subject: () => 'Educatio kiállítás [év], beosztás és tudnivalók',
+    body: (c) => `Kedves Kollégák és Hallgatók!\n\nKöszönöm, hogy részt vesztek az idei Educatio kiállításon és segítitek a szakunk népszerűsítését, a jelenlétetek kulcsfontosságú. A helyszín ${or(c.place, '[helyszín]')}, időpont ${or(c.when, '[dátumok]')}, nyitvatartás [idősáv]; az alábbi beosztás szerint leszünk kint a standnál: [név, idősáv listája]. Kérem a hallgatókat, hogy lehetőség szerint maradjatok kint a vállalt sávban, és ha megérkeztetek, keressétek [kapcsolattartó neve, telefonszáma]-t, aki segít az eligazodásban. Öltözet: [pl. kényelmes, fekete felső], étkezésről: [info].\n\nHa bárkinek kérdése van, engem is hívhattok bármikor. Találkozunk a helyszínen, számítok Rátok!`,
+  },
+  {
+    id: 'szakest-szervezes', group: '17 · Rendezvények / hallgatói élet', label: 'Szakest: szervezőcsapat összehívása (körlevél)',
+    subject: (c) => `Szervezői egyeztetés: ${or(c.title, '[esemény]')}`,
+    body: (c) => `Sziasztok, Szervezők!\n\nIdeje elindítani a következő szakest / szakkör szervezését: ${or(c.title, '[esemény típusa]')} a tervek szerint ${or(c.when, '[időpont]')}-kor${c.place ? ` (${nd(c.place)})` : ', [helyszín]-en'}. Szeretnék egy közös egyeztetést [javasolt dátum]-kor, ahol átbeszéljük a koncepciót, a helyszínfoglalást, a technikát és a promóciót; kérlek, jelezzétek, kinek mikor jó. Első körben [Név] és [Név] vállalná a [feladat] kidolgozását, [Név] pedig a [feladat]-t; ha máshogy osztanátok fel, írjátok meg bátran. Fontos, hogy a promót időben indítsuk, mert tavaly is a korai szórólapozás és a Discord-üzenetek hozták a közönséget.\n\nVárom az ötleteiteket!`,
+  },
+  {
+    id: 'szakest-emlekezteto', group: '17 · Rendezvények / hallgatói élet', label: 'Szakest: emlékeztető a hallgatóknak (körlevél)',
+    subject: (c) => `${or(c.title, '[esemény]')}: holnap, ${or(c.place, '[helyszín]')}!`,
+    body: (c) => `Sziasztok!\n\nEmlékeztető: holnap, ${or(c.when, '[dátum]')}-án tartjuk a(z) ${or(c.title, '[esemény]')}-t${c.place ? ` (${nd(c.place)})` : ' a [helyszín]-en'}, kapunyitás [idő]-kor. [Rövid programleírás: koncert / bajnokság / verseny, fő időpontok.] A szervezők [idő]-kor kezdik a helyszín előkészítését; aki tud segíteni a setupban, jöjjön nyugodtan korábban.\n\nOsszátok meg az eseményt a csoporttársaitokkal is, minél többen vagyunk, annál jobb a hangulat! Találkozunk ott.`,
+  },
+  {
+    id: 'kutatok-ejszakaja', group: '17 · Rendezvények / hallgatói élet', label: 'Kutatók Éjszakája: részvétel egyeztetése (körlevél)',
+    subject: (c) => `Kutatók Éjszakája ${or(c.when, '[dátum]')}, részvétel egyeztetése`,
+    body: (c) => `Sziasztok!\n\nA Kutatók Éjszakája idén ${or(c.when, '[dátum]')}-kor lesz, és szeretném, ha a Média Design egy interaktív modullal jelenne meg, például [ötlet], amely élményalapú, ugyanakkor megmutatja a szak tudományos, interdiszciplináris arcát. Kérlek, jelezzétek, kinek van kapacitása bekapcsolódni a felkészülésbe, és milyen hallgatói munkákat tudnánk bemutatni. A jelentkezési határidő ${or(c.due, '[dátum]')}, úgyhogy hamar döntenünk kell, részt veszünk-e idén, vagy inkább a felkészülésre szánjuk az időt és jövőre pályázunk.\n\nÍrjátok meg a véleményeteket, és utána véglegesítjük a koncepciót.`,
+  },
+  {
+    id: 'kutatok-ejszakaja-hallgato', group: '17 · Rendezvények / hallgatói élet', label: 'Kutatók Éjszakája: hallgatói közreműködő felkérése',
+    subject: (c) => `Kutatók Éjszakája ${or(c.when, '[dátum]')}, közreműködés`,
+    body: (c) => `Kedves [Név]!\n\nIdén részt veszünk a Kutatók Éjszakáján ${or(c.when, '[dátum]')}-kor${c.place ? ` (${nd(c.place)})` : ' a [helyszín]-en'}, és szeretnélek felkérni, hogy közreműködj a szak installációjánál / bemutatójánál. A feladat [rövid leírás: az interaktív modul kezelése, látogatók fogadása], a vállalt idősáv [idősáv]. Az oktatóiddal egyeztetve úgy látom, hogy Te hitelesen tudod bemutatni a munkáinkat és a szak szemléletét, ezért számítok Rád.\n\nKérlek, jelezd ${or(c.due, '[határidő]')}-ig, hogy tudsz-e jönni és melyik idősávban; a részletes beosztást ezután küldöm.`,
+  },
+  {
+    id: 'kiallitas-tarsteruletek', group: '17 · Rendezvények / hallgatói élet', label: 'Hallgatói kiállítás: társterületek felkérése',
+    subject: () => 'Média Design [évfolyam] kiállítás, helyszín és egyeztetés',
+    body: (c) => `Kedves Kollégák!\n\nA Média Design [évfolyam] hallgatói kiállítást szerveznének${c.place ? ` (${nd(c.place)})` : ' a [helyszín]-ben'}. Tervezett időpontok: építés / installálás [dátum], megnyitó [dátum, óra], látogathatóság [dátumok], bontás [dátum]. A részleteket a csatolt dokumentumban foglaltuk össze; kérem, jelezzétek, üzemeltetési vagy protokolláris oldalról van-e akadálya, illetve milyen technikai (hang-fény) igényt tudtok támogatni. Fontos egyeztetnünk a záróvizsga-időpontokkal is, hogy a bontás ne ütközzön velük.\n\nKöszönöm a mérlegelést, várom a visszajelzéseteket!`,
+  },
+  {
+    id: 'kiallitas-evfolyam', group: '17 · Rendezvények / hallgatói élet', label: 'Hallgatói kiállítás: tájékoztató az évfolyamnak',
+    subject: () => '[Évfolyam] kiállítás, tudnivalók és teendők',
+    body: (c) => `Kedves [Évfolyam] Hallgatók!\n\nÖrömmel jelzem, hogy a kiállításotok helyszíne és időpontja megvan: ${or(c.place, '[helyszín]')}, ${or(c.when, '[dátumok]')}, megnyitó [dátum, óra]. Kérlek, [évfolyam-referens neve] fogja össze az évfolyam részéről a teendőket, és egyeztessen a kiállítás oktatói felelősével, [oktató neve]-val. A telepítést [dátum]-kor kezdjük, a bontásra [dátum]-án kerül sor; kérlek, ehhez igazítsátok a munkátokat, hogy ne ütközzön a záróvizsgákkal. Ha technikai igényetek van (hang, fény, berendezés), azt strukturáltan, minél hamarabb küldjétek el nekem.\n\nKöszönöm a munkátokat, izgatottan várom a kiállítást!`,
+  },
+  {
+    id: 'kiallitas-meghivo', group: '17 · Rendezvények / hallgatói élet', label: 'Hallgatói kiállítás: megnyitó-meghívó (körlevél)',
+    subject: (c) => `Meghívó: ${or(c.title, '[kiállítás címe]')} megnyitója`,
+    body: (c) => `Kedves Kollégák!\n\nSzeretettel meghívlak Benneteket a Média Design [évfolyam] hallgatóinak ${or(c.title, '[kiállítás címe]')} című kiállítására, amelynek megnyitója ${or(c.when, '[dátum, óra]')}-kor lesz${c.place ? ` (${nd(c.place)})` : ' a [helyszín]-en'}. A hallgatók egy féléves közös munka eredményét mutatják be: [rövid tematikai leírás]; a kiállítás [dátumokig] látogatható. Nagy örömünkre szolgálna, ha személyes jelenlétetekkel támogatnátok a hallgatóinkat ezen az estén.\n\nKérlek, aki tud, jelezze, hogy számíthatunk-e Rá. Találkozzunk a megnyitón!`,
+  },
 ];
 
 export const TOPIC_GROUPS: string[] = [...new Set(TOPIC_TEMPLATES.map((t) => t.group))];

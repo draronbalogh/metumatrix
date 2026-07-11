@@ -6,9 +6,25 @@ export interface Person {
   name: string;
   email: string | null;
   phone: string | null;
-  title?: string | null; // titulus / beosztás (intézményi, alumni, piaci kapcsolatoknál)
-  field?: string | null; // terület, ahol dolgozik / amiért kereshető
+  title?: string | null; // titulus / beosztás — MINDEN listán egységesen
+  field?: string | null; // terület, ahol dolgozik / amiért kereshető — MINDEN listán egységesen
+  status?: string | null; // tanárnál: főállású / óraadó · hallgatónál: szervező / nagykövet / képviselő / demonstrátor
 }
+
+// Választható státusz-címkék — ezekből lesznek a levél-címzett gyorskörök.
+export const TEACHER_STATUSES = ['főállású', 'óraadó'] as const;
+export const STUDENT_STATUSES = ['szervező', 'nagykövet', 'képviselő', 'demonstrátor'] as const;
+
+// Volt / külsős oktató-kontaktok: a tanár-listában vannak, de a tantervben (aktuális
+// oktatói kar) már nem szerepelnek — külön címzett-körként kezeljük őket.
+export const formerTeacherNames = (teacherNames: string[], db: PeopleDB): string[] =>
+  db.teachers.filter((p) => !teacherNames.includes(p.name)).map((p) => p.name);
+// Aktuális oktatók adott státusszal (főállású / óraadó — a Névjegyzékben címkézhető).
+export const teacherStatusNames = (teacherNames: string[], db: PeopleDB, status: string): string[] =>
+  teacherNames.filter((n) => db.teachers.find((p) => p.name === n)?.status === status);
+// Hallgatói szervezői kör: szervezők + nagykövetek + képviselők (a demonstrátor külön szerep).
+export const studentOrganizerNames = (db: PeopleDB): string[] =>
+  db.students.filter((p) => p.status && p.status !== 'demonstrátor').map((p) => p.name);
 
 // Egyedi email-csoport (pl. „Kiállítás-csapat") — a tagok az állandó listából (tanár/hallgató nevek).
 export interface PeopleGroup {
@@ -78,7 +94,7 @@ export const normalizePhone = (phone: string | null): string | null => {
   return t; // külföldi vagy egyéb formátum — hagyjuk békén
 };
 
-const normPerson = (x: Person): Person => ({ name: x.name, email: x.email ?? null, phone: normalizePhone(x.phone ?? null), title: x.title ?? null, field: x.field ?? null });
+const normPerson = (x: Person): Person => ({ name: x.name, email: x.email ?? null, phone: normalizePhone(x.phone ?? null), title: x.title ?? null, field: x.field ?? null, status: x.status ?? null });
 
 export const normalizePeople = (p: Partial<PeopleDB>): PeopleDB => {
   // régi, egyben tárolt aláírás szétválasztása: a "Web: ..."-tól kezdődő rész a link-blokk
@@ -110,8 +126,12 @@ export const emailOf = (db: PeopleDB, name: string): string | null => {
 
 // Egységes választólista: minden állandó lista egyben, badge-hez való típussal.
 // Címzettet, felelőst, résztvevőt MINDIG ezekből választunk (a listák a Névjegyzékben bővíthetők).
+// A volt / külsős oktató-kontaktok is választhatók (T badge-dzsel), hogy nekik is lehessen írni.
 export const buildRoster = (teacherNames: string[], db: PeopleDB): RosterEntry[] => [
   ...teacherNames.map((name) => ({ name, kind: 'T' as const })),
+  ...formerTeacherNames(teacherNames, db)
+    .filter((name) => !db.alumni.some((a) => a.name === name)) // aki alumniként már ott van, nem duplázzuk
+    .map((name) => ({ name, kind: 'T' as const })),
   ...db.students.map((s) => ({ name: s.name, kind: 'H' as const })),
   ...db.institution.map((s) => ({ name: s.name, kind: 'I' as const })),
   ...db.alumni.map((s) => ({ name: s.name, kind: 'A' as const })),

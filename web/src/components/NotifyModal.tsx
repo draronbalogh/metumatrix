@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AgendaEvent, AgendaTask, Letter } from '@/data/agenda';
-import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster } from '@/data/people';
+import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster, formerTeacherNames, teacherStatusNames, studentOrganizerNames } from '@/data/people';
 import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, LetterKind, MeetingMode, MeetingPlan } from '@/lib/letters';
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
@@ -428,18 +428,22 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                 <button type="button" className="crx c-blue" title="A kártya felelőse és résztvevői"
                   onClick={() => { setSelected([...new Set(target.names)]); setAdhoc([]); }}>Résztvevők</button>
                 {([
-                  { label: 'Minden tanár', kinds: ['T'] as PersonKind[] },
-                  { label: 'Minden hallgató', kinds: ['H'] as PersonKind[] },
-                  { label: 'Minden intézményi', kinds: ['I'] as PersonKind[] },
-                  { label: 'Minden alumni', kinds: ['A'] as PersonKind[] },
-                  { label: 'Minden piaci', kinds: ['P'] as PersonKind[] },
-                  { label: 'Mindenki', kinds: ['T', 'H', 'I', 'A', 'P'] as PersonKind[] },
+                  { label: 'Aktuális oktatók', names: teacherNames, hint: 'A tantervben szereplő jelenlegi oktatói kar' },
+                  { label: 'Főállású oktatók', names: teacherStatusNames(teacherNames, db, 'főállású'), hint: 'A Névjegyzékben "főállású" státuszúra címkézett aktuális oktatók' },
+                  { label: 'Óraadók', names: teacherStatusNames(teacherNames, db, 'óraadó'), hint: 'A Névjegyzékben "óraadó" státuszúra címkézett aktuális oktatók' },
+                  { label: 'Volt / külsős oktatók', names: formerTeacherNames(teacherNames, db), hint: 'Oktatói kontaktok, akik az aktuális tantervben már nem szerepelnek' },
+                  { label: 'Hallgatói szervezők', names: studentOrganizerNames(db), hint: 'Szervező / nagykövet / képviselő státuszú hallgatók' },
+                  { label: 'Minden hallgató', names: db.students.map((p) => p.name), hint: 'A teljes hallgatói lista' },
+                  { label: 'Minden intézményi', names: db.institution.map((p) => p.name), hint: 'A teljes intézményi kontaktlista' },
+                  { label: 'Minden alumni', names: db.alumni.map((p) => p.name), hint: 'A teljes alumni lista' },
+                  { label: 'Minden piaci', names: db.market.map((p) => p.name), hint: 'A teljes piaci / külső partnerlista' },
+                  { label: 'Mindenki', names: [...teacherNames, ...formerTeacherNames(teacherNames, db), ...db.students.map((p) => p.name), ...db.institution.map((p) => p.name), ...db.alumni.map((p) => p.name), ...db.market.map((p) => p.name)], hint: 'Az összes lista együtt' },
                 ]).map((p) => {
-                  const names = roster.filter((r) => p.kinds.includes(r.kind)).map((r) => r.name);
+                  const names = [...new Set(p.names)];
                   return (
                     <button key={p.label} type="button" className="crx c-blue" disabled={!names.length}
-                      title={names.length ? `${p.label}: ${names.length} név (a lista cseréje)` : 'A lista még üres. A ☎ Névjegyzékben töltheted fel.'}
-                      onClick={() => { setSelected([...new Set(names)]); setAdhoc([]); }}>
+                      title={names.length ? `${p.hint}. ${names.length} név — a lista cseréje.` : `${p.hint}. Még üres: a ☎ Névjegyzékben tölthető fel / címkézhető.`}
+                      onClick={() => { setSelected(names); setAdhoc([]); }}>
                       {p.label}{names.length ? ` (${names.length})` : ''}
                     </button>
                   );

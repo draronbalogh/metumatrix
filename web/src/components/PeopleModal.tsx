@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { PeopleDB, PeopleGroup, Person, normalizePhone } from '@/data/people';
+import { PeopleDB, PeopleGroup, Person, normalizePhone, TEACHER_STATUSES, STUDENT_STATUSES } from '@/data/people';
 import GrowArea from './GrowArea';
 
 interface Props {
@@ -11,11 +11,13 @@ interface Props {
   onClose: () => void;
 }
 
-interface Row { name: string; email: string; phone: string; title: string; field: string; }
+// Egységes rubrikák MINDEN listán: név, email, telefon, titulus, terület (+ státusz a tanár/hallgató listán)
+interface Row { name: string; email: string; phone: string; title: string; field: string; status: string; }
 
-const toRow = (name: string, p?: Person): Row => ({ name, email: p?.email ?? '', phone: p?.phone ?? '', title: p?.title ?? '', field: p?.field ?? '' });
-const toPerson = (r: Row): Person => ({ name: r.name.trim(), email: r.email.trim() || null, phone: normalizePhone(r.phone.trim() || null), title: r.title.trim() || null, field: r.field.trim() || null });
-const EMPTY_ROW: Row = { name: '', email: '', phone: '', title: '', field: '' };
+const toRow = (name: string, p?: Person): Row => ({ name, email: p?.email ?? '', phone: p?.phone ?? '', title: p?.title ?? '', field: p?.field ?? '', status: p?.status ?? '' });
+const toPerson = (r: Row): Person => ({ name: r.name.trim(), email: r.email.trim() || null, phone: normalizePhone(r.phone.trim() || null), title: r.title.trim() || null, field: r.field.trim() || null, status: r.status.trim() || null });
+const EMPTY_ROW: Row = { name: '', email: '', phone: '', title: '', field: '', status: '' };
+const hasData = (r: Row): boolean => !!(r.email.trim() || r.phone.trim() || r.title.trim() || r.field.trim() || r.status.trim());
 
 // Kibővített kapcsolat-lista (intézményi / alumni / piaci): név + email + telefon + titulus + terület
 function ContactSection({ label, note, rows, setRows }: { label: string; note: string; rows: Row[]; setRows: (f: (r: Row[]) => Row[]) => void }) {
@@ -46,7 +48,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
   const [teachers, setTeachers] = useState<Row[]>(() => {
     const byName: Record<string, Person> = {};
     db.teachers.forEach((p) => { byName[p.name] = p; });
-    // a tantervi névsor a vezérfonal; a fájlban maradt (már nem oktató) nevek elérhetőségét is megtartjuk a lista végén
+    // a tantervi névsor a vezérfonal; a fájlban maradt (már nem aktuális) oktató-kontaktok a lista végén
     const extra = db.teachers.filter((p) => !teacherNames.includes(p.name));
     return [...teacherNames.map((n) => toRow(n, byName[n])), ...extra.map((p) => toRow(p.name, p))];
   });
@@ -73,15 +75,15 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const setT = (i: number, k: 'email' | 'phone', v: string) =>
+  const setT = (i: number, k: keyof Row, v: string) =>
     setTeachers((rows) => rows.map((r, ix) => (ix === i ? { ...r, [k]: v } : r)));
   const setS = (i: number, k: keyof Row, v: string) =>
     setStudents((rows) => rows.map((r, ix) => (ix === i ? { ...r, [k]: v } : r)));
 
   const save = () => {
     onSave({
-      // tanárból csak azt tároljuk, akinek van elérhetősége — a névsor forrása úgyis a tanterv
-      teachers: teachers.filter((r) => r.email.trim() || r.phone.trim()).map(toPerson),
+      // tanárból azt tároljuk, akihez bármilyen adat tartozik — a névsor forrása úgyis a tanterv
+      teachers: teachers.filter(hasData).map(toPerson),
       students: students.filter((r) => r.name.trim()).map(toPerson),
       institution: institution.filter((r) => r.name.trim()).map(toPerson),
       alumni: alumni.filter((r) => r.name.trim()).map(toPerson),
@@ -97,27 +99,40 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
       <div className="modal modal--wide">
         <h3>Névjegyzék — elérhetőségek</h3>
         <div className="pm-body">
-          <div className="pm-note">A tanárnévsor forrása a tanterv (Mátrix/Katalógus) — itt csak az elérhetőségük adható meg. Az email/telefon a későbbi értesítés-küldéshez kell.</div>
-          <div className="pm-sec"><span className="pb t">T</span> Tanárok · {teachers.length}</div>
+          <div className="pm-note">A tanárnévsor forrása a tanterv (Mátrix/Katalógus) — itt az elérhetőségük és a státuszuk adható meg. A státusz (főállású / óraadó, ill. szervező / nagykövet) alapján a levélírásban külön címzett-körök választhatók.</div>
+          <div className="pm-sec"><span className="pb t">T</span> Aktuális oktatók · {teacherNames.length} <span className="pm-sec-extra">+ volt / külsős kontakt · {teachers.length - teacherNames.length}</span></div>
           <div className="pm-rows">
-            <div className="pm-row pm-head"><span>Név</span><span>Email</span><span>Telefon</span><span /></div>
+            <div className="pm-row pm-row6 pm-head"><span>Név</span><span>Email</span><span>Telefon</span><span>Titulus</span><span>Terület</span><span>Státusz</span><span /></div>
             {teachers.map((r, i) => (
-              <div className="pm-row" key={`t-${r.name}`}>
-                <span className="pm-name">{r.name}</span>
+              <div className="pm-row pm-row6" key={`t-${r.name}`}>
+                <span className="pm-name">{r.name}{!teacherNames.includes(r.name) && <em className="pm-former" title="A tantervben már nem szerepel — volt vagy külsős oktató-kontakt"> volt/külsős</em>}</span>
                 <input type="email" value={r.email} placeholder="email@metropolitan.hu" onChange={(e) => setT(i, 'email', e.target.value)} />
                 <input type="tel" value={r.phone} placeholder="+36…" onChange={(e) => setT(i, 'phone', e.target.value)} />
+                <input value={r.title} placeholder="titulus" onChange={(e) => setT(i, 'title', e.target.value)} />
+                <input value={r.field} placeholder="terület" onChange={(e) => setT(i, 'field', e.target.value)} />
+                <select value={r.status} onChange={(e) => setT(i, 'status', e.target.value)} title="Főállású vagy óraadó — a levélírás külön köreihez">
+                  <option value="">státusz…</option>
+                  {TEACHER_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
                 <span />
               </div>
             ))}
           </div>
-          <div className="pm-sec"><span className="pb h">H</span> Hallgatók / demonstrátorok · {students.length}</div>
+          <div className="pm-sec"><span className="pb h">H</span> Aktuális hallgatók · {students.length}</div>
+          <div className="pm-note">A státusz jelöli, ki vesz részt a szak életének szervezésében (szervező / nagykövet / képviselő / demonstrátor) — ők a levélírásban „Hallgatói szervezők" körként egyben címezhetők. A végzettek az Alumni listában vannak.</div>
           <div className="pm-rows">
-            {students.length > 0 && <div className="pm-row pm-head"><span>Név</span><span>Email</span><span>Telefon</span><span /></div>}
+            {students.length > 0 && <div className="pm-row pm-row6 pm-head"><span>Név</span><span>Email</span><span>Telefon</span><span>Titulus</span><span>Terület</span><span>Státusz</span><span /></div>}
             {students.map((r, i) => (
-              <div className="pm-row" key={`s-${i}`}>
+              <div className="pm-row pm-row6" key={`s-${i}`}>
                 <input value={r.name} placeholder="Név" onChange={(e) => setS(i, 'name', e.target.value)} />
                 <input type="email" value={r.email} placeholder="email" onChange={(e) => setS(i, 'email', e.target.value)} />
                 <input type="tel" value={r.phone} placeholder="+36…" onChange={(e) => setS(i, 'phone', e.target.value)} />
+                <input value={r.title} placeholder="titulus / szerep" onChange={(e) => setS(i, 'title', e.target.value)} />
+                <input value={r.field} placeholder="évfolyam / terület" onChange={(e) => setS(i, 'field', e.target.value)} />
+                <select value={r.status} onChange={(e) => setS(i, 'status', e.target.value)} title="Szervezői szerep — a Hallgatói szervezők levél-körhöz">
+                  <option value="">státusz…</option>
+                  {STUDENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
                 <button className="btn btn--danger pm-del" title="Hallgató törlése a listából"
                   onClick={() => setStudents((rows) => rows.filter((_, ix) => ix !== i))}>✕</button>
               </div>
@@ -125,7 +140,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
             <button className="btn pm-add" onClick={() => setStudents((rows) => [...rows, { ...EMPTY_ROW }])}>+ Új hallgató</button>
           </div>
           <ContactSection label="🏛 Intézményi kapcsolatok" note="Marketing, PR, továbbképzési központ, más tanszékek elérhetőségei — címzettként mindenhol választhatók." rows={institution} setRows={setInstitution} />
-          <ContactSection label="🎓 Alumni" note="METU-t végzett volt hallgatók: titulus és terület, ahol dolgoznak." rows={alumni} setRows={setAlumni} />
+          <ContactSection label="🎓 Alumni" note="METU-t végzett volt hallgatók: titulus és terület, ahol dolgoznak. A volt oktatók kontaktja a Tanárok lista végén marad (volt/külsős jelöléssel)." rows={alumni} setRows={setAlumni} />
           <ContactSection label="🤝 Piaci kapcsolatok" note="Ipari, céges és egyéb külső partnerek." rows={market} setRows={setMarket} />
           <div className="pm-sec">✉ Egyedi csoportok · {groups.length}</div>
           <div className="pm-note">Elnevezett email-csoportok (pl. „Kiállítás-csapat") — az Értesítés ablakban egy gombbal hozzáadhatók a címzettekhez.</div>

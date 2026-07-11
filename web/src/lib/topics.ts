@@ -137,6 +137,60 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
     subject: (c) => `Időpont-egyeztetés: ${or(c.title, '[téma]')}`,
     body: (c) => `Szia [Név]!\n\nFoglaljunk egy időpontot a(z) ${or(c.title, '[téma]')} megbeszélésére. Nekem ${or(c.when, '[időpontok]')} felelne meg. Csatlakozási link: [Zoom-link].\n\nJelezd, melyik jó!`,
   },
+  // 11. tömb: óratervezés és óralátogatás
+  {
+    id: 'oratervezes', group: '11 · Óratervezés / óralátogatás', label: 'Óratervezés egyeztetése (körlevél)',
+    subject: () => 'Óratervezés [félév], Média Design',
+    body: (c) => `Kedves Kollégák!\n\nElindult a [félév] óratervezése. Kérlek, ${or(c.due, '[határidő]')}-ig küldjétek meg a tervezett óráitokat és az esetleges ütközéseket: [mit / hova].\n\nKöszönöm az együttműködést!`,
+  },
+  {
+    id: 'oralatogatas', group: '11 · Óratervezés / óralátogatás', label: 'Páros óralátogatások ütemezése (körlevél)',
+    subject: () => 'Páros óralátogatások, ütemezés',
+    body: (c) => `Kedves Kollégák!\n\nIndul a féléves páros óralátogatások ütemezése. A beosztást itt éritek el: [link]. Kérlek, ${or(c.due, '[határidő]')}-ig jelezzétek, ha valamelyik időpont nem megfelelő.\n\nKöszönöm!`,
+  },
+  // 12. tömb: nyílt nap és Educatio
+  {
+    id: 'nyiltnap', group: '12 · Nyílt nap / Educatio', label: 'Nyílt nap tájékoztató (körlevél)',
+    subject: (c) => `Nyílt nap, ${or(c.when, '[dátum]')}`,
+    body: (c) => `Kedves Kollégák!\n\nA következő nyílt nap ${or(c.when, '[dátum]')}-kor lesz${c.place ? ` (${nd(c.place)})` : ''}. A Média Design bemutatkozásához a következőkre lesz szükség: [beosztás / teendők].\n\nKérlek, jelezzétek, ki tud részt venni. Köszönöm!`,
+  },
+  {
+    id: 'educatio', group: '12 · Nyílt nap / Educatio', label: 'Educatio kiállítás emlékeztető (körlevél)',
+    subject: (c) => `Educatio Kiállítás, ${or(c.when, '[dátum]')}`,
+    body: (c) => `Kedves Kollégák!\n\nKözeledik az Educatio Kiállítás (${or(c.when, '[dátum]')}, ${or(c.place, '[helyszín]')}). A szak standjához a beosztás: [link / részletek].\n\nKérlek, nézzétek át, és jelezzétek az észrevételeiteket. Köszönöm!`,
+  },
+  // 13. tömb: záróvizsga és opponencia
+  {
+    id: 'zarovizsga', group: '13 · Záróvizsga / opponencia', label: 'Záróvizsga előkészítés (körlevél)',
+    subject: () => 'Média Design záróvizsga, előkészítés',
+    body: (c) => `Kedves Kollégák!\n\nKözeledik a záróvizsga-időszak (${or(c.when, '[időszak]')}). A beosztás és a tudnivalók: [link / részletek]. Kérlek, ${or(c.due, '[határidő]')}-ig jelezzétek, ha valamelyik időpont nem megfelelő.\n\nKöszönöm!`,
+  },
+  {
+    id: 'opponencia-felkeres', group: '13 · Záróvizsga / opponencia', label: 'Opponencia felkérés',
+    subject: () => 'Opponensi felkérés, METU Média Design',
+    body: (c) => `Kedves [Név]!\n\nSzeretnélek felkérni a Média Design szak [hallgató] mestermunkájának / szakdolgozatának opponensi bírálatára. A bírálat leadási határideje: ${or(c.due, '[határidő]')}. Az anyagot itt éred el: [link].\n\nKérlek, jelezd, hogy el tudod-e vállalni. Köszönöm!`,
+  },
+  {
+    id: 'diplomafeltoltes', group: '13 · Záróvizsga / opponencia', label: 'Diplomafeltöltés határidő (körlevél, hallgatók)',
+    subject: (c) => `Diplomafeltöltés határidő: ${or(c.due, '[dátum]')}`,
+    body: (c) => `Kedves Hallgatók!\n\nEmlékeztetlek Benneteket, hogy a diplomamunka feltöltésének határideje ${or(c.due, '[dátum]')}. A feltöltés menete: [rendszer / link].\n\nKérlek, ne hagyjátok az utolsó pillanatra. Kérdés esetén keressetek!`,
+  },
+  {
+    id: 'bestof', group: '13 · Záróvizsga / opponencia', label: 'Best of Diploma kiállítás szervezése',
+    subject: () => 'Best of Diploma kiállítás, szervezés',
+    body: (c) => `Kedves [Név/Kollégák]!\n\nSzervezzük a Best of Diploma kiállítást (${or(c.when, '[időpont]')}, ${or(c.place, '[helyszín]')}). A kiválasztott munkák és a teendők: [lista / link].\n\nKérlek, jelezzétek az észrevételeiteket ${or(c.due, '[határidő]')}-ig. Köszönöm!`,
+  },
+  // kiegészítő gerinc-sablonok
+  {
+    id: 'szakkonzultacio', group: '8 · Hallgatói ügyek', label: 'Központi szakkonzultáció időpont (körlevél)',
+    subject: (c) => `Központi szakkonzultáció, ${or(c.when, '[időpont]')}`,
+    body: (c) => `Kedves Hallgatók!\n\nA központi szakkonzultáció időpontja: ${or(c.when, '[dátum, időpont]')}${c.place ? `, helyszín: ${nd(c.place)}` : ''}. [Menete / jelentkezés.]\n\nKérdés esetén keressetek!`,
+  },
+  {
+    id: 'felevkezdes-info', group: '2 · Oktatói kapcsolattartás', label: 'Félévkezdési információk (körlevél)',
+    subject: () => 'Félévkezdési információk, Média Design',
+    body: () => `Kedves Kollégák!\n\nÖsszegyűjtöttem a félévkezdés legfontosabb tudnivalóit:\n1. [órarend / termek]\n2. [adminisztráció, határidők]\n3. [események, dátumok]\n\nKérlek, nézzétek át, és jelezzétek, ha valami hiányzik. Köszönöm!`,
+  },
 ];
 
 export const TOPIC_GROUPS: string[] = [...new Set(TOPIC_TEMPLATES.map((t) => t.group))];

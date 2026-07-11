@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AgendaEvent, AgendaTask, Letter } from '@/data/agenda';
 import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster } from '@/data/people';
 import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, LetterKind, MeetingMode, MeetingPlan } from '@/lib/letters';
@@ -96,10 +96,11 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     const ev = target.event ? { ...target.event, place: p || null } : target.event;
     const meet = meetOverride !== undefined ? meetOverride
       : (meetMode === 'nincs' ? null : { mode: meetMode, date: meetDate, time: meetTime, link: meetLink });
-    const gen = buildLetter(k, { type: target.targetType, event: ev, task: target.task, source: src }, buildFooter(db, sigOverride ?? sigOn), stepsOverride ?? selSteps, meet, audience);
+    const gen = buildLetter(k, { type: target.targetType, event: ev, task: target.task, source: src }, buildFooter(db, sigOverride ?? sigOn), stepsOverride ?? selSteps, meet, audience, recipient);
     setSubject(gen.subject);
     setBody(gen.body);
     setBodyDirty(false);
+    lastGreetRef.current = gen.body.split('\n').find((l) => l.trim())?.trim() ?? '';
   };
 
   // meeting-beállítás változása: ha a levél nincs kézzel átírva, azonnal újragenerálunk
@@ -170,19 +171,29 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     const union = (['T', 'H', 'I', 'A', 'P'] as PersonKind[]).filter((k) => selected.some((n) => has(k, n)));
     return union;
   }, [selected, kindSets]);
+  // Címzett-információ a levélgenerátornak: EGY címzettnél név szerinti, egyes számú
+  // megszólítás és szöveg; többnél a kör összetétele szerinti többes számú készlet.
+  const recipient = useMemo(() => {
+    const count = selected.length + adhoc.length;
+    return { count, name: count === 1 ? (selected[0] ?? null) : null };
+  }, [selected, adhoc]);
   // a címzett-kör változásakor a levél megszólító sora automatikusan átvált
-  // (csak az ismert, generált megszólításokat cseréljük; a kézzel írtat nem bántjuk)
-  const audienceKey = audience.join('');
+  // (az általunk generált megszólítást cseréljük; a kézzel írtat nem bántjuk)
+  const lastGreetRef = useRef('');
+  const audienceKey = `${audience.join('')}|${recipient.count}|${recipient.name ?? ''}`;
   useEffect(() => {
-    setBody((b) => {
-      const lines = b.split('\n');
-      const gi = lines.findIndex((l) => l.trim() !== '');
-      if (gi < 0 || !isKnownGreeting(lines[gi])) return b;
-      const next = greetingFor(audience.length ? audience : undefined);
-      if (lines[gi].trim() === next) return b;
-      lines[gi] = next;
-      return lines.join('\n');
-    });
+    const lines = body.split('\n');
+    const gi = lines.findIndex((l) => l.trim() !== '');
+    if (gi < 0) return;
+    const cur = lines[gi].trim();
+    if (!isKnownGreeting(cur) && cur !== lastGreetRef.current) return;
+    const next = recipient.count === 1
+      ? `Kedves ${recipient.name ? recipient.name.trim().split(/\s+/).filter((p) => !/^dr\.?$/i.test(p) && !/^habil\.?$/i.test(p)).pop() : '[Név]'}!`
+      : greetingFor(audience.length ? audience : undefined);
+    if (cur === next) return;
+    lines[gi] = next;
+    lastGreetRef.current = next;
+    setBody(lines.join('\n'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audienceKey]);
 

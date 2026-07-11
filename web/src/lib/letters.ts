@@ -129,6 +129,28 @@ const KOSZONO_CLOSER = [
   'Ez közös siker, köszönöm.',
 ];
 
+// EGYES SZÁMÚ változatok: ha pontosan EGY címzett van, a levél tegező egyes számban szól
+const CLOSER_SG = [
+  'Előre is köszönöm a segítségedet.',
+  'Köszönöm, hogy időt szánsz rá.',
+  'Minden visszajelzésnek örülök.',
+  'Kérdés esetén keress bátran.',
+  'Köszönöm a közreműködésedet.',
+  'Számítok Rád.',
+  'Köszönöm előre is.',
+  'Ha bármi kérdés van, írj nyugodtan.',
+  'Bízom benne, hogy össze tudjuk hozni.',
+  'Köszönöm, hogy foglalkozol vele.',
+];
+const KOSZONO_CLOSER_SG = [
+  'Még egyszer köszönöm.',
+  'Még egyszer hálásan köszönöm.',
+  'Köszönöm Neked.',
+  'Nagyon köszönöm a munkádat.',
+  'Jó volt együtt dolgozni ezen.',
+  'Remélem, legközelebb is számíthatok Rád.',
+];
+
 // Relatív időzítés az emlékeztetőhöz: "ma", "holnap", "2 nap múlva", "egy hét múlva"…
 export function relativePhrase(day: string | null | undefined): string | null {
   if (!day || !/^\d{4}-\d{2}-\d{2}/.test(day)) return null;
@@ -159,6 +181,8 @@ export function rerollLetter(body: string): string {
     const cur = lines[i].trim();
     if (CLOSER.includes(cur)) lines[i] = pick(CLOSER.filter((c) => c !== cur));
     else if (KOSZONO_CLOSER.includes(cur)) lines[i] = pick(KOSZONO_CLOSER.filter((c) => c !== cur));
+    else if (CLOSER_SG.includes(cur)) lines[i] = pick(CLOSER_SG.filter((c) => c !== cur));
+    else if (KOSZONO_CLOSER_SG.includes(cur)) lines[i] = pick(KOSZONO_CLOSER_SG.filter((c) => c !== cur));
   }
   return lines.join('\n');
 }
@@ -229,7 +253,11 @@ const STEP_HEAD = [
   'Ezekről lesz szó:',
 ];
 
-export function buildLetter(kind: LetterKind, target: LetterTarget, signature: string, steps?: string[], meeting?: MeetingPlan | null, audience?: PersonKind[]): { subject: string; body: string } {
+export interface RecipientInfo { count: number; name?: string | null; }
+
+export function buildLetter(kind: LetterKind, target: LetterTarget, signature: string, steps?: string[], meeting?: MeetingPlan | null, audience?: PersonKind[], recipient?: RecipientInfo): { subject: string; body: string } {
+  // pontosan EGY címzettnél a teljes levél tegező egyes számban szól
+  const single = (recipient?.count ?? 0) === 1;
   const e = target.event ?? null;
   const t = target.task ?? null;
   const title = noDash(e?.title || t?.title || '');
@@ -271,7 +299,15 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
       `Készülünk ${aT} megszervezésére.`,
       `Napirenden van ${aT}, és most dől el, ki miben vesz részt.`,
     ], 'felkeres.lead') : null;
-    const ask = pickAvoid([
+    const ask = pickAvoid(single ? [
+      `Rád gondoltam, hogy segíts ${aT} előkészítésében és megvalósításában.`,
+      `Szeretnélek felkérni, hogy működj közre ${aT} kapcsán.`,
+      `${aTC} szervezéséhez keresek közreműködőt, és Rád gondoltam.`,
+      `Számítanék a közreműködésedre ${aT} körüli munkában.`,
+      `Örülnék, ha be tudnál kapcsolódni ${aT} előkészítésébe.`,
+      `Segítségre lenne szükségem ${aT} lebonyolításában, és Rád számítok.`,
+      `Abban kérném a segítségedet, hogy ${aT} rendben megvalósuljon.`,
+    ] : [
       `Rátok gondoltam, hogy segítsetek ${aT} előkészítésében és megvalósításában.`,
       `Szeretnélek felkérni Benneteket, hogy működjetek közre ${aT} kapcsán.`,
       `${aTC} szervezéséhez keresek közreműködőket, és Rátok gondoltam.`,
@@ -281,7 +317,14 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
       `Abban kérném a segítségeteket, hogy ${aT} rendben megvalósuljon.`,
       `Szeretném, ha közösen vinnénk ${aT} szervezését.`,
     ], 'felkeres.ask');
-    const cta = pickAvoid([
+    const cta = pickAvoid(single ? [
+      'Kérlek, küldd el a javaslataidat, és egyeztessünk a részletekről.',
+      'Kérlek, oszd meg az ötleteidet, a részleteket együtt dolgozzuk ki.',
+      'Várom a gondolataidat, utána egyeztessünk a részletekről.',
+      'Írd meg kérlek, miben tudnál részt venni, és utána egyeztetünk.',
+      'Jelezd kérlek egy rövid válaszban, hogy számíthatok-e Rád.',
+      'Egy sorban jelezd kérlek, ha benne vagy, a többit megbeszéljük.',
+    ] : [
       'Kérlek, küldjétek el a javaslataitokat, és kezdjünk el egy párbeszédet erről a feladatról. A részleteket közösen alakítjuk.',
       'Kérlek, osszátok meg az ötleteiteket, javaslataitokat. A részleteket együtt dolgozzuk ki.',
       'Várom a gondolataitokat és javaslataitokat, utána egyeztessünk a részletekről.',
@@ -293,7 +336,7 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
     blocks.push([lead, ask].filter(Boolean).join(' '));
     blocks.push(...infoBlocks());
     blocks.push(cta);
-    closer = pickAvoid(CLOSER, 'closer');
+    closer = pickAvoid(single ? CLOSER_SG : CLOSER, 'closer');
   } else if (kind === 'meghivo') {
     subject = pickAvoid([
       `Meghívó: ${title}`,
@@ -302,7 +345,12 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
       `Gyertek el: ${title}`,
       `${title}: várunk Benneteket`,
     ], 'meghivo.subj');
-    const invite = pickAvoid([
+    const invite = pickAvoid(single ? [
+      `Meghívlak ${aT} eseményre.`,
+      `Ezúton hívlak meg ${aT} alkalmára.`,
+      `Várlak ${aT} eseményen.`,
+      `Örülnék, ha ott lennél ${aT} eseményen.`,
+    ] : [
       `Meghívlak Benneteket ${aT} eseményre.`,
       `Ezúton hívlak meg Titeket ${aT} alkalmára.`,
       `Várlak Benneteket ${aT} eseményen.`,
@@ -310,7 +358,12 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
       `Gyertek el ${aT} eseményre, számítunk a jelenlétetekre.`,
       `Örülnék, ha ott lennétek ${aT} eseményen.`,
     ], 'meghivo.invite');
-    const rsvp = pickAvoid([
+    const rsvp = pickAvoid(single ? [
+      'Kérlek, jelezz vissza, hogy számíthatunk-e a részvételedre.',
+      'Kérek egy rövid visszajelzést, hogy el tudsz-e jönni.',
+      'Egy sorban jelezd kérlek, ha ott leszel.',
+      'Ha tudsz jönni, kérlek, írj egy rövid választ.',
+    ] : [
       'Kérlek, jelezzétek vissza, hogy számíthatunk-e a részvételetekre.',
       'Kérek egy rövid visszajelzést, hogy ki tud eljönni.',
       'Egy sorban jelezzétek kérlek, ha ott lesztek.',
@@ -321,7 +374,7 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
     blocks.push(invite);
     blocks.push(...infoBlocks());
     blocks.push(rsvp);
-    closer = pickAvoid(CLOSER, 'closer');
+    closer = pickAvoid(single ? CLOSER_SG : CLOSER, 'closer');
   } else if (kind === 'emlekezteto') {
     const rel = relativePhrase(e?.day ?? t?.dueDate);
     subject = pickAvoid(rel
@@ -329,7 +382,7 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
       : [`Emlékeztető: ${title}`, `${title}: közeledik`, `Ne feledjétek: ${title}`, `Rövid emlékeztető: ${title}`], 'emlekezteto.subj');
     const remind = pickAvoid(rel
       ? (e ? [
-          `Szeretnélek emlékeztetni Titeket: ${aT} ${rel} lesz.`,
+          single ? `Szeretnélek emlékeztetni: ${aT} ${rel} lesz.` : `Szeretnélek emlékeztetni Titeket: ${aT} ${rel} lesz.`,
           `Rövid emlékeztető: ${aT} ${rel} lesz.`,
           `Gyors jelzés: ${aT} ${rel} lesz.`,
           `Csak jelzem, hogy ${aT} ${rel} lesz.`,
@@ -342,12 +395,18 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
           `Csak jelzem, hogy ${aT} határideje ${rel} lejár.`,
         ])
       : [
-          `Szeretnélek emlékeztetni Titeket: ${title}.`,
+          single ? `Szeretnélek emlékeztetni: ${title}.` : `Szeretnélek emlékeztetni Titeket: ${title}.`,
           `Rövid emlékeztető: közeledik ${aT}.`,
           `Gyors jelzés: ${aT} hamarosan aktuális.`,
           `Csak jelzem, hogy ${aT} hamarosan esedékes.`,
         ], 'emlekezteto.remind');
-    const help = pickAvoid([
+    const help = pickAvoid(single ? [
+      'Kérlek, jelezd, ha kérdésed van, vagy valamiben segítség kell.',
+      'Szólj, ha valamiben segíthetek, vagy kérdés merült fel.',
+      'Ha bármi akadály van, kérlek, időben jelezd.',
+      'Kérdés esetén keress nyugodtan.',
+      'Ha kell még valami az előkészülethez, írj.',
+    ] : [
       'Kérlek, jelezzétek, ha kérdésetek van, vagy valamiben segítségre van szükségetek.',
       'Szóljatok, ha valamiben segíthetek, vagy kérdés merült fel.',
       'Ha bármi akadály van, kérlek, időben jelezzétek.',
@@ -366,7 +425,12 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
       `Köszönet ${aT} kapcsán`,
       `${title}: köszönet mindenkinek`,
     ], 'koszono.subj');
-    const thanks = pickAvoid([
+    const thanks = pickAvoid(single ? [
+      `Köszönöm a segítségedet és a munkádat ${aT} kapcsán.`,
+      `Szeretném megköszönni a közreműködésedet ${aT} során.`,
+      `Köszönöm Neked a munkát, amit ${aT} érdekében tettél.`,
+      `Hálásan köszönöm a részvételedet és a segítségedet ${aT} alkalmával.`,
+    ] : [
       `Köszönöm a segítségeteket és a munkátokat ${aT} kapcsán.`,
       `Szeretném megköszönni a közreműködéseteket ${aT} során.`,
       `Köszönöm Nektek a munkát, amit ${aT} érdekében tettetek.`,
@@ -374,7 +438,12 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
       `Köszönöm mindenkinek, aki dolgozott ${aT} sikeréért.`,
       `Köszönöm a befektetett időt és munkát ${aT} kapcsán.`,
     ], 'koszono.thanks');
-    const detail = Math.random() < 0.6 ? pickAvoid([
+    const detail = Math.random() < 0.6 ? pickAvoid(single ? [
+      'Sokat segített, hogy számíthattam Rád.',
+      'Köszönöm a ráfordított időt és energiát.',
+      'A közös munkának köszönhetően rendben lezajlott.',
+      'Jó volt látni, hogy beálltál mögé.',
+    ] : [
       'Sokat segített, hogy számíthattam Rátok.',
       'Köszönöm a ráfordított időt és energiát.',
       'A közös munkának köszönhetően rendben lezajlott.',
@@ -384,8 +453,8 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
     ], 'koszono.detail') : null;
     blocks.push([thanks, detail].filter(Boolean).join(' '));
     const st = (steps ?? []).map((s) => noDash(s.trim())).filter(Boolean);
-    if (st.length) blocks.push(`${pick(['Amiben segítettetek:', 'Ami elkészült a közreműködésetekkel:'])}\n${st.map((s, i) => `${i + 1}. ${s}`).join('\n')}`);
-    closer = pickAvoid(KOSZONO_CLOSER, 'koszono.closer');
+    if (st.length) blocks.push(`${single ? pick(['Amiben segítettél:', 'Ami elkészült a közreműködéseddel:']) : pick(['Amiben segítettetek:', 'Ami elkészült a közreműködésetekkel:'])}\n${st.map((s, i) => `${i + 1}. ${s}`).join('\n')}`);
+    closer = pickAvoid(single ? KOSZONO_CLOSER_SG : KOSZONO_CLOSER, 'koszono.closer');
   } else if (kind === 'valasz') {
     const src = target.source ?? null;
     const orig = noDash((src?.subject || '').trim());
@@ -411,16 +480,19 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
     blocks.push([ack, bodyLine].join(' '));
     blocks.push(...infoBlocks());
     blocks.push(cta);
-    closer = pickAvoid(CLOSER, 'closer');
+    closer = pickAvoid(CLOSER_SG, 'closer'); // a válasz mindig egy embernek szól
   } else {
     subject = title;
     closer = null;
   }
 
-  // válasz-levélnél a feladót név szerint szólítjuk meg; egyébként a címzett-kör dönt
+  // válasz-levélnél a feladót név szerint szólítjuk meg; EGY címzettnél szintén név
+  // szerint (keresztnévvel); több címzettnél a kör összetétele dönt
   const greet = kind === 'valasz' && target.source?.name
     ? `Kedves ${givenName(target.source.name)}!`
-    : greetingFor(audience);
+    : single
+      ? `Kedves ${recipient?.name ? givenName(recipient.name) : '[Név]'}!`
+      : greetingFor(audience);
   const core = blocks.filter(Boolean).join('\n\n');
   const body = `${greet}\n\n${core ? core + '\n\n' : ''}${closer ? closer + '\n\n' : ''}${signature}`;
   return { subject, body };

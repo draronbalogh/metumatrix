@@ -139,12 +139,7 @@ export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, on
             </div>
           )}
         </div>
-      ) : (
-        <div className="ag-intro">
-          <p>{agenda.intro}</p>
-          <button className="btn ag-intro-edit" title="Bevezető szerkesztése" onClick={onEditIntro}>✎</button>
-        </div>
-      )}
+      ) : null}
 
       {presentCats.length > 0 && (
         <div className="ag-catfilter">

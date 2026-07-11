@@ -279,23 +279,6 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               </div>
             )}
           </div>
-          <div className="field full">
-            <label>Kiválasztott címzettek: {selected.length + adhoc.length} címzett · {emails.length} email{missing.length ? ` · ${missing.length} címe hiányzik` : ''}</label>
-            <div className="cat-picker pp-picker nm-recips">
-              {selected.length === 0 && adhoc.length === 0 && <span className="nm-empty">Nincs címzett. Válassz lentről a csoportokból vagy a névsorból.</span>}
-              {adhoc.map((e) => (
-                <button key={e} type="button" className="chip is-on" title="Egyedi email-címzett — kattints a levételhez" onClick={() => setAdhoc((a) => a.filter((x) => x !== e))}>@ {e}</button>
-              ))}
-              {selected.map((n) => {
-                const has = !!emailOf(db, n);
-                return (
-                  <button key={n} type="button" className={`chip is-on${has ? '' : ' nm-noemail'}`} title={has ? emailOf(db, n) as string : 'nincs email-cím, a Névjegyzékben add meg'}
-                    onClick={() => toggle(n)}>{n}{has ? '' : ' ⚠'}</button>
-                );
-              })}
-            </div>
-            {missing.length > 0 && <div className="nm-missing">⚠ Nincs email-címük (kimaradnak): {missing.join(', ')}. A ☎ Névjegyzékben pótolható.</div>}
-          </div>
           {db.groups.length > 0 && (
             <div className="field full">
               <label>Egyedi csoportok hozzáadása</label>
@@ -305,7 +288,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             </div>
           )}
           <div className="field full">
-            <label>Vagy válassz név szerint, hozzáadással</label>
+            <label>Címzettek: {selected.length + adhoc.length} címzett · {emails.length} email{missing.length ? ` · ${missing.length} címe hiányzik` : ''} (koppints a nevekre)</label>
             <div className="nm-groups nm-kindrow">
               {(['T', 'H', 'I', 'A', 'P'] as PersonKind[]).map((k) => (
                 <button key={k} type="button" aria-pressed={kindFilter === k} className={`chip${kindFilter === k ? ' is-on' : ''}`}
@@ -316,6 +299,12 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             </div>
             <input className="nm-search" value={rq} onChange={(e) => setRq(e.target.value)} placeholder="Szűrés névre…" />
             <div className="cat-picker pp-picker">
+              {adhoc.map((e) => (
+                <button key={e} type="button" className="chip is-on" title="Egyedi email-címzett — kattints a levételhez" onClick={() => setAdhoc((a) => a.filter((x) => x !== e))}>@ {e}</button>
+              ))}
+              {selected.filter((n) => !roster.some((r) => r.name === n)).map((n) => (
+                <button key={n} type="button" className="chip is-on" title="Listán kívüli (régi) név — kattints a levételhez" onClick={() => toggle(n)}>{n}</button>
+              ))}
               {roster
                 .filter((r) => (!kindFilter || r.kind === kindFilter) && (!rq.trim() || norm(r.name).includes(norm(rq))))
                 .map((r) => {
@@ -330,6 +319,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                   );
                 })}
             </div>
+            {missing.length > 0 && <div className="nm-missing">⚠ Nincs email-címük (kimaradnak): {missing.join(', ')}. A ☎ Névjegyzékben pótolható.</div>}
           </div>
           <div className="f-sec c-green">2 · Miről szóljon?</div>
           <div className="field full">

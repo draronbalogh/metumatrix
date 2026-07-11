@@ -48,6 +48,10 @@ export default function CatalogView({ data, filter, view, onDetails, onEdit, onA
 
   return (
     <main className="catalog">
+      <div className="cat-block-head">
+        <span className="pl">Katalógus</span>
+        <span className="nm">Média Design {view.prog === 'ALL' ? 'BA + MA' : view.prog} · {view.ver}</span>
+      </div>
       {allVisible.length > 0 && (
         <div className="viewtoggle cat-semfilter">
           <button className={!semActive ? 'is-on' : ''} onClick={() => setSem(0)}>Mind</button>

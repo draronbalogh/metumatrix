@@ -343,9 +343,9 @@ body {
 .f { padding: 18px 24px 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px 16px; }
 /* KRITIKUS: a grid-cellák tudjanak összemenni — enélkül a hosszú select kitolja a modalt (vízszintes scroll) */
 .f > * { min-width: 0; }
-/* színkódolt szekciófejek — a mezőcsoportok ránézésre elkülönülnek */
-.f-sec { --sec-c: var(--brand); grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; font-size: .64rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: color-mix(in srgb, var(--sec-c) 78%, var(--ink)); margin: 14px -10px 0; padding: 7px 10px; border-radius: 8px; background: color-mix(in srgb, var(--sec-c) 9%, transparent); }
-.f-sec::before { content: ''; width: 8px; height: 8px; border-radius: 3px; background: var(--sec-c); flex: none; }
+/* színkódolt szekciófejek — markánsan elválnak, mobilon is jól látszik, hol tartunk */
+.f-sec { --sec-c: var(--brand); grid-column: 1 / -1; display: flex; align-items: center; gap: 9px; font-size: .76rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: color-mix(in srgb, var(--sec-c) 70%, var(--ink)); margin: 18px -10px 0; padding: 10px 12px; border-radius: 9px; background: color-mix(in srgb, var(--sec-c) 14%, transparent); border-left: 4px solid var(--sec-c); }
+.f-sec::before { content: ''; width: 9px; height: 9px; border-radius: 3px; background: var(--sec-c); flex: none; }
 .f-sec:first-child { margin-top: 0; }
 .f-sec.c-yellow { --sec-c: var(--yellow-deep); }
 .f-sec.c-blue { --sec-c: var(--g1); }

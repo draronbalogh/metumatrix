@@ -828,6 +828,68 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
     subject: (c) => `Meghívó: ${or(c.title, '[kiállítás címe]')} megnyitója`,
     body: (c) => `Kedves Kollégák!\n\nSzeretettel meghívlak Benneteket a Média Design [évfolyam] hallgatóinak ${or(c.title, '[kiállítás címe]')} című kiállítására, amelynek megnyitója ${or(c.when, '[dátum, óra]')}-kor lesz${c.place ? ` (${nd(c.place)})` : ' a [helyszín]-en'}. A hallgatók egy féléves közös munka eredményét mutatják be: [rövid tematikai leírás]; a kiállítás [dátumokig] látogatható. Nagy örömünkre szolgálna, ha személyes jelenlétetekkel támogatnátok a hallgatóinkat ezen az estén.\n\nKérlek, aki tud, jelezze, hogy számíthatunk-e Rá. Találkozzunk a megnyitón!`,
   },
+  // a 151-154. tételek: demonstrátorok és óradíj
+  {
+    id: 'demonstrator-jeloltek', group: '8 · Hallgatói ügyek', label: 'Demonstrátor-jelöltek bekérése (körlevél)',
+    subject: (c) => `Demonstrátor-jelöltek: ${or(c.title, '[esemény]')}, ${or(c.due, '[határidő]')}-ig`,
+    body: (c) => `Sziasztok!\n\nA(z) ${or(c.title, '[esemény, pl. tavaszi felvételi]')} közeledtével keressük a hallgatói demonstrátorokat, ezért kérlek, jelezzétek ${or(c.due, '[határidő]')}-ig, ha van olyan hallgatótok, aki szívesen vállalna demonstrátori munkát. Jó lehetőség nekik az extra kereset (idei óradíj: [összeg] Ft/óra) és a szakmai tapasztalat is. Kérlek, a jelöltnél írjátok meg a nevet, a szakot/évfolyamot és az elérhetőséget, hogy fel tudjuk venni a listára. A beérkezett neveket összesítem, és továbbítom [koordinátor neve]-nek, aki a toborzó táblázatot kiküldi.\n\nKöszönöm a gyors visszajelzést!`,
+  },
+  {
+    id: 'demonstrator-felkeres', group: '8 · Hallgatói ügyek', label: 'Demonstrátori felkérés hallgatónak',
+    subject: (c) => `Demonstrátori felkérés: ${or(c.title, '[esemény]')}, ${or(c.when, '[dátum]')}`,
+    body: (c) => `Kedves [Név]!\n\nÖrömmel értesítelek, hogy az oktatóid javaslata alapján felkérünk a(z) ${or(c.title, '[esemény, pl. felvételi]')} demonstrátori feladataira ${or(c.when, '[dátum]')}-án. A feladat röviden: [leírás: a jelentkezők fogadása, a folyamat segítése, gyakorlati asszisztencia], a helyszín ${or(c.place, '[helyszín]')}, az időpont [idősáv]; az óradíj [összeg] Ft/óra. Kérlek, jelezd ${or(c.due, '[határidő]')}-ig, hogy vállalod-e, és melyik idősávban tudsz jönni; a pontos beosztást és a szerződéssel kapcsolatos teendőket ezután küldöm.\n\nSzámítok Rád, jó tapasztalat lesz, és a munkádat is megbecsüljük!`,
+  },
+  {
+    id: 'demonstrator-beosztas', group: '8 · Hallgatói ügyek', label: 'Demonstrátori beosztás és tudnivalók',
+    subject: (c) => `Demonstrátori beosztás: ${or(c.title, '[esemény]')}, ${or(c.when, '[dátum]')}`,
+    body: (c) => `Kedves [Név]!\n\nKöszönöm, hogy vállaltad a demonstrátori feladatot! A beosztásod: ${or(c.when, '[dátum]')}, [idősáv]${c.place ? `, helyszín: ${nd(c.place)}` : ', helyszín: [helyszín]'}; érkezz [x] perccel korábban, és [kapcsolattartó neve, telefonszáma] fogad a helyszínen. Kérlek, hozd magaddal a [szükséges dokumentum/eszköz]-t; az óradíj-elszámoláshoz a jelenléti ív aláírásáról a helyszínen gondoskodunk. Ha bármi közbejön, jelezd időben, hogy tudjunk pótlásról gondoskodni.\n\nKöszönöm az együttműködésed, számítok Rád!`,
+  },
+  {
+    id: 'oradij-elszamolas', group: '8 · Hallgatói ügyek', label: 'Óradíj-elszámolás / jelenléti igazolás',
+    subject: (c) => `Óradíj-elszámolás: ${or(c.title, '[esemény]')}, [név / hónap]`,
+    body: (c) => `Kedves [Koordinátor neve]!\n\nA(z) ${or(c.title, '[esemény]')} demonstrátori munkájának elszámolásához küldöm a szükséges adatokat: [hallgató neve], [Neptun-kód], teljesített [óraszám] óra, [dátumok]-on, óradíj [összeg] Ft/óra. Az aláírt jelenléti ívet [csatolva küldöm / a helyszínen leadtuk], kérlek, jelezd, ha bármilyen további dokumentum vagy aláírás szükséges a kifizetéshez. A hallgató elérhetősége: [e-mail], ha közvetlenül egyeztetnél vele.\n\nKöszönöm, hogy segítesz a gördülékeny elszámolásban!`,
+  },
+  // a 155-162. tételek: kiállítás-szervezés (protokoll, üzemeltetés, marketing)
+  {
+    id: 'kiallitas-helyszinfoglalas', group: '17 · Rendezvények / hallgatói élet', label: 'Kiállítás: helyszín / galéria foglalása (protokoll)',
+    subject: () => 'Média Design [évfolyam] kiállítás, helyszínfoglalás',
+    body: (c) => `Kedves [Kollégák / Detti]!\n\nA Média Design [évfolyam] hallgatói kiállítást szeretnének tartani, tervezett időpont: építés [dátum], megnyitó ${or(c.when, '[dátum, óra]')}, látogathatóság [dátumok], bontás [dátum]; a kért helyszín a(z) ${or(c.place, '[helyszín, pl. Infopark I. Galéria]')}. Kérlek, jelezzétek, hogy a galéria a megadott napokra foglalható-e a részünkre, és van-e ütközés más rendezvénnyel vagy záróvizsgával, amihez a bontást igazítanunk kell. A részleteket a csatolt dokumentumban foglaltam össze, a hallgatói oldalról [referens neve] tartja a kapcsolatot.\n\nKöszönöm a segítségeteket, várom a visszaigazolást!`,
+  },
+  {
+    id: 'kiallitas-technika', group: '17 · Rendezvények / hallgatói élet', label: 'Kiállítás: technikai igény az üzemeltetésnek',
+    subject: (c) => `${or(c.title, '[kiállítás]')}: technikai igény (hang-fény-berendezés)`,
+    body: (c) => `Kedves [Kollégák / Urbán István]!\n\nA(z) ${or(c.title, '[kiállítás neve]')} kapcsán, amely ${or(c.when, '[dátumok]')} között lesz${c.place ? ` (${nd(c.place)})` : ' a [helyszín]-en'}, szeretném strukturáltan leadni a technikai igényeinket. Szükségünk lenne az alábbiakra: [pl. X db projektor, hangrendszer, kiegészítő világítás, elosztók, asztalok]. Kérlek, jelezzétek, hogy ezeket tudjátok-e biztosítani, illetve ha a kérést a TOPdesk-felületen kell rögzítenem, akkor megteszem. A telepítés [dátum]-kor kezdődne, ehhez [időpont]-tól kérnénk hozzáférést a térhez.\n\nKöszönöm a támogatásotokat!`,
+  },
+  {
+    id: 'kiallitas-marketing-anyagok', group: '17 · Rendezvények / hallgatói élet', label: 'Kiállítás: kommunikációs anyagok a marketingnek',
+    subject: (c) => `${or(c.title, '[kiállítás]')}: kommunikációs anyagok a publikáláshoz`,
+    body: (c) => `Kedves Krisztina és Nóra!\n\nKüldöm a(z) ${or(c.title, '[kiállítás neve]')} kommunikációjához szükséges anyagokat, hogy időben, a hivatalos METU-felületeken tudjátok publikálni az eseményt. Mellékelem: [1-3 db jogtiszta, fekvő kép], az esemény szöveges adatai (cím: [cím], alcím: [alcím], időpont: ${or(c.when, '[mettől meddig]')}, helyszín: ${or(c.place, '[helyszín]')}, rövid leírás: [leírás], szak: Média Design), valamint a hallgatók és a témavezető oktatók névsora. Kérlek, jelezzétek, hogy a grafikát ti készítitek az arculati rendszerben, vagy a mi alapjainkat használjátok; mindkét megoldás jó nekünk.\n\nHa bármi hiányzik, szóljatok, pótlom. Köszönöm a közreműködést!`,
+  },
+  {
+    id: 'kiallitas-jovahagyas', group: '17 · Rendezvények / hallgatói élet', label: 'Kiállítás: webhír / FB-event jóváhagyása',
+    subject: (c) => `${or(c.title, '[kiállítás]')}: webhír és FB-event jóváhagyás`,
+    body: () => `Kedves Krisztina!\n\nKöszönöm a webhír, a sajtószöveg és az FB-event terveit; átnéztem, és a szakmai tartalom rendben van. [Egy módosítást kérnék: a kiállítás címe, a hallgatók nevei és a helyszín kiemelten jelenjen meg. / Részemről jóváhagyva, mehet a hírelés.] Kérlek, a galériát / társszervezőt tüntessétek fel co-host szerepben, és a tanszéki honlap ([link]) is legyen jól látható. Mivel a megnyitóig kevés idő van, örülnék, ha mielőbb elindulhatna a kommunikáció.\n\nKöszönöm a gyors és igényes munkát!`,
+  },
+  {
+    id: 'kiallitas-hivatalos-meghivo', group: '17 · Rendezvények / hallgatói élet', label: 'Kiállítás: hivatalos megnyitó-meghívó',
+    subject: (c) => `Meghívó: ${or(c.title, '[kiállítás címe]')} megnyitója, ${or(c.when, '[dátum]')}`,
+    body: (c) => `Kedves [Kollégák / Meghívottak]!\n\nSzeretettel meghívunk a METU Média Design szak [évfolyam / diplomázó] hallgatóinak ${or(c.title, '[kiállítás címe]')} című kiállítására. Megnyitó: ${or(c.when, '[dátum, óra]')}, helyszín: ${or(c.place, '[helyszín, cím]')}; a kiállítás [dátumokig] látogatható. A hallgatók egy féléves közös munka eredményét mutatják be: [rövid tematikai összefoglaló].\n\nMegtisztelő lenne, ha jelenléteddel támogatnád a hallgatóinkat ezen az estén; kérlek, jelezd, ha számíthatunk Rád. Találkozzunk a megnyitón!`,
+  },
+  {
+    id: 'kiallitas-bontas', group: '17 · Rendezvények / hallgatói élet', label: 'Kiállítás: bontás időzítése (ütközés-egyeztetés)',
+    subject: (c) => `${or(c.title, '[kiállítás]')}: bontás időzítése`,
+    body: (c) => `Kedves [Kollégák / Hallgatók]!\n\nEgyeztetnünk kell a bontás pontos időzítését, mert a(z) ${or(c.place, '[helyszín]')} melletti teremben [dátum]-án záróvizsgák lesznek, illetve [dátum]-tól a [következő rendezvény] foglalja a teret. Ezért a bontást [dátum, időpont, pl. késő délután]-ra kell időzítenünk, hogy se a vizsgákat, se a következő rendezvényt ne zavarja. Kérlek, [referens neve] és a hallgatók igazítsátok ehhez a leszerelést és az installációk elszállítását.\n\nKöszönöm, hogy rugalmasak vagytok, így mindenki zökkenőmentesen tud dolgozni!`,
+  },
+  {
+    id: 'kiallitas-koszonet', group: '17 · Rendezvények / hallgatói élet', label: 'Kiállítás: köszönőlevél a közreműködőknek',
+    subject: (c) => `Köszönet: ${or(c.title, '[kiállítás neve]')}`,
+    body: (c) => `Kedves Mind!\n\nKöszönöm szépen mindenkinek a segítségét és a támogatását, amivel a(z) ${or(c.title, '[kiállítás neve]')} létrejöhetett: a marketingnek, a protokollnak, az üzemeltetésnek és természetesen a hallgatóknak és a témavezető oktatóknak. Nagyszerű volt látni, hogy a közös munka milyen színvonalas eredményt hozott, és milyen jó visszhangot kapott. A tapasztalatokat összegyűjtöm, hogy a következő kiállítást még gördülékenyebben tudjuk megszervezni.\n\nMég egyszer köszönöm mindenki munkáját!`,
+  },
+  {
+    id: 'kiallitas-elojelzes', group: '17 · Rendezvények / hallgatói élet', label: 'Kiállítás: korai előjelzés a marketingnek',
+    subject: (c) => `Előzetes jelzés: ${or(c.title, '[kiállítás]')}, ${or(c.when, '[dátum]')}`,
+    body: (c) => `Kedves Krisztina és Nóra!\n\nIdőben szeretnék szólni egy közelgő eseményről: a Média Design [évfolyam] [kiállítás típusa] kiállítása ${or(c.when, '[dátum]')}-kor lesz${c.place ? ` (${nd(c.place)})` : ' a [helyszín]-en'}. Egyelőre a végleges anyagok készülnek, de szerettem volna minél előbb jelezni, hogy legyen időtök felkészülni és rendesen beharangozni. A részletes tartalmakat (képek, szövegek, névsor) ${or(c.due, '[dátum]')}-ig küldöm; addig is jelezzétek, ha valamire már most szükségetek van.\n\nKöszönöm, hogy segítitek a szakunk láthatóságát!`,
+  },
 ];
 
 export const TOPIC_GROUPS: string[] = [...new Set(TOPIC_TEMPLATES.map((t) => t.group))];

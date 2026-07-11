@@ -271,6 +271,20 @@ export default function CurriculumApp() {
   const composeFromTopic = useCallback((t: TopicTemplate) => {
     setNotify({ targetType: null, targetId: null, task: null, event: null, names: [], steps: [], source: null, topicId: t.id });
   }, []);
+  // a Levelek nézet BEÁGYAZOTT szerkesztője: széles kijelzőn ide töltődnek a
+  // sablonok / mentett levelek; mobilon (nincs hely a 3. oszlopnak) modál nyílik
+  const [topicReq, setTopicReq] = useState<{ t: TopicTemplate; n: number } | null>(null);
+  const [letterReq, setLetterReq] = useState<{ l: Letter; n: number } | null>(null);
+  // a beágyazott szerkesztő csak kliens-oldalon jelenik meg: a localStorage-ból
+  // töltött beállításai (sablonfajta, aláírás) SSR-ben nem elérhetők (hydration)
+  const [booted, setBooted] = useState(false);
+  useEffect(() => { setBooted(true); }, []);
+  const inlineTarget = useMemo<NotifyTarget>(() => ({ targetType: null, targetId: null, task: null, event: null, names: [], steps: [], source: null }), []);
+  const isWide = () => typeof window !== 'undefined' && window.matchMedia('(min-width: 721px)').matches;
+  const useTopicInComposer = useCallback((t: TopicTemplate) => {
+    if (isWide()) setTopicReq({ t, n: Date.now() });
+    else composeFromTopic(t);
+  }, [composeFromTopic]);
   // mentett levél megnyitása a Levelek nézetből: ha megvan a kártyája, annak
   // kontextusában (lépések, feladó, mentett levelek listája), különben önállóan
   const openSavedLetter = useCallback((l: Letter) => {
@@ -291,6 +305,11 @@ export default function CurriculumApp() {
     if (l.targetType === 'event') return cur.events.find((x) => x.id === l.targetId)?.title ?? null;
     return null;
   }, []);
+  const openLetterInComposer = useCallback((l: Letter) => {
+    if (isWide()) setLetterReq({ l, n: Date.now() });
+    else openSavedLetter(l);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openSavedLetter]);
   // mentett levelek kezelése (a levelek az agenda részei, az automentés viszi fájlba)
   const saveLetter = useCallback((l: Letter) => {
     const cur = agendaRef.current;
@@ -674,9 +693,31 @@ export default function CurriculumApp() {
               onPerson={onInstructor}
               onNotify={notifyEvent}
             />
-          ) : view === 'topics' ? (
-            <TopicsView letters={agenda.letters || []} onCompose={composeFromTopic} onOpenLetter={openSavedLetter} targetTitle={letterTargetTitle} />
           ) : null}
+          {/* A Levelek nézet mindig mountolva marad (csak elrejtjük), hogy a beágyazott
+              szerkesztőben írt piszkozat nézetváltáskor NE vesszen el. */}
+          <div className="view-pane" style={{ display: view === 'topics' ? 'block' : 'none' }}>
+            <TopicsView
+              letters={agenda.letters || []}
+              onUseTopic={useTopicInComposer}
+              onOpenLetter={openLetterInComposer}
+              targetTitle={letterTargetTitle}
+              composer={booted && (
+                <NotifyModal
+                  inline
+                  target={inlineTarget}
+                  topicReq={topicReq}
+                  letterReq={letterReq}
+                  teacherNames={teacherNames}
+                  db={peopleDB}
+                  letters={(agenda.letters || []).filter((l) => l.targetId === null)}
+                  onSaveLetter={saveLetter}
+                  onDeleteLetter={deleteLetter}
+                  onClose={() => { /* beágyazva nincs bezárás */ }}
+                />
+              )}
+            />
+          </div>
         </div>
       </div>
 

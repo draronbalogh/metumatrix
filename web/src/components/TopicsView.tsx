@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate, TopicCtx } from '@/lib/topics';
+import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate, TopicCtx, autoFill } from '@/lib/topics';
 import { Letter } from '@/data/agenda';
 
 // Levelek központ: kétpaneles (levelezőkliens-szerű) nézet.
@@ -85,7 +85,7 @@ export default function TopicsView({ letters, onCompose, onOpenLetter, targetTit
                         <button key={t.id} type="button" aria-pressed={selT === t.id}
                           className={`tp-item${selT === t.id ? ' is-on' : ''}`} onClick={() => pickT(t.id)}>
                           <span className="s">{t.label}</span>
-                          <span className="d">{t.subject(CTX)}</span>
+                          <span className="d">{autoFill(t.subject(CTX))}</span>
                         </button>
                       ))}
                     </div>
@@ -112,8 +112,8 @@ export default function TopicsView({ letters, onCompose, onOpenLetter, targetTit
               <button type="button" className="btn tp-back" onClick={() => setMobileDetail(false)}>← Vissza a listához</button>
               <div className="tp-pv-meta">{curT.group}</div>
               <h3 className="tp-pv-title">{curT.label}</h3>
-              <div className="tp-pv-subj"><b>Tárgy:</b> {curT.subject(CTX)}</div>
-              <pre className="tp-pv-body">{curT.body(CTX)}</pre>
+              <div className="tp-pv-subj"><b>Tárgy:</b> {autoFill(curT.subject(CTX))}</div>
+              <pre className="tp-pv-body">{autoFill(curT.body(CTX))}</pre>
               <div className="tp-pv-actions">
                 <button type="button" className="btn btn--ink" onClick={() => onCompose(curT)}>✉ Levélírás ebből a sablonból</button>
               </div>

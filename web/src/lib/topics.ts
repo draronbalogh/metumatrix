@@ -21,6 +21,36 @@ export interface TopicTemplate {
 const nd = (s: string | null | undefined): string => (s || '').replace(/\s*—\s*/g, ', ');
 const or = (v: string | null | undefined, ph: string): string => (nd(v).trim() || ph);
 
+// Ismert adatok automatikus kitöltése a mai dátumból: a [tanév], [félév], [hónap]
+// típusú mezőket nem kell kézzel kitölteni, a levél-készítő és az előnézet is
+// a kiszámolt értékkel mutatja a sablont.
+const HONAPOK = ['január', 'február', 'március', 'április', 'május', 'június', 'július', 'augusztus', 'szeptember', 'október', 'november', 'december'];
+export interface SemInfo { tanev: string; felevNev: 'őszi' | 'tavaszi'; felev: string; kovTanev: string; honap: string; }
+export const semesterInfo = (d: Date = new Date()): SemInfo => {
+  const y = d.getFullYear();
+  const m = d.getMonth(); // 0 = január
+  const startYear = m >= 6 ? y : y - 1; // júliustól már az induló tanév számít
+  const tanev = `${startYear}/${String(startYear + 1).slice(-2)}`;
+  const felevNev: 'őszi' | 'tavaszi' = m >= 6 || m === 0 ? 'őszi' : 'tavaszi';
+  const kovStart = m === 6 || m === 7 ? startYear : startYear + 1; // nyáron a most induló tanév a "következő"
+  return {
+    tanev, felevNev, felev: `${tanev} ${felevNev} félév`,
+    kovTanev: `${kovStart}/${String(kovStart + 1).slice(-2)}`,
+    honap: HONAPOK[m],
+  };
+};
+export const autoFill = (s: string, d: Date = new Date()): string => {
+  const i = semesterInfo(d);
+  const cap = (x: string): string => x.charAt(0).toUpperCase() + x.slice(1);
+  return s
+    .replace(/\[[fF]élév\]-ben/g, `${i.felev}ben`)
+    .replace(/\[[fF]élév\]/g, i.felev)
+    .replace(/\[[tT]anév\]/g, i.tanev)
+    .replace(/\[[kK]övetkező tanév\]/g, i.kovTanev)
+    .replace(/\[szemeszter\]/g, `${i.tanev} ${i.felevNev}`)
+    .replace(/\[[hH]ónap\]/g, (m0) => (m0 === '[Hónap]' ? cap(i.honap) : i.honap));
+};
+
 export const TOPIC_TEMPLATES: TopicTemplate[] = [
   // 1. tömb: tematikák és órarend
   {

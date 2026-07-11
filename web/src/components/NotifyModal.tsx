@@ -7,7 +7,7 @@ import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, 
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
 import { editHeaders } from '@/lib/editkey';
-import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate } from '@/lib/topics';
+import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate, autoFill } from '@/lib/topics';
 
 export interface NotifyTarget {
   targetType: 'event' | 'task' | null;
@@ -82,18 +82,36 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const [result, setResult] = useState<string | null>(null);
   const [tq, setTq] = useState(''); // keresés a jobb oldali sablonpanelben
 
-  // témasablon alkalmazása: a kártya adatai (cím, időpont, helyszín, határidő) beíródnak,
-  // a lábléc a levél végére kerül, és a kész vázlatot csak rákérdezés után írja felül más
+  // témasablon alkalmazása: minden ismert adat automatikusan kitöltődik — a kártya
+  // adatai (cím, időpont, helyszín, határidő), a tanév/félév/hónap a mai dátumból,
+  // a megszólítás pedig a kiválasztott címzettekhez igazodik (egyes/többes szám, kör).
+  // A kész vázlatot más sablon / 🎲 csak rákérdezés után írhatja felül.
   const applyTopic = (t: TopicTemplate) => {
     const ctx = {
       title: target.event?.title || target.task?.title || '',
       when: target.event?.when, place: place || target.event?.place,
       due: target.task?.due || target.task?.dueDate,
     };
-    setSubject(t.subject(ctx));
-    setBody(`${t.body(ctx)}\n\n${buildFooter(db, sigOn)}`);
+    setSubject(autoFill(t.subject(ctx)));
+    let txt = autoFill(t.body(ctx));
+    const lines = txt.split('\n');
+    const gi = lines.findIndex((l) => l.trim() !== '');
+    if (gi >= 0) {
+      const tmpl = lines[gi].trim();
+      let next = tmpl;
+      if (recipient.count === 1 && recipient.name) {
+        const given = recipient.name.trim().split(/\s+/).filter((p) => !/^dr\.?$/i.test(p) && !/^habil\.?$/i.test(p)).pop() ?? '[Név]';
+        next = `${tmpl.startsWith('Szia') ? 'Szia' : 'Kedves'} ${given}!`;
+      } else if (recipient.count > 1 && audience.length) {
+        next = greetingFor(audience);
+      }
+      lines[gi] = next;
+      lastGreetRef.current = next; // a címzett-kör későbbi változásakor is cserélhető marad
+      txt = lines.join('\n');
+    }
+    setBody(`${txt}\n\n${buildFooter(db, sigOn)}`);
     setBodyDirty(true);
-    setResult(`✓ Sablon betöltve: ${t.label}. A [szögletes] mezőket töltsd ki.`);
+    setResult(`✓ Sablon betöltve: ${t.label}. Csak a maradék [szögletes] mezőt töltsd ki.`);
   };
 
   // a Levelek nézetből indított levél: mentett levél vagy kiválasztott sablon betöltése

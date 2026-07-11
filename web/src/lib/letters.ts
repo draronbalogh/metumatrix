@@ -478,7 +478,11 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
       'Kérdés esetén állok rendelkezésre.',
     ], 'valasz.cta');
     blocks.push([ack, bodyLine].join(' '));
-    blocks.push(...infoBlocks());
+    // a válaszba NEM emeljük be a kártya belső jegyzetét és adat-sorait (furcsán hatna
+    // a levél írójának szánt belső kontextus) — csak a kifejezetten kért elemeket:
+    const st = (steps ?? []).map((s) => noDash(s.trim())).filter(Boolean);
+    if (st.length) blocks.push(`${pickAvoid(STEP_HEAD, 'stephead')}\n${st.map((s, i) => `${i + 1}. ${s}`).join('\n')}`);
+    if (meeting) blocks.push(meetingBlock(meeting));
     blocks.push(cta);
     closer = pickAvoid(CLOSER_SG, 'closer'); // a válasz mindig egy embernek szól
   } else {

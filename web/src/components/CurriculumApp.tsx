@@ -74,6 +74,11 @@ export default function CurriculumApp() {
   const [peopleEdit, setPeopleEdit] = useState(false);
   const [notify, setNotify] = useState<NotifyTarget | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  // mobilon a főmenü vízszintesen görgethető — nézetváltáskor az aktív fül beúszik a képbe
+  const navRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    navRef.current?.querySelector('.is-on')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }, [view]);
 
   useEffect(() => {
     (async () => {
@@ -587,7 +592,7 @@ export default function CurriculumApp() {
 
       <div className="toolbar">
         <div className="wrap toolbar__inner">
-          <div className="viewtoggle">
+          <div className="viewtoggle viewtoggle--nav" ref={navRef}>
             <button className={view === 'map' ? 'is-on' : ''} onClick={() => setView('map')}>◆ Mátrix</button>
             <button className={view === 'catalog' ? 'is-on' : ''} onClick={() => setView('catalog')}>▦ Katalógus</button>
             <button className={view === 'tasks' ? 'is-on' : ''} onClick={() => setView('tasks')}>☑ Feladatok</button>

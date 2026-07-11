@@ -282,6 +282,82 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
     subject: () => '3D labor (Játéktervezés), egyeztetés',
     body: () => `Szia [Név]!\n\nA 3D labor / Játéktervezés kurzus kapcsán egyeztetnék: [pont]. Mikor tudnánk beszélni róla?\n\nKöszönöm!`,
   },
+  // a 3-5. rész (október-január) új sablonjai
+  {
+    id: 'felevkozi-statusz', group: '14 · Félévközben és záráskor', label: 'Félévközi státusz bekérése',
+    subject: () => 'Félévközi státusz: [tantárgy]',
+    body: () => `Szia [Név]!\n\nKérlek, jelezd röviden, hogy áll a(z) [tantárgy]: van-e lemaradó hallgató, gond a jelenléttel vagy a leadásokkal? Ha valahol beavatkozás kell, együtt megoldjuk.\n\nKöszönöm!`,
+  },
+  {
+    id: 'hianyzas-jelzes', group: '14 · Félévközben és záráskor', label: 'Hallgatói hiányzás jelzése',
+    subject: () => '[Hallgató neve], hiányzások',
+    body: () => `Szia [Név]!\n\n[Hallgató] a(z) [tantárgy]-ból sokat hiányzott. Kérlek, egyeztess vele, illetve jelezd, ha beavatkozás kell. Fontos, hogy időben elérjük, amíg behozható a lemaradás.\n\nKöszönöm!`,
+  },
+  {
+    id: 'ertekelesi-szempontok', group: '14 · Félévközben és záráskor', label: 'Értékelési szempontok egyeztetése',
+    subject: () => 'Értékelési szempontok: [tantárgy]',
+    body: () => `Szia [Név]!\n\nA félév vége közeledik. Kérlek, oszd meg a(z) [tantárgy] értékelési szempontjait, hogy egységes legyen a hallgatói tájékoztatás.\n\nKöszönöm!`,
+  },
+  {
+    id: 'vizsgaidoszak', group: '14 · Félévközben és záráskor', label: 'Vizsgaidőszak tudnivalók (körlevél)',
+    subject: () => 'Vizsgaidőszak, tudnivalók',
+    body: (c) => `Kedves Kollégák!\n\nA vizsgaidőszak [dátum]-tól [dátum]-ig tart. Kérlek, hirdessétek meg a vizsgaidőpontjaitokat a Neptunban ${or(c.due, '[határidő]')}-ig, hogy a hallgatók időben tervezhessenek.\n\nKöszönöm!`,
+  },
+  {
+    id: 'jegybeiras', group: '14 · Félévközben és záráskor', label: 'Jegybeírási emlékeztető',
+    subject: (c) => `Jegybeírás, határidő: ${or(c.due, '[dátum]')}`,
+    body: (c) => `Szia [Név]!\n\nKérlek, a(z) [tantárgy] jegyeit vezesd be a Neptunban ${or(c.due, '[dátum]')}-ig. Köszönöm, hogy időben megteszed!`,
+  },
+  {
+    id: 'felevzaro-admin', group: '14 · Félévközben és záráskor', label: 'Félévzáró adminisztráció (körlevél)',
+    subject: () => 'Félévzáró adminisztráció, emlékeztető',
+    body: (c) => `Kedves Kollégák!\n\nA félév zárásához a következőket kérem ${or(c.due, '[dátum]')}-ig:\n1. jegyek beírása\n2. jelenléti adminisztráció\n3. [dokumentumok]\n\nKöszönöm az együttműködést!`,
+  },
+  {
+    id: 'potvizsga', group: '14 · Félévközben és záráskor', label: 'Pótvizsga egyeztetése',
+    subject: () => 'Pótvizsga: [tantárgy]',
+    body: () => `Szia [Név]!\n\n[Hallgató] pótvizsgát kér a(z) [tantárgy]-ból. Meg tudjátok oldani [dátum] körül? Kérlek, jelezz egy időpontot, és én szólok a hallgatónak.\n\nKöszönöm!`,
+  },
+  {
+    id: 'felevi-beszamolo', group: '14 · Félévközben és záráskor', label: 'Féléves tapasztalat-összefoglaló bekérése',
+    subject: () => '[Félév], rövid beszámoló',
+    body: () => `Szia [Név]!\n\nKérlek, küldj egy rövid összefoglalót a(z) [tantárgy] félévi tapasztalatairól: mi ment jól, min változtatnál. Pár mondat is elég, a tavaszi tervezéshez használom.\n\nKöszönöm!`,
+  },
+  {
+    id: 'vendegeloadas', group: '6 · Külső kapcsolatok', label: 'Vendégelőadó felkérése',
+    subject: (c) => `Vendégelőadás felkérés, ${or(c.when, '[dátum]')}`,
+    body: (c) => `Kedves [Név]!\n\nA METU Média Design szakán szeretnélek felkérni egy [időtartam]-es előadásra [téma] témában, ${or(c.when, '[dátum]')} körül. A hallgatóknak sokat adna a gyakorlati nézőpontod.\n\nÉrdekelne? A részleteket egyeztethetjük. Köszönöm!`,
+  },
+  {
+    id: 'tanszeki-ertekezlet', group: '2 · Oktatói kapcsolattartás', label: 'Tanszéki értekezlet emlékeztető (körlevél)',
+    subject: (c) => `Tanszéki értekezlet, ${or(c.when, '[dátum, időpont]')}`,
+    body: (c) => `Kedves Kollégák!\n\nEmlékeztető: ${or(c.when, '[dátum] [időpont]')}-kor tanszéki értekezlet${c.place ? ` (${nd(c.place)})` : ' [helyszín / Zoom-link]'}. Napirend: [pontok].\n\nKérlek, jelezzétek, ha nem tudtok jönni. Köszönöm!`,
+  },
+  {
+    id: 'unnepi-koszonto', group: '2 · Oktatói kapcsolattartás', label: 'Évzáró / ünnepi köszöntő (körlevél)',
+    subject: () => 'Békés ünnepeket!',
+    body: () => `Kedves Kollégák!\n\nKöszönöm az idei félév közös munkáját, sokat tettetek hozzá a szak sikeréhez. Kellemes ünnepeket és pihentető szünetet kívánok mindannyiótoknak!\n\nTalálkozunk januárban!`,
+  },
+  {
+    id: 'tantargyfelosztas', group: '1 · Tematikák és órarend', label: 'Tantárgyfelosztás egyeztetése (következő félév)',
+    subject: () => '[Félév], tantárgyfelosztás egyeztetés',
+    body: (c) => `Szia [Név]!\n\nA következő félévre a(z) [tantárgy/tantárgyak]-at terveztem hozzád. Megfelel? Kérlek, ${or(c.due, '[dátum]')}-ig jelezz vissza, hogy véglegesíthessem a felosztást.\n\nKöszönöm!`,
+  },
+  {
+    id: 'orarend-veglegesites', group: '1 · Tematikák és órarend', label: 'Órarend véglegesítése (körlevél)',
+    subject: () => '[Félév] órarend, véglegesítés',
+    body: (c) => `Kedves Kollégák!\n\nKüldöm a [félév] órarend tervezetét: [link / csatolmány]. Kérlek, ${or(c.due, '[dátum]')}-ig jelezzétek az ütközéseket, hogy véglegesíthessük.\n\nKöszönöm!`,
+  },
+  {
+    id: 'szakdolgozat-utemterv', group: '13 · Záróvizsga / opponencia', label: 'Szakdolgozati konzultációk ütemezése (körlevél)',
+    subject: () => 'Szakdolgozati konzultációk, ütemezés',
+    body: (c) => `Kedves Kollégák!\n\nKérlek, egyeztessetek a témavezetett hallgatóitokkal a konzultációs ütemtervről, és küldjétek felém ${or(c.due, '[dátum]')}-ig. Így időben látjuk, ha valahol csúszás van.\n\nKöszönöm!`,
+  },
+  {
+    id: 'valaszthato-kurzus', group: '8 · Hallgatói ügyek', label: 'Új választható kurzus meghirdetése (körlevél, hallgatók)',
+    subject: () => 'Új választható kurzus: [cím]',
+    body: () => `Kedves Hallgatók!\n\n[Félév]-ben indul a(z) [kurzuscím] választható kurzus. Rövid leírás: [szöveg]. Jelentkezés: [mód, határidő].\n\nÉrdemes időben jelentkezni, a helyek száma korlátozott!`,
+  },
 ];
 
 export const TOPIC_GROUPS: string[] = [...new Set(TOPIC_TEMPLATES.map((t) => t.group))];

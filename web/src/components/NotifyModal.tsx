@@ -231,34 +231,6 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
         <div className="pm-body nm-body">
           <div className="f-sec c-blue">1 · Kinek megy a levél?</div>
           <div className="field full">
-            <label>Válassz egy koppintással (felülírja a címzett-listát)</label>
-            <div className="chipradio">
-              <button type="button" className="crx c-amber" disabled={!src}
-                title={src ? `Válasz a feladónak: ${src.email}` : 'Előbb add meg a feladót az alábbi mezőben (név + email), utána egy koppintás a válasz'}
-                onClick={() => { if (!src) return; setSelected([]); setAdhoc([src.email]); if (confirmIfDirty()) regenerate('valasz'); }}>↩ A feladónak (válasz)</button>
-              <button type="button" className="crx c-blue" title="A kártya felelőse és résztvevői"
-                onClick={() => { setSelected([...new Set(target.names)]); setAdhoc([]); }}>Résztvevőknek</button>
-              {([
-                { label: 'Minden tanárnak', kinds: ['T'] as PersonKind[] },
-                { label: 'Minden hallgatónak', kinds: ['H'] as PersonKind[] },
-                { label: 'Intézményieknek', kinds: ['I'] as PersonKind[] },
-                { label: 'Alumninak', kinds: ['A'] as PersonKind[] },
-                { label: 'Piaci partnereknek', kinds: ['P'] as PersonKind[] },
-                { label: 'Mindenkinek (T+H)', kinds: ['T', 'H'] as PersonKind[] },
-              ]).map((p) => {
-                const names = roster.filter((r) => p.kinds.includes(r.kind)).map((r) => r.name);
-                return (
-                  <button key={p.label} type="button" className="crx c-blue" disabled={!names.length}
-                    title={names.length ? `${p.label}: ${names.length} név` : 'A lista még üres. A ☎ Névjegyzékben töltheted fel.'}
-                    onClick={() => { setSelected([...new Set(names)]); setAdhoc([]); }}>
-                    {p.label}{names.length ? ` (${names.length})` : ''}
-                  </button>
-                );
-              })}
-              <button type="button" className="crx c-grey" title="Minden címzett törlése" onClick={() => { setSelected([]); setAdhoc([]); }}>✕ Senki</button>
-            </div>
-          </div>
-          <div className="field full">
             <label>A levél feladója (neki egy gombbal válaszolhatsz)</label>
             {src ? (
               <div className="nm-groups">
@@ -279,23 +251,54 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               </div>
             )}
           </div>
-          {db.groups.length > 0 && (
-            <div className="field full">
-              <label>Egyedi csoportok hozzáadása</label>
-              <div className="nm-groups">
-                {db.groups.map((g) => <button key={g.name} type="button" className="chip" title={g.members.join(', ')} onClick={() => addCustom(g.members)}>+ {g.name}</button>)}
+          <div className="field full">
+            <label>Címzettek: {selected.length + adhoc.length} címzett · {emails.length} email{missing.length ? ` · ${missing.length} címe hiányzik` : ''}</label>
+            <div className="nm-row">
+              <span className="nm-hint" title="Egy koppintás lecseréli a teljes címzett-listát">Gyors:</span>
+              <div className="chipradio">
+                <button type="button" className="crx c-amber" disabled={!src}
+                  title={src ? `Válasz a feladónak: ${src.email}` : 'Előbb add meg fent a feladót (név + email), utána egy koppintás a válasz'}
+                  onClick={() => { if (!src) return; setSelected([]); setAdhoc([src.email]); if (confirmIfDirty()) regenerate('valasz'); }}>↩ A feladónak</button>
+                <button type="button" className="crx c-blue" title="A kártya felelőse és résztvevői"
+                  onClick={() => { setSelected([...new Set(target.names)]); setAdhoc([]); }}>Résztvevők</button>
+                {([
+                  { label: 'Tanárok', kinds: ['T'] as PersonKind[] },
+                  { label: 'Hallgatók', kinds: ['H'] as PersonKind[] },
+                  { label: 'Intézményiek', kinds: ['I'] as PersonKind[] },
+                  { label: 'Alumni', kinds: ['A'] as PersonKind[] },
+                  { label: 'Piaciak', kinds: ['P'] as PersonKind[] },
+                  { label: 'Mindenki (T+H)', kinds: ['T', 'H'] as PersonKind[] },
+                ]).map((p) => {
+                  const names = roster.filter((r) => p.kinds.includes(r.kind)).map((r) => r.name);
+                  return (
+                    <button key={p.label} type="button" className="crx c-blue" disabled={!names.length}
+                      title={names.length ? `${p.label}: ${names.length} név (a lista cseréje)` : 'A lista még üres. A ☎ Névjegyzékben töltheted fel.'}
+                      onClick={() => { setSelected([...new Set(names)]); setAdhoc([]); }}>
+                      {p.label}{names.length ? ` (${names.length})` : ''}
+                    </button>
+                  );
+                })}
+                <button type="button" className="crx c-grey" title="Minden címzett törlése" onClick={() => { setSelected([]); setAdhoc([]); }}>✕ Senki</button>
               </div>
             </div>
-          )}
-          <div className="field full">
-            <label>Címzettek: {selected.length + adhoc.length} címzett · {emails.length} email{missing.length ? ` · ${missing.length} címe hiányzik` : ''} (koppints a nevekre)</label>
-            <div className="nm-groups nm-kindrow">
-              {(['T', 'H', 'I', 'A', 'P'] as PersonKind[]).map((k) => (
-                <button key={k} type="button" aria-pressed={kindFilter === k} className={`chip${kindFilter === k ? ' is-on' : ''}`}
-                  onClick={() => setKindFilter((v) => (v === k ? '' : k))}>
-                  <span className={`pb ${k.toLowerCase()}`}>{k}</span>{KIND_LABEL[k]}
-                </button>
-              ))}
+            {db.groups.length > 0 && (
+              <div className="nm-row">
+                <span className="nm-hint" title="A csoport tagjait hozzáadja a mostani címzettekhez">Csoport:</span>
+                <div className="nm-groups">
+                  {db.groups.map((g) => <button key={g.name} type="button" className="chip" title={g.members.join(', ')} onClick={() => addCustom(g.members)}>+ {g.name}</button>)}
+                </div>
+              </div>
+            )}
+            <div className="nm-row">
+              <span className="nm-hint" title="Koppints a nevekre a hozzáadáshoz / levételhez">Névsor:</span>
+              <div className="nm-groups nm-kindrow">
+                {(['T', 'H', 'I', 'A', 'P'] as PersonKind[]).map((k) => (
+                  <button key={k} type="button" aria-pressed={kindFilter === k} className={`chip${kindFilter === k ? ' is-on' : ''}`}
+                    onClick={() => setKindFilter((v) => (v === k ? '' : k))}>
+                    <span className={`pb ${k.toLowerCase()}`}>{k}</span>{KIND_LABEL[k]}
+                  </button>
+                ))}
+              </div>
             </div>
             <input className="nm-search" value={rq} onChange={(e) => setRq(e.target.value)} placeholder="Szűrés névre…" />
             <div className="cat-picker pp-picker">

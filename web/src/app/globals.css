@@ -815,6 +815,10 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 @media (max-width: 720px) { .pm-row5 { grid-template-columns: 1fr 1fr; } .pm-row5.pm-head { display: none; } }
 /* kategória-szűrő a névsor felett */
 .nm-kindrow { margin-bottom: 8px; }
+/* az egységes címzett-blokk sorai: apró sorkezdő felirat + tartalom */
+.nm-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 9px; }
+.nm-row .chipradio, .nm-row .nm-groups { flex: 1; min-width: 0; }
+.nm-hint { flex: none; width: 58px; padding-top: 7px; font-size: .62rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-2); }
 /* letiltott preset-gomb: látszik, de jelzi, hogy előfeltétele van */
 .crx:disabled { opacity: .45; cursor: not-allowed; }
 /* ---- bemutató (csak-olvasó) mód: minden szerkesztő elem rejtve ---- */

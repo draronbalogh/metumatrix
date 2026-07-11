@@ -2,6 +2,7 @@
 // Cél: sablononként több száz érdemben különböző levél, hogy sose kelljen ugyanazt írni.
 // Hangvétel: korrekt, kollegiális. A hosszú gondolatjel (—) használata TILOS a szövegekben.
 import { AgendaEvent, AgendaTask } from '@/data/agenda';
+import type { PersonKind } from '@/data/people';
 
 export type LetterKind = 'felkeres' | 'meghivo' | 'emlekezteto' | 'koszono' | 'valasz' | 'ures';
 
@@ -71,7 +72,8 @@ function pickAvoid<T>(pool: T[], key: string): T {
 
 // ---- közös poolok ----
 
-// megszólítás-változatok
+// Megszólítás-változatok a címzett-kör szerint: a levél köszöntése mindig ahhoz
+// igazodik, KIK vannak kiválasztva (oktatók, hallgatók, alumni, intézményi, piaci).
 const GREET = [
   'Kedves Kollégák!',
   'Kedves Oktatók!',
@@ -82,6 +84,25 @@ const GREET = [
   'Sziasztok!',
   'Kedves Munkatársak!',
 ];
+const GREET_H = ['Kedves Hallgatóink!', 'Kedves Hallgatók!', 'Kedves Diákok!', 'Sziasztok!'];
+const GREET_A = ['Kedves Alumnusok!', 'Kedves Volt Hallgatóink!', 'Kedves Öregdiákjaink!'];
+const GREET_I = ['Kedves Kollégák!', 'Kedves Munkatársak!', 'Kedves Mindenki!'];
+const GREET_P = ['Kedves Partnereink!', 'Kedves Partnerek!'];
+const GREET_TH = ['Kedves Oktatók és Hallgatók!', 'Kedves Mindenki!', 'Kedves Kollégák és Hallgatók!'];
+const GREET_MIX = ['Kedves Mindenki!', 'Kedves Mindannyian!'];
+const GREET_POOLS = [GREET, GREET_H, GREET_A, GREET_I, GREET_P, GREET_TH, GREET_MIX];
+
+function greetPool(kinds?: PersonKind[]): string[] {
+  if (!kinds || kinds.length === 0) return GREET;
+  const set = new Set(kinds);
+  if (set.size === 1) return ({ T: GREET, H: GREET_H, A: GREET_A, I: GREET_I, P: GREET_P } as Record<PersonKind, string[]>)[kinds[0]];
+  if (set.size === 2 && set.has('T') && set.has('H')) return GREET_TH;
+  return GREET_MIX;
+}
+// a címzett-körhöz illő megszólítás (ismétlés-kerüléssel)
+export const greetingFor = (kinds?: PersonKind[]): string => pickAvoid(greetPool(kinds), 'greet');
+// ismert (generált) megszólítás-e a sor — a kézzel írt egyedi megszólítást nem bántjuk
+export const isKnownGreeting = (line: string): boolean => GREET_POOLS.some((p) => p.includes(line.trim()));
 
 // záró fordulatok a törzsszöveg és az aláírás közé
 const CLOSER = [
@@ -129,8 +150,10 @@ export function relativePhrase(day: string | null | undefined): string | null {
 export function rerollLetter(body: string): string {
   const lines = body.split('\n');
   const gi = lines.findIndex((l) => l.trim() !== '');
-  if (gi >= 0 && GREET.includes(lines[gi].trim())) {
-    lines[gi] = pick(GREET.filter((g) => g !== lines[gi].trim()));
+  if (gi >= 0) {
+    const cur = lines[gi].trim();
+    const pool = GREET_POOLS.find((p) => p.includes(cur));
+    if (pool && pool.length > 1) lines[gi] = pick(pool.filter((g) => g !== cur));
   }
   for (let i = gi + 1; i < lines.length; i++) {
     const cur = lines[i].trim();
@@ -206,7 +229,7 @@ const STEP_HEAD = [
   'Ezekről lesz szó:',
 ];
 
-export function buildLetter(kind: LetterKind, target: LetterTarget, signature: string, steps?: string[], meeting?: MeetingPlan | null): { subject: string; body: string } {
+export function buildLetter(kind: LetterKind, target: LetterTarget, signature: string, steps?: string[], meeting?: MeetingPlan | null, audience?: PersonKind[]): { subject: string; body: string } {
   const e = target.event ?? null;
   const t = target.task ?? null;
   const title = noDash(e?.title || t?.title || '');
@@ -394,10 +417,10 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
     closer = null;
   }
 
-  // válasz-levélnél a feladót név szerint szólítjuk meg
+  // válasz-levélnél a feladót név szerint szólítjuk meg; egyébként a címzett-kör dönt
   const greet = kind === 'valasz' && target.source?.name
     ? `Kedves ${givenName(target.source.name)}!`
-    : pickAvoid(GREET, 'greet');
+    : greetingFor(audience);
   const core = blocks.filter(Boolean).join('\n\n');
   const body = `${greet}\n\n${core ? core + '\n\n' : ''}${closer ? closer + '\n\n' : ''}${signature}`;
   return { subject, body };

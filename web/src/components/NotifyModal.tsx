@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AgendaEvent, AgendaTask, Letter } from '@/data/agenda';
 import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster } from '@/data/people';
-import { buildLetter, rerollLetter, LETTER_KINDS, LetterKind, MeetingMode, MeetingPlan } from '@/lib/letters';
+import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, LetterKind, MeetingMode, MeetingPlan } from '@/lib/letters';
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
 import { editHeaders } from '@/lib/editkey';
@@ -95,7 +95,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     const ev = target.event ? { ...target.event, place: p || null } : target.event;
     const meet = meetOverride !== undefined ? meetOverride
       : (meetMode === 'nincs' ? null : { mode: meetMode, date: meetDate, time: meetTime, link: meetLink });
-    const gen = buildLetter(k, { type: target.targetType, event: ev, task: target.task, source: src }, buildFooter(db, sigOverride ?? sigOn), stepsOverride ?? selSteps, meet);
+    const gen = buildLetter(k, { type: target.targetType, event: ev, task: target.task, source: src }, buildFooter(db, sigOverride ?? sigOn), stepsOverride ?? selSteps, meet, audience);
     setSubject(gen.subject);
     setBody(gen.body);
     setBodyDirty(false);
@@ -148,6 +148,42 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   // intézményi, alumni, piaci) — a badge-szűrővel kategóriára szűkíthető
   const roster = useMemo(() => buildRoster(teacherNames, db), [teacherNames, db]);
   const [kindFilter, setKindFilter] = useState<PersonKind | ''>('');
+
+  // a kiválasztott címzettek összetétele (T/H/I/A/P) — ehhez igazodik a megszólítás.
+  // Egy név több listában is szerepelhet (pl. alumnus, aki óraadó is): ha a kiválasztottak
+  // MIND lefedhetők egyetlen listával, az a lista dönt (alumni/piaci/intézményi elsőbbséggel).
+  const kindSets = useMemo(() => ({
+    T: new Set(teacherNames),
+    H: new Set(db.students.map((s) => s.name)),
+    I: new Set(db.institution.map((s) => s.name)),
+    A: new Set(db.alumni.map((s) => s.name)),
+    P: new Set(db.market.map((s) => s.name)),
+  }), [teacherNames, db]);
+  const audience = useMemo<PersonKind[]>(() => {
+    if (!selected.length) return [];
+    const has = (k: PersonKind, n: string) => kindSets[k].has(n);
+    for (const k of ['A', 'P', 'I', 'H', 'T'] as PersonKind[]) {
+      if (selected.every((n) => has(k, n))) return [k];
+    }
+    if (selected.every((n) => has('T', n) || has('H', n))) return ['T', 'H'];
+    const union = (['T', 'H', 'I', 'A', 'P'] as PersonKind[]).filter((k) => selected.some((n) => has(k, n)));
+    return union;
+  }, [selected, kindSets]);
+  // a címzett-kör változásakor a levél megszólító sora automatikusan átvált
+  // (csak az ismert, generált megszólításokat cseréljük; a kézzel írtat nem bántjuk)
+  const audienceKey = audience.join('');
+  useEffect(() => {
+    setBody((b) => {
+      const lines = b.split('\n');
+      const gi = lines.findIndex((l) => l.trim() !== '');
+      if (gi < 0 || !isKnownGreeting(lines[gi])) return b;
+      const next = greetingFor(audience.length ? audience : undefined);
+      if (lines[gi].trim() === next) return b;
+      lines[gi] = next;
+      return lines.join('\n');
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audienceKey]);
 
   const { emails, missing } = useMemo(() => {
     const em: string[] = []; const mi: string[] = []; const seen = new Set<string>();

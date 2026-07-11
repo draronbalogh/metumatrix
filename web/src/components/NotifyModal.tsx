@@ -267,8 +267,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                   { label: 'Minden intézményi', kinds: ['I'] as PersonKind[] },
                   { label: 'Minden alumni', kinds: ['A'] as PersonKind[] },
                   { label: 'Minden piaci', kinds: ['P'] as PersonKind[] },
-                  { label: 'Mindenki (T+H)', kinds: ['T', 'H'] as PersonKind[] },
-                  { label: 'Közös (összes lista)', kinds: ['T', 'H', 'I', 'A', 'P'] as PersonKind[] },
+                  { label: 'Mindenki', kinds: ['T', 'H', 'I', 'A', 'P'] as PersonKind[] },
                 ]).map((p) => {
                   const names = roster.filter((r) => p.kinds.includes(r.kind)).map((r) => r.name);
                   return (

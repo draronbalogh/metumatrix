@@ -17,7 +17,8 @@ export interface NotifyTarget {
   names: string[]; // előre kijelölt címzettek (a tétel felelőse + résztvevői)
   steps?: string[]; // a kártya (ill. eseménynél a kötött feladatok) lépései — választhatóan a levélbe
   source?: { name: string; email: string; subject?: string | null } | null; // a kiváltó email feladója
-  topicId?: string | null; // a Sablonok nézetből indított levél előtöltött témasablonja
+  topicId?: string | null; // a Levelek nézetből indított levél előtöltött témasablonja
+  preload?: { subject: string; body: string; names: string[] } | null; // mentett levél megnyitása kész tartalommal
 }
 
 interface Props {
@@ -95,12 +96,26 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     setResult(`✓ Sablon betöltve: ${t.label}. A [szögletes] mezőket töltsd ki.`);
   };
 
-  // a Sablonok nézetből indított levél: a kiválasztott sablon azonnal betöltődik
+  // a Levelek nézetből indított levél: mentett levél vagy kiválasztott sablon betöltése
   useEffect(() => {
+    if (target.preload) {
+      setSubject(target.preload.subject);
+      setBody(target.preload.body);
+      setSelected(target.preload.names.filter((n) => !n.includes('@')));
+      setAdhoc(target.preload.names.filter((n) => n.includes('@')));
+      setBodyDirty(true); // kész levél: sablon / 🎲 csak rákérdezés után írhatja felül
+      return;
+    }
     if (!target.topicId) return;
     const t = TOPIC_TEMPLATES.find((x) => x.id === target.topicId);
     if (t) applyTopic(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // teljes szövegű keresőindex a jobb oldali sablonpanelhez (cím + csoport + tárgy + törzs)
+  const topicIndex = useMemo(() => {
+    const c0 = { title: '', when: null, place: null, due: null };
+    return new Map(TOPIC_TEMPLATES.map((t) => [t.id, norm(`${t.label} ${t.group} ${t.subject(c0)} ${t.body(c0)}`)]));
   }, []);
 
   useEffect(() => {
@@ -478,7 +493,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                 <input value={tq} onChange={(e) => setTq(e.target.value)} placeholder="Keresés a sablonok között…" />
                 <div className="nm-topiclist">
                   {TOPIC_GROUPS.map((g) => {
-                    const items = TOPIC_TEMPLATES.filter((t) => t.group === g && (!tq.trim() || norm(`${t.label} ${t.group}`).includes(norm(tq))));
+                    const items = TOPIC_TEMPLATES.filter((t) => t.group === g && (!tq.trim() || (topicIndex.get(t.id) as string).includes(norm(tq))));
                     if (!items.length) return null;
                     return (
                       <div key={g}>

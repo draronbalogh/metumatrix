@@ -656,6 +656,97 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
     subject: (c) => `${or(c.title, '[téma]')}, ${or(c.due, '[dátum / határidő]')}`,
     body: (c) => `Kedves Kollégák!\n\nSzeretném a figyelmetekbe ajánlani a(z) ${or(c.title, '[téma]')}-t, amely a szakunk munkáját érinti. Röviden a lényeg: [1-2 mondatos leírás], a hozzá tartozó teendő pedig [teendő], határideje ${or(c.due, '[dátum]')}. Kérlek, jelezzétek, ha kérdésetek van, vagy ha valakit közvetlenül érint az ügy.\n\nKöszönöm az együttműködést!`,
   },
+  // a 121-140. tételek új sablonjai (tartalmi egyeztetés, átadás-átvétel, események)
+  {
+    id: 'tartalmi-egyeztetes', group: '2 · Oktatói kapcsolattartás', label: 'Átfogó tartalmi egyeztetés meghívó (körlevél)',
+    subject: (c) => `Meghívó: MD tartalmi átbeszélés, ${or(c.when, '[dátum]')}`,
+    body: (c) => `Kedves Kollégák!\n\nSzeretnék veletek közösen leülni egy átfogó egyeztetésre a következő szemeszter és tanév tartalmáról, hogy összehangoljuk a tananyagokat és megismerjük egymás elképzeléseit. A találkozó ${or(c.when, '[dátum] [időpont]')} között lesz${c.place ? ` (${nd(c.place)})` : ' [helyszín]'}. Aki nem tud egész nap ott lenni, egy-két órára is bekapcsolódhat, akár a kezdéskor, akár ebéd után.\n\nKérlek, ${or(c.due, '[dátum]')}-ig jelezzétek, hogy ott tudtok-e lenni. Köszönöm!`,
+  },
+  {
+    id: 'eloretervezes', group: '2 · Oktatói kapcsolattartás', label: 'Előretervezés: korábbi egyeztetés a jövőben (körlevél)',
+    subject: () => 'Tervezés: korábbi egyeztetés a jövőben',
+    body: () => `Kedves Kollégák!\n\nTöbb jelzést kaptam, hogy a fontosabb meetingeket és brainstormingokat érdemes lenne korábban egyeztetni, és ezt jogosnak tartom. A jövőben a kiemelt alkalmakat igyekszem jóval előre kiírni, hogy könnyebb legyen a részvételt összehangolni. Kérlek, ti is jelezzétek időben a fix elfoglaltságaitokat, hogy ezekhez tudjunk igazodni.\n\nKöszönöm a visszajelzéseket!`,
+  },
+  {
+    id: 'oraharmonizacio', group: '11 · Óratervezés / óralátogatás', label: 'Óra- és tananyag-harmonizáció (egyéni)',
+    subject: () => 'Óraharmonizáció: [tantárgy]',
+    body: () => `Szia [Név]!\n\nSzeretnék veled leülni egy egyéni egyeztetésre a(z) [tantárgy] tananyagáról, hogy jobban illeszkedjen a szak képzési mátrixához. Fontosnak tartom, hogy a tárgyaink szervesen kapcsolódjanak egymáshoz és a hallgatói igényekhez. Ahol közösen vagy egymáshoz közel oktatunk (pl. [terület]), ott az óraszintű összehangolás is sokat segít.\n\nJelezd, ha megfelel, és keresünk rá egy időpontot. Köszönöm!`,
+  },
+  {
+    id: 'zv-kovetelmenyek', group: '13 · Záróvizsga / opponencia', label: 'ZV-követelmények / showreel megosztása (körlevél)',
+    subject: () => 'Záróvizsga követelmények és showreel, [tanév]',
+    body: () => `Kedves Kollégák!\n\nMegosztom az aktuális záróvizsga-követelményeket és a showreel elvárásait, hogy egységesen tudjuk tájékoztatni a hallgatókat. A dokumentumot itt éritek el: [link / csatolmány]. Kérlek, nézzétek át, és a témavezetett hallgatóitokkal is osszátok meg időben, hogy a formai és tartalmi elvárások leadás előtt mindenkinek egyértelműek legyenek.\n\nHa kérdés van bármelyik ponthoz, jelezzétek. Köszönöm!`,
+  },
+  {
+    id: 'zv-elnok-helyettesites', group: '13 · Záróvizsga / opponencia', label: 'ZV-elnöki felkérés (helyettesítés)',
+    subject: (c) => `Záróvizsga-elnöki felkérés, ${or(c.when, '[dátum]')}`,
+    body: (c) => `Szia [Név]!\n\n${or(c.when, '[dátum] [időpont]')} között szeretnélek felkérni magam helyett a Záróvizsga Bizottság elnöki feladatára, mert [ok] miatt nem tudok jelen lenni. Bízom benne, hogy az elnöki-vezetői rutinoddal gördülékenyen koordinálod majd az adott napot. Jelezd, hogy el tudod-e vállalni, és amit igényelsz hozzá, azt előre megküldöm.\n\nElőre is köszönöm!`,
+  },
+  {
+    id: 'ertekelesi-dontes', group: '14 · Félévközben és záráskor', label: 'Értékelési döntés / bukás egyeztetése',
+    subject: () => 'Értékelési döntés: [hallgató], [tantárgy]',
+    body: () => `Szia [Név]!\n\nÁtnéztem a(z) [hallgató neve / Neptun-kód] ügyét, amit a hiányzások és a le nem adott feladatok miatt jeleztél. A körülmények alapján [támogatom a döntésedet / egyeztessünk még róla], mert [rövid indok]. Ha kell, utánajárok a hiányzó információknak, vagy egyeztetek a hallgatóval és az adminisztrációval.\n\nJelezz, ha bármi továbbit lépjek. Köszönöm!`,
+  },
+  {
+    id: 'esemeny-felhivas', group: '6 · Külső kapcsolatok', label: 'Esemény-felhívás: munkák beküldése (körlevél)',
+    subject: (c) => `${or(c.title, '[esemény]')}, felhívás: munkák beküldése`,
+    body: (c) => `Kedves Kollégák!\n\nA szak idén is tervez részt venni a(z) ${or(c.title, '[esemény]')}-en (${or(c.when, '[dátum]')}), ahol oktatói és hallgatói munkákat egyaránt várnak. Kérlek, gondoljátok át, mely projektek, diplomamunkák vagy saját alkotások illeszkednének a(z) [idei téma] tematikájához, és jelezzétek felém. A beküldési határidő ${or(c.due, '[dátum]')}.\n\nHa kérdés van a formátumról vagy a feltételekről, keressetek. Köszönöm!`,
+  },
+  {
+    id: 'munka-javaslat', group: '6 · Külső kapcsolatok', label: 'Konkrét munka javaslata eseményre',
+    subject: (c) => `${or(c.title, '[esemény]')}, javasolt munka: [cím]`,
+    body: (c) => `Szia [Név]!\n\nA(z) ${or(c.title, '[esemény]')}-re javasolnám [alkotó] "[munka címe]" című [munka típusa] munkáját, mert jól illeszkedik a kiállítás tematikájához ([rövid indok]). Jelezd, ha egyetértesz, vagy ha van más jelöltünk, amit érdemes mérlegelni.\n\nA beküldés előkészítésében szívesen segítek. Köszönöm!`,
+  },
+  {
+    id: 'kozossegi-feluletek', group: '9 · Kommunikáció / arculat', label: 'Szakos közösségi felületek megosztása (körlevél)',
+    subject: () => 'Média Design: Facebook-csoport és weboldal',
+    body: () => `Kedves Kollégák!\n\nAjánlom a figyelmetekbe a szak közösségi felületeit, ahol a jövőben is egyeztethetünk és megoszthatjuk a híreket. Facebook-csoport: [link], a formálódó weboldalunk: [link]. Kérlek, nézzetek rá a weboldalra, és küldjétek a javaslataitokat, hogy jobbá tegyük.\n\nKöszönöm!`,
+  },
+  {
+    id: 'atadas-koszonet', group: '10 · Belső / technikai', label: 'Átadott anyagok nyugtázása (átadás-átvétel)',
+    subject: () => 'Re: [dokumentum / standard neve]',
+    body: () => `Szia [Név]!\n\nKöszönöm a(z) [dokumentum / standard]-ot, sokat segít a szak folyamatainak átlátásában. Átnézem, és ha valahol pontosítás kell, jelzek. Jó tudni, hogy a korábbi szakvezetői tapasztalatodra támaszkodhatom az átállásnál.\n\nHa van olyan pont, amit érdemes közösen átbeszélni, kereslek egy időponttal.`,
+  },
+  {
+    id: 'standard-atvetel', group: '10 · Belső / technikai', label: 'Standard / szabályzat átvételének visszaigazolása',
+    subject: () => '[Standard / szabályzat], átvéve',
+    body: () => `Szia [Név]!\n\nMegkaptam és átnéztem a(z) [standard / követelmény / szabályzat]-ot. Beépítem a szak folyamataiba, és a következő tájékoztatóban a kollégák felé is kommunikálom. Ha időközben frissül, jelezd, hogy mindig a legaktuálisabb változattal dolgozzunk.\n\nKöszönöm!`,
+  },
+  {
+    id: 'korabbi-anyagok', group: '10 · Belső / technikai', label: 'Korábbi levelezés / anyagok kikérése',
+    subject: () => 'Korábbi anyagok: [téma]',
+    body: () => `Szia [Név]!\n\nKérnék tőled néhány korábbi levelet, illetve anyagot a(z) [téma] kapcsán, hogy egységes legyen a folytatás. Szeretném látni, korábban milyen formában és tartalommal ment ez a hallgatók / kollégák felé, hogy a bevált gyakorlatot vigyem tovább. Ha van összegyűjtött változat, az különösen sokat segít.\n\nKöszönöm!`,
+  },
+  {
+    id: 'esemeny-lemondas', group: '15 · Általános', label: 'Értekezlet / esemény lemondása (körlevél)',
+    subject: (c) => `Elmarad: ${or(c.title, '[esemény]')}, ${or(c.when, '[dátum]')}`,
+    body: (c) => `Kedves Kollégák!\n\nA(z) ${or(c.when, '[dátum]')}-ra tervezett ${or(c.title, '[egyeztetés]')} sajnos elmarad. Az új időponttal hamarosan jelentkezem, igyekszem olyat találni, amely a legtöbbeteknek megfelel. Ha addig van sürgős téma, írjatok nyugodtan, és e-mailben megbeszéljük.\n\nKöszönöm a megértést!`,
+  },
+  {
+    id: 'pontositas', group: '15 · Általános', label: 'Dátumelírás / pontosítás korábbi levélhez (körlevél)',
+    subject: () => 'Pontosítás, helyes időpont: [helyes dátum]',
+    body: () => `Kedves Kollégák!\n\nAz előző levelemben tévesen [téves dátum] szerepelt, helyesen [helyes dátum]. Minden más változatlanul érvényes. Kérlek, e szerint tervezzetek, és jelezzétek, ha emiatt bármi módosulna nálatok.\n\nKöszönöm!`,
+  },
+  {
+    id: 'felkeres-nyugtazas', group: '15 · Általános', label: 'Felkérés elfogadásának nyugtázása',
+    subject: () => 'Re: [felkérés tárgya]',
+    body: () => `Szia [Név]!\n\nKöszönöm, hogy elvállalod! Ahogy közeledik az időpont, megküldöm a szükséges részleteket és anyagokat. Ha addig bármi kérdésed van, keress nyugodtan.\n\nMég egyszer köszönöm!`,
+  },
+  {
+    id: 'esemeny-emlekezteto', group: '15 · Általános', label: 'Emlékeztető közelgő eseményre (körlevél)',
+    subject: (c) => `Emlékeztető: ${or(c.title, '[esemény]')}, ${or(c.when, '[dátum, időpont]')}`,
+    body: (c) => `Kedves Kollégák!\n\nRövid emlékeztető a közelgő ${or(c.title, '[esemény]')}-ről: ${or(c.when, '[dátum] [időpont]')}-kor${c.place ? ` (${nd(c.place)})` : ', [helyszín / online link]'}. Aki még nem jelezte a részvételét, kérlek, tegye meg ${or(c.due, '[dátum]')}-ig, hogy tudjuk tervezni a létszámot. Ha időközben változott valakinél a helyzet, jelezze nyugodtan.\n\nKöszönöm!`,
+  },
+  {
+    id: 'online-atteres', group: '15 · Általános', label: 'Egyeztetés online alternatívája (válasz)',
+    subject: () => 'Re: Egyeztetés, online opció',
+    body: (c) => `Szia [Név]!\n\nRendben, megoldjuk online is. A(z) ${or(c.when, '[dátum / idősáv]')} megfelel, vagy ha más időpont jobb, írd meg, és igazodom. Amint fixáltuk, küldök egy [Zoom / Meet] linket.\n\nKöszönöm!`,
+  },
+  {
+    id: 'lemondas-elfogadasa', group: '15 · Általános', label: 'Részvétel-lemondás elfogadása (válasz)',
+    subject: (c) => `Re: ${or(c.title, '[esemény]')}, lemondás`,
+    body: () => `Szia [Név]!\n\nKöszönöm a jelzést, megértem, és természetesen elfogadjuk a lemondást. Egy következő alkalommal szívesen dolgozunk együtt. Kérlek, keress velem egy időpontot egy rövid személyes vagy online egyeztetésre, hogy a fontosabb pontokat azért átvegyük.\n\nJó munkát a projektjeidhez!`,
+  },
 ];
 
 export const TOPIC_GROUPS: string[] = [...new Set(TOPIC_TEMPLATES.map((t) => t.group))];

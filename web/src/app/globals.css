@@ -911,26 +911,38 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
   .nm-outlook { padding: 7px 10px; font-size: .72rem; }
 }
 
-/* ============ Sablonok nezet (TopicsView) ============ */
+/* ============ Levelek nezet (TopicsView): ketpaneles sablontar + mentett levelek ============ */
 .tpv { padding: 18px 0 48px; }
 .tp-title { font-family: var(--ff-display); font-size: 1.3rem; margin: 0 0 4px; }
-.tp-count { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 7px; margin-left: 6px; border-radius: 11px; background: var(--brand); color: #fff; font-size: .72rem; font-weight: 800; vertical-align: 3px; }
-.tp-sub { max-width: 70ch; margin: 0 0 14px; color: var(--ink-2); font-size: .82rem; line-height: 1.5; }
-.tp-tools { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
-.tp-empty { color: var(--muted); font-size: .85rem; }
-.tp-group { margin-bottom: 20px; }
-.tp-gh { margin: 0 0 8px; padding: 4px 0 4px 10px; border-left: 4px solid var(--brand); font-size: .78rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: var(--brand-text); }
-.tp-gcount { font-weight: 700; color: var(--muted); margin-left: 4px; }
-.tp-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 8px; }
-.tp-card { border: 1px solid var(--line); border-radius: 10px; background: var(--card); overflow: hidden; }
-.tp-card.is-open { grid-column: 1 / -1; border-color: var(--brand); box-shadow: 0 2px 14px rgba(21, 23, 26, .08); }
-.tp-card-head { display: block; width: 100%; text-align: left; padding: 10px 12px; font-family: var(--ff); background: none; border: 0; cursor: pointer; }
-.tp-card-head:hover { background: var(--brand-100); }
-.tp-label { display: block; font-size: .84rem; font-weight: 700; color: var(--ink); }
-.tp-subj { display: block; margin-top: 3px; font-size: .7rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tp-body { margin: 0; padding: 4px 14px 12px; white-space: pre-wrap; font-family: var(--ff); font-size: .86rem; line-height: 1.55; color: var(--ink); border-top: 1px dashed var(--line); }
-.tp-actions { padding: 0 14px 14px; }
+.tp-sub { max-width: 78ch; margin: 0 0 12px; color: var(--ink-2); font-size: .82rem; line-height: 1.5; }
+.tp-tabs { margin-bottom: 12px; }
+.tp-split { display: grid; grid-template-columns: minmax(280px, 420px) minmax(0, 1fr); gap: 14px; align-items: start; }
+.tp-listcol { display: flex; flex-direction: column; min-width: 0; }
+.tp-grps { margin-bottom: 8px; }
+.tp-scroll { max-height: calc(100dvh - 350px); min-height: 300px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
+.tp-gh { position: sticky; top: 0; z-index: 1; padding: 6px 12px 5px; font-size: .64rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--brand-text); background: var(--paper); border-bottom: 1px solid var(--line); }
+.tp-item { display: block; width: 100%; text-align: left; padding: 9px 12px; background: none; border: 0; border-bottom: 1px solid var(--line); cursor: pointer; font-family: var(--ff); }
+.tp-item:hover { background: var(--brand-100); }
+.tp-item.is-on { background: var(--brand); }
+.tp-item.is-on .s, .tp-item.is-on .d { color: #fff; }
+.tp-item .s { display: block; font-size: .8rem; font-weight: 700; color: var(--ink); }
+.tp-item .d { display: block; margin-top: 2px; font-size: .68rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tp-empty { padding: 14px; color: var(--muted); font-size: .82rem; }
+.tp-preview { position: sticky; top: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 16px 18px; min-height: 300px; }
+.tp-back { display: none; margin-bottom: 10px; }
+.tp-pv-meta { font-size: .66rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--brand-text); }
+.tp-pv-title { margin: 4px 0 8px; font-family: var(--ff-display); font-size: 1.05rem; }
+.tp-pv-subj { font-size: .8rem; color: var(--ink-2); padding-bottom: 8px; border-bottom: 1px dashed var(--line); }
+.tp-pv-body { margin: 10px 0 14px; white-space: pre-wrap; font-family: var(--ff); font-size: .88rem; line-height: 1.55; color: var(--ink); }
+.tp-pv-hint { margin: 10px 0 0; font-size: .7rem; color: var(--muted); }
+.tp-pv-empty { display: grid; place-items: center; min-height: 260px; color: var(--muted); font-size: .84rem; text-align: center; padding: 20px; }
 @media (max-width: 720px) {
   .tpv { padding: 10px 0 40px; }
-  .tp-list { grid-template-columns: 1fr; }
+  .tp-split { grid-template-columns: 1fr; }
+  .tp-scroll { max-height: none; }
+  /* drill-in: a listáról az előnézet külön lapként nyílik, ← vissza gombbal */
+  .tp-split .tp-preview { display: none; }
+  .tp-split.is-detail .tp-preview { display: block; position: static; }
+  .tp-split.is-detail .tp-listcol { display: none; }
+  .tp-back { display: inline-block; }
 }

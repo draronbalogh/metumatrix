@@ -267,9 +267,29 @@ export default function CurriculumApp() {
     const steps = agendaRef.current.tasks.filter((t) => t.eventId === e.id).flatMap((t) => t.ideas).filter(Boolean);
     setNotify({ targetType: 'event', targetId: e.id, event: e, task: null, names: [e.owner, ...e.people].filter((n): n is string => !!n), steps, source: e.source ?? null });
   }, []);
-  // levélírás a Sablonok nézetből: kártya nélkül, a kiválasztott sablon előtöltve
+  // levélírás a Levelek nézetből: kártya nélkül, a kiválasztott sablon előtöltve
   const composeFromTopic = useCallback((t: TopicTemplate) => {
     setNotify({ targetType: null, targetId: null, task: null, event: null, names: [], steps: [], source: null, topicId: t.id });
+  }, []);
+  // mentett levél megnyitása a Levelek nézetből: ha megvan a kártyája, annak
+  // kontextusában (lépések, feladó, mentett levelek listája), különben önállóan
+  const openSavedLetter = useCallback((l: Letter) => {
+    const cur = agendaRef.current;
+    const preload = { subject: l.subject, body: l.body, names: l.names };
+    const t = l.targetType === 'task' ? cur.tasks.find((x) => x.id === l.targetId) : null;
+    const e = l.targetType === 'event' ? cur.events.find((x) => x.id === l.targetId) : null;
+    if (t) setNotify({ targetType: 'task', targetId: t.id, task: t, event: null, names: [], steps: t.ideas.filter(Boolean), source: t.source ?? null, preload });
+    else if (e) {
+      const steps = cur.tasks.filter((x) => x.eventId === e.id).flatMap((x) => x.ideas).filter(Boolean);
+      setNotify({ targetType: 'event', targetId: e.id, event: e, task: null, names: [], steps, source: e.source ?? null, preload });
+    } else setNotify({ targetType: null, targetId: null, task: null, event: null, names: [], steps: [], source: null, preload });
+  }, []);
+  // a mentett levél kártyájának címe a Levelek nézet listájához
+  const letterTargetTitle = useCallback((l: Letter): string | null => {
+    const cur = agendaRef.current;
+    if (l.targetType === 'task') return cur.tasks.find((x) => x.id === l.targetId)?.title ?? null;
+    if (l.targetType === 'event') return cur.events.find((x) => x.id === l.targetId)?.title ?? null;
+    return null;
   }, []);
   // mentett levelek kezelése (a levelek az agenda részei, az automentés viszi fájlba)
   const saveLetter = useCallback((l: Letter) => {
@@ -552,7 +572,7 @@ export default function CurriculumApp() {
             <button className={view === 'catalog' ? 'is-on' : ''} onClick={() => setView('catalog')}>▦ Katalógus</button>
             <button className={view === 'tasks' ? 'is-on' : ''} onClick={() => setView('tasks')}>☑ Feladatok</button>
             <button className={view === 'events' ? 'is-on' : ''} onClick={() => setView('events')}>▤ Események</button>
-            <button className={view === 'topics' ? 'is-on' : ''} onClick={() => setView('topics')}>✉ Sablonok</button>
+            <button className={view === 'topics' ? 'is-on' : ''} onClick={() => setView('topics')}>✉ Levelek</button>
           </div>
           {isCurr && (
           <div className="viewtoggle">
@@ -655,7 +675,7 @@ export default function CurriculumApp() {
               onNotify={notifyEvent}
             />
           ) : view === 'topics' ? (
-            <TopicsView onCompose={composeFromTopic} />
+            <TopicsView letters={agenda.letters || []} onCompose={composeFromTopic} onOpenLetter={openSavedLetter} targetTitle={letterTargetTitle} />
           ) : null}
         </div>
       </div>

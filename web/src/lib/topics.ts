@@ -69,7 +69,7 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
   {
     id: 'projekthet-terv', group: '4 · Projekthét', label: 'Programterv / táblázat kiküldése (körlevél)',
     subject: () => 'Őszi Projekthét, programterv',
-    body: (c) => `Kedves Kollégák!\n\nKüldöm az őszi Projekthét programtervét: [link / csatolmány]. Kérlek, nézzétek át a saját blokkotokat, és ${or(c.due, '[dátum]')}-ig jelezzétek a módosításokat.\n\nKöszönöm!`,
+    body: (c) => `Kedves Kollégák!\n\nKüldöm a(z) ${or(c.when, '[dátum]')} heti Projekthét programtervét és beosztását: [link / csatolmány]. Kérlek, nézzétek át a rátok osztott sávokat és termeket, és ${or(c.due, '[dátum]')}-ig jelezzétek, ha bárhol ütközést vagy hibát láttok. Fontos, hogy a hallgatók egységes tájékoztatást kapjanak, ezért örülök, ha a saját csoportotokkal is időben egyeztettek.\n\nHa bármi kérdés van, keressetek nyugodtan. Köszönöm!`,
   },
   {
     id: 'projekthet-komm', group: '4 · Projekthét', label: 'Kommunikáció / beosztás egyeztetése',
@@ -195,12 +195,12 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
   {
     id: 'tematika-egyeni', group: '1 · Tematikák és órarend', label: 'Tematika kitöltés, egyéni felhívás',
     subject: (c) => `Tantárgytematika kitöltése, határidő: ${or(c.due, '[dátum]')}`,
-    body: (c) => `Szia [Név]!\n\nKérlek, töltsd ki / frissítsd a(z) [tantárgy] tematikáját a Neptun felületén ${or(c.due, '[dátum]')}-ig. Ha kérdés van, szólj.\n\nKöszönöm!`,
+    body: (c) => `Szia [Név]!\n\nKérlek, töltsd ki, illetve frissítsd a(z) [tantárgy] tematikáját a Neptun felületén a következő félévre. Fontos, hogy a tanulási eredmények, a heti bontás és az értékelés módja is naprakész legyen, mert ezek alapján tájékozódnak a hallgatók. A leadási határidő ${or(c.due, '[dátum]')}, így van még idő átnézni és pontosítani.\n\nHa bármiben elakadsz, vagy segítség kell a felülethez, szólj nyugodtan, és megoldjuk. Köszönöm!`,
   },
   {
     id: 'szillabusz', group: '1 · Tematikák és órarend', label: 'Szillabusz leadási emlékeztető',
     subject: () => 'Szillabusz leadás, emlékeztető',
-    body: (c) => `Szia [Név]!\n\nEmlékeztetőül: a(z) [tantárgy] szillabuszát ${or(c.due, '[dátum]')}-ig várom. A sablont itt éred el: [link].\n\nKöszönöm!`,
+    body: (c) => `Szia [Név]!\n\nSzeretnélek emlékeztetni, hogy a(z) [tantárgy] szillabuszát ${or(c.due, '[dátum]')}-ig várom, hogy időben véglegesíteni tudjuk a féléves anyagokat. A sablont itt éred el: [link], így csak a tartalmat kell hozzáigazítanod. Kérlek, figyelj rá, hogy a követelmények és a pontozás egyértelmű legyen, mert erre a hallgatók gyakran visszakérdeznek.\n\nHa bármi kérdésed van, szólj, és segítek. Köszönöm!`,
   },
   {
     id: 'targykiosztas', group: '1 · Tematikák és órarend', label: 'Tárgykiosztás egyeztetése',
@@ -210,7 +210,7 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
   {
     id: 'orarend-egyeztetes', group: '1 · Tematikák és órarend', label: 'Órarendi sáv egyeztetése (egyéni)',
     subject: () => 'Órarend [félév], egyeztetés',
-    body: () => `Szia [Név]!\n\nKüldöm a tervezett órarendi sávodat: [nap, időpont, terem]. Kérlek, jelezz vissza, hogy megfelel-e, vagy van-e ütközés.\n\nKöszönöm!`,
+    body: (c) => `Szia [Név]!\n\nKészül a [félév] órarendje, ezért szeretném leegyeztetni Veled a sávjaidat. A jelenlegi terv szerint a(z) [tantárgy] [nap]-on [időpont]-kor lenne, [terem/online]. Kérlek, jelezz vissza ${or(c.due, '[dátum]')}-ig, hogy ez megfelel-e, vagy van-e olyan nap/idő, ami ütközik nálad.\n\nIgyekszem mindenkinek a lehető legjobb beosztást összehozni, ezért hálás vagyok, ha minél előbb visszajelzel. Köszönöm!`,
   },
   {
     id: 'orarend-utkozes', group: '1 · Tematikák és órarend', label: 'Órarendi ütközés, válasz',
@@ -220,12 +220,12 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
   {
     id: 'uj-oktato', group: '2 · Oktatói kapcsolattartás', label: 'Új oktató bemutatása (körlevél)',
     subject: () => 'Új kolléga: [Név] bemutatása',
-    body: () => `Kedves Kollégák!\n\nSzeretném bemutatni [Név]-t, aki [félév]-től a(z) [tantárgy]-t viszi nálunk. Kérlek, segítsétek a beilleszkedését.\n\nKöszönöm!`,
+    body: () => `Kedves Kollégák!\n\nNagy örömmel mutatom be [Név]-t, aki [félév]-től csatlakozik a Média Design szakhoz, és a(z) [tantárgy]-t viszi majd. [Név] [rövid szakmai háttér], így sokat tud hozzátenni a szak munkájához.\n\nKérlek, fogadjátok szeretettel, és segítsétek a beilleszkedését az első időszakban. Bízom benne, hogy hamar megismeritek egymást a közös munkában.`,
   },
   {
-    id: 'elerhetoseg-potlas', group: '2 · Oktatói kapcsolattartás', label: 'Elérhetőség pótlása (egyéni)',
-    subject: () => 'MD oktatói elérhetőségek, kérlek pótold',
-    body: () => `Szia [Név]!\n\nA szakos elérhetőségi listát frissítem. Kérlek, küldd el a telefonszámod és a preferált email-címed.\n\nKöszönöm!`,
+    id: 'elerhetoseg-potlas', group: '2 · Oktatói kapcsolattartás', label: 'Elérhetőségek bekérése (körlevél)',
+    subject: () => 'MD oktatók elérhetőségei, kérlek pótoljátok',
+    body: (c) => `Kedves Kollégák!\n\nFrissítem a szak oktatói elérhetőségi listáját, hogy a félév során gyorsan és pontosan tudjunk kommunikálni. Kérlek, küldjétek el a preferált email-címeteket és telefonszámotokat, illetve jelezzétek, ha valamelyik adat megváltozott. Ez különösen a szeptemberi kezdésnél lesz fontos, amikor sok gyors egyeztetés lesz.\n\nKöszönöm, hogy ${or(c.due, '[dátum]')}-ig visszajeleztek!`,
   },
   {
     id: 'konzultacios-idosav', group: '2 · Oktatói kapcsolattartás', label: 'Konzultációs idősávok bekérése',
@@ -235,7 +235,7 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
   {
     id: 'havi-hataridok', group: '2 · Oktatói kapcsolattartás', label: 'Havi határidő-összefoglaló (körlevél)',
     subject: () => '[Hónap] határidők, összefoglaló',
-    body: () => `Kedves Kollégák!\n\nRöviden a hónap teendői:\n1. [teendő]\n2. [teendő]\n3. [teendő]\n\nA határidők: [dátumok]. Köszönöm, hogy tartjátok!`,
+    body: () => `Kedves Kollégák!\n\nRöviden összefoglalom a hónap fő teendőit, hogy mindenki időben tudjon haladni:\n1. [teendő]\n2. [teendő]\n3. [teendő]\n\nA hozzájuk tartozó határidők: [dátumok]. Kérlek, jelezzetek, ha bárhol csúszás várható, hogy időben tudjunk reagálni. Köszönöm!`,
   },
   {
     id: 'felveteli-levelek', group: '3 · Pótfelvételi', label: 'Felvételi levelek (MED) kiküldése',
@@ -245,12 +245,12 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
   {
     id: 'projekthet-felkeres', group: '4 · Projekthét', label: 'Projekthét oktatói felkérés (egyéni)',
     subject: (c) => `Projekthét, ${or(c.when, '[dátum]')}, felkérés`,
-    body: (c) => `Szia [Név]!\n\nA(z) ${or(c.title, '[projekthét téma]')} projekthéten szeretnélek felkérni [szerep]-re (${or(c.when, '[dátum]')}). Belefér? A részleteket küldöm.\n\nKöszönöm!`,
+    body: (c) => `Szia [Név]!\n\nA(z) ${or(c.when, '[dátum]')} heti projekthéten szeretnélek felkérni, hogy [szerep/feladat] szerepben vegyél részt a(z) ${or(c.title, '[téma]')} témában. A projekthét célja, hogy a hallgatók intenzív, gyakorlati formában dolgozzanak együtt, és ehhez nagyon fontos a Te tapasztalatod. A tervezett beosztást és a részleteket hamarosan küldöm.\n\nKérlek, jelezz vissza ${or(c.due, '[dátum]')}-ig, hogy belefér-e az időbeosztásodba. Köszönöm!`,
   },
   {
     id: 'szemeszterkezdes', group: '8 · Hallgatói ügyek', label: 'Szemeszterkezdő tájékoztató (körlevél, hallgatók)',
     subject: () => 'Szemeszterkezdés, fontos tudnivalók',
-    body: (c) => `Kedves Hallgatók!\n\nA(z) [félév] ${or(c.when, '[dátum]')}-án indul. A legfontosabbak:\n1. [órarend]\n2. [regisztráció]\n3. [helyszínek]\n\nKérdés esetén írjatok!`,
+    body: (c) => `Kedves Hallgatók!\n\nKözeledik a(z) [félév] kezdete, ezért összeszedtem a legfontosabb tudnivalókat. Az órák ${or(c.when, '[dátum]')}-án indulnak a közzétett órarend szerint, amelyet itt értek el: [link]. Kérlek, figyeljetek a regisztrációs és tárgyfelvételi határidőkre, mert ezek [dátum]-kor lejárnak.\n\nHa bármi kérdésetek van a kezdéssel kapcsolatban, írjatok nyugodtan, és igyekszem gyorsan segíteni.`,
   },
   {
     id: 'szakdolgozati-temak', group: '13 · Záróvizsga / opponencia', label: 'Szakdolgozati témák bekérése (körlevél)',
@@ -260,12 +260,12 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
   {
     id: 'web-bio-bekeres', group: '9 · Kommunikáció / arculat', label: 'Web-bio bekérése (angol szöveg + fotó)',
     subject: () => 'Web-bio, angol szöveg kérése',
-    body: (c) => `Szia [Név]!\n\nA honlapra kérnék tőled egy rövid angol bemutatkozó szöveget (kb. [terjedelem]) és egy fotót ${or(c.due, '[dátum]')}-ig.\n\nKöszönöm!`,
+    body: (c) => `Szia [Név]!\n\nA nemzetközi hallgatók miatt a honlapra kérnék tőled egy rövid angol nyelvű bemutatkozó szöveget is, kb. [terjedelem] terjedelemben. Elég egy tömör, szakmai leírás rólad és az oktatott területeidről, hogy egységes legyen a felület. Ha megvan a magyar változat, abból is kiindulhatunk, csak jelezd.\n\nKérlek, ${or(c.due, '[dátum]')}-ig küldd el, hogy időben feltölthessük. Köszönöm!`,
   },
   {
     id: 'teremigeny', group: '10 · Belső / technikai', label: 'Teremigény egyeztetése',
     subject: () => 'Teremigény: [tantárgy], [időpont]',
-    body: () => `Szia [Név]!\n\nA(z) [tantárgy]-hoz [teremtípus]-ra lenne szükségem [nap, időpont]. Meg tudjátok oldani?\n\nKöszönöm!`,
+    body: () => `Szia [Név]!\n\nA(z) [tantárgy / esemény]-hez [teremtípus]-ra lenne szükségem [nap]-on [időpont]-kor, [létszám] főre. A gyakorlati jelleg miatt fontos lenne a(z) [technikai igény: projektor / gépterem / stúdió].\n\nKérlek, jelezd, hogy megoldható-e, vagy van-e helyette alternatíva. Köszönöm, hogy segítesz megtalálni a legjobb megoldást!`,
   },
   {
     id: 'szakvezetoi-anyagok', group: '10 · Belső / technikai', label: 'Szakvezetői anyagok kérése (HR)',
@@ -357,6 +357,67 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
     id: 'valaszthato-kurzus', group: '8 · Hallgatói ügyek', label: 'Új választható kurzus meghirdetése (körlevél, hallgatók)',
     subject: () => 'Új választható kurzus: [cím]',
     body: () => `Kedves Hallgatók!\n\n[Félév]-ben indul a(z) [kurzuscím] választható kurzus. Rövid leírás: [szöveg]. Jelentkezés: [mód, határidő].\n\nÉrdemes időben jelentkezni, a helyek száma korlátozott!`,
+  },
+  // a 6-7. rész (február-április) és a kibővített augusztusi rész új sablonjai
+  {
+    id: 'szakvezetes-atvetel', group: '2 · Oktatói kapcsolattartás', label: 'Szakvezetés átvétele, bejelentés (körlevél)',
+    subject: () => 'Változás: Média Design szakvezetés',
+    body: () => `Kedves Kollégák!\n\nNagyon köszönöm a bizalmat és a rám bízott feladatot! [Dátum]-tól én veszem át a Média Design alap- és mesterszak vezetését, és őszintén örülök, hogy együtt építhetjük tovább a szakot. Köszönöm [Név] eddigi értékteremtő munkáját, amelyre a jövőben is támaszkodni szeretnék.\n\nSzámítok Rátok a közös fejlesztésekben, és bízom benne, hogy a következő tanévben még erősebbé tesszük a Média Designt.`,
+  },
+  {
+    id: 'bemutatkozas', group: '2 · Oktatói kapcsolattartás', label: 'Bemutatkozás az oktatói karnak (körlevél)',
+    subject: () => 'Bemutatkozás, Média Design szak',
+    body: () => `Kedves Kollégák!\n\n[Dátum]-tól szakvezetőként dolgozom a Média Design szakon, és szeretnék röviden bemutatkozni azoknak, akikkel eddig még nem volt alkalmunk együtt dolgozni. Több éve oktatok a tanszéken, elsősorban [terület] területén, és nagy örömmel veszem át ezt a feladatot.\n\nAz a célom, hogy nyitott, jól szervezett és támogató környezetben dolgozzunk együtt, ezért bármilyen kérdéssel, ötlettel vagy jelzéssel nyugodtan kereshettek. A közeljövőben egyeztetünk az induló félév részleteiről is.`,
+  },
+  {
+    id: 'felev-elokeszites', group: '2 · Oktatói kapcsolattartás', label: 'Félév-előkészítés indítása (körlevél)',
+    subject: () => 'Őszi félév előkészítése, első teendők',
+    body: () => `Kedves Kollégák!\n\nLassan indul a tanév, ezért szeretném időben elindítani a félév előkészítését. A legfontosabb közelgő feladatok: a tantárgytematikák frissítése, az órarendi igények egyeztetése és a szillabuszok leadása. Kérlek, nézzétek át a hozzátok tartozó tárgyakat, és jelezzétek, ha bármiben változást terveztek.\n\nA pontos határidőket a következő levélben küldöm, de aki előre szeretne haladni, nyugodtan kezdjen bele. Köszönöm!`,
+  },
+  {
+    id: 'web-bio-magyar', group: '9 · Kommunikáció / arculat', label: 'Web-bio bekérése (magyar szöveg + fotó)',
+    subject: () => 'Honlap: bemutatkozó szöveg és fotó kérése',
+    body: (c) => `Szia [Név]!\n\nA szak honlapjára frissítjük az oktatói bemutatkozásokat, és ehhez kérnék tőled egy rövid, kb. [terjedelem] hosszú szöveget magadról és a szakmai hátteredről. Emellett jó lenne egy jó minőségű portréfotó is, amit használhatunk a profilodhoz.\n\nKérlek, ${or(c.due, '[dátum]')}-ig küldd el mindkettőt, hogy egyszerre tudjuk feltölteni az anyagokat. Ha szeretnéd, szívesen átnézem a szöveget, mielőtt felkerül. Köszönöm!`,
+  },
+  {
+    id: 'gyors-visszaigazolas', group: '15 · Általános', label: 'Gyors visszaigazolás / rövid válasz',
+    subject: () => 'Re: [eredeti tárgy]',
+    body: () => `Szia [Név]!\n\nKöszönöm, hogy írtál, megkaptam a(z) [anyag/kérdés]-t. [Rendben, így jó / átnéztem, és: megjegyzés.] A következő lépés: [teendő / dátum].\n\nHa addig bármi kell, szólj nyugodtan. Köszönöm a gyors reakciót!`,
+  },
+  {
+    id: 'orakezdes', group: '8 · Hallgatói ügyek', label: 'Órakezdés-emlékeztető (körlevél, hallgatók)',
+    subject: () => 'Órák indulása, emlékeztető',
+    body: (c) => `Kedves Hallgatók!\n\nAz órák ${or(c.when, '[dátum]')}-án indulnak a megszokott rend szerint. Az órarendet itt éritek el: [link]. Az első héten minden órán részvételt várunk, ott hangzanak el a féléves követelmények.\n\nJó félévet mindenkinek!`,
+  },
+  {
+    id: 'szakmai-gyakorlat', group: '8 · Hallgatói ügyek', label: 'Szakmai gyakorlat egyeztetése',
+    subject: () => 'Szakmai gyakorlat: [hallgató / cég]',
+    body: () => `Szia [Név]!\n\n[Hallgató] szakmai gyakorlatáról egyeztetnék: [cég], [időszak]. Kérlek, [teendő / jóváhagyás]. Ha a céges oldalról kell még dokumentum, azt is jelezd.\n\nKöszönöm!`,
+  },
+  {
+    id: 'szakdolgozat-leadas', group: '13 · Záróvizsga / opponencia', label: 'Szakdolgozat-leadási emlékeztető (körlevél)',
+    subject: (c) => `Szakdolgozat leadás, határidő: ${or(c.due, '[dátum]')}`,
+    body: (c) => `Kedves Kollégák!\n\nEmlékeztető: a szakdolgozatok leadási határideje ${or(c.due, '[dátum]')}. Kérlek, sürgessétek a témavezetett hallgatóitokat, és jelezzétek, ha valakinél csúszás várható, hogy időben tudjunk lépni.\n\nKöszönöm!`,
+  },
+  {
+    id: 'konzultacio-statusz', group: '13 · Záróvizsga / opponencia', label: 'Konzultációs státusz bekérése',
+    subject: () => 'Szakdolgozati konzultáció, státusz',
+    body: (c) => `Szia [Név]!\n\nHogy állnak a témavezetett hallgatóid a szakdolgozattal? Van, akinél beavatkozás kell ${or(c.due, '[dátum]')} előtt? Egy rövid, névsoros státusz is sokat segít.\n\nKöszönöm!`,
+  },
+  {
+    id: 'workshop-felkeres', group: '6 · Külső kapcsolatok', label: 'Workshop felkérés',
+    subject: (c) => `Workshop felkérés: ${or(c.title, '[téma]')}, ${or(c.when, '[dátum]')}`,
+    body: (c) => `Kedves [Név]!\n\nEgy [időtartam]-es workshopra kérnélek fel ${or(c.title, '[téma]')} témában ${or(c.when, '[dátum]')} körül a Média Design szakon. A hallgatók nagyon sokat profitálnak a gyakorlati, kézzelfogható feladatokból.\n\nBelefér? A részleteket egyeztethetjük. Köszönöm!`,
+  },
+  {
+    id: 'hallgatoi-bemutato', group: '6 · Külső kapcsolatok', label: 'Hallgatói bemutató / kiállítás előkészítése (körlevél)',
+    subject: (c) => `Hallgatói bemutató: ${or(c.title, '[esemény]')}, ${or(c.when, '[dátum]')}`,
+    body: (c) => `Kedves Kollégák!\n\nA(z) ${or(c.title, '[esemény]')} ${or(c.when, '[dátum]')}-án lesz${c.place ? ` (${nd(c.place)})` : ''}. Kérlek, készítsétek elő a hallgatói munkákat, és jelezzétek a technikai igényeket (vetítés, hang, installáció) ${or(c.due, '[határidő]')}-ig.\n\nKöszönöm!`,
+  },
+  {
+    id: 'diplomabemutato', group: '13 · Záróvizsga / opponencia', label: 'Diplomabemutató szervezése (körlevél)',
+    subject: (c) => `Diplomabemutató, ${or(c.when, '[dátum]')}`,
+    body: (c) => `Kedves Kollégák!\n\nA diplomamunkák bemutatója ${or(c.when, '[dátum]')}-án lesz${c.place ? ` (${nd(c.place)})` : ' [helyszín]'}. Kérlek, készítsétek fel a hallgatókat, és jelezzétek a technikai igényeket ${or(c.due, '[határidő]')}-ig.\n\nKöszönöm!`,
   },
 ];
 

@@ -60,7 +60,7 @@ const saveUi = (kind: LetterKind, sigOn: boolean): void => {
 const norm = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 // az automatikus naptár-hozzárendelés NEM köthet általános folyamat-szavakra
 // (egyeztetés, emlékeztető...), csak megkülönböztető nevekre (Erasmus, Educatio...)
-const LINK_STOP = new Set(['egyeztetes', 'egyeztetese', 'emlekezteto', 'meghivo', 'felkeres', 'felkerese', 'korlevel', 'hatarido', 'hataridok', 'tajekoztato', 'osszefoglalo', 'szervezes', 'szervezese', 'beosztas', 'bekeres', 'bekerese', 'megbeszeles', 'visszajelzes', 'visszaigazolas', 'jovahagyas', 'elokeszites', 'elojelzes', 'kezeles', 'kezelese', 'valasz', 'kerdes', 'altalanos', 'hallgato', 'hallgatoi', 'hallgatok', 'hallgatoknak', 'oktato', 'oktatoi', 'oktatok', 'oktatoknak', 'kollega', 'kollegak', 'idopont', 'idozites', 'tudnivalok', 'reszletek', 'egyeni', 'ertekezlet', 'ertekeles', 'ertekelesi', 'leadas', 'leadasi', 'frissites', 'kikuldese', 'veglegesites', 'megosztasa', 'tovabbitasa', 'osszehivasa', 'surgetese', 'nyugtazasa', 'lemondasa', 'elfogadasa', 'esemeny', 'esemenyek', 'esemenyre', 'esemenyekre', 'kozelgo', 'rendezveny', 'rendezvenyek', 'elokeszitese']);
+const LINK_STOP = new Set(['egyeztetes', 'egyeztetese', 'emlekezteto', 'meghivo', 'felkeres', 'felkerese', 'korlevel', 'hatarido', 'hataridok', 'tajekoztato', 'osszefoglalo', 'szervezes', 'szervezese', 'beosztas', 'bekeres', 'bekerese', 'megbeszeles', 'visszajelzes', 'visszaigazolas', 'jovahagyas', 'elokeszites', 'elojelzes', 'kezeles', 'kezelese', 'valasz', 'kerdes', 'altalanos', 'hallgato', 'hallgatoi', 'hallgatok', 'hallgatoknak', 'oktato', 'oktatoi', 'oktatok', 'oktatoknak', 'kollega', 'kollegak', 'idopont', 'idozites', 'tudnivalok', 'reszletek', 'egyeni', 'ertekezlet', 'ertekeles', 'ertekelesi', 'leadas', 'leadasi', 'frissites', 'kikuldese', 'veglegesites', 'megosztasa', 'tovabbitasa', 'osszehivasa', 'surgetese', 'nyugtazasa', 'lemondasa', 'elfogadasa', 'esemeny', 'esemenyek', 'esemenyre', 'esemenyekre', 'kozelgo', 'rendezveny', 'rendezvenyek', 'elokeszitese', 'reszvetel', 'reszvetele', 'reszvetelt']);
 
 // Levél-készítő: sablonból generált szöveg + 3 numerikus másolás-gomb (Outlookba illesztéshez).
 // A küldés (Brevo/SMTP) opcionális — csak akkor jelenik meg, ha a szerveren be van állítva.
@@ -100,6 +100,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const effEvent = useMemo(() => (ctxSel.startsWith('e:') ? (ctxEvents ?? []).find((e) => e.id === ctxSel.slice(2)) ?? null : null), [ctxSel, ctxEvents]);
   const effTask = useMemo(() => (ctxSel.startsWith('t:') ? (ctxTasks ?? []).find((t) => t.id === ctxSel.slice(2)) ?? null : null), [ctxSel, ctxTasks]);
   const lastTopicRef = useRef<TopicTemplate | null>(null); // az utoljára betöltött sablon (újratöltéshez)
+  const [linkSuggestion, setLinkSuggestion] = useState<{ sel: string; title: string } | null>(null); // névegyezéses JAVASLAT — csak gombbal rögzül
   const [activeTopic, setActiveTopic] = useState<TopicTemplate | null>(null); // ugyanez a felületnek
   const typedRef = useRef(false); // írt-e bele kézzel — csak akkor kérdezünk rá a felülírásra
 
@@ -119,14 +120,17 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       if (ev) { setCtxSel(`e:${ev.id}`); evStored = true; }
       else if (tk) { setCtxSel(`t:${tk.id}`); evStored = true; }
     }
-    // 2) névegyezés csak javaslatként, első alkalommal — és ha talál, rögzítjük UID szerint
+    // 2) névegyezés: SOHA nem kapcsol magától — csak javaslatot tesz, amit egy
+    // gombnyomás rögzít (UID szerint); enélkül a sablon kapcsolat nélkül töltődik
+    let suggestion: { sel: string; title: string } | null = null;
     if (!ev && !tk) {
       const toks = [...t.id.split('-'), ...t.label.split(/[^\wáéíóöőúüűÁÉÍÓÖŐÚÜŰ]+/)].map(norm).filter((w) => w.length >= 6 && !LINK_STOP.has(w));
       const evs = (ctxEvents ?? []).filter((e) => toks.some((w) => norm(e.title).includes(w)));
       const tks = (ctxTasks ?? []).filter((x) => toks.some((w) => norm(x.title).includes(w)));
-      if (evs.length === 1) { ev = evs[0]; setCtxSel(`e:${evs[0].id}`); }
-      else if (evs.length === 0 && tks.length === 1) { tk = tks[0]; setCtxSel(`t:${tks[0].id}`); }
+      if (evs.length === 1) suggestion = { sel: `e:${evs[0].id}`, title: evs[0].title };
+      else if (evs.length === 0 && tks.length === 1) suggestion = { sel: `t:${tks[0].id}`, title: tks[0].title };
     }
+    setLinkSuggestion(suggestion);
     // feladathoz kötött levélnél a feladat SZÜLŐ-eseményéből jön az időpont és a helyszín
     if (!ev && tk?.eventId) ev = (ctxEvents ?? []).find((e) => e.id === tk.eventId) ?? null;
     const ctx = {
@@ -159,7 +163,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     setBodyDirty(true);
     const linked = ev ?? tk;
     const tipp = !linked && !target.event && !target.task && ((ctxEvents?.length ?? 0) + (ctxTasks?.length ?? 0)) > 0
-      ? ' Nincs naptári találat: fent, a Kapcsolt naptári tételnél húzhatod be a dátumokat.' : '';
+      ? (suggestion ? ` Javaslat: kapcsolható a(z) „${suggestion.title}" tételhez — a választó alatt egy gombbal rögzítheted.` : ' Nincs naptári találat: fent, a Kapcsolt naptári tételnél húzhatod be a dátumokat.') : '';
     setResult(`✓ Sablon betöltve: ${t.label}.${linked && !target.event && !target.task ? ` Kapcsolt naptári tétel: ${linked.title}${evStored ? ' (rögzített kapcsolat)' : ''}.` : ''}${tipp} Csak a maradék [szögletes] mezőt töltsd ki.`);
   };
 
@@ -542,6 +546,14 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                   </optgroup>
                 )}
               </select>
+              {linkSuggestion && !ctxSel && (
+                <div className="nm-groups">
+                  <button type="button" className="chip" title="A javasolt naptári tétel rögzítése ehhez a sablonhoz (azonosító szerint, véglegesen)"
+                    onClick={() => { setCtxSel(linkSuggestion.sel); if (activeTopic) onLinkTopic?.(activeTopic.id, linkSuggestion.sel); setLinkSuggestion(null); }}>
+                    ⚲ Javaslat: {linkSuggestion.title} — kapcsolás
+                  </button>
+                </div>
+              )}
             </div>
           )}
           <div className="field full">

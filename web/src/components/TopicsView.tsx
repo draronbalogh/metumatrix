@@ -48,6 +48,12 @@ export default function TopicsView({ letters, composer, onUseTopic, onOpenLetter
     if (tab === 'levelek' && lList.length && !lList.some((l) => l.id === selL)) setSelL(lList[0].id);
   }, [tab, tList, lList, selT, selL]);
 
+  // közepes szélességen (721-1180px) az előnézet-oszlop rejtett: ilyenkor a
+  // lista-kattintás azonnal a szerkesztőbe tölti a kiválasztott elemet
+  const noPreview = () => typeof window !== 'undefined' && window.matchMedia('(min-width: 721px) and (max-width: 1180px)').matches;
+  const pickT = (t: TopicTemplate) => { setSelT(t.id); setMobileDetail(true); if (noPreview()) onUseTopic(t); };
+  const pickL = (l: Letter) => { setSelL(l.id); setMobileDetail(true); if (noPreview()) onOpenLetter(l); };
+
   const curT = TOPIC_TEMPLATES.find((t) => t.id === selT) ?? null;
   const curL = letters.find((l) => l.id === selL) ?? null;
   const fmtDate = (iso: string) => iso.slice(0, 16).replace('T', ' ');
@@ -89,7 +95,7 @@ export default function TopicsView({ letters, composer, onUseTopic, onOpenLetter
                       <div className="tp-gh">{g}</div>
                       {items.map((t) => (
                         <button key={t.id} type="button" aria-pressed={selT === t.id}
-                          className={`tp-item${selT === t.id ? ' is-on' : ''}`} onClick={() => { setSelT(t.id); setMobileDetail(true); }}>
+                          className={`tp-item${selT === t.id ? ' is-on' : ''}`} onClick={() => pickT(t)}>
                           <span className="s">{t.label}</span>
                           <span className="d">{autoFill(t.subject(CTX))}</span>
                         </button>
@@ -103,7 +109,7 @@ export default function TopicsView({ letters, composer, onUseTopic, onOpenLetter
                 {lList.length === 0 && <p className="tp-empty">{letters.length ? 'Nincs találat.' : 'Még nincs mentett levél. A szerkesztő 💾 Levél mentése gombja teszi ide őket.'}</p>}
                 {lList.map((l) => (
                   <button key={l.id} type="button" aria-pressed={selL === l.id}
-                    className={`tp-item${selL === l.id ? ' is-on' : ''}`} onClick={() => { setSelL(l.id); setMobileDetail(true); }}>
+                    className={`tp-item${selL === l.id ? ' is-on' : ''}`} onClick={() => pickL(l)}>
                     <span className="s">{l.subject || '(tárgy nélkül)'}</span>
                     <span className="d">{fmtDate(l.createdAt)} · {lKind(l)}{targetTitle(l) ? `: ${targetTitle(l)}` : ''} · {l.names.length} címzett</span>
                   </button>

@@ -316,7 +316,9 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
-    if (topicReq && confirmIfDirty()) applyTopic(topicReq.t);
+    if (!topicReq) return;
+    if (typedRef.current && !confirm('A kézi módosításaid elvesznek. Betöltsem az új sablont?')) return;
+    applyTopic(topicReq.t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topicReq]);
   useEffect(() => {
@@ -542,7 +544,8 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             <select value="" onChange={(e) => {
               const t = TOPIC_TEMPLATES.find((x) => x.id === e.target.value);
               e.target.value = '';
-              if (!t || !confirmIfDirty()) return;
+              if (!t) return;
+              if (typedRef.current && !confirm('A kézi módosításaid elvesznek. Betöltsem az új sablont?')) return;
               applyTopic(t);
             }}>
               <option value="">Válassz témasablont…</option>
@@ -617,7 +620,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                         <div className="nm-tgh">{g}</div>
                         {items.map((t) => (
                           <button key={t.id} type="button" className="nm-titem" title={`Tárgy: ${t.subject({ title: '', when: null, place: null, due: null })}`}
-                            onClick={() => { if (confirmIfDirty()) applyTopic(t); }}>{t.label}</button>
+                            onClick={() => { if (typedRef.current && !confirm('A kézi módosításaid elvesznek. Betöltsem az új sablont?')) return; applyTopic(t); }}>{t.label}</button>
                         ))}
                       </div>
                     );

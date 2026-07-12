@@ -112,10 +112,11 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline 
     });
   };
 
-  // státusz-szintű szűrés: főállású / óraadó / volt-külsős, ill. hallgatói szerepek
+  // státusz-szintű szűrés: a főállású / óraadó CSAK aktuális (tantervi) oktatót mutat,
+  // a régiek kizárólag a volt/külsős körben jelennek meg (bármi is a státusz-címkéjük)
   const tStat = (r: Row): boolean =>
-    psec === 'Tf' ? r.status === 'főállású'
-    : psec === 'To' ? r.status === 'óraadó'
+    psec === 'Tf' ? r.status === 'főállású' && teacherNames.includes(r.name)
+    : psec === 'To' ? r.status === 'óraadó' && teacherNames.includes(r.name)
     : psec === 'Tv' ? !teacherNames.includes(r.name)
     : true;
   const sStat = (r: Row): boolean => (H_STAT[psec] ? r.status === H_STAT[psec] : true);

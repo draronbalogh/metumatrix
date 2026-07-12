@@ -630,7 +630,10 @@ export default function CurriculumApp() {
             <button className={`editonly${view === 'docs' ? ' is-on' : ''}`} title="Belső útmutatók: Zoom, oktatói segédletek, tréning — csak szerkesztő módban"
               onClick={() => { if (!canEdit) return; setView('docs'); }}>📚 Segédletek</button>
           </div>
-          <input className="search search--corner" placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : view === 'people' ? 'Keresés a névjegyzékben…' : view === 'orarend' ? 'Keresés az órarendben…' : view === 'it' ? 'Keresés szoftverre, teremre…' : view === 'docs' ? 'Keresés a segédletekben…' : view === 'topics' ? 'Keresés a sablonokban és levelekben…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />
+          <span className="search-wrap">
+            <input className="search search--corner" placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : view === 'people' ? 'Keresés a névjegyzékben…' : view === 'orarend' ? 'Keresés az órarendben…' : view === 'it' ? 'Keresés szoftverre, teremre…' : view === 'docs' ? 'Keresés a segédletekben…' : view === 'topics' ? 'Keresés a sablonokban és levelekben…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />
+            {q && <button type="button" className="search-clear" title="Keresés törlése" onClick={() => setQ('')}>✕</button>}
+          </span>
           <div className="toolbar-break" />
           {isCurr && (
           <div className="viewtoggle">

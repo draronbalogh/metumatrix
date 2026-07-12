@@ -12,16 +12,16 @@ export interface Person {
 }
 
 // Választható státusz-címkék — ezekből lesznek a levél-címzett gyorskörök.
-export const TEACHER_STATUSES = ['főállású', 'óraadó'] as const;
+export const TEACHER_STATUSES = ['főállású', 'óraadó', 'volt/külsős'] as const;
 export const STUDENT_STATUSES = ['szervező', 'nagykövet', 'képviselő', 'demonstrátor'] as const;
 
-// Volt / külsős oktató-kontaktok: a tanár-listában vannak, de a tantervben (aktuális
-// oktatói kar) már nem szerepelnek — külön címzett-körként kezeljük őket.
+// Volt / külsős oktató-kontaktok: a Névjegyzékben 'volt/külsős'-re CÍMKÉZETTEK, plusz
+// tartalékként a címkézetlen, a tantervben már nem szereplő kontaktok (ne tűnjön el senki).
 export const formerTeacherNames = (teacherNames: string[], db: PeopleDB): string[] =>
-  db.teachers.filter((p) => !teacherNames.includes(p.name)).map((p) => p.name);
-// Aktuális oktatók adott státusszal (főállású / óraadó — a Névjegyzékben címkézhető).
-export const teacherStatusNames = (teacherNames: string[], db: PeopleDB, status: string): string[] =>
-  teacherNames.filter((n) => db.teachers.find((p) => p.name === n)?.status === status);
+  db.teachers.filter((p) => p.status === 'volt/külsős' || (!p.status && !teacherNames.includes(p.name))).map((p) => p.name);
+// Oktatók adott státusszal — a Névjegyzék-adatbázis címkéje az EGYETLEN forrás.
+export const teacherStatusNames = (db: PeopleDB, status: string): string[] =>
+  db.teachers.filter((p) => p.status === status).map((p) => p.name);
 // Adott státuszú hallgatók (szervező / nagykövet / képviselő / demonstrátor).
 export const studentStatusNames = (db: PeopleDB, status: string): string[] =>
   db.students.filter((p) => p.status === status).map((p) => p.name);
@@ -136,7 +136,7 @@ export const emailOf = (db: PeopleDB, name: string): string | null => {
 export const buildRoster = (teacherNames: string[], db: PeopleDB): RosterEntry[] => [
   ...teacherNames.map((name) => ({ name, kind: 'T' as const })),
   ...formerTeacherNames(teacherNames, db)
-    .filter((name) => !db.alumni.some((a) => a.name === name)) // aki alumniként már ott van, nem duplázzuk
+    .filter((name) => !teacherNames.includes(name) && !db.alumni.some((a) => a.name === name)) // se tantervi, se alumni duplikátum
     .map((name) => ({ name, kind: 'T' as const })),
   ...db.students.map((s) => ({ name: s.name, kind: 'H' as const })),
   ...db.institution.map((s) => ({ name: s.name, kind: 'I' as const })),

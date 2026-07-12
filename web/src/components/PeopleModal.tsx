@@ -112,12 +112,12 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline 
     });
   };
 
-  // státusz-szintű szűrés: a főállású / óraadó CSAK aktuális (tantervi) oktatót mutat,
-  // a régiek kizárólag a volt/külsős körben jelennek meg (bármi is a státusz-címkéjük)
+  // státusz-szintű szűrés: a Névjegyzék CÍMKÉJE az egyetlen forrás (a volt/külsős is
+  // beállítható címke; tartalékként a címkézetlen, nem-tantervi kontakt is volt-nak számít)
   const tStat = (r: Row): boolean =>
-    psec === 'Tf' ? r.status === 'főállású' && teacherNames.includes(r.name)
-    : psec === 'To' ? r.status === 'óraadó' && teacherNames.includes(r.name)
-    : psec === 'Tv' ? !teacherNames.includes(r.name)
+    psec === 'Tf' ? r.status === 'főállású'
+    : psec === 'To' ? r.status === 'óraadó'
+    : psec === 'Tv' ? (r.status === 'volt/külsős' || (!r.status && !teacherNames.includes(r.name)))
     : true;
   const sStat = (r: Row): boolean => (H_STAT[psec] ? r.status === H_STAT[psec] : true);
   const tVisible = teachers.map((r, i) => ({ r, i })).filter(({ r }) => rowMatch(r, pq) && tStat(r));

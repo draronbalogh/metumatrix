@@ -265,8 +265,8 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   // státusz-szintű szűrés a névsorban (főállású / óraadó / h-szervező stb.)
   const [statusFilter, setStatusFilter] = useState('');
   const statusSets = useMemo<Record<string, Set<string>>>(() => ({
-    'T:főállású': new Set(teacherStatusNames(teacherNames, db, 'főállású')),
-    'T:óraadó': new Set(teacherStatusNames(teacherNames, db, 'óraadó')),
+    'T:főállású': new Set(teacherStatusNames(db, 'főállású')),
+    'T:óraadó': new Set(teacherStatusNames(db, 'óraadó')),
     'T:volt/külsős': new Set(formerTeacherNames(teacherNames, db)),
     'H:szervező': new Set(studentStatusNames(db, 'szervező')),
     'H:nagykövet': new Set(studentStatusNames(db, 'nagykövet')),
@@ -470,9 +470,9 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                   onClick={() => { setSelected([...new Set(target.names)]); setAdhoc([]); }}>Résztvevők</button>
                 {([
                   { label: 'Aktuális oktatók', names: teacherNames, hint: 'A tantervben szereplő jelenlegi oktatói kar' },
-                  { label: 'Főállású oktatók', names: teacherStatusNames(teacherNames, db, 'főállású'), hint: 'A Névjegyzékben "főállású" státuszúra címkézett aktuális oktatók' },
-                  { label: 'Óraadók', names: teacherStatusNames(teacherNames, db, 'óraadó'), hint: 'A Névjegyzékben "óraadó" státuszúra címkézett aktuális oktatók' },
-                  { label: 'Volt / külsős oktatók', names: formerTeacherNames(teacherNames, db), hint: 'Oktatói kontaktok, akik az aktuális tantervben már nem szerepelnek' },
+                  { label: 'Főállású oktatók', names: teacherStatusNames(db, 'főállású'), hint: 'A Névjegyzékben főállásúra címkézett oktatók' },
+                  { label: 'Óraadók', names: teacherStatusNames(db, 'óraadó'), hint: 'A Névjegyzékben óraadóra címkézett oktatók' },
+                  { label: 'Volt / külsős oktatók', names: formerTeacherNames(teacherNames, db), hint: 'A Névjegyzékben volt/külsősre címkézett oktató-kontaktok' },
                   { label: 'Minden hallgató', names: db.students.map((p) => p.name), hint: 'A teljes hallgatói lista' },
                   { label: 'Hallgatói szervezők (mind)', names: studentOrganizerNames(db), hint: 'Szervező + nagykövet + képviselő státuszú hallgatók együtt' },
                   { label: 'H · szervezők', names: studentStatusNames(db, 'szervező'), hint: 'Szervező státuszú hallgatók' },

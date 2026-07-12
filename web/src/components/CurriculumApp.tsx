@@ -18,7 +18,7 @@ import TopicsView from './TopicsView';
 import OrarendView from './OrarendView';
 import { TopicTemplate } from '@/lib/topics';
 import type { Handlers, Filter, View, Prog } from '@/lib/buildGraph';
-import { getEditKey, setEditKey, editHeaders } from '@/lib/editkey';
+import { editHeaders } from '@/lib/editkey';
 import { instrList } from '@/lib/buildGraph';
 import type { Persist } from './MapView';
 
@@ -127,19 +127,11 @@ export default function CurriculumApp() {
     document.documentElement.dataset.theme = theme;
     try { localStorage.setItem(THEME_KEY, theme); } catch { /* ignore */ }
   }, [theme]);
-  // Szerkesztési kulcs (bemutató mód): a ?admin=<kulcs> eltárolja az eszközön (és a
-  // címsorból azonnal eltűnik), a ?admin=ki törli. Ezután a szerverrel ellenőrizzük:
-  // ha az EDIT_KEY be van állítva és nincs (jó) kulcsunk, az app csak-olvasásra vált.
+  // Admin / megtekintő mód: KIZÁRÓLAG az URL dönt. ?a=<kulcs> érvényes értékkel →
+  // admin mód; hiányzó vagy rossz érték → megtekintő mód. Nincs tárolás sehol —
+  // a korábbi localStorage-kulcsot takarításképp töröljük is.
   useEffect(() => {
-    try {
-      const u = new URL(window.location.href);
-      const a = u.searchParams.get('admin');
-      if (a) {
-        setEditKey(a === 'ki' ? null : a);
-        u.searchParams.delete('admin');
-        window.history.replaceState(null, '', u.toString());
-      }
-    } catch { /* ignore */ }
+    try { localStorage.removeItem('mm-edit-key'); } catch { /* ignore */ }
     fetch('/api/auth', { headers: editHeaders(), cache: 'no-store' })
       .then((r) => r.json())
       .then((j) => { setCanEdit(!!j.ok); canEditRef.current = !!j.ok; })

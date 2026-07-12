@@ -1,14 +1,11 @@
-// A szerkesztési kulcs kliens-oldali kezelése (bemutató mód).
-// A kulcs a böngésző localStorage-ában él eszközönként és címenként; a ?admin=<kulcs>
-// URL-lel egyszer kell megadni, a ?admin=ki törli (az eszköz bemutató módba vált).
-const KEY = 'mm-edit-key';
-
+// A szerkesztési jog kliens-oldali kezelése — SEMMILYEN tárolás nincs.
+// A mód mindig az aktuális URL-ből jön: ?a=<kulcs> → admin (szerkesztő) mód,
+// hiányzó vagy rossz érték → megtekintő mód. A paraméter az URL-ben marad.
 export const getEditKey = (): string | null => {
-  try { return localStorage.getItem(KEY); } catch { return null; }
-};
-
-export const setEditKey = (v: string | null): void => {
-  try { if (v) localStorage.setItem(KEY, v); else localStorage.removeItem(KEY); } catch { /* privát mód */ }
+  try {
+    if (typeof window === 'undefined') return null;
+    return new URL(window.location.href).searchParams.get('a');
+  } catch { return null; }
 };
 
 // minden író fetch-hez: a kulcs fejléce (ha van)

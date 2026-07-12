@@ -1,24 +1,13 @@
 import { NextResponse } from 'next/server';
 
-// Szerkesztési kulcs (bemutató mód): ha a web/.env.local-ban be van állítva az EDIT_KEY,
-// minden ÍRÓ API-hívásnak hoznia kell a kulcsot — x-edit-key fejlécben VAGY a szerver
-// által beállított tartós sütiben. A süti azért kell, mert a mobil böngészők a
-// localStorage-t HTTP-oldalaknál időnként törlik, és az app bemutató módba esett vissza.
-// Kulcs nélküli környezetben (nincs EDIT_KEY) a kapu nyitva, minden a régi módon működik.
-export const EDIT_COOKIE = 'mm_edit_key';
-
-const cookieKey = (req: Request): string | null => {
-  const raw = req.headers.get('cookie');
-  if (!raw) return null;
-  const m = raw.split(/;\s*/).find((c) => c.startsWith(`${EDIT_COOKIE}=`));
-  return m ? decodeURIComponent(m.slice(EDIT_COOKIE.length + 1)) : null;
-};
-
+// Szerkesztési kulcs: ha a web/.env.local-ban be van állítva az EDIT_KEY, minden ÍRÓ
+// API-hívásnak x-edit-key fejlécben kell hoznia. A kliens a kulcsot mindig az aktuális
+// URL ?a= paraméteréből veszi — nincs tárolás, nincs süti, nincs localStorage.
 export function canWrite(req: Request): boolean {
   const key = process.env.EDIT_KEY;
   if (!key) return true;
-  return req.headers.get('x-edit-key') === key || cookieKey(req) === key;
+  return req.headers.get('x-edit-key') === key;
 }
 
 export const writeDenied = () =>
-  NextResponse.json({ ok: false, error: 'Bemutató mód: a mentéshez szerkesztési kulcs kell (?admin=<kulcs>).' }, { status: 403 });
+  NextResponse.json({ ok: false, error: 'Megtekintő mód: a mentéshez az URL-ben ?a=<kulcs> kell.' }, { status: 403 });

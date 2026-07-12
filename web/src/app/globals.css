@@ -1039,3 +1039,30 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
   /* a statusz-valaszto teljes szelessegben a kartya aljan */
   .pm-row6:not(.pm-head) select { grid-column: 1 / -1; }
 }
+
+/* Egyseges, kenyelmes inputok: a csupasz .nm-search mezok es a nevjegyzek-sorok
+   eddig bongeszo-alap (szogletes, keskeny) kinezetuek voltak */
+.nm-search, .tp-grpsel {
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+  font-family: var(--ff); font-size: .9rem; color: var(--ink); background: var(--paper);
+  min-width: 0; transition: border-color .12s, background .12s;
+}
+.nm-search:focus, .tp-grpsel:focus { outline: 2px solid color-mix(in srgb, var(--brand) 35%, transparent); outline-offset: 1px; border-color: var(--brand); background: var(--card); }
+.pm-row input, .pm-row6 select, .pm-group-head input { border-radius: 10px; padding: 9px 11px; font-size: .88rem; }
+.pm-row input:focus, .pm-row6 select:focus { outline: 2px solid color-mix(in srgb, var(--brand) 35%, transparent); outline-offset: 1px; border-color: var(--brand); }
+@media (max-width: 720px) {
+  /* mobilon 16px betu: kenyelmes es az iOS sem zoomol ra */
+  .nm-search, .tp-grpsel, .pm-row input, .pm-row6 select, .pm-group-head input { font-size: 16px; padding: 11px 12px; }
+}
+
+/* Eszkoztar-elrendezes: a kereso MINDIG a jobb felso sarokban, a fomenu mellett;
+   a BA/MA + evvalaszto es minden mas a kovetkezo sorban kezdodik */
+.toolbar-break { flex-basis: 100%; height: 0; }
+.search--corner { margin-left: auto; flex: 0 1 280px; }
+@media (max-width: 900px) {
+  .search--corner { margin-left: 0; flex: 1 1 100%; max-width: none; }
+}
+
+/* mentes-visszajelzes az eszkozsorban */
+.save-msg { font-size: .72rem; font-weight: 700; color: var(--danger); }
+.save-msg.ok { color: var(--g0); }

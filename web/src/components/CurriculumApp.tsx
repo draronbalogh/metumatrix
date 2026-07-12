@@ -379,21 +379,36 @@ export default function CurriculumApp() {
   // KÖZÖS MENTÉS: minden adat (tanterv + feladatok/események + névjegyzék) azonnali fájlba
   // írása a helyi API-kon át, plusz EGY közös biztonsági másolat letöltése. A mentés sosem
   // veszélyes (a jelenlegi állapotot írja); a visszatöltés kér megerősítést.
-  const exportJSON = () => {
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const backupPayload = () => ({
+    kind: 'metumatrix-backup',
+    savedAt: new Date().toISOString(),
+    curriculum: dataRef.current,
+    agenda: agendaRef.current,   // feladatok + események + levelek + sablon-kapcsolatok
+    people: peopleRef.current,   // mind a hat névlista + címkék + aláírás
+  });
+  // ⤓ Mentés: MINDEN adat a szerverre + időbélyeges teljes pillanatkép egyetlen fix
+  // mappába (grid/backups) — letöltési párbeszéd nélkül, a pontos hely kiírásával
+  const exportJSON = async () => {
+    setSaveMsg('Mentés folyamatban…');
     const post = (url: string, body: unknown) =>
-      fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(body) }).catch(() => { /* ignore */ });
-    post('/api/curriculum', dataRef.current);
-    post('/api/agenda', agendaRef.current);
-    post('/api/people', peopleRef.current);
-    const payload = {
-      kind: 'metumatrix-backup',
-      savedAt: new Date().toISOString(),
-      curriculum: dataRef.current,
-      agenda: agendaRef.current,
-      people: peopleRef.current,
-    };
-    post('/api/snapshots', payload); // idobelyeges pillanatkep a szerveren (grid/backups)
-    const b = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+      fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(body) }).then((r) => r.json());
+    try {
+      const [c, a, pe, snap] = await Promise.all([
+        post('/api/curriculum', dataRef.current),
+        post('/api/agenda', agendaRef.current),
+        post('/api/people', peopleRef.current),
+        post('/api/snapshots', backupPayload()),
+      ]);
+      if (c?.ok && a?.ok && pe?.ok && snap?.ok) {
+        setSaveMsg(`✓ Minden elmentve (tanterv + feladatok + események + levelek + névjegyzék). Pillanatkép: grid/backups/${snap.name}`);
+      } else setSaveMsg('⚠ A mentés részben sikertelen — nézd meg a Betöltés listát, és próbáld újra.');
+    } catch { setSaveMsg('⚠ A mentés nem sikerült (hálózati hiba). Próbáld újra.'); }
+    window.setTimeout(() => setSaveMsg(null), 8000);
+  };
+  // opcionális: hordozható másolat letöltése fájlba (pl. másik gépre költöztetéshez)
+  const downloadBackup = () => {
+    const b = new Blob([JSON.stringify(backupPayload(), null, 2)], { type: 'application/json;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(b);
     a.download = `metumatrix-mentes-${new Date().toISOString().slice(0, 10)}.json`;
@@ -416,8 +431,13 @@ export default function CurriculumApp() {
           if (d.people && Array.isArray(d.people.students)) {
             const p = normalizePeople(d.people);
             setPeopleDB(p);
+            peopleRef.current = p;
             try { localStorage.setItem(PEOPLE_LS_KEY, JSON.stringify(p)); } catch { /* ignore */ }
           }
+          // a visszatöltött állapot azonnal a szerver-fájlokba is íródik (nem csak a képernyőre)
+          fetch('/api/curriculum', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(d.curriculum ?? dataRef.current) }).catch(() => { /* ignore */ });
+          fetch('/api/agenda', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(d.agenda ? normalizeAgenda(d.agenda) : agendaRef.current) }).catch(() => { /* ignore */ });
+          fetch('/api/people', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(d.people ? normalizePeople(d.people) : peopleRef.current) }).catch(() => { /* ignore */ });
         } else if (Array.isArray(d.cohorts)) {
           // régi formátum: csak tanterv
           commit(d as unknown as Curriculum);
@@ -604,6 +624,8 @@ export default function CurriculumApp() {
             <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>🕒 Órarend</button>
             <button className={view === 'it' ? 'is-on' : ''} onClick={() => setView('it')}>🖥 IT és szoftverek</button>
           </div>
+          <input className="search search--corner" placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : view === 'people' ? 'Keresés a névjegyzékben…' : view === 'orarend' ? 'Keresés az órarendben…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />
+          <div className="toolbar-break" />
           {isCurr && (
           <div className="viewtoggle">
             <button className={prog === 'BA' ? 'is-on' : ''} onClick={() => setProg('BA')}>BA</button>
@@ -611,18 +633,17 @@ export default function CurriculumApp() {
             <button className={prog === 'ALL' ? 'is-on' : ''} onClick={() => setProg('ALL')} title="BA és MA egyszerre, egymás alatt">BA+MA</button>
           </div>
           )}
+          {isCurr && (
+          <select className="presetsel" value={ver} onChange={(e) => setVer(e.target.value)} title="Tanterv-verzió">
+            {versions.map((v) => <option key={v} value={v}>{v === 'régi (korábbi)' ? 'Régi (korábbi)' : v}</option>)}
+          </select>
+          )}
           <button
             className={`btn tools-toggle${q || spec || ctype || instr || cat ? ' has-f' : ''}`}
             onClick={() => setToolsOpen((o) => !o)}
             title="Szűrők és eszközök"
           >{toolsOpen ? '✕' : '☰'}{(q || spec || ctype || instr || cat) && !toolsOpen ? ' •' : ''}</button>
           <div className={`toolbar-more${toolsOpen ? ' open' : ''}`}>
-          {isCurr && (
-          <select className="presetsel" value={ver} onChange={(e) => setVer(e.target.value)} title="Tanterv-verzió">
-            {versions.map((v) => <option key={v} value={v}>{v === 'régi (korábbi)' ? 'Régi (korábbi)' : v}</option>)}
-          </select>
-          )}
-          <input className="search" placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />
           <select className={`presetsel instrsel${instr ? ' is-on' : ''}`} value={instr} onChange={(e) => setInstr(e.target.value)} title="Szűrés névre — tanterv, feladatok és események is erre szűrődnek">
             <option value="">{isCurr ? 'Minden oktató' : 'Mindenki'}</option>
             {(isCurr ? allInstructors : allPeople).map((n) => <option key={n} value={n}>{n}</option>)}
@@ -648,7 +669,9 @@ export default function CurriculumApp() {
           <select className="presetsel" value={preset} onChange={(e) => setPreset(e.target.value as Preset)} title="Betűtípus / stílus">
             {PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
-          <button className="btn editonly" onClick={exportJSON} title="Minden adat mentése: tanterv + feladatok + események + névjegyzék — fájlba írás, időbélyeges pillanatkép a szerveren, és biztonsági másolat letöltése">⤓ Mentés</button>
+          <button className="btn editonly" onClick={exportJSON} title="MINDEN adat mentése egy helyre: tanterv + feladatok + események + levelek + névjegyzék — időbélyeges pillanatkép a szerver grid/backups mappájában">⤓ Mentés</button>
+          <button className="btn editonly" onClick={downloadBackup} title="Hordozható másolat letöltése fájlba (pl. másik gépre)">⇩ Fájlba</button>
+          {saveMsg && <span className={`save-msg${saveMsg.startsWith('✓') ? ' ok' : ''}`}>{saveMsg}</span>}
           <button className="btn editonly" onClick={openLoad} title="Mentett pillanatkép visszatöltése (alapból a legutolsó), vagy fájl a gépről">⤒ Betöltés</button>
           <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importJSON(f); e.target.value = ''; }} />
           {isCurr && (
@@ -704,9 +727,9 @@ export default function CurriculumApp() {
               onNotify={notifyEvent}
             />
           ) : view === 'people' ? (
-            <PeopleModal inline teacherNames={teacherNames} db={peopleDB} onSave={savePeople} onClose={() => { /* nézetként nincs bezárás */ }} />
+            <PeopleModal inline externalQuery={q} teacherNames={teacherNames} db={peopleDB} onSave={savePeople} onClose={() => { /* nézetként nincs bezárás */ }} />
           ) : view === 'orarend' ? (
-            <OrarendView knownNames={[...teacherNames, ...peopleDB.teachers.map((p) => p.name), ...peopleDB.institution.map((p) => p.name), ...peopleDB.alumni.map((p) => p.name)]} />
+            <OrarendView q={q} knownNames={[...teacherNames, ...peopleDB.teachers.map((p) => p.name), ...peopleDB.institution.map((p) => p.name), ...peopleDB.alumni.map((p) => p.name)]} />
           ) : view === 'it' ? (
             <section className="wrap orv">
               <div className="tp-headrow"><h2 className="tp-title">🖥 IT, szoftverek és teremkiosztás</h2></div>

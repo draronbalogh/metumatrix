@@ -10,6 +10,7 @@ interface Props {
   onSave: (db: PeopleDB) => void;
   onClose: () => void;
   inline?: boolean; // nézetként (a főmenü alatt) fut, nem modálként — mobilon nem takarja el a menüt
+  externalQuery?: string; // a felső, globális keresőmező értéke — ilyenkor nincs saját kereső
 }
 
 // Egységes rubrikák MINDEN listán: név, email, telefon, titulus, terület (+ státusz a tanár/hallgató listán)
@@ -54,7 +55,7 @@ function ContactSection({ label, note, rows, setRows, q }: { label: string; note
   );
 }
 
-export default function PeopleModal({ teacherNames, db, onSave, onClose, inline }: Props) {
+export default function PeopleModal({ teacherNames, db, onSave, onClose, inline, externalQuery }: Props) {
   const [teachers, setTeachers] = useState<Row[]>(() => {
     const byName: Record<string, Person> = {};
     db.teachers.forEach((p) => { byName[p.name] = p; });
@@ -70,8 +71,10 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline 
   const [groups, setGroups] = useState<PeopleGroup[]>(() => db.groups.map((g) => ({ name: g.name, members: [...g.members] })));
   const [signature, setSignature] = useState(db.signature);
   const [signatureLinks, setSignatureLinks] = useState(db.signatureLinks);
-  // kereső + tábla-szűrő: nem kell végiggörgetni, választható, melyik listában keresel
-  const [pq, setPq] = useState('');
+  // kereső + tábla-szűrő: nem kell végiggörgetni, választható, melyik listában keresel.
+  // Nézetként a FELSŐ globális kereső az egyetlen kereső; modálként van saját mező.
+  const [pqLocal, setPqLocal] = useState('');
+  const pq = externalQuery !== undefined ? externalQuery : pqLocal;
   const [psec, setPsec] = useState<Sec>('');
   const show = (s: Sec) => psec === '' || psec === s || (s === 'T' && T_SECS.includes(psec)) || (s === 'H' && H_SECS.includes(psec));
   // választható tagok: tantervi tanárok + az itt szerkesztett összes lista
@@ -127,8 +130,10 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline 
     <>
         <div className="pm-body">
           <div className="pm-toolbar">
-            <input className="nm-search pm-search" value={pq} onChange={(e) => setPq(e.target.value)}
-              placeholder="Keresés mindenben: név, email, titulus, terület, státusz…" />
+            {externalQuery === undefined && (
+              <input className="nm-search pm-search" value={pqLocal} onChange={(e) => setPqLocal(e.target.value)}
+                placeholder="Keresés mindenben: név, email, titulus, terület, státusz…" />
+            )}
             <div className="cat-picker pm-secpick">
               {([['', 'Mind'], ['T', 'Oktatók'], ['Tf', 'T · főállású'], ['To', 'T · óraadó'], ['Tv', 'T · volt/külsős'], ['H', 'Hallgatók'], ['Hsz', 'H · szervező'], ['Hn', 'H · nagykövet'], ['Hk', 'H · képviselő'], ['Hd', 'H · demonstrátor'], ['I', 'Intézményi'], ['A', 'Alumni'], ['O', 'Opponensek'], ['P', 'Piaci'], ['G', 'Csoportok']] as [Sec, string][]).map(([v, l]) => (
                 <button key={v || 'mind'} type="button" className={`chip${psec === v ? ' is-on' : ''}`}

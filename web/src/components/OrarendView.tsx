@@ -18,10 +18,9 @@ const norm = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[�
 // a Névjegyzék-egyeztetéshez: Dr. / habil előtagok nélkül hasonlítunk
 const normName = (s: string): string => norm(s.replace(/\b(dr|habil)\.?\s*/gi, '').trim());
 
-export default function OrarendView({ knownNames }: { knownNames: string[] }) {
+export default function OrarendView({ knownNames, q }: { knownNames: string[]; q: string }) {
   const [data, setData] = useState<Orarend | null>(null);
   const [failed, setFailed] = useState(false);
-  const [q, setQ] = useState('');
   const [day, setDay] = useState('');
 
   useEffect(() => {
@@ -51,7 +50,6 @@ export default function OrarendView({ knownNames }: { knownNames: string[] }) {
         <span className="tp-headhint">{data.forras} · frissítve: {data.frissitve} · {list.length} órarendi sor, {teacherCount} oktató</span>
       </div>
       <div className="or-tools">
-        <input className="nm-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Keresés: tantárgy, oktató, terem, tankör…" />
         <div className="cat-picker">
           <button type="button" className={`chip${day === '' ? ' is-on' : ''}`} onClick={() => setDay('')}>Minden nap</button>
           {DAYS.map((d) => (

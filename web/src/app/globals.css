@@ -1060,7 +1060,22 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .toolbar-break { flex-basis: 100%; height: 0; }
 .search--corner { margin-left: auto; flex: 0 1 280px; }
 @media (max-width: 900px) {
-  .search--corner { margin-left: 0; flex: 1 1 100%; max-width: none; }
+  /* mobilon a kereso es a ☰ gomb EGY sort oszt meg (a sortores csak asztali nezethez kell) */
+  .toolbar-break { display: none; }
+  .search--corner { margin-left: 0; flex: 1 1 auto; min-width: 0; max-width: none; }
+}
+
+/* Mobil: a nevjegyzek/orarend szuro-chipek EGYETLEN vizszintesen gorgetheto sorban,
+   kulonben a 15 chip 5-6 sorba torve a fel kepernyot elfoglalja es a tartalom nem latszik */
+@media (max-width: 720px) {
+  .pm-secpick, .or-tools .cat-picker {
+    flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; padding: 4px 0 6px;
+  }
+  .pm-secpick::-webkit-scrollbar, .or-tools .cat-picker::-webkit-scrollbar { display: none; }
+  .pm-secpick .chip, .pm-secpick .tp-grpsel, .or-tools .chip { flex: none; white-space: nowrap; }
+  .pmv .pm-toolbar { padding: 8px var(--pad) 6px; }
+  .pmv .mfoot { padding: 8px var(--pad) calc(8px + env(safe-area-inset-bottom)); }
 }
 
 /* mentes-visszajelzes az eszkozsorban */

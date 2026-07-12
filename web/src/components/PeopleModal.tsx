@@ -33,10 +33,12 @@ const H_STAT: Partial<Record<Sec, string>> = { Hsz: 'szervező', Hn: 'nagykövet
 function ContactSection({ label, note, rows, setRows, q }: { label: string; note: string; rows: Row[]; setRows: (f: (r: Row[]) => Row[]) => void; q: string }) {
   const set = (i: number, k: keyof Row, v: string) => setRows((rs) => rs.map((r, ix) => (ix === i ? { ...r, [k]: v } : r)));
   const visible = rows.map((r, i) => ({ r, i })).filter(({ r }) => rowMatch(r, q));
+  // kereséskor a találat nélküli szekció teljesen eltűnik — így a találat azonnal a képernyőn van
+  if (q.trim() && visible.length === 0) return null;
   return (
     <>
       <div className="pm-sec">{label} · {rows.length}{q.trim() && visible.length !== rows.length ? ` (találat: ${visible.length})` : ''}</div>
-      <div className="pm-note">{note}</div>
+      {!q.trim() && <div className="pm-note">{note}</div>}
       <div className="pm-rows">
         {visible.length > 0 && <div className="pm-row pm-row5 pm-head"><span>Név</span><span>Email</span><span>Telefon</span><span>Titulus</span><span>Terület</span><span /></div>}
         {visible.map(({ r, i }) => (
@@ -126,6 +128,10 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
   const sStat = (r: Row): boolean => (H_STAT[psec] ? r.status === H_STAT[psec] : true) && (!hcoh || r.cohort === hcoh);
   const tVisible = teachers.map((r, i) => ({ r, i })).filter(({ r }) => rowMatch(r, pq) && tStat(r));
   const sVisible = students.map((r, i) => ({ r, i })).filter(({ r }) => rowMatch(r, pq) && sStat(r));
+  // kereséskor csak a találatot adó szekciók látszanak, a magyarázó szövegek nélkül
+  const searching = !!pq.trim();
+  const anyHit = tVisible.length > 0 || sVisible.length > 0 ||
+    [institution, alumni, opponents, market].some((rows) => rows.some((r) => rowMatch(r, pq)));
 
   const content = (
     <>
@@ -148,10 +154,10 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
               ))}
             </div>
           </div>
-          {show('T') && (
+          {show('T') && (!searching || tVisible.length > 0) && (
             <>
               <div className="pm-sec"><span className="pb t">T</span> Aktuális oktatók · {teacherNames.length} <span className="pm-sec-extra">+ volt / külsős kontakt · {teachers.length - teacherNames.length}</span></div>
-              <div className="pm-note">A tanárnévsor forrása a tanterv — itt az elérhetőség és a státusz (főállású / óraadó) adható meg; a státusz alapján a levélírásban külön körök választhatók.</div>
+              {!searching && <div className="pm-note">A tanárnévsor forrása a tanterv — itt az elérhetőség és a státusz (főállású / óraadó) adható meg; a státusz alapján a levélírásban külön körök választhatók.</div>}
               <div className="pm-rows">
                 {tVisible.length > 0 && <div className="pm-row pm-row6 pm-head"><span>Név</span><span>Email</span><span>Telefon</span><span>Titulus</span><span>Terület</span><span>Státusz</span><span /></div>}
                 {tVisible.map(({ r, i }) => (
@@ -171,10 +177,10 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
               </div>
             </>
           )}
-          {show('H') && (
+          {show('H') && (!searching || sVisible.length > 0) && (
             <>
               <div className="pm-sec"><span className="pb h">H</span> Aktuális hallgatók · {students.length}</div>
-              <div className="pm-note">A státusz jelöli, ki vesz részt a szervezésben (szervező / nagykövet / képviselő / demonstrátor) — ők a levélírásban „Hallgatói szervezők" körként egyben címezhetők. A végzettek az Alumni listában vannak.</div>
+              {!searching && <div className="pm-note">A státusz jelöli, ki vesz részt a szervezésben (szervező / nagykövet / képviselő / demonstrátor) — ők a levélírásban „Hallgatói szervezők" körként egyben címezhetők. A végzettek az Alumni listában vannak.</div>}
               <div className="pm-rows">
                 {sVisible.length > 0 && <div className="pm-row pm-row6 pm-head"><span>Név</span><span>Email</span><span>Telefon</span><span>Titulus</span><span>Terület</span><span>Státusz</span><span /></div>}
                 {sVisible.map(({ r, i }) => (
@@ -200,7 +206,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
           {show('A') && <ContactSection q={pq} label="🎓 Alumni" note="METU-t végzett volt hallgatók: titulus és terület, ahol dolgoznak. A volt oktatók kontaktja a Tanárok lista végén marad (volt/külsős jelöléssel)." rows={alumni} setRows={setAlumni} />}
           {show('O') && <ContactSection q={pq} label="⚖ Opponensek / diploma-opponensek" note="A záróvizsgák és diplomavédések bírálói — a levélírásban a Minden opponens körrel egyben címezhetők." rows={opponents} setRows={setOpponents} />}
           {show('P') && <ContactSection q={pq} label="🤝 Piaci kapcsolatok" note="Ipari, céges és egyéb külső partnerek." rows={market} setRows={setMarket} />}
-          {show('G') && (
+          {show('G') && (!searching || psec === 'G') && (
             <>
               <div className="pm-sec">✉ Egyedi csoportok · {groups.length}</div>
               <div className="pm-note">Elnevezett email-csoportok (pl. „Kiállítás-csapat") — az Értesítés ablakban egy gombbal hozzáadhatók a címzettekhez.</div>
@@ -223,7 +229,8 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
               </div>
             </>
           )}
-          {psec === '' && (
+          {searching && !anyHit && <p className="tp-empty">Nincs találat a keresésre.</p>}
+          {psec === '' && !searching && (
             <>
               <div className="pm-sec">✒ Hivatalos aláírás — a levélben ki-be kapcsolható</div>
               <div className="field full">

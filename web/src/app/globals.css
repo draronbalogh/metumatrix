@@ -992,11 +992,15 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .or-warn { margin-left: 5px; cursor: help; }
 @media (max-width: 720px) { .or-table { font-size: .74rem; } .or-table th, .or-table td { padding: 6px 7px; } }
 
-/* Fomenu mobilon: NINCS gorgetes — a 8 menupont tobb sorba tordelodve,
-   egyben lathatoan jelenik meg; a gombok kitoltik a sorokat, kozvetlenul kattinthatok */
+/* Fomenu mobilon: EGYETLEN vizszintesen (jobbra) gorgetheto sor — csak ~1 sornyi
+   helyet foglal; nezetvaltaskor az aktiv ful scrollIntoView-val beuszik a kepbe */
 @media (max-width: 900px) {
-  .toolbar__inner > .viewtoggle--nav { display: flex; width: 100%; flex-wrap: wrap; gap: 3px; }
-  .viewtoggle--nav button { flex: 1 1 auto; white-space: nowrap; text-align: center; padding: 8px 10px; }
+  .toolbar__inner > .viewtoggle--nav {
+    display: flex; width: 100%; flex-wrap: nowrap; gap: 3px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .toolbar__inner > .viewtoggle--nav::-webkit-scrollbar { display: none; }
+  .viewtoggle--nav button { flex: none; white-space: nowrap; text-align: center; padding: 8px 12px; }
 }
 
 /* Nevjegyzek nezetkent: a fomenu latszik felette, az oldal gorgeti (nem modal) */

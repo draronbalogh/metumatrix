@@ -127,9 +127,8 @@ export default function CurriculumApp() {
     document.documentElement.dataset.theme = theme;
     try { localStorage.setItem(THEME_KEY, theme); } catch { /* ignore */ }
   }, [theme]);
-  // Hozzáférés: a Tailscale-hálózat a védelem, kulcs nincs — az /api/auth kulcs
-  // nélküli környezetben mindig ok-t ad, így az app mindig szerkesztő módban fut.
-  // (A viewer-mód kódja megmarad: EDIT_KEY visszakapcsolásával újra élne.)
+  // Hozzáférés: a link publikus (Tailscale Funnel), a mód az URL-ből jön.
+  // ?a=<EDIT_KEY> → szerkesztő mód; csupasz / rossz érték → megtekintő mód.
   useEffect(() => {
     try { localStorage.removeItem('mm-edit-key'); } catch { /* ignore */ }
     fetch('/api/auth', { headers: editHeaders(), cache: 'no-store' })
@@ -598,7 +597,7 @@ export default function CurriculumApp() {
             <button className={view === 'catalog' ? 'is-on' : ''} onClick={() => setView('catalog')}>▦ Katalógus</button>
             <button className={view === 'tasks' ? 'is-on' : ''} onClick={() => setView('tasks')}>☑ Feladatok</button>
             <button className={view === 'events' ? 'is-on' : ''} onClick={() => setView('events')}>▤ Események</button>
-            <button className={view === 'topics' ? 'is-on' : ''} onClick={() => setView('topics')}>✉ Levelek</button>
+            <button className={`editonly${view === 'topics' ? ' is-on' : ''}`} onClick={() => { if (!canEdit) return; setView('topics'); }}>✉ Levelek</button>
             <button className={`editonly${view === 'people' ? ' is-on' : ''}`} title="Elérhetőségek: oktatók, hallgatók, intézményi / alumni / opponens / piaci kapcsolatok"
               onClick={() => { if (!canEdit) return; setView('people'); }}>☎ Névjegyzék</button>
             <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>🕒 Órarend</button>

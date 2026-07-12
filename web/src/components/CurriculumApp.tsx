@@ -609,9 +609,11 @@ export default function CurriculumApp() {
               <div className="subtitle">Tanulmányi mátrix — ahogy a félévek és a tárgyak egymásra épülnek · kösd össze, szerkeszd, mentsd</div>
             </div>
           </div>
-          <button className="themebtn themebtn--head" title="Világos / sötét mód" onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}>{theme === 'dark' ? '☀' : '☾'}</button>
         </div>
       </header>
+      {/* a fejlécen KÍVÜL él: sötét módban a masthead/toolbar blur-je saját stacking
+          contextet nyit, és azon belülről a fix gomb a menüsáv mögé kerülne */}
+      <button className="themebtn themebtn--head" title="Világos / sötét mód" onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}>{theme === 'dark' ? '☀' : '☾'}</button>
 
       <div className="toolbar">
         <div className="wrap toolbar__inner">

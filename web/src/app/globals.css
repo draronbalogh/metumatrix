@@ -1088,9 +1088,18 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .it-sw-vars { font-size: .72rem; color: var(--ink-2); margin-top: 2px; }
 .it-sw-rooms { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
 .it-doch { margin-top: 6px; }
-.it-docs { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; margin: 10px 0 22px; }
+.it-docs { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; margin: 10px 0 22px; align-items: start; }
+.it-docwrap { padding: 0; display: flex; flex-direction: column; cursor: default; }
+.it-docwrap:hover { border-color: var(--brand); }
 .it-doc { display: flex; align-items: center; gap: 12px; padding: 12px 14px; text-decoration: none; color: inherit; }
-.it-doc:hover { border-color: var(--brand); }
+.it-doc:hover .it-doc-title { color: var(--brand-text); }
+/* kivonat: a PDF lenyege kattinthato linkekkel, lenyithato blokkban */
+.it-doc-sum { border-top: 1px dashed var(--line); padding: 8px 14px 12px; }
+.it-doc-sum summary { cursor: pointer; font-size: .76rem; font-weight: 700; color: var(--ink-2); padding: 3px 0; }
+.it-doc-sum summary:hover { color: var(--brand-text); }
+.it-doc-sum ul, .it-doc-sum ol { margin: 8px 0 2px; padding-left: 20px; font-size: .8rem; line-height: 1.6; display: flex; flex-direction: column; gap: 6px; }
+.doc-link { color: var(--brand-text); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.doc-link:hover { color: var(--brand); }
 .it-doc-icon { font-size: 1.5rem; flex: none; }
 .it-doc-body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .it-doc-title { font-weight: 700; font-size: .87rem; }

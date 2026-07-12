@@ -23,7 +23,10 @@ const hasData = (r: Row): boolean => !!(r.email.trim() || r.phone.trim() || r.ti
 const norm = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 const rowMatch = (r: Row, q: string): boolean => !q.trim() || norm(`${r.name} ${r.email} ${r.phone} ${r.title} ${r.field} ${r.status}`).includes(norm(q));
 
-type Sec = '' | 'T' | 'H' | 'I' | 'A' | 'O' | 'P' | 'G';
+type Sec = '' | 'T' | 'Tf' | 'To' | 'Tv' | 'H' | 'Hsz' | 'Hn' | 'Hk' | 'Hd' | 'I' | 'A' | 'O' | 'P' | 'G';
+const T_SECS: Sec[] = ['', 'T', 'Tf', 'To', 'Tv'];
+const H_SECS: Sec[] = ['', 'H', 'Hsz', 'Hn', 'Hk', 'Hd'];
+const H_STAT: Partial<Record<Sec, string>> = { Hsz: 'szervező', Hn: 'nagykövet', Hk: 'képviselő', Hd: 'demonstrátor' };
 
 // Kibővített kapcsolat-lista (intézményi / alumni / opponens / piaci): 5 egységes mező
 function ContactSection({ label, note, rows, setRows, q }: { label: string; note: string; rows: Row[]; setRows: (f: (r: Row[]) => Row[]) => void; q: string }) {
@@ -70,7 +73,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline 
   // kereső + tábla-szűrő: nem kell végiggörgetni, választható, melyik listában keresel
   const [pq, setPq] = useState('');
   const [psec, setPsec] = useState<Sec>('');
-  const show = (s: Sec) => psec === '' || psec === s;
+  const show = (s: Sec) => psec === '' || psec === s || (s === 'T' && T_SECS.includes(psec)) || (s === 'H' && H_SECS.includes(psec));
   // választható tagok: tantervi tanárok + az itt szerkesztett összes lista
   const memberPool = [
     ...teacherNames,
@@ -109,8 +112,15 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline 
     });
   };
 
-  const tVisible = teachers.map((r, i) => ({ r, i })).filter(({ r }) => rowMatch(r, pq));
-  const sVisible = students.map((r, i) => ({ r, i })).filter(({ r }) => rowMatch(r, pq));
+  // státusz-szintű szűrés: főállású / óraadó / volt-külsős, ill. hallgatói szerepek
+  const tStat = (r: Row): boolean =>
+    psec === 'Tf' ? r.status === 'főállású'
+    : psec === 'To' ? r.status === 'óraadó'
+    : psec === 'Tv' ? !teacherNames.includes(r.name)
+    : true;
+  const sStat = (r: Row): boolean => (H_STAT[psec] ? r.status === H_STAT[psec] : true);
+  const tVisible = teachers.map((r, i) => ({ r, i })).filter(({ r }) => rowMatch(r, pq) && tStat(r));
+  const sVisible = students.map((r, i) => ({ r, i })).filter(({ r }) => rowMatch(r, pq) && sStat(r));
 
   const content = (
     <>
@@ -119,7 +129,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline 
             <input className="nm-search pm-search" value={pq} onChange={(e) => setPq(e.target.value)}
               placeholder="Keresés mindenben: név, email, titulus, terület, státusz…" />
             <div className="cat-picker pm-secpick">
-              {([['', 'Mind'], ['T', 'Oktatók'], ['H', 'Hallgatók'], ['I', 'Intézményi'], ['A', 'Alumni'], ['O', 'Opponensek'], ['P', 'Piaci'], ['G', 'Csoportok']] as [Sec, string][]).map(([v, l]) => (
+              {([['', 'Mind'], ['T', 'Oktatók'], ['Tf', 'T · főállású'], ['To', 'T · óraadó'], ['Tv', 'T · volt/külsős'], ['H', 'Hallgatók'], ['Hsz', 'H · szervező'], ['Hn', 'H · nagykövet'], ['Hk', 'H · képviselő'], ['Hd', 'H · demonstrátor'], ['I', 'Intézményi'], ['A', 'Alumni'], ['O', 'Opponensek'], ['P', 'Piaci'], ['G', 'Csoportok']] as [Sec, string][]).map(([v, l]) => (
                 <button key={v || 'mind'} type="button" className={`chip${psec === v ? ' is-on' : ''}`}
                   onClick={() => setPsec((cur) => (cur === v ? '' : v))}>{l}</button>
               ))}

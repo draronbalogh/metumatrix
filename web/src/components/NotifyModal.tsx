@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AgendaEvent, AgendaTask, Letter } from '@/data/agenda';
-import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster, formerTeacherNames, teacherStatusNames, studentOrganizerNames, SIGNATURE_SEPARATOR } from '@/data/people';
+import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster, formerTeacherNames, teacherStatusNames, studentOrganizerNames, studentStatusNames, SIGNATURE_SEPARATOR } from '@/data/people';
 import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, LetterKind, MeetingMode, MeetingPlan } from '@/lib/letters';
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
@@ -262,6 +262,17 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   // intézményi, alumni, piaci) — a badge-szűrővel kategóriára szűkíthető
   const roster = useMemo(() => buildRoster(teacherNames, db), [teacherNames, db]);
   const [kindFilter, setKindFilter] = useState<PersonKind | ''>('');
+  // státusz-szintű szűrés a névsorban (főállású / óraadó / h-szervező stb.)
+  const [statusFilter, setStatusFilter] = useState('');
+  const statusSets = useMemo<Record<string, Set<string>>>(() => ({
+    'T:főállású': new Set(teacherStatusNames(teacherNames, db, 'főállású')),
+    'T:óraadó': new Set(teacherStatusNames(teacherNames, db, 'óraadó')),
+    'T:volt/külsős': new Set(formerTeacherNames(teacherNames, db)),
+    'H:szervező': new Set(studentStatusNames(db, 'szervező')),
+    'H:nagykövet': new Set(studentStatusNames(db, 'nagykövet')),
+    'H:képviselő': new Set(studentStatusNames(db, 'képviselő')),
+    'H:demonstrátor': new Set(studentStatusNames(db, 'demonstrátor')),
+  }), [teacherNames, db]);
 
   // a kiválasztott címzettek összetétele (T/H/I/A/P) — ehhez igazodik a megszólítás.
   // Egy név több listában is szerepelhet (pl. alumnus, aki óraadó is): ha a kiválasztottak
@@ -462,8 +473,12 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                   { label: 'Főállású oktatók', names: teacherStatusNames(teacherNames, db, 'főállású'), hint: 'A Névjegyzékben "főállású" státuszúra címkézett aktuális oktatók' },
                   { label: 'Óraadók', names: teacherStatusNames(teacherNames, db, 'óraadó'), hint: 'A Névjegyzékben "óraadó" státuszúra címkézett aktuális oktatók' },
                   { label: 'Volt / külsős oktatók', names: formerTeacherNames(teacherNames, db), hint: 'Oktatói kontaktok, akik az aktuális tantervben már nem szerepelnek' },
-                  { label: 'Hallgatói szervezők', names: studentOrganizerNames(db), hint: 'Szervező / nagykövet / képviselő státuszú hallgatók' },
                   { label: 'Minden hallgató', names: db.students.map((p) => p.name), hint: 'A teljes hallgatói lista' },
+                  { label: 'Hallgatói szervezők (mind)', names: studentOrganizerNames(db), hint: 'Szervező + nagykövet + képviselő státuszú hallgatók együtt' },
+                  { label: 'H · szervezők', names: studentStatusNames(db, 'szervező'), hint: 'Szervező státuszú hallgatók' },
+                  { label: 'H · nagykövetek', names: studentStatusNames(db, 'nagykövet'), hint: 'Nagykövet státuszú hallgatók' },
+                  { label: 'H · képviselők', names: studentStatusNames(db, 'képviselő'), hint: 'Képviselő státuszú hallgatók' },
+                  { label: 'H · demonstrátorok', names: studentStatusNames(db, 'demonstrátor'), hint: 'Demonstrátor státuszú hallgatók' },
                   { label: 'Minden intézményi', names: db.institution.map((p) => p.name), hint: 'A teljes intézményi kontaktlista' },
                   { label: 'Minden alumni', names: db.alumni.map((p) => p.name), hint: 'A teljes alumni lista' },
                   { label: 'Minden opponens', names: db.opponents.map((p) => p.name), hint: 'Opponensek és diploma-opponensek' },
@@ -495,8 +510,16 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               <div className="nm-groups nm-kindrow">
                 {(['T', 'H', 'I', 'A', 'O', 'P'] as PersonKind[]).map((k) => (
                   <button key={k} type="button" aria-pressed={kindFilter === k} className={`chip${kindFilter === k ? ' is-on' : ''}`}
-                    onClick={() => setKindFilter((v) => (v === k ? '' : k))}>
+                    onClick={() => { setStatusFilter(''); setKindFilter((v) => (v === k ? '' : k)); }}>
                     <span className={`pb ${k.toLowerCase()}`}>{k}</span>{KIND_LABEL[k]}
+                  </button>
+                ))}
+                {Object.keys(statusSets).map((id) => (
+                  <button key={id} type="button" aria-pressed={statusFilter === id}
+                    className={`chip${statusFilter === id ? ' is-on' : ''}`} disabled={!statusSets[id].size}
+                    title={statusSets[id].size ? `${statusSets[id].size} név` : 'Még senki nincs ilyen státuszra címkézve a Névjegyzékben'}
+                    onClick={() => { setKindFilter(''); setStatusFilter((v) => (v === id ? '' : id)); }}>
+                    <span className={`pb ${id[0].toLowerCase()}`}>{id[0]}</span>{id.slice(2)}
                   </button>
                 ))}
               </div>
@@ -510,7 +533,9 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                 <button key={n} type="button" className="chip is-on" title="Listán kívüli (régi) név — kattints a levételhez" onClick={() => toggle(n)}>{n}</button>
               ))}
               {roster
-                .filter((r) => (!kindFilter || r.kind === kindFilter) && (!rq.trim() || norm(r.name).includes(norm(rq))))
+                .filter((r) => (!kindFilter || r.kind === kindFilter)
+                  && (!statusFilter || statusSets[statusFilter]?.has(r.name))
+                  && (!rq.trim() || norm(r.name).includes(norm(rq))))
                 .map((r) => {
                   const on = selected.includes(r.name);
                   const has = !!emailOf(db, r.name);

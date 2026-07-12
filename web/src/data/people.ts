@@ -22,6 +22,9 @@ export const formerTeacherNames = (teacherNames: string[], db: PeopleDB): string
 // Aktuális oktatók adott státusszal (főállású / óraadó — a Névjegyzékben címkézhető).
 export const teacherStatusNames = (teacherNames: string[], db: PeopleDB, status: string): string[] =>
   teacherNames.filter((n) => db.teachers.find((p) => p.name === n)?.status === status);
+// Adott státuszú hallgatók (szervező / nagykövet / képviselő / demonstrátor).
+export const studentStatusNames = (db: PeopleDB, status: string): string[] =>
+  db.students.filter((p) => p.status === status).map((p) => p.name);
 // Hallgatói szervezői kör: szervezők + nagykövetek + képviselők (a demonstrátor külön szerep).
 export const studentOrganizerNames = (db: PeopleDB): string[] =>
   db.students.filter((p) => p.status && p.status !== 'demonstrátor').map((p) => p.name);

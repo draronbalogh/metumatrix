@@ -1,17 +1,21 @@
 import { NextResponse } from 'next/server';
 
-// Hozzáférés: NINCS kulcs és NINCS query-paraméter. A Tailscale proxy a saját
-// tailnetből érkező kérésekre ráteszi a Tailscale-User-Login fejlécet (a kívülről,
-// Funnelen át jövőkre nem, és a kliens által küldött hamisítványt eltávolítja).
-// Így ugyanaz a link: a tulaj eszközein szerkesztői, mindenki másnál megtekintő.
+// Hozzáférés — KÉT szerkesztői út, egy megtekintői:
+// 1) A saját tailnet-eszközökről érkező kérésre a Tailscale proxy ráteszi a
+//    Tailscale-User-Login fejlécet (hamisítás ellen védve) → automatikus szerkesztő mód.
+// 2) IDEGEN gépen (pl. egyetemi asztali gép) a szerkesztői link használható:
+//    ?a=<EDIT_KEY> az URL-ben → a kliens x-edit-key fejlécben küldi. Nincs tárolás.
+// 3) Minden más (a csupasz publikus link) → megtekintő mód.
 export function editorLogin(req: Request): string | null {
   return req.headers.get('tailscale-user-login');
 }
 
 export function canWrite(req: Request): boolean {
   if (process.env.OPEN_EDIT === '1') return true; // vészkijárat tailscale nélküli futtatáshoz
-  return !!editorLogin(req);
+  if (editorLogin(req)) return true;
+  const key = process.env.EDIT_KEY;
+  return !!key && req.headers.get('x-edit-key') === key;
 }
 
 export const writeDenied = () =>
-  NextResponse.json({ ok: false, error: 'Megtekintő mód: szerkeszteni csak a saját (Tailscale) eszközökről lehet.' }, { status: 403 });
+  NextResponse.json({ ok: false, error: 'Megtekintő mód: a szerkesztéshez a szerkesztői linket használd (?a=<kulcs>).' }, { status: 403 });

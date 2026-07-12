@@ -21,10 +21,11 @@ levél-készítő központ és névjegyzék. Az élő adatok a `C:\node\metu_tan
 A `web/.env.local`-ban az `EDIT_KEY` védi az összes írást (mentés, szerkesztés, levélküldés).
 
 - **Belépés szerkesztő módba** (eszközönként és címenként egyszer kell):
-  Hozzáférés-kezelés NINCS: a védelem maga a Tailscale-hálózat (csak a saját, tailnetbe
+  Hozzáférés: EGYETLEN publikus link, query-paraméter és kulcs nélkül. A szerver a
   a címsorból azonnal eltűnik (kivetítőn sem látszik). Utána a sima URL is szerkesztő módú.
-  bejelentkezett eszközeid érik el az appot), és ott mindig teljes szerkesztő mód jár.
-- Ha valaha nyilvános (Funnel) kitettség lesz: a web/.env.local-ban az EDIT_KEY visszakapcsolható.
+  Tailscale-identitás fejlécből dönt: a saját tailnet-eszközről érkező kérés SZERKESZTŐ
+  mód, a Funnelen (nyílt internetről) érkező MEGTEKINTŐ mód. Semmi nem tárolódik.
+- Vészkijárat tailscale nélküli futtatáshoz: OPEN_EDIT=1 a web/.env.local-ban.
 - **Bemutató mód** (kulcs nélkül): minden szerkesztő gomb rejtve, jobb alul „👁 Bemutató mód"
   jelvény, és a szerver minden írási kérést 403-mal elutasít — a nézelődés szabad.
 - **Kulcscsere (pánikgomb)**: új érték az `.env.local`-ba → dev szerver újraindítása →
@@ -38,7 +39,7 @@ A `web/.env.local`-ban az `EDIT_KEY` védi az összes írást (mentés, szerkesz
 2. A kapott `https://<gépnév>.<tailnet>.ts.net` linket kivetíted — bárki nézheti,
    bemutató módban, szerkeszteni senki nem tud.
 3. Ha te szerkesztenél közben: a saját eszközödön egyszer nyisd meg a linket
-   kulcs nélkül — a tailneten belül minden eszközön azonnal szerkesztő mód van.
+   ugyanazzal a linkkel — a saját eszközeiden szerkesztő, mindenki másnál megtekintő mód.
 4. Meeting után: Ctrl+C a terminálban (vagy `tailscale funnel reset`) — a link megszűnik.
    Kerüld a `--bg` kapcsolót: az újraindítás után is nyitva maradna!
 

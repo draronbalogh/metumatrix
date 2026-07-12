@@ -127,8 +127,9 @@ export default function CurriculumApp() {
     document.documentElement.dataset.theme = theme;
     try { localStorage.setItem(THEME_KEY, theme); } catch { /* ignore */ }
   }, [theme]);
-  // Hozzáférés: a link publikus (Tailscale Funnel), a mód az URL-ből jön.
-  // ?a=<EDIT_KEY> → szerkesztő mód; csupasz / rossz érték → megtekintő mód.
+  // Hozzáférés: EGYETLEN publikus link (Funnel), query-paraméter nélkül. A szerver
+  // a Tailscale-identitás fejlécből dönt: a saját tailnet-eszközökről érkező kérés
+  // szerkesztő mód, a kívülről (Funnelen át) érkező megtekintő mód.
   useEffect(() => {
     try { localStorage.removeItem('mm-edit-key'); } catch { /* ignore */ }
     fetch('/api/auth', { headers: editHeaders(), cache: 'no-store' })

@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { canWrite } from '@/lib/editauth';
+import { canWrite, editorLogin } from '@/lib/editauth';
 
-// A kliens ezzel ellenőrzi, hogy az URL ?a= paramétere érvényes-e (admin / megtekintő mód).
+// A kliens ezzel dönti el a módot: a tailnetből jövő kérés szerkesztő, a többi megtekintő.
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
-  return NextResponse.json({ ok: canWrite(req) });
+  return NextResponse.json({ ok: canWrite(req), user: editorLogin(req) });
 }

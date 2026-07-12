@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
 
-// Szerkesztési kulcs: ha a web/.env.local-ban be van állítva az EDIT_KEY, minden ÍRÓ
-// API-hívásnak x-edit-key fejlécben kell hoznia. A kliens a kulcsot mindig az aktuális
-// URL ?a= paraméteréből veszi — nincs tárolás, nincs süti, nincs localStorage.
+// Hozzáférés: NINCS kulcs és NINCS query-paraméter. A Tailscale proxy a saját
+// tailnetből érkező kérésekre ráteszi a Tailscale-User-Login fejlécet (a kívülről,
+// Funnelen át jövőkre nem, és a kliens által küldött hamisítványt eltávolítja).
+// Így ugyanaz a link: a tulaj eszközein szerkesztői, mindenki másnál megtekintő.
+export function editorLogin(req: Request): string | null {
+  return req.headers.get('tailscale-user-login');
+}
+
 export function canWrite(req: Request): boolean {
-  const key = process.env.EDIT_KEY;
-  if (!key) return true;
-  return req.headers.get('x-edit-key') === key;
+  if (process.env.OPEN_EDIT === '1') return true; // vészkijárat tailscale nélküli futtatáshoz
+  return !!editorLogin(req);
 }
 
 export const writeDenied = () =>
-  NextResponse.json({ ok: false, error: 'Megtekintő mód: a mentéshez az URL-ben ?a=<kulcs> kell.' }, { status: 403 });
+  NextResponse.json({ ok: false, error: 'Megtekintő mód: szerkeszteni csak a saját (Tailscale) eszközökről lehet.' }, { status: 403 });

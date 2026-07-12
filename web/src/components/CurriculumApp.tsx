@@ -127,9 +127,9 @@ export default function CurriculumApp() {
     document.documentElement.dataset.theme = theme;
     try { localStorage.setItem(THEME_KEY, theme); } catch { /* ignore */ }
   }, [theme]);
-  // Admin / megtekintő mód: KIZÁRÓLAG az URL dönt. ?a=<kulcs> érvényes értékkel →
-  // admin mód; hiányzó vagy rossz érték → megtekintő mód. Nincs tárolás sehol —
-  // a korábbi localStorage-kulcsot takarításképp töröljük is.
+  // Hozzáférés: a Tailscale-hálózat a védelem, kulcs nincs — az /api/auth kulcs
+  // nélküli környezetben mindig ok-t ad, így az app mindig szerkesztő módban fut.
+  // (A viewer-mód kódja megmarad: EDIT_KEY visszakapcsolásával újra élne.)
   useEffect(() => {
     try { localStorage.removeItem('mm-edit-key'); } catch { /* ignore */ }
     fetch('/api/auth', { headers: editHeaders(), cache: 'no-store' })

@@ -1,15 +1,6 @@
-// A szerkesztési jog kliens-oldali kezelése — SEMMILYEN tárolás nincs.
-// A mód mindig az aktuális URL-ből jön: ?a=<kulcs> → admin (szerkesztő) mód,
-// hiányzó vagy rossz érték → megtekintő mód. A paraméter az URL-ben marad.
-export const getEditKey = (): string | null => {
-  try {
-    if (typeof window === 'undefined') return null;
-    return new URL(window.location.href).searchParams.get('a');
-  } catch { return null; }
-};
-
-// minden író fetch-hez: a kulcs fejléce (ha van)
-export const editHeaders = (): Record<string, string> => {
-  const k = getEditKey();
-  return k ? { 'x-edit-key': k } : {};
-};
+// Hozzáférés-kezelés: NINCS. A védelem maga a Tailscale-hálózat — az appot csak a
+// tailnetbe bejelentkezett saját eszközök érik el, ott pedig mindig teljes
+// (szerkesztő) mód jár. A korábbi kulcs/query-logika szándékosan törölve.
+// (Ha valaha nyilvános Funnel-kitettség lesz, a szerver-oldali EDIT_KEY kapu a
+// web/.env.local-ban visszakapcsolható — akkor ide kell újra kulcs-fejléc.)
+export const editHeaders = (): Record<string, string> => ({});

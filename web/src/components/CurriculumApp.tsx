@@ -10,6 +10,7 @@ import EditModal from './EditModal';
 import AgendaView from './AgendaView';
 import EventsView from './EventsView';
 import ITView from './ITView';
+import DocsView from './DocsView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
 import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, Letter, agendaPeople, emptyEvent, emptyTask, nextPriority, normalizeAgenda } from '@/data/agenda';
 import { DEFAULT_PEOPLE, PeopleDB, PersonKind, buildRoster, normalizePeople, emailOf } from '@/data/people';
@@ -48,7 +49,7 @@ export default function CurriculumApp() {
   const [hydrated, setHydrated] = useState(false);
   const [edited, setEdited] = useState(false);
 
-  const [view, setView] = useState<'map' | 'catalog' | 'tasks' | 'events' | 'topics' | 'orarend' | 'it' | 'people'>('map');
+  const [view, setView] = useState<'map' | 'catalog' | 'tasks' | 'events' | 'topics' | 'orarend' | 'it' | 'docs' | 'people'>('map');
   const [agenda, setAgenda] = useState<Agenda>(DEFAULT_AGENDA);
   const [peopleDB, setPeopleDB] = useState<PeopleDB>(DEFAULT_PEOPLE);
   const [theme, setTheme] = useState<'light' | 'dark'>('light'); // alapértelmezés: világos téma
@@ -624,8 +625,10 @@ export default function CurriculumApp() {
               onClick={() => { if (!canEdit) return; setView('people'); }}>☎ Névjegyzék</button>
             <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>🕒 Órarend</button>
             <button className={view === 'it' ? 'is-on' : ''} onClick={() => setView('it')}>🖥 IT és szoftverek</button>
+            <button className={`editonly${view === 'docs' ? ' is-on' : ''}`} title="Belső útmutatók: Zoom, oktatói segédletek, tréning — csak szerkesztő módban"
+              onClick={() => { if (!canEdit) return; setView('docs'); }}>📚 Segédletek</button>
           </div>
-          <input className="search search--corner" placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : view === 'people' ? 'Keresés a névjegyzékben…' : view === 'orarend' ? 'Keresés az órarendben…' : view === 'it' ? 'Keresés szoftverre, teremre…' : view === 'topics' ? 'Keresés a sablonokban és levelekben…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />
+          <input className="search search--corner" placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : view === 'people' ? 'Keresés a névjegyzékben…' : view === 'orarend' ? 'Keresés az órarendben…' : view === 'it' ? 'Keresés szoftverre, teremre…' : view === 'docs' ? 'Keresés a segédletekben…' : view === 'topics' ? 'Keresés a sablonokban és levelekben…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />
           <div className="toolbar-break" />
           {isCurr && (
           <div className="viewtoggle">
@@ -733,7 +736,9 @@ export default function CurriculumApp() {
           ) : view === 'orarend' ? (
             <OrarendView q={q} knownNames={[...teacherNames, ...peopleDB.teachers.map((p) => p.name), ...peopleDB.institution.map((p) => p.name), ...peopleDB.alumni.map((p) => p.name)]} />
           ) : view === 'it' ? (
-            <ITView q={q} canEdit={canEdit} />
+            <ITView q={q} />
+          ) : view === 'docs' ? (
+            <DocsView q={q} />
           ) : null}
           {/* A Levelek nézet mindig mountolva marad (csak elrejtjük), hogy a beágyazott
               szerkesztőben írt piszkozat nézetváltáskor NE vesszen el. */}

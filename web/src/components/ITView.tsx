@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { getEditKey } from '@/lib/editkey';
 
 // IT és szoftverek: az Infopark termeiben telepített szoftverek (xlsx-ből generálva),
 // kétféle nézetben (termek szerint / szoftverek szerint), a globális keresővel szűrve.
-// A Segédletek szekció csak szerkesztőknek látszik (belső információk).
+// A segédletek KÜLÖN főmenü-fülön élnek (DocsView).
 
 interface Terem { terem: string; tipus: string; gepek: string; szoftverek: string[]; }
 interface Epulet { nev: string; termek: Terem[]; }
@@ -18,15 +17,7 @@ const norm = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[�
 const swKey = (s: string): string =>
   norm(s).replace(/\(.*?\)/g, ' ').replace(/\b\d[\d.]*\b/g, ' ').replace(/\s+/g, ' ').trim() || norm(s);
 
-const DOCS: { f: string; icon: string; title: string; desc: string }[] = [
-  { f: 'zoom-hasznalat.pdf', icon: '📹', title: 'Zoom: központi fiókok és foglalás', desc: 'ZOOM01–ZOOM20 fiókok foglalási rendje, belépés, személyes meeting-link indítása.' },
-  { f: 'zoom-utmutato.pdf', icon: '📹', title: 'Zoom használati útmutató (2024/25/2)', desc: 'Részletes lépések: kliens telepítése, óratartás, hibakezelés.' },
-  { f: 'fooallasu-oktatoi-segedlet.pdf', icon: '📘', title: 'Főállású oktatói segédlet (2024/25/2 · MKK)', desc: 'Adminisztráció, rendszerek, határidők — főállású oktatóknak.' },
-  { f: 'oraado-oktatoi-segedlet.pdf', icon: '📗', title: 'Óraadó oktatói segédlet (2024/25/2 · MKK)', desc: 'A legfontosabb tudnivalók óraadóknak: belépések, Neptun, teendők.' },
-  { f: 'rendszerhasznalati-trening.pptx', icon: '🖥', title: 'Rendszerhasználati tréning (2024/25)', desc: 'Bemutató az egyetemi rendszerek használatáról (letölthető pptx).' },
-];
-
-export default function ITView({ q, canEdit }: { q: string; canEdit: boolean }) {
+export default function ITView({ q }: { q: string }) {
   const [data, setData] = useState<ITData | null>(null);
   const [failed, setFailed] = useState(false);
   const [mode, setMode] = useState<'terem' | 'szoftver'>('terem');
@@ -71,9 +62,6 @@ export default function ITView({ q, canEdit }: { q: string; canEdit: boolean }) 
 
   if (failed) return <section className="wrap orv"><p className="tp-empty">A szoftver-adat még nincs feltöltve (grid/it-szoftverek.json).</p></section>;
   if (!data) return <section className="wrap orv"><p className="tp-empty">Betöltés…</p></section>;
-
-  const k = getEditKey();
-  const docHref = (f: string) => `/api/docs?f=${f}${k ? `&k=${encodeURIComponent(k)}` : ''}`;
 
   return (
     <section className="wrap orv itv">
@@ -124,24 +112,6 @@ export default function ITView({ q, canEdit }: { q: string; canEdit: boolean }) 
         </div>
       )}
 
-      {canEdit && (
-        <>
-          <h3 className="tp-gh it-doch">📚 Segédletek és útmutatók <span className="tp-gcount">{DOCS.length}</span></h3>
-          <p className="pm-note">Belső anyagok — csak szerkesztő módban látszanak, a publikus linken nem érhetők el.</p>
-          <div className="it-docs">
-            {DOCS.map((d) => (
-              <a key={d.f} className="cc-card it-doc" href={docHref(d.f)} target="_blank" rel="noreferrer">
-                <span className="it-doc-icon">{d.icon}</span>
-                <span className="it-doc-body">
-                  <span className="it-doc-title">{d.title}</span>
-                  <span className="it-doc-desc">{d.desc}</span>
-                </span>
-                <span className="it-doc-open">{d.f.endsWith('.pdf') ? 'megnyitás ↗' : 'letöltés ⤓'}</span>
-              </a>
-            ))}
-          </div>
-        </>
-      )}
       <p className="tp-pv-hint">Forrás: {data.forras} — újrageneráláskor a lista frissül. A kereső teremre és szoftverre is illeszkedik (pl. „Maya", „225", „Avid").</p>
     </section>
   );

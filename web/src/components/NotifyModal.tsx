@@ -7,7 +7,7 @@ import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, 
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
 import { editHeaders } from '@/lib/editkey';
-import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate, autoFill } from '@/lib/topics';
+import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate, autoFill, fmtDay } from '@/lib/topics';
 
 export interface NotifyTarget {
   targetType: 'event' | 'task' | null;
@@ -114,11 +114,13 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       if (evs.length === 1) { ev = evs[0]; setCtxSel(`e:${evs[0].id}`); }
       else if (evs.length === 0 && tks.length === 1) { tk = tks[0]; setCtxSel(`t:${tks[0].id}`); }
     }
+    // feladathoz kötött levélnél a feladat SZÜLŐ-eseményéből jön az időpont és a helyszín
+    if (!ev && tk?.eventId) ev = (ctxEvents ?? []).find((e) => e.id === tk.eventId) ?? null;
     const ctx = {
-      title: ev?.title || tk?.title || '',
-      when: ev ? (ev.when || ev.day) : undefined,
+      title: (target.task ? tk?.title : ev?.title || tk?.title) || '',
+      when: ev ? (ev.when || fmtDay(ev.day)) : undefined,
       place: target.event ? (place || target.event.place) : ev?.place,
-      due: tk ? (tk.due || tk.dueDate) : undefined,
+      due: tk ? (tk.due || fmtDay(tk.dueDate)) : undefined,
     };
     lastTopicRef.current = t;
     setActiveTopic(t);
@@ -143,7 +145,9 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     setBody(`${txt}\n\n${buildFooter(db, sigOn)}`);
     setBodyDirty(true);
     const linked = ev ?? tk;
-    setResult(`✓ Sablon betöltve: ${t.label}.${linked && !target.event && !target.task ? ` Kapcsolt naptári tétel: ${linked.title}.` : ''} Csak a maradék [szögletes] mezőt töltsd ki.`);
+    const tipp = !linked && !target.event && !target.task && ((ctxEvents?.length ?? 0) + (ctxTasks?.length ?? 0)) > 0
+      ? ' Nincs naptári találat: fent, a Kapcsolt naptári tételnél húzhatod be a dátumokat.' : '';
+    setResult(`✓ Sablon betöltve: ${t.label}.${linked && !target.event && !target.task ? ` Kapcsolt naptári tétel: ${linked.title}.` : ''}${tipp} Csak a maradék [szögletes] mezőt töltsd ki.`);
   };
 
   // ha a kapcsolt tétel változik (másikat választasz, vagy a naptárban átírják a

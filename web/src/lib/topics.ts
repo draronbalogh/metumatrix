@@ -39,6 +39,14 @@ export const semesterInfo = (d: Date = new Date()): SemInfo => {
     honap: HONAPOK[m],
   };
 };
+// ISO dátum (2026-09-02) → olvasható magyar forma a levelekhez
+export const fmtDay = (iso?: string | null): string | null => {
+  if (!iso) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!m) return iso;
+  return `${m[1]}. ${HONAPOK[Number(m[2]) - 1]} ${Number(m[3])}.`;
+};
+
 export const autoFill = (s: string, d: Date = new Date()): string => {
   const i = semesterInfo(d);
   const cap = (x: string): string => x.charAt(0).toUpperCase() + x.slice(1);

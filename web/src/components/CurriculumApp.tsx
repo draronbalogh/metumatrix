@@ -304,6 +304,15 @@ export default function CurriculumApp() {
       setNotify({ targetType: 'event', targetId: e.id, event: e, task: null, names: [], steps, source: e.source ?? null, preload });
     } else setNotify({ targetType: null, targetId: null, task: null, event: null, names: [], steps: [], source: null, preload });
   }, []);
+  // sablon→naptár kapcsolat rögzítése UID szerint (a fájlba is lementve)
+  const linkTopic = useCallback((topicId: string, sel: string | null) => {
+    if (!canEditRef.current) return;
+    const cur = agendaRef.current;
+    const links = { ...(cur.topicLinks || {}) };
+    if (sel) links[topicId] = sel; else delete links[topicId];
+    commitAgenda({ ...cur, topicLinks: links });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // a mentett levél kártyájának címe a Levelek nézet listájához
   const letterTargetTitle = useCallback((l: Letter): string | null => {
     const cur = agendaRef.current;
@@ -728,6 +737,8 @@ export default function CurriculumApp() {
                   letterReq={letterReq}
                   ctxEvents={agenda.events}
                   ctxTasks={agenda.tasks}
+                  topicLinks={agenda.topicLinks}
+                  onLinkTopic={linkTopic}
                   teacherNames={teacherNames}
                   db={peopleDB}
                   letters={(agenda.letters || []).filter((l) => l.targetId === null)}
@@ -869,6 +880,8 @@ export default function CurriculumApp() {
           target={notify}
           ctxEvents={agenda.events}
           ctxTasks={agenda.tasks}
+          topicLinks={agenda.topicLinks}
+          onLinkTopic={linkTopic}
           teacherNames={teacherNames}
           db={peopleDB}
           letters={(agenda.letters || []).filter((l) => l.targetId === notify.targetId)}

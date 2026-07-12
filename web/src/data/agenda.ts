@@ -84,6 +84,7 @@ export interface Agenda {
   tasks: AgendaTask[];
   events: AgendaEvent[];
   letters: Letter[];
+  topicLinks: Record<string, string>; // témasablon-id → 'e:<esemény-id>' / 't:<feladat-id>' rögzített kapcsolat
 }
 
 // Új feladat/esemény alapértelmezett felelőse
@@ -105,6 +106,7 @@ export const normalizeAgenda = (a: Partial<Agenda>): Agenda => ({
   tasks: (a.tasks ?? []).map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null, priority: t.priority ?? 'normal', category: t.category ?? null, createdAt: t.createdAt ?? null, source: t.source ?? null })),
   events: (a.events ?? []).map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null, featured: e.featured ?? false, source: e.source ?? null })),
   letters: a.letters ?? [],
+  topicLinks: a.topicLinks ?? {},
 });
 
 // Egy névhez tartozó feladatok/események (felelősként vagy résztvevőként).
@@ -268,4 +270,5 @@ export const DEFAULT_AGENDA: Agenda = {
   })),
   events: RAW_EVENTS.map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null, featured: e.featured ?? false })),
   letters: [],
+  topicLinks: {},
 };

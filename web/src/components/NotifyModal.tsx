@@ -36,6 +36,8 @@ interface Props {
   letterReq?: { l: Letter; n: number } | null;        // kívülről kért mentett-levél betöltés
   ctxEvents?: AgendaEvent[]; // kártya nélküli levélnél: kapcsolható események (dátum/helyszín forrás)
   ctxTasks?: AgendaTask[];   // kártya nélküli levélnél: kapcsolható feladatok (határidő forrás)
+  topicLinks?: Record<string, string>; // rögzített sablon→naptár kapcsolatok (UID szerint, 100% determinisztikus)
+  onLinkTopic?: (topicId: string, sel: string | null) => void; // kapcsolat rögzítése / törlése
 }
 
 
@@ -58,11 +60,11 @@ const saveUi = (kind: LetterKind, sigOn: boolean): void => {
 const norm = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 // az automatikus naptár-hozzárendelés NEM köthet általános folyamat-szavakra
 // (egyeztetés, emlékeztető...), csak megkülönböztető nevekre (Erasmus, Educatio...)
-const LINK_STOP = new Set(['egyeztetes', 'egyeztetese', 'emlekezteto', 'meghivo', 'felkeres', 'felkerese', 'korlevel', 'hatarido', 'hataridok', 'tajekoztato', 'osszefoglalo', 'szervezes', 'szervezese', 'beosztas', 'bekeres', 'bekerese', 'megbeszeles', 'visszajelzes', 'visszaigazolas', 'jovahagyas', 'elokeszites', 'elojelzes', 'kezeles', 'kezelese', 'valasz', 'kerdes', 'altalanos', 'hallgato', 'hallgatoi', 'hallgatok', 'hallgatoknak', 'oktato', 'oktatoi', 'oktatok', 'oktatoknak', 'kollega', 'kollegak', 'idopont', 'idozites', 'tudnivalok', 'reszletek', 'egyeni', 'ertekezlet', 'ertekeles', 'ertekelesi', 'leadas', 'leadasi', 'frissites', 'kikuldese', 'veglegesites', 'megosztasa', 'tovabbitasa', 'osszehivasa', 'surgetese', 'nyugtazasa', 'lemondasa', 'elfogadasa']);
+const LINK_STOP = new Set(['egyeztetes', 'egyeztetese', 'emlekezteto', 'meghivo', 'felkeres', 'felkerese', 'korlevel', 'hatarido', 'hataridok', 'tajekoztato', 'osszefoglalo', 'szervezes', 'szervezese', 'beosztas', 'bekeres', 'bekerese', 'megbeszeles', 'visszajelzes', 'visszaigazolas', 'jovahagyas', 'elokeszites', 'elojelzes', 'kezeles', 'kezelese', 'valasz', 'kerdes', 'altalanos', 'hallgato', 'hallgatoi', 'hallgatok', 'hallgatoknak', 'oktato', 'oktatoi', 'oktatok', 'oktatoknak', 'kollega', 'kollegak', 'idopont', 'idozites', 'tudnivalok', 'reszletek', 'egyeni', 'ertekezlet', 'ertekeles', 'ertekelesi', 'leadas', 'leadasi', 'frissites', 'kikuldese', 'veglegesites', 'megosztasa', 'tovabbitasa', 'osszehivasa', 'surgetese', 'nyugtazasa', 'lemondasa', 'elfogadasa', 'esemeny', 'esemenyek', 'esemenyre', 'esemenyekre', 'kozelgo', 'rendezveny', 'rendezvenyek', 'elokeszitese']);
 
 // Levél-készítő: sablonból generált szöveg + 3 numerikus másolás-gomb (Outlookba illesztéshez).
 // A küldés (Brevo/SMTP) opcionális — csak akkor jelenik meg, ha a szerveren be van állítva.
-export default function NotifyModal({ target, teacherNames, db, letters, onSaveLetter, onDeleteLetter, onPlaceChange, onSourceChange, onClose, inline, topicReq, letterReq, ctxEvents, ctxTasks }: Props) {
+export default function NotifyModal({ target, teacherNames, db, letters, onSaveLetter, onDeleteLetter, onPlaceChange, onSourceChange, onClose, inline, topicReq, letterReq, ctxEvents, ctxTasks, topicLinks, onLinkTopic }: Props) {
   const ui0 = useMemo(loadUi, []);
   const [kind, setKind] = useState<LetterKind>(ui0.kind);
   const [sigOn, setSigOn] = useState(ui0.sigOn); // hivatalos aláírás a levélben (a link-blokk mindig ott van)
@@ -108,8 +110,16 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const applyTopic = (t: TopicTemplate) => {
     let ev = target.event ?? effEvent;
     let tk = target.task ?? effTask;
-    // automatikus hozzárendelés: ha nincs kapcsolt tétel, és a sablon neve
-    // egyértelműen egyezik egy naptári eseménnyel / feladattal, azt használjuk
+    // 1) rögzített (UID-alapú) kapcsolat: ha korábban már összekötötted, az a biztos forrás
+    let evStored = false;
+    if (!ev && !tk) {
+      const stored = topicLinks?.[t.id];
+      if (stored?.startsWith('e:')) ev = (ctxEvents ?? []).find((e) => e.id === stored.slice(2)) ?? null;
+      else if (stored?.startsWith('t:')) tk = (ctxTasks ?? []).find((x) => x.id === stored.slice(2)) ?? null;
+      if (ev) { setCtxSel(`e:${ev.id}`); evStored = true; }
+      else if (tk) { setCtxSel(`t:${tk.id}`); evStored = true; }
+    }
+    // 2) névegyezés csak javaslatként, első alkalommal — és ha talál, rögzítjük UID szerint
     if (!ev && !tk) {
       const toks = [...t.id.split('-'), ...t.label.split(/[^\wáéíóöőúüűÁÉÍÓÖŐÚÜŰ]+/)].map(norm).filter((w) => w.length >= 6 && !LINK_STOP.has(w));
       const evs = (ctxEvents ?? []).filter((e) => toks.some((w) => norm(e.title).includes(w)));
@@ -150,7 +160,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     const linked = ev ?? tk;
     const tipp = !linked && !target.event && !target.task && ((ctxEvents?.length ?? 0) + (ctxTasks?.length ?? 0)) > 0
       ? ' Nincs naptári találat: fent, a Kapcsolt naptári tételnél húzhatod be a dátumokat.' : '';
-    setResult(`✓ Sablon betöltve: ${t.label}.${linked && !target.event && !target.task ? ` Kapcsolt naptári tétel: ${linked.title}.` : ''}${tipp} Csak a maradék [szögletes] mezőt töltsd ki.`);
+    setResult(`✓ Sablon betöltve: ${t.label}.${linked && !target.event && !target.task ? ` Kapcsolt naptári tétel: ${linked.title}${evStored ? ' (rögzített kapcsolat)' : ''}.` : ''}${tipp} Csak a maradék [szögletes] mezőt töltsd ki.`);
   };
 
   // ha a kapcsolt tétel változik (másikat választasz, vagy a naptárban átírják a
@@ -515,7 +525,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           {!target.event && !target.task && ((ctxEvents?.length ?? 0) + (ctxTasks?.length ?? 0)) > 0 && (
             <div className="field full">
               <label>Kapcsolt naptári tétel (a dátum, helyszín, határidő innen töltődik a sablonba)</label>
-              <select value={ctxSel} onChange={(e) => setCtxSel(e.target.value)}>
+              <select value={ctxSel} onChange={(e) => { setCtxSel(e.target.value); if (activeTopic) onLinkTopic?.(activeTopic.id, e.target.value || null); }}>
                 <option value="">Nincs kapcsolt tétel (általános levél)</option>
                 {(ctxEvents?.length ?? 0) > 0 && (
                   <optgroup label="Események">

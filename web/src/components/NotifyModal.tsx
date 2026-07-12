@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AgendaEvent, AgendaTask, Letter } from '@/data/agenda';
-import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster, formerTeacherNames, teacherStatusNames, studentOrganizerNames } from '@/data/people';
+import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster, formerTeacherNames, teacherStatusNames, studentOrganizerNames, SIGNATURE_SEPARATOR } from '@/data/people';
 import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, LetterKind, MeetingMode, MeetingPlan } from '@/lib/letters';
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
 import { editHeaders } from '@/lib/editkey';
-import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate, autoFill, fmtDay } from '@/lib/topics';
+import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate, autoFill, fmtDay, paraphrase } from '@/lib/topics';
 
 export interface NotifyTarget {
   targetType: 'event' | 'task' | null;
@@ -639,6 +639,17 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                     } else if (confirmIfDirty()) regenerate(kind);
                   }}>{activeTopic ? '↻ Sablon újratöltése' : '🎲 Átfogalmaz'}</button>
                 <button type="button" className="nm-bodytoggle" title="Csak a megszólítást és az elköszönést cseréli, a törzsszöveg marad" onClick={() => setBody((b) => rerollLetter(b))}>↺ Megszólítás és zárás</button>
+                <button type="button" className="nm-bodytoggle" title="A tartalom és minden adat változatlan marad, csak néhány fordulat megfogalmazása cserélődik; az egyes/többes szám nem sérül"
+                  onClick={() => {
+                    const idx = body.indexOf(SIGNATURE_SEPARATOR);
+                    const head = idx >= 0 ? body.slice(0, idx) : body;
+                    const tail = idx >= 0 ? body.slice(idx) : '';
+                    const r = paraphrase(head);
+                    if (!r.changed) { setResult('Ebben a szövegben most nincs cserélhető fordulat.'); return; }
+                    setBody(r.text + tail);
+                    setBodyDirty(true);
+                    setResult(`✓ ${r.changed} fordulat átfogalmazva; a tartalom és az adatok változatlanok.`);
+                  }}>≈ Finom átfogalmazás</button>
                 <button type="button" aria-pressed={sigOn} className={`nm-bodytoggle${sigOn ? '' : ' nm-off'}`} title="A hivatalos aláírás ki-be kapcsolása; a szakos linkek mindig a levél alján maradnak" onClick={toggleSig}>✒ Aláírás: {sigOn ? 'be' : 'ki'}</button>
                 <button type="button" className="nm-bodytoggle" onClick={() => setBodyOpen((v) => !v)}>{bodyOpen ? '▲ elrejtés' : '▼ szerkesztés'}</button>
               </div>

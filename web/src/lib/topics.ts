@@ -59,6 +59,53 @@ export const autoFill = (s: string, d: Date = new Date()): string => {
     .replace(/\[[hH]ónap\]/g, (m0) => (m0 === '[Hónap]' ? cap(i.honap) : i.honap));
 };
 
+// Finom átfogalmazás: a tartalom, az adatok és az egyes/többes szám változatlan,
+// csak a visszatérő fordulatok cserélődnek azonos jelentésű változatra. Minden
+// csoport tagjai azonos számban/regiszterben állnak, így a csere sosem ront nyelvtant.
+const VARIANTS: string[][] = [
+  ['Kérlek, jelezzétek', 'Kérlek, szóljatok', 'Kérlek, írjátok meg'],
+  ['Kérlek, jelezd', 'Kérlek, szólj', 'Kérlek, írd meg'],
+  ['Kérlek, nézzétek át', 'Kérlek, fussátok át', 'Kérlek, tekintsétek át'],
+  ['Köszönöm az együttműködést', 'Köszönöm a közreműködést', 'Köszönöm, hogy ebben is partnerek vagytok'],
+  ['keressetek nyugodtan', 'keressetek bátran', 'szóljatok bizalommal'],
+  ['Kérlek, jelezz vissza', 'Kérlek, adj visszajelzést'],
+  ['Fontos, hogy', 'Lényeges, hogy'],
+  ['Köszönöm, hogy segítesz', 'Hálás vagyok, hogy segítesz'],
+  ['írjatok nyugodtan', 'írjatok bátran'],
+  ['Kérlek, küldjétek el', 'Kérlek, juttassátok el hozzám'],
+  ['szólj nyugodtan', 'szólj bátran'],
+  ['Köszönöm a segítséget!', 'Előre is köszönöm a segítséget!', 'Köszönöm szépen a segítséget!'],
+  ['nagyon örülnék', 'igazán örülnék'],
+  ['Kérdés esetén', 'Bármilyen kérdés esetén'],
+  ['jelezzétek, ha', 'szóljatok, ha'],
+  ['Köszönöm!', 'Köszönöm szépen!', 'Előre is köszönöm!'],
+  ['Köszönöm a gyors visszajelzést!', 'Előre is köszönöm a gyors visszajelzést!'],
+  ['Köszönöm a türelmeteket', 'Köszönöm a türelmet'],
+  ['örülök minden segítségnek', 'minden segítségnek örülök'],
+  ['Emlékeztetlek Benneteket, hogy', 'Szeretnélek emlékeztetni Titeket, hogy'],
+  ['Kérlek, tartsátok a határidőt.', 'Kérlek, figyeljetek a határidőre.'],
+  ['Szeretnélek emlékeztetni, hogy', 'Emlékeztetlek, hogy'],
+  ['Ha bármiben elakadsz', 'Ha elakadnál valamiben'],
+  ['Köszönöm, hogy időt szántok rá', 'Köszönöm, hogy időt fordítotok rá'],
+  ['Közeledik a', 'Egyre közelebb a'],
+];
+const escRe = (x: string): string => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+export const paraphrase = (text: string): { text: string; changed: number } => {
+  const all = VARIANTS.flatMap((g, gi) => g.map((m) => ({ m, gi })));
+  const re = new RegExp(all.map((x) => escRe(x.m)).sort((a, b) => b.length - a.length).join('|'), 'g');
+  let changed = 0;
+  // egyetlen menet: a beszúrt szöveget nem dolgozzuk fel újra, nincs oda-vissza csere
+  const out = text.replace(re, (m) => {
+    const hit = all.find((x) => x.m === m);
+    if (!hit) return m;
+    const others = VARIANTS[hit.gi].filter((x) => x !== m);
+    if (!others.length) return m;
+    changed += 1;
+    return others[Math.floor(Math.random() * others.length)];
+  });
+  return { text: out, changed };
+};
+
 export const TOPIC_TEMPLATES: TopicTemplate[] = [
   // 1. tömb: tematikák és órarend
   {

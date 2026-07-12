@@ -1065,6 +1065,41 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
   .search--corner { margin-left: 0; flex: 1 1 auto; min-width: 0; max-width: none; }
 }
 
+/* ---- IT es szoftverek nezet ---- */
+.it-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin-bottom: 26px; }
+.it-room { padding: 13px 15px; cursor: default; }
+.it-room-head { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+.it-room-no { font-family: var(--ff-display); font-weight: 800; font-size: 1.15rem; color: var(--brand-text); }
+.it-room-type { font-weight: 600; font-size: .86rem; }
+.it-room-pc { margin-left: auto; font-size: .74rem; color: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.it-hits { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.it-hit { background: var(--brand); color: #fff; border-color: var(--brand); }
+.it-swlist { margin-top: 8px; }
+.it-swlist summary { cursor: pointer; font-size: .78rem; font-weight: 600; color: var(--ink-2); }
+.it-swlist summary:hover { color: var(--brand-text); }
+.it-swlist ul { margin: 7px 0 2px; padding-left: 19px; font-size: .8rem; line-height: 1.55; columns: 2; column-gap: 18px; }
+.it-swgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-bottom: 26px; }
+.it-sw { padding: 11px 13px; cursor: default; }
+.it-sw-name { font-weight: 700; font-size: .9rem; }
+.it-sw-vars { font-size: .72rem; color: var(--ink-2); margin-top: 2px; }
+.it-sw-rooms { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
+.it-doch { margin-top: 6px; }
+.it-docs { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; margin: 10px 0 22px; }
+.it-doc { display: flex; align-items: center; gap: 12px; padding: 12px 14px; text-decoration: none; color: inherit; }
+.it-doc:hover { border-color: var(--brand); }
+.it-doc-icon { font-size: 1.5rem; flex: none; }
+.it-doc-body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.it-doc-title { font-weight: 700; font-size: .87rem; }
+.it-doc-desc { font-size: .74rem; color: var(--ink-2); line-height: 1.4; }
+.it-doc-open { margin-left: auto; flex: none; font-size: .72rem; font-weight: 700; color: var(--brand-text); white-space: nowrap; }
+@media (max-width: 720px) { .it-swlist ul { columns: 1; } .it-doc-open { display: none; } }
+
+/* Google Meet gomb az esemenykartyan */
+.ev-task.meet { border-color: color-mix(in srgb, #0e7f4f 45%, var(--line)); color: #0e7f4f; font-weight: 700; }
+.ev-task.meet:hover { background: #0e7f4f; border-color: #0e7f4f; color: #fff; }
+html[data-theme='dark'] .ev-task.meet { color: #34d399; border-color: color-mix(in srgb, #34d399 40%, var(--line)); }
+html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; }
+
 /* Mobil: a nevjegyzek/orarend szuro-chipek EGYETLEN vizszintesen gorgetheto sorban,
    kulonben a 15 chip 5-6 sorba torve a fel kepernyot elfoglalja es a tartalom nem latszik */
 @media (max-width: 720px) {

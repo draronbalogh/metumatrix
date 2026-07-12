@@ -9,9 +9,10 @@ import CatalogView from './CatalogView';
 import EditModal from './EditModal';
 import AgendaView from './AgendaView';
 import EventsView from './EventsView';
+import ITView from './ITView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
 import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, Letter, agendaPeople, emptyEvent, emptyTask, nextPriority, normalizeAgenda } from '@/data/agenda';
-import { DEFAULT_PEOPLE, PeopleDB, PersonKind, buildRoster, normalizePeople } from '@/data/people';
+import { DEFAULT_PEOPLE, PeopleDB, PersonKind, buildRoster, normalizePeople, emailOf } from '@/data/people';
 import PeopleModal from './PeopleModal';
 import NotifyModal, { NotifyTarget } from './NotifyModal';
 import TopicsView from './TopicsView';
@@ -624,7 +625,7 @@ export default function CurriculumApp() {
             <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>🕒 Órarend</button>
             <button className={view === 'it' ? 'is-on' : ''} onClick={() => setView('it')}>🖥 IT és szoftverek</button>
           </div>
-          <input className="search search--corner" placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : view === 'people' ? 'Keresés a névjegyzékben…' : view === 'orarend' ? 'Keresés az órarendben…' : view === 'topics' ? 'Keresés a sablonokban és levelekben…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />
+          <input className="search search--corner" placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : view === 'people' ? 'Keresés a névjegyzékben…' : view === 'orarend' ? 'Keresés az órarendben…' : view === 'it' ? 'Keresés szoftverre, teremre…' : view === 'topics' ? 'Keresés a sablonokban és levelekben…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />
           <div className="toolbar-break" />
           {isCurr && (
           <div className="viewtoggle">
@@ -725,16 +726,14 @@ export default function CurriculumApp() {
               }}
               onPerson={onInstructor}
               onNotify={notifyEvent}
+              emailFor={(n) => emailOf(peopleDB, n)}
             />
           ) : view === 'people' ? (
             <PeopleModal inline externalQuery={q} teacherNames={teacherNames} db={peopleDB} onSave={savePeople} onClose={() => { /* nézetként nincs bezárás */ }} />
           ) : view === 'orarend' ? (
             <OrarendView q={q} knownNames={[...teacherNames, ...peopleDB.teachers.map((p) => p.name), ...peopleDB.institution.map((p) => p.name), ...peopleDB.alumni.map((p) => p.name)]} />
           ) : view === 'it' ? (
-            <section className="wrap orv">
-              <div className="tp-headrow"><h2 className="tp-title">🖥 IT, szoftverek és teremkiosztás</h2></div>
-              <p className="tp-empty">Ez a nézet elő van készítve: ide kerül a szoftver-lista és a teremkiosztás táblázata. Küldd el az anyagot (xlsx vagy lista), és ugyanolyan kereshető, MD-re szűrt táblázat lesz belőle, mint az Órarend.</p>
-            </section>
+            <ITView q={q} canEdit={canEdit} />
           ) : null}
           {/* A Levelek nézet mindig mountolva marad (csak elrejtjük), hogy a beágyazott
               szerkesztőben írt piszkozat nézetváltáskor NE vesszen el. */}

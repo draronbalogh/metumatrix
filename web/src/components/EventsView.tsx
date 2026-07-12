@@ -17,9 +17,30 @@ interface Props {
   onAddTaskFor: (eventId: string) => void; // új feladat rögtön ehhez az eseményhez kötve
   onPerson: (name: string) => void;
   onNotify: (id: string) => void;         // értesítés az esemény résztvevőinek
+  emailFor: (name: string) => string | null; // a Névjegyzékből — a Meet-meghívó vendégeihez
 }
 
-export default function EventsView({ agenda, q, instr, kindOf, onAdd, onEdit, onEditTask, onAddTaskFor, onPerson, onNotify }: Props) {
+// Google Naptár-esemény előtöltve Meet videohívással (vcon=meet): cím, időpont,
+// helyszín, leírás és a résztvevők email-címei már ki vannak töltve, csak menteni kell.
+const meetUrl = (e: AgendaEvent, emails: string[]): string => {
+  const p = new URLSearchParams({ text: e.title, vcon: 'meet', hl: 'hu' });
+  if (e.day) {
+    // ha a "when" szövegben van óra:perc, azt vesszük kezdésnek, különben 9:00; hossz 1 óra
+    const m = e.when.match(/(\d{1,2})[:.](\d{2})/);
+    const h = m ? Math.min(23, parseInt(m[1], 10)) : 9;
+    const mi = m ? m[2] : '00';
+    const d = e.day.replace(/-/g, '');
+    const hh = String(h).padStart(2, '0');
+    const he = String(Math.min(23, h + 1)).padStart(2, '0');
+    p.set('dates', `${d}T${hh}${mi}00/${d}T${he}${mi}00`);
+  }
+  if (e.place) p.set('location', e.place);
+  if (e.note) p.set('details', e.note);
+  if (emails.length > 0) p.set('add', emails.join(','));
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&${p.toString()}`;
+};
+
+export default function EventsView({ agenda, q, instr, kindOf, onAdd, onEdit, onEditTask, onAddTaskFor, onPerson, onNotify, emailFor }: Props) {
   const [mode, setMode] = useState<'list' | 'cal'>('list');
 
   const matches = (e: AgendaEvent) => {
@@ -113,6 +134,12 @@ export default function EventsView({ agenda, q, instr, kindOf, onAdd, onEdit, on
                       onClick={(ev) => { ev.stopPropagation(); onAddTaskFor(e.id); }}>+ feladat</button>
                     <button className="ev-task notify" title="Értesítés küldése a résztvevőknek"
                       onClick={(ev) => { ev.stopPropagation(); onNotify(e.id); }}>✉ értesítés</button>
+                    <button className="ev-task meet" title="Google Meet találkozó szervezése: naptár-esemény előtöltve videohívással, résztvevőkkel"
+                      onClick={(ev) => {
+                        ev.stopPropagation();
+                        const emails = [e.owner, ...e.people].filter((n): n is string => !!n).map(emailFor).filter((x): x is string => !!x);
+                        window.open(meetUrl(e, [...new Set(emails)]), '_blank', 'noopener');
+                      }}>📹 Meet</button>
                   </div>
                 </div>
               </article>

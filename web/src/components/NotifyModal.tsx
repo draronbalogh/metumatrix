@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AgendaEvent, AgendaTask, Letter } from '@/data/agenda';
-import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster, formerTeacherNames, teacherStatusNames, studentOrganizerNames, studentStatusNames, SIGNATURE_SEPARATOR } from '@/data/people';
+import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster, formerTeacherNames, teacherStatusNames, studentOrganizerNames, studentStatusNames, studentCohorts, cohortNames, SIGNATURE_SEPARATOR } from '@/data/people';
 import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, LetterKind, MeetingMode, MeetingPlan } from '@/lib/letters';
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
@@ -272,6 +272,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     'H:nagykövet': new Set(studentStatusNames(db, 'nagykövet')),
     'H:képviselő': new Set(studentStatusNames(db, 'képviselő')),
     'H:demonstrátor': new Set(studentStatusNames(db, 'demonstrátor')),
+    ...Object.fromEntries(studentCohorts(db).map((c) => [`H:${c}`, new Set(cohortNames(db, c))])),
   }), [teacherNames, db]);
 
   // a kiválasztott címzettek összetétele (T/H/I/A/P) — ehhez igazodik a megszólítás.
@@ -479,6 +480,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                   { label: 'H · nagykövetek', names: studentStatusNames(db, 'nagykövet'), hint: 'Nagykövet státuszú hallgatók' },
                   { label: 'H · képviselők', names: studentStatusNames(db, 'képviselő'), hint: 'Képviselő státuszú hallgatók' },
                   { label: 'H · demonstrátorok', names: studentStatusNames(db, 'demonstrátor'), hint: 'Demonstrátor státuszú hallgatók' },
+                  ...studentCohorts(db).map((c) => ({ label: `${c} évf.`, names: cohortNames(db, c), hint: `A(z) ${c} évfolyam hallgatói` })),
                   { label: 'Minden intézményi', names: db.institution.map((p) => p.name), hint: 'A teljes intézményi kontaktlista' },
                   { label: 'Minden alumni', names: db.alumni.map((p) => p.name), hint: 'A teljes alumni lista' },
                   { label: 'Minden opponens', names: db.opponents.map((p) => p.name), hint: 'Opponensek és diploma-opponensek' },

@@ -8,7 +8,8 @@ export interface Person {
   phone: string | null;
   title?: string | null; // titulus / beosztás — MINDEN listán egységesen
   field?: string | null; // terület, ahol dolgozik / amiért kereshető — MINDEN listán egységesen
-  status?: string | null; // tanárnál: főállású / óraadó · hallgatónál: szervező / nagykövet / képviselő / demonstrátor
+  status?: string | null; // tanárnál: főállású / óraadó / volt-külsős · hallgatónál: szervező / nagykövet / képviselő / demonstrátor
+  cohort?: string | null; // hallgatónál/alumninál az évfolyam (pl. 'BA 2024', 'MA 2025') — szűrőkhöz
 }
 
 // Választható státusz-címkék — ezekből lesznek a levél-címzett gyorskörök.
@@ -22,6 +23,11 @@ export const formerTeacherNames = (teacherNames: string[], db: PeopleDB): string
 // Oktatók adott státusszal — a Névjegyzék-adatbázis címkéje az EGYETLEN forrás.
 export const teacherStatusNames = (db: PeopleDB, status: string): string[] =>
   db.teachers.filter((p) => p.status === status).map((p) => p.name);
+// A hallgatói évfolyamok (cohortok) az adatbázisból, rendezve — szűrőkhöz és körökhöz.
+export const studentCohorts = (db: PeopleDB): string[] =>
+  [...new Set(db.students.map((p) => p.cohort).filter((c): c is string => !!c))].sort();
+export const cohortNames = (db: PeopleDB, cohort: string): string[] =>
+  db.students.filter((p) => p.cohort === cohort).map((p) => p.name);
 // Adott státuszú hallgatók (szervező / nagykövet / képviselő / demonstrátor).
 export const studentStatusNames = (db: PeopleDB, status: string): string[] =>
   db.students.filter((p) => p.status === status).map((p) => p.name);
@@ -98,7 +104,7 @@ export const normalizePhone = (phone: string | null): string | null => {
   return t; // külföldi vagy egyéb formátum — hagyjuk békén
 };
 
-const normPerson = (x: Person): Person => ({ name: x.name, email: x.email ?? null, phone: normalizePhone(x.phone ?? null), title: x.title ?? null, field: x.field ?? null, status: x.status ?? null });
+const normPerson = (x: Person): Person => ({ name: x.name, email: x.email ?? null, phone: normalizePhone(x.phone ?? null), title: x.title ?? null, field: x.field ?? null, status: x.status ?? null, cohort: x.cohort ?? null });
 
 export const normalizePeople = (p: Partial<PeopleDB>): PeopleDB => {
   // régi, egyben tárolt aláírás szétválasztása: a "Web: ..."-tól kezdődő rész a link-blokk

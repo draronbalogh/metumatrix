@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { PeopleDB, PeopleGroup, Person, normalizePhone, TEACHER_STATUSES, STUDENT_STATUSES } from '@/data/people';
+import { PeopleDB, PeopleGroup, Person, normalizePhone, TEACHER_STATUSES, STUDENT_STATUSES, studentCohorts } from '@/data/people';
 import GrowArea from './GrowArea';
 
 interface Props {
@@ -14,11 +14,11 @@ interface Props {
 }
 
 // Egységes rubrikák MINDEN listán: név, email, telefon, titulus, terület (+ státusz a tanár/hallgató listán)
-interface Row { name: string; email: string; phone: string; title: string; field: string; status: string; }
+interface Row { name: string; email: string; phone: string; title: string; field: string; status: string; cohort: string; }
 
-const toRow = (name: string, p?: Person): Row => ({ name, email: p?.email ?? '', phone: p?.phone ?? '', title: p?.title ?? '', field: p?.field ?? '', status: p?.status ?? '' });
-const toPerson = (r: Row): Person => ({ name: r.name.trim(), email: r.email.trim() || null, phone: normalizePhone(r.phone.trim() || null), title: r.title.trim() || null, field: r.field.trim() || null, status: r.status.trim() || null });
-const EMPTY_ROW: Row = { name: '', email: '', phone: '', title: '', field: '', status: '' };
+const toRow = (name: string, p?: Person): Row => ({ name, email: p?.email ?? '', phone: p?.phone ?? '', title: p?.title ?? '', field: p?.field ?? '', status: p?.status ?? '', cohort: p?.cohort ?? '' });
+const toPerson = (r: Row): Person => ({ name: r.name.trim(), email: r.email.trim() || null, phone: normalizePhone(r.phone.trim() || null), title: r.title.trim() || null, field: r.field.trim() || null, status: r.status.trim() || null, cohort: r.cohort.trim() || null });
+const EMPTY_ROW: Row = { name: '', email: '', phone: '', title: '', field: '', status: '', cohort: '' };
 const hasData = (r: Row): boolean => !!(r.email.trim() || r.phone.trim() || r.title.trim() || r.field.trim() || r.status.trim());
 // ékezet-független keresés minden mezőben
 const norm = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -76,6 +76,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
   const [pqLocal, setPqLocal] = useState('');
   const pq = externalQuery !== undefined ? externalQuery : pqLocal;
   const [psec, setPsec] = useState<Sec>('');
+  const [hcoh, setHcoh] = useState(''); // hallgatói évfolyam-szűrő
   const show = (s: Sec) => psec === '' || psec === s || (s === 'T' && T_SECS.includes(psec)) || (s === 'H' && H_SECS.includes(psec));
   // választható tagok: tantervi tanárok + az itt szerkesztett összes lista
   const memberPool = [
@@ -122,7 +123,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
     : psec === 'To' ? r.status === 'óraadó'
     : psec === 'Tv' ? (r.status === 'volt/külsős' || (!r.status && !teacherNames.includes(r.name)))
     : true;
-  const sStat = (r: Row): boolean => (H_STAT[psec] ? r.status === H_STAT[psec] : true);
+  const sStat = (r: Row): boolean => (H_STAT[psec] ? r.status === H_STAT[psec] : true) && (!hcoh || r.cohort === hcoh);
   const tVisible = teachers.map((r, i) => ({ r, i })).filter(({ r }) => rowMatch(r, pq) && tStat(r));
   const sVisible = students.map((r, i) => ({ r, i })).filter(({ r }) => rowMatch(r, pq) && sStat(r));
 
@@ -135,6 +136,12 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
                 placeholder="Keresés mindenben: név, email, titulus, terület, státusz…" />
             )}
             <div className="cat-picker pm-secpick">
+              {studentCohorts(db).length > 0 && H_SECS.includes(psec) && (
+                <select className="tp-grpsel" value={hcoh} onChange={(e) => setHcoh(e.target.value)} title="Hallgatói évfolyam-szűrő">
+                  <option value="">Minden évfolyam</option>
+                  {studentCohorts(db).map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              )}
               {([['', 'Mind'], ['T', 'Oktatók'], ['Tf', 'T · főállású'], ['To', 'T · óraadó'], ['Tv', 'T · volt/külsős'], ['H', 'Hallgatók'], ['Hsz', 'H · szervező'], ['Hn', 'H · nagykövet'], ['Hk', 'H · képviselő'], ['Hd', 'H · demonstrátor'], ['I', 'Intézményi'], ['A', 'Alumni'], ['O', 'Opponensek'], ['P', 'Piaci'], ['G', 'Csoportok']] as [Sec, string][]).map(([v, l]) => (
                 <button key={v || 'mind'} type="button" className={`chip${psec === v ? ' is-on' : ''}`}
                   onClick={() => setPsec((cur) => (cur === v ? '' : v))}>{l}</button>

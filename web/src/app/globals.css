@@ -912,7 +912,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 }
 
 /* ============ Levelek nezet (TopicsView): 3 oszlop = lista | elonezet | szerkeszto ============ */
-.tpv { padding: 14px 0 48px; }
+.tpv { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding: 14px var(--pad) 48px; }
 .tp-headrow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
 .tp-title { font-family: var(--ff-display); font-size: 1.3rem; margin: 0; }
 .tp-headhint { font-size: .7rem; color: var(--muted); }
@@ -950,7 +950,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
   .tp3 .tp-preview { display: none; }
 }
 @media (max-width: 720px) {
-  .tpv { padding: 10px 0 40px; }
+  .tpv { padding: 10px var(--pad) 40px; }
   .tp3 { grid-template-columns: 1fr; }
   .tp-scroll { height: auto; max-height: 62dvh; }
   /* drill-in: a listáról az előnézet külön lapként nyílik, ← vissza gombbal;
@@ -977,7 +977,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .pm-search { margin-bottom: 0; }
 
 /* Orarend nezet */
-.orv { padding: 14px 0 48px; }
+.orv { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding: 14px var(--pad) 48px; }
 .or-tools { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 16px; }
 .or-day { margin-bottom: 18px; }
 .or-tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
@@ -999,7 +999,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 }
 
 /* Nevjegyzek nezetkent: a fomenu latszik felette, az oldal gorgeti (nem modal) */
-.pmv { padding: 14px 0 48px; }
+.pmv { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding: 14px var(--pad) 24px; }
 .pmv .pm-body { padding: 0; }
 .pmv .pm-toolbar { top: 0; border-radius: 0 0 10px 10px; }
 .pmv .mfoot { position: sticky; bottom: 0; z-index: 6; border-top: 1px solid var(--line); border-radius: 10px 10px 0 0; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); }

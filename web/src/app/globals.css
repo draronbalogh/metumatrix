@@ -1013,3 +1013,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 /* A ragados savok teljes szelessegben takarjanak (ne latsszon at a gorgo tartalom a szeleken) */
 .pmv .pm-toolbar { margin: 0 calc(-1 * var(--pad)) 6px; padding: 10px var(--pad) 10px; border-radius: 0; background: var(--paper); }
 .pmv .mfoot { margin: 0 calc(-1 * var(--pad)); padding: 10px var(--pad) calc(10px + env(safe-area-inset-bottom)); background: var(--paper); border-radius: 0; }
+
+/* a sablonpanelben az aktiv (betoltott) sablon kijelolve latszik */
+.nm-titem.is-on { background: var(--brand); color: #fff; font-weight: 800; }
+.nm-titem.is-on:hover { background: var(--brand); color: #fff; }

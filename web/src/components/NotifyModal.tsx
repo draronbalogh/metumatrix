@@ -541,14 +541,13 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           </div>
           <div className="field full">
             <label>Vagy témasablon a tavalyi leveleid mintáiból (a [szögletes] mezőket töltsd ki)</label>
-            <select value="" onChange={(e) => {
+            <select value={activeTopic?.id ?? ''} onChange={(e) => {
               const t = TOPIC_TEMPLATES.find((x) => x.id === e.target.value);
-              e.target.value = '';
               if (!t) return;
               if (typedRef.current && !confirm('A kézi módosításaid elvesznek. Betöltsem az új sablont?')) return;
               applyTopic(t);
             }}>
-              <option value="">Válassz témasablont…</option>
+              <option value="">{activeTopic ? 'Sablon nélkül (hangnem-motor)' : 'Válassz témasablont…'}</option>
               {TOPIC_GROUPS.map((g) => (
                 <optgroup key={g} label={g}>
                   {TOPIC_TEMPLATES.filter((t) => t.group === g).map((t) => (
@@ -619,7 +618,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                       <div key={g}>
                         <div className="nm-tgh">{g}</div>
                         {items.map((t) => (
-                          <button key={t.id} type="button" className="nm-titem" title={`Tárgy: ${t.subject({ title: '', when: null, place: null, due: null })}`}
+                          <button key={t.id} type="button" className={`nm-titem${activeTopic?.id === t.id ? ' is-on' : ''}`} title={`Tárgy: ${t.subject({ title: '', when: null, place: null, due: null })}`}
                             onClick={() => { if (typedRef.current && !confirm('A kézi módosításaid elvesznek. Betöltsem az új sablont?')) return; applyTopic(t); }}>{t.label}</button>
                         ))}
                       </div>

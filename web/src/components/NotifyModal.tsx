@@ -488,7 +488,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                   return (
                     <button key={`${r.kind}-${r.name}`} type="button" aria-pressed={on} className={`chip${on ? ' is-on' : ''}${on && !has ? ' nm-noemail' : ''}`}
                       title={has ? (emailOf(db, r.name) as string) : 'nincs email-cím, a Névjegyzékben add meg'}
-                      onClick={() => toggle(r.name)}>
+                      onClick={() => { if (!on && rq.trim()) setRq(''); toggle(r.name); }}>
                       <span className={`pb ${r.kind.toLowerCase()}`}>{r.kind}</span>{r.name}{on && !has ? ' ⚠' : ''}
                     </button>
                   );

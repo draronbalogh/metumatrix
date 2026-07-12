@@ -21,7 +21,7 @@ function OwnerSelect({ value, roster, onChange }: { value: string; roster: Roste
     <select value={value} onChange={(e) => onChange(e.target.value)}>
       <option value="">— nincs —</option>
       {value && !known && <option value={value}>{value} (régi bejegyzés)</option>}
-      {(['T', 'H', 'I', 'A', 'P'] as PersonKind[]).map((k) => {
+      {(['T', 'H', 'I', 'A', 'O', 'P'] as PersonKind[]).map((k) => {
         const items = roster.filter((r) => r.kind === k);
         if (!items.length) return null;
         return (
@@ -60,7 +60,7 @@ function PeoplePicker({ selected, roster, onToggle, onSet }: { selected: string[
         <div className="nm-groups pp-quick">
           <button type="button" className="chip chip--danger" title="Minden résztvevő törlése" onClick={() => onSet([])}>✕ Senki</button>
           <button type="button" className="chip" title="Mindenki hozzáadása az öt listából" onClick={() => onSet(uniq([...selected, ...roster.map((r) => r.name)]))}>+ Mindenki</button>
-          {(['T', 'H', 'I', 'A', 'P'] as PersonKind[]).map((k) => {
+          {(['T', 'H', 'I', 'A', 'O', 'P'] as PersonKind[]).map((k) => {
             const n = kindNames(k).length;
             return (
               <button key={k} type="button" className="chip" disabled={!n}
@@ -76,7 +76,7 @@ function PeoplePicker({ selected, roster, onToggle, onSet }: { selected: string[
       <div className="cat-picker pp-picker">
         {roster.filter((r) => !q.trim() || normName(r.name).includes(normName(q))).map((r) => (
           <button type="button" key={`${r.kind}-${r.name}`} className={`chip${selected.includes(r.name) ? ' is-on' : ''}`}
-            onClick={() => onToggle(r.name)}>
+            onClick={() => { if (!selected.includes(r.name) && q.trim()) setQ(''); onToggle(r.name); }}>
             <span className={`pb ${r.kind.toLowerCase()}`}>{r.kind}</span>{r.name}
           </button>
         ))}

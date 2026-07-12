@@ -624,7 +624,7 @@ export default function CurriculumApp() {
             <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>🕒 Órarend</button>
             <button className={view === 'it' ? 'is-on' : ''} onClick={() => setView('it')}>🖥 IT és szoftverek</button>
           </div>
-          <input className="search search--corner" placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : view === 'people' ? 'Keresés a névjegyzékben…' : view === 'orarend' ? 'Keresés az órarendben…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />
+          <input className="search search--corner" placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : view === 'people' ? 'Keresés a névjegyzékben…' : view === 'orarend' ? 'Keresés az órarendben…' : view === 'topics' ? 'Keresés a sablonokban és levelekben…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />
           <div className="toolbar-break" />
           {isCurr && (
           <div className="viewtoggle">
@@ -740,6 +740,7 @@ export default function CurriculumApp() {
               szerkesztőben írt piszkozat nézetváltáskor NE vesszen el. */}
           <div className="view-pane" style={{ display: view === 'topics' ? 'block' : 'none' }}>
             <TopicsView
+              q={q}
               letters={agenda.letters || []}
               onUseTopic={useTopicInComposer}
               onOpenLetter={openLetterInComposer}

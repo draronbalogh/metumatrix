@@ -16,6 +16,7 @@ const norm = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[�
 const CTX: TopicCtx = { title: '', when: null, place: null, due: null };
 
 interface Props {
+  q: string; // a felső, globális keresőmező értéke — nincs saját kereső
   letters: Letter[];
   composer: ReactNode;                    // az egységes levélszerkesztő, beágyazva
   onUseTopic: (t: TopicTemplate) => void; // sablon betöltése a szerkesztőbe
@@ -23,9 +24,8 @@ interface Props {
   targetTitle: (l: Letter) => string | null;
 }
 
-export default function TopicsView({ letters, composer, onUseTopic, onOpenLetter, targetTitle }: Props) {
+export default function TopicsView({ q, letters, composer, onUseTopic, onOpenLetter, targetTitle }: Props) {
   const [tab, setTab] = useState<'sablonok' | 'levelek'>('sablonok');
-  const [q, setQ] = useState('');
   const [grp, setGrp] = useState('');
   const [selT, setSelT] = useState<string | null>(TOPIC_TEMPLATES[0]?.id ?? null);
   const [selL, setSelL] = useState<string | null>(null);
@@ -74,8 +74,6 @@ export default function TopicsView({ letters, composer, onUseTopic, onOpenLetter
       <div className={`tp3${mobileDetail ? ' is-detail' : ''}`}>
         <div className="tp-listcol">
           <div className="tp-filters">
-            <input className="nm-search" value={q} onChange={(e) => setQ(e.target.value)}
-              placeholder={tab === 'sablonok' ? 'Keresés (cím, tárgy, szöveg)…' : 'Keresés a levelekben…'} />
             {tab === 'sablonok' && (
               <select className="tp-grpsel" value={grp} onChange={(e) => setGrp(e.target.value)} title="Szűrés csoportra">
                 <option value="">Minden csoport</option>

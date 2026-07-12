@@ -95,6 +95,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const effEvent = useMemo(() => (ctxSel.startsWith('e:') ? (ctxEvents ?? []).find((e) => e.id === ctxSel.slice(2)) ?? null : null), [ctxSel, ctxEvents]);
   const effTask = useMemo(() => (ctxSel.startsWith('t:') ? (ctxTasks ?? []).find((t) => t.id === ctxSel.slice(2)) ?? null : null), [ctxSel, ctxTasks]);
   const lastTopicRef = useRef<TopicTemplate | null>(null); // az utoljára betöltött sablon (újratöltéshez)
+  const [activeTopic, setActiveTopic] = useState<TopicTemplate | null>(null); // ugyanez a felületnek
   const typedRef = useRef(false); // írt-e bele kézzel — csak akkor kérdezünk rá a felülírásra
 
   // témasablon alkalmazása: minden ismert adat automatikusan kitöltődik — a kártya
@@ -120,6 +121,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       due: tk ? (tk.due || tk.dueDate) : undefined,
     };
     lastTopicRef.current = t;
+    setActiveTopic(t);
     typedRef.current = false;
     setSubject(autoFill(t.subject(ctx)));
     let txt = autoFill(t.body(ctx));
@@ -177,6 +179,9 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
 
   const regenerate = (k: LetterKind, placeOverride?: string, sigOverride?: boolean, stepsOverride?: string[], meetOverride?: MeetingPlan | null) => {
     setKind(k);
+    lastTopicRef.current = null; // a hangnem-motorra váltás kilép a témasablon-módból
+    setActiveTopic(null);
+    typedRef.current = false;
     saveUi(k, sigOverride ?? sigOn);
     const p = (placeOverride ?? place).trim();
     const ev = target.event ? { ...target.event, place: p || null } : target.event;
@@ -370,6 +375,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     setSubject(l.subject); setBody(l.body); setSelected(l.names);
     setBodyDirty(true); // a betöltött (kész) levelet a sablon-chipek ne írhassák felül rákérdezés nélkül
     lastTopicRef.current = null; // kész levél: a kapcsolt tétel változása ne írja át
+    setActiveTopic(null);
     typedRef.current = true;
     setResult('✓ Mentett levél betöltve.');
   };
@@ -618,8 +624,14 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             <div className="field full nm-msg">
               <label>Üzenet</label>
               <div className="nm-tools">
-                <button type="button" className="nm-reroll-big" title="Teljes újrafogalmazás: tárgy + minden mondat újragenerálódik, az adatok (időpont, helyszín) maradnak"
-                  onClick={() => { if (confirmIfDirty()) regenerate(kind); }}>🎲 Átfogalmaz</button>
+                <button type="button" className="nm-reroll-big"
+                  title={activeTopic ? `A betöltött témasablon (${activeTopic.label}) újratöltése friss adatokkal — a kézi módosításokra rákérdez` : 'Teljes újrafogalmazás: tárgy + minden mondat újragenerálódik, az adatok (időpont, helyszín) maradnak'}
+                  onClick={() => {
+                    if (activeTopic) {
+                      if (typedRef.current && !confirm('A kézi módosításaid elvesznek. Újratöltsem a témasablont?')) return;
+                      applyTopic(activeTopic);
+                    } else if (confirmIfDirty()) regenerate(kind);
+                  }}>{activeTopic ? '↻ Sablon újratöltése' : '🎲 Átfogalmaz'}</button>
                 <button type="button" className="nm-bodytoggle" title="Csak a megszólítást és az elköszönést cseréli, a törzsszöveg marad" onClick={() => setBody((b) => rerollLetter(b))}>↺ Megszólítás és zárás</button>
                 <button type="button" aria-pressed={sigOn} className={`nm-bodytoggle${sigOn ? '' : ' nm-off'}`} title="A hivatalos aláírás ki-be kapcsolása; a szakos linkek mindig a levél alján maradnak" onClick={toggleSig}>✒ Aláírás: {sigOn ? 'be' : 'ki'}</button>
                 <button type="button" className="nm-bodytoggle" onClick={() => setBodyOpen((v) => !v)}>{bodyOpen ? '▲ elrejtés' : '▼ szerkesztés'}</button>

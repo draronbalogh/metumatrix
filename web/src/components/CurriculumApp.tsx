@@ -47,7 +47,7 @@ export default function CurriculumApp() {
   const [hydrated, setHydrated] = useState(false);
   const [edited, setEdited] = useState(false);
 
-  const [view, setView] = useState<'map' | 'catalog' | 'tasks' | 'events' | 'topics' | 'orarend' | 'it'>('map');
+  const [view, setView] = useState<'map' | 'catalog' | 'tasks' | 'events' | 'topics' | 'orarend' | 'it' | 'people'>('map');
   const [agenda, setAgenda] = useState<Agenda>(DEFAULT_AGENDA);
   const [peopleDB, setPeopleDB] = useState<PeopleDB>(DEFAULT_PEOPLE);
   const [theme, setTheme] = useState<'light' | 'dark'>('light'); // alapértelmezés: világos téma
@@ -598,8 +598,8 @@ export default function CurriculumApp() {
             <button className={view === 'tasks' ? 'is-on' : ''} onClick={() => setView('tasks')}>☑ Feladatok</button>
             <button className={view === 'events' ? 'is-on' : ''} onClick={() => setView('events')}>▤ Események</button>
             <button className={view === 'topics' ? 'is-on' : ''} onClick={() => setView('topics')}>✉ Levelek</button>
-            <button className={`editonly${peopleEdit ? ' is-on' : ''}`} title="Elérhetőségek: oktatók, hallgatók, intézményi / alumni / opponens / piaci kapcsolatok"
-              onClick={() => { if (!canEdit) return; setPeopleEdit(true); }}>☎ Névjegyzék</button>
+            <button className={`editonly${view === 'people' ? ' is-on' : ''}`} title="Elérhetőségek: oktatók, hallgatók, intézményi / alumni / opponens / piaci kapcsolatok"
+              onClick={() => { if (!canEdit) return; setView('people'); }}>☎ Névjegyzék</button>
             <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>🕒 Órarend</button>
             <button className={view === 'it' ? 'is-on' : ''} onClick={() => setView('it')}>🖥 IT és szoftverek</button>
           </div>
@@ -702,6 +702,8 @@ export default function CurriculumApp() {
               onPerson={onInstructor}
               onNotify={notifyEvent}
             />
+          ) : view === 'people' ? (
+            <PeopleModal inline teacherNames={teacherNames} db={peopleDB} onSave={savePeople} onClose={() => { /* nézetként nincs bezárás */ }} />
           ) : view === 'orarend' ? (
             <OrarendView knownNames={[...teacherNames, ...peopleDB.teachers.map((p) => p.name), ...peopleDB.institution.map((p) => p.name), ...peopleDB.alumni.map((p) => p.name)]} />
           ) : view === 'it' ? (
@@ -861,7 +863,6 @@ export default function CurriculumApp() {
 
       {introEdit && <IntroModal intro={agenda.intro} onSave={saveIntro} onClose={() => setIntroEdit(false)} />}
 
-      {peopleEdit && <PeopleModal teacherNames={teacherNames} db={peopleDB} onSave={savePeople} onClose={() => setPeopleEdit(false)} />}
 
       {notify && (
         <NotifyModal

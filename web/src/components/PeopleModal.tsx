@@ -9,6 +9,7 @@ interface Props {
   db: PeopleDB;
   onSave: (db: PeopleDB) => void;
   onClose: () => void;
+  inline?: boolean; // nézetként (a főmenü alatt) fut, nem modálként — mobilon nem takarja el a menüt
 }
 
 // Egységes rubrikák MINDEN listán: név, email, telefon, titulus, terület (+ státusz a tanár/hallgató listán)
@@ -50,7 +51,7 @@ function ContactSection({ label, note, rows, setRows, q }: { label: string; note
   );
 }
 
-export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props) {
+export default function PeopleModal({ teacherNames, db, onSave, onClose, inline }: Props) {
   const [teachers, setTeachers] = useState<Row[]>(() => {
     const byName: Record<string, Person> = {};
     db.teachers.forEach((p) => { byName[p.name] = p; });
@@ -80,11 +81,13 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
   const setGroupName = (i: number, v: string) => setGroups((gs) => gs.map((g, ix) => (ix === i ? { ...g, name: v } : g)));
   const toggleMember = (i: number, name: string) => setGroups((gs) => gs.map((g, ix) => (ix === i ? { ...g, members: g.members.includes(name) ? g.members.filter((m) => m !== name) : [...g.members, name] } : g)));
 
+  const [savedMsg, setSavedMsg] = useState(false); // inline mentés visszajelzése
   useEffect(() => {
+    if (inline) return; // nézetként nincs mit bezárni
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [onClose, inline]);
 
   const setT = (i: number, k: keyof Row, v: string) =>
     setTeachers((rows) => rows.map((r, ix) => (ix === i ? { ...r, [k]: v } : r)));
@@ -109,10 +112,8 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
   const tVisible = teachers.map((r, i) => ({ r, i })).filter(({ r }) => rowMatch(r, pq));
   const sVisible = students.map((r, i) => ({ r, i })).filter(({ r }) => rowMatch(r, pq));
 
-  return (
-    <div className="ovl" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal modal--wide">
-        <h3>☎ Névjegyzék — elérhetőségek</h3>
+  const content = (
+    <>
         <div className="pm-body">
           <div className="pm-toolbar">
             <input className="nm-search pm-search" value={pq} onChange={(e) => setPq(e.target.value)}
@@ -213,10 +214,27 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose }: Props
           )}
         </div>
         <div className="mfoot">
+          {inline && savedMsg && <span className="pm-saved">✓ Mentve — a levélírás körei azonnal frissültek</span>}
           <span className="sp" />
-          <button className="btn" onClick={onClose}>Mégsem</button>
-          <button className="btn btn--ink" onClick={save}>Mentés</button>
+          {!inline && <button className="btn" onClick={onClose}>Mégsem</button>}
+          <button className="btn btn--ink" onClick={() => { save(); if (inline) { setSavedMsg(true); setTimeout(() => setSavedMsg(false), 4000); } }}>💾 Mentés</button>
         </div>
+    </>
+  );
+
+  if (inline) {
+    return (
+      <section className="wrap pmv">
+        <div className="tp-headrow"><h2 className="tp-title">☎ Névjegyzék — elérhetőségek</h2></div>
+        {content}
+      </section>
+    );
+  }
+  return (
+    <div className="ovl" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal modal--wide">
+        <h3>☎ Névjegyzék — elérhetőségek</h3>
+        {content}
       </div>
     </div>
   );

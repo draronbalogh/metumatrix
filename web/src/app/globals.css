@@ -997,3 +997,10 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
   .toolbar__inner > .viewtoggle--nav { display: flex; width: 100%; flex-wrap: wrap; gap: 3px; }
   .viewtoggle--nav button { flex: 1 1 auto; white-space: nowrap; text-align: center; padding: 8px 10px; }
 }
+
+/* Nevjegyzek nezetkent: a fomenu latszik felette, az oldal gorgeti (nem modal) */
+.pmv { padding: 14px 0 48px; }
+.pmv .pm-body { padding: 0; }
+.pmv .pm-toolbar { top: 0; border-radius: 0 0 10px 10px; }
+.pmv .mfoot { position: sticky; bottom: 0; z-index: 6; border-top: 1px solid var(--line); border-radius: 10px 10px 0 0; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); }
+.pm-saved { font-size: .78rem; font-weight: 700; color: var(--g0); }

@@ -13,8 +13,11 @@ const ZOOM_FOGLALO = 'https://bkfhu-my.sharepoint.com/:x:/g/personal/pgulyas_met
 const L = ({ href, children }: { href: string; children: ReactNode }) => (
   <a className="doc-link" href={href} target="_blank" rel="noreferrer">{children}</a>
 );
-const M = ({ to, name }: { to: string; name: string }) => (
-  <a className="doc-link" href={`mailto:${to}`}>{name}</a>
+// személy: NEM mailto — a saját Névjegyzékünkre ugrik és ott mutatja az elérhetőségét
+let personJump: (name: string) => void = () => { /* a DocsView állítja be */ };
+const P = ({ name }: { name: string }) => (
+  <button type="button" className="doc-link doc-person" title={`${name} elérhetősége a Névjegyzékben`}
+    onClick={() => personJump(name)}>☎ {name}</button>
 );
 
 interface Doc { f: string; icon: string; title: string; desc: string; kivonat: ReactNode; }
@@ -60,12 +63,12 @@ const GROUPS: DocGroup[] = [
         desc: 'Adminisztráció, rendszerek, határidők — főállású oktatóknak.',
         kivonat: (
           <ul>
-            <li>Kapcsolat: AMD tanszéki referens <M to="zsbejczi@metropolitan.hu" name="Bejczi Zsolt" /> · órarend és teremfoglalás (MKK) <M to="rkkalny@metropolitan.hu" name="Kálny Rita" /> · oktatásszervezési vezető <M to="tnagy@metropolitan.hu" name="Nagy Tünde" /> · többletórák <M to="pgulyas@metropolitan.hu" name="Gulyás Péter" />.</li>
+            <li>Kapcsolat: AMD tanszéki referens <P name="Bejczi Zsolt" /> · órarend és teremfoglalás (MKK) <P name="Kálny Rita" /> · oktatásszervezési vezető <P name="Nagy Tünde" /> · többletórák <P name="Gulyás Péter" />.</li>
             <li>Rendszerek: <L href="https://neptunweb1.metropolitan.hu/">Neptun</L> (jelenlét, jegyek, szakdolgozati konzultáció rögzítése) · <L href="https://coospace.metropolitan.hu/">CooSpace</L> (segédanyagok; a Neptun-belépés érvényes) · IT- és teremhiba-bejelentés: <L href="https://metu.topdesk.net/">metu.topdesk.net</L>.</li>
             <li>Wi-fi: „Metropolitan" hálózat, kód: 12348765.</li>
             <li>Óraelmaradás: lehetőleg 1 nappal előbb emailben a referensnek; a hallgatókat kizárólag Neptun-üzenetben lehet értesíteni, a pótlásról a referenst, tanszékvezetőt és szakvezetőt metus címről kell tájékoztatni.</li>
-            <li>Módszertani konzultáció új oktatóknak (CLT): <M to="elukacsi@metropolitan.hu" name="Lukácsi Éva" />.</li>
-            <li>Könyvtár: <L href="https://www.metropolitan.hu/hu/konyvtar#nyitvatartas">nyitvatartás</L> · <L href="https://www.metropolitan.hu/hu/adatbazisok">adatbázisok</L> · <L href="https://www.metropolitan.hu/foglalj-konyvtarost/">Foglalj könyvtárost</L> · <L href="https://corvina.metropolitan.hu/WebPac/CorvinaWeb">Corvina katalógus</L> · <M to="lib@metropolitan.hu" name="lib@metropolitan.hu" />.</li>
+            <li>Módszertani konzultáció új oktatóknak (CLT): <P name="Lukácsi Éva" />.</li>
+            <li>Könyvtár: <L href="https://www.metropolitan.hu/hu/konyvtar#nyitvatartas">nyitvatartás</L> · <L href="https://www.metropolitan.hu/hu/adatbazisok">adatbázisok</L> · <L href="https://www.metropolitan.hu/foglalj-konyvtarost/">Foglalj könyvtárost</L> · <L href="https://corvina.metropolitan.hu/WebPac/CorvinaWeb">Corvina katalógus</L> · <P name="METU Könyvtár" />.</li>
             <li>Fontos: munkatársi email-címet nem adunk ki hallgatónak; tanulmányi és pénzügyi kérdéssel a hallgató a Hallgatói Információs Központhoz fordul.</li>
           </ul>
         ),
@@ -75,11 +78,11 @@ const GROUPS: DocGroup[] = [
         desc: 'A legfontosabb tudnivalók óraadóknak: belépések, Neptun, teendők.',
         kivonat: (
           <ul>
-            <li>Kapcsolat: AMD tanszéki referens <M to="zsbejczi@metropolitan.hu" name="Bejczi Zsolt" /> · órarend és teremfoglalás (MKK) <M to="rkkalny@metropolitan.hu" name="Kálny Rita" /> · oktatásszervezési vezető <M to="tnagy@metropolitan.hu" name="Nagy Tünde" />.</li>
+            <li>Kapcsolat: AMD tanszéki referens <P name="Bejczi Zsolt" /> · órarend és teremfoglalás (MKK) <P name="Kálny Rita" /> · oktatásszervezési vezető <P name="Nagy Tünde" />.</li>
             <li>Rendszerek: <L href="https://neptunweb1.metropolitan.hu/">Neptun</L> (jelenlét, jegyek rögzítése) · <L href="https://coospace.metropolitan.hu/">CooSpace</L> (segédanyagok, a Neptun-belépéssel).</li>
             <li>Zoom óratartáshoz: <L href={ZOOM_FOGLALO}>foglalási táblázat</L> · ha kódot kér: <L href="https://zoomokt.metropolitan.hu/">zoomokt.metropolitan.hu</L>.</li>
             <li>Óraelmaradás: előre jelezni emailben a referensnek; a hallgatókat kizárólag Neptun-üzenetben lehet értesíteni.</li>
-            <li>Könyvtár: <L href="https://www.metropolitan.hu/hu/konyvtar#nyitvatartas">nyitvatartás</L> · <L href="https://www.metropolitan.hu/hu/adatbazisok">adatbázisok</L> · <L href="https://www.metropolitan.hu/foglalj-konyvtarost/">Foglalj könyvtárost</L> · <M to="lib@metropolitan.hu" name="lib@metropolitan.hu" />.</li>
+            <li>Könyvtár: <L href="https://www.metropolitan.hu/hu/konyvtar#nyitvatartas">nyitvatartás</L> · <L href="https://www.metropolitan.hu/hu/adatbazisok">adatbázisok</L> · <L href="https://www.metropolitan.hu/foglalj-konyvtarost/">Foglalj könyvtárost</L> · <P name="METU Könyvtár" />.</li>
           </ul>
         ),
       },
@@ -99,7 +102,8 @@ const GROUPS: DocGroup[] = [
 
 const norm = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
-export default function DocsView({ q }: { q: string }) {
+export default function DocsView({ q, onPerson }: { q: string; onPerson: (name: string) => void }) {
+  personJump = onPerson; // a statikus kivonat-JSX-ben élő ☎ név-gombok ide futnak be
   const k = getEditKey();
   const docHref = (f: string) => `/api/docs?f=${f}${k ? `&k=${encodeURIComponent(k)}` : ''}`;
   const nq = norm(q);

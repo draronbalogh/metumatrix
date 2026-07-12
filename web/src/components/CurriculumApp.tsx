@@ -740,7 +740,7 @@ export default function CurriculumApp() {
           ) : view === 'it' ? (
             <ITView q={q} />
           ) : view === 'docs' ? (
-            <DocsView q={q} />
+            <DocsView q={q} onPerson={(n) => { setQ(n); setView('people'); }} />
           ) : null}
           {/* A Levelek nézet mindig mountolva marad (csak elrejtjük), hogy a beágyazott
               szerkesztőben írt piszkozat nézetváltáskor NE vesszen el. */}

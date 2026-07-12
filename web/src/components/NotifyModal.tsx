@@ -56,6 +56,9 @@ const saveUi = (kind: LetterKind, sigOn: boolean): void => {
 };
 // ékezet-független névszűréshez
 const norm = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+// az automatikus naptár-hozzárendelés NEM köthet általános folyamat-szavakra
+// (egyeztetés, emlékeztető...), csak megkülönböztető nevekre (Erasmus, Educatio...)
+const LINK_STOP = new Set(['egyeztetes', 'egyeztetese', 'emlekezteto', 'meghivo', 'felkeres', 'felkerese', 'korlevel', 'hatarido', 'hataridok', 'tajekoztato', 'osszefoglalo', 'szervezes', 'szervezese', 'beosztas', 'bekeres', 'bekerese', 'megbeszeles', 'visszajelzes', 'visszaigazolas', 'jovahagyas', 'elokeszites', 'elojelzes', 'kezeles', 'kezelese', 'valasz', 'kerdes', 'altalanos', 'hallgato', 'hallgatoi', 'hallgatok', 'hallgatoknak', 'oktato', 'oktatoi', 'oktatok', 'oktatoknak', 'kollega', 'kollegak', 'idopont', 'idozites', 'tudnivalok', 'reszletek', 'egyeni', 'ertekezlet', 'ertekeles', 'ertekelesi', 'leadas', 'leadasi', 'frissites', 'kikuldese', 'veglegesites', 'megosztasa', 'tovabbitasa', 'osszehivasa', 'surgetese', 'nyugtazasa', 'lemondasa', 'elfogadasa']);
 
 // Levél-készítő: sablonból generált szöveg + 3 numerikus másolás-gomb (Outlookba illesztéshez).
 // A küldés (Brevo/SMTP) opcionális — csak akkor jelenik meg, ha a szerveren be van állítva.
@@ -108,7 +111,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     // automatikus hozzárendelés: ha nincs kapcsolt tétel, és a sablon neve
     // egyértelműen egyezik egy naptári eseménnyel / feladattal, azt használjuk
     if (!ev && !tk) {
-      const toks = [...t.id.split('-'), ...t.label.split(/[^\wáéíóöőúüűÁÉÍÓÖŐÚÜŰ]+/)].map(norm).filter((w) => w.length >= 6);
+      const toks = [...t.id.split('-'), ...t.label.split(/[^\wáéíóöőúüűÁÉÍÓÖŐÚÜŰ]+/)].map(norm).filter((w) => w.length >= 6 && !LINK_STOP.has(w));
       const evs = (ctxEvents ?? []).filter((e) => toks.some((w) => norm(e.title).includes(w)));
       const tks = (ctxTasks ?? []).filter((x) => toks.some((w) => norm(x.title).includes(w)));
       if (evs.length === 1) { ev = evs[0]; setCtxSel(`e:${evs[0].id}`); }

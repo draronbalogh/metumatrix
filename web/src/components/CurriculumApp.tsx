@@ -132,11 +132,27 @@ export default function CurriculumApp() {
   // Hozzáférés: EGYETLEN publikus link (Funnel), query-paraméter nélkül. A szerver
   // a Tailscale-identitás fejlécből dönt: a saját tailnet-eszközökről érkező kérés
   // szerkesztő mód, a kívülről (Funnelen át) érkező megtekintő mód.
+  // Mélylink: ?view=<nézet>&q=<keresés> — pl. a Segédletek ☎ név-gombjai ezzel
+  // nyitják ÚJ LAPON a Névjegyzéket; a szerkesztő-only nézetek csak sikeres auth után.
   useEffect(() => {
     try { localStorage.removeItem('mm-edit-key'); } catch { /* ignore */ }
+    const VIEWS = ['map', 'catalog', 'tasks', 'events', 'topics', 'orarend', 'it', 'docs', 'people'] as const;
+    const EDITONLY = ['topics', 'people', 'docs'];
+    let deepView: (typeof VIEWS)[number] | null = null;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const v = sp.get('view');
+      if (v && (VIEWS as readonly string[]).includes(v)) deepView = v as (typeof VIEWS)[number];
+      const dq = sp.get('q');
+      if (dq) setQ(dq);
+    } catch { /* ignore */ }
+    if (deepView && !EDITONLY.includes(deepView)) setView(deepView);
     fetch('/api/auth', { headers: editHeaders(), cache: 'no-store' })
       .then((r) => r.json())
-      .then((j) => { setCanEdit(!!j.ok); canEditRef.current = !!j.ok; })
+      .then((j) => {
+        setCanEdit(!!j.ok); canEditRef.current = !!j.ok;
+        if (j.ok && deepView && EDITONLY.includes(deepView)) setView(deepView);
+      })
       .catch(() => { /* offline: marad az alapérték */ });
   }, []);
   useEffect(() => {
@@ -732,13 +748,17 @@ export default function CurriculumApp() {
               emailFor={(n) => emailOf(peopleDB, n)}
             />
           ) : view === 'people' ? (
-            <PeopleModal inline externalQuery={q} teacherNames={teacherNames} db={peopleDB} onSave={savePeople} onClose={() => { /* nézetként nincs bezárás */ }} />
+            // csak betöltött adattal mountolunk: a PeopleModal szerkesztőként mount-kor
+            // másolja be a db-t, egy mélylinkes korai mount üres listát mutatna
+            hydrated
+              ? <PeopleModal inline externalQuery={q} teacherNames={teacherNames} db={peopleDB} onSave={savePeople} onClose={() => { /* nézetként nincs bezárás */ }} />
+              : <section className="wrap orv"><p className="tp-empty">Névjegyzék betöltése…</p></section>
           ) : view === 'orarend' ? (
             <OrarendView q={q} knownNames={[...teacherNames, ...peopleDB.teachers.map((p) => p.name), ...peopleDB.institution.map((p) => p.name), ...peopleDB.alumni.map((p) => p.name)]} />
           ) : view === 'it' ? (
             <ITView q={q} />
           ) : view === 'docs' ? (
-            <DocsView q={q} onPerson={(n) => { setQ(n); setView('people'); }} />
+            <DocsView q={q} />
           ) : null}
           {/* A Levelek nézet mindig mountolva marad (csak elrejtjük), hogy a beágyazott
               szerkesztőben írt piszkozat nézetváltáskor NE vesszen el. */}

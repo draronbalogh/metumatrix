@@ -14,10 +14,18 @@ const ZOOM_FOGLALO = 'https://bkfhu-my.sharepoint.com/:x:/g/personal/pgulyas_met
 const L = ({ href, children }: { href: string; children: ReactNode }) => (
   <a className="doc-link" href={href} target="_blank" rel="noreferrer">{children}</a>
 );
-// személy: NEM mailto — a saját Névjegyzékünkre ugrik és ott mutatja az elérhetőségét
-let personJump: (name: string) => void = () => { /* a DocsView állítja be */ };
+// személy: NEM mailto — a Névjegyzéket nyitja ÚJ LAPON, a névre szűrve
+// (a ?ts= kulcs átöröklődik, így az új fül is szerkesztő módban nyílik)
+const personJump = (name: string) => {
+  const p = new URLSearchParams();
+  const k = getEditKey();
+  if (k) p.set('ts', k);
+  p.set('view', 'people');
+  p.set('q', name);
+  window.open(`${window.location.pathname}?${p.toString()}`, '_blank', 'noopener');
+};
 const P = ({ name }: { name: string }) => (
-  <button type="button" className="doc-link doc-person" title={`${name} elérhetősége a Névjegyzékben`}
+  <button type="button" className="doc-link doc-person" title={`${name} elérhetősége a Névjegyzékben (új lapon nyílik)`}
     onClick={() => personJump(name)}>☎ {name}</button>
 );
 
@@ -156,8 +164,7 @@ const GROUPS: DocGroup[] = [
 
 const norm = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
-export default function DocsView({ q, onPerson }: { q: string; onPerson: (name: string) => void }) {
-  personJump = onPerson; // a statikus kivonat-JSX-ben élő ☎ név-gombok ide futnak be
+export default function DocsView({ q }: { q: string }) {
   const k = getEditKey();
   const docHref = (f: string) => `/api/docs?f=${f}${k ? `&k=${encodeURIComponent(k)}` : ''}`;
   const nq = norm(q);

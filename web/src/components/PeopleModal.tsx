@@ -142,17 +142,18 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
                 placeholder="Keresés mindenben: név, email, titulus, terület, státusz…" />
             )}
             <div className="cat-picker pm-secpick">
-              {studentCohorts(db).length > 0 && H_SECS.includes(psec) && (
-                <select className="tp-grpsel" value={hcoh} onChange={(e) => setHcoh(e.target.value)} title="Hallgatói évfolyam-szűrő">
-                  <option value="">Minden évfolyam</option>
-                  {studentCohorts(db).map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-              )}
               {([['', 'Mind'], ['T', 'Oktatók'], ['Tf', 'T · főállású'], ['To', 'T · óraadó'], ['Tv', 'T · volt/külsős'], ['H', 'Hallgatók'], ['Hsz', 'H · szervező'], ['Hn', 'H · nagykövet'], ['Hk', 'H · képviselő'], ['Hd', 'H · demonstrátor'], ['I', 'Intézményi'], ['A', 'Alumni'], ['O', 'Opponensek'], ['P', 'Piaci'], ['G', 'Csoportok']] as [Sec, string][]).map(([v, l]) => (
                 <button key={v || 'mind'} type="button" className={`chip${psec === v ? ' is-on' : ''}`}
                   onClick={() => setPsec((cur) => (cur === v ? '' : v))}>{l}</button>
               ))}
             </div>
+            {/* az évfolyam-szűrő KÜLÖN, második sorban — nem torzítja a megszokott chipsort */}
+            {studentCohorts(db).length > 0 && H_SECS.includes(psec) && (
+              <select className="tp-grpsel pm-cohsel" value={hcoh} onChange={(e) => setHcoh(e.target.value)} title="Hallgatói évfolyam-szűrő">
+                <option value="">Minden évfolyam</option>
+                {studentCohorts(db).map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            )}
           </div>
           {show('T') && (!searching || tVisible.length > 0) && (
             <>

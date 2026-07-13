@@ -26,16 +26,20 @@ interface Props {
 
 export default function TopicsView({ q, letters, composer, onUseTopic, onOpenLetter, targetTitle }: Props) {
   const [tab, setTab] = useState<'sablonok' | 'levelek'>('sablonok');
-  const [grp, setGrp] = useState('');
   const [selT, setSelT] = useState<string | null>(TOPIC_TEMPLATES[0]?.id ?? null);
   const [selL, setSelL] = useState<string | null>(null);
   const [mobileDetail, setMobileDetail] = useState(false); // mobilon: lista helyett az előnézet
+  // csoport-accordion: alapból minden csoport összecsukva (a kiválasztotté nyitva),
+  // így 17 áttekinthető sor látszik 172 sablon helyett; keresésnél a találati
+  // csoportok maguktól kinyílnak
+  const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set(TOPIC_TEMPLATES[0] ? [TOPIC_TEMPLATES[0].group] : []));
+  const toggleGroup = (g: string) => setOpenGroups((s) => { const n = new Set(s); if (n.has(g)) n.delete(g); else n.add(g); return n; });
 
   // teljes szövegű keresőindex (cím + csoport + tárgy + törzs), ékezet-függetlenül
   const index = useMemo(() => new Map(TOPIC_TEMPLATES.map((t) => [t.id, norm(`${t.label} ${t.group} ${t.subject(CTX)} ${t.body(CTX)}`)])), []);
   const tList = useMemo(() => TOPIC_TEMPLATES.filter((t) =>
-    (!grp || t.group === grp) && (!q.trim() || (index.get(t.id) as string).includes(norm(q)))
-  ), [q, grp, index]);
+    !q.trim() || (index.get(t.id) as string).includes(norm(q))
+  ), [q, index]);
 
   const lSorted = useMemo(() => [...letters].sort((a, b) => b.createdAt.localeCompare(a.createdAt)), [letters]);
   const lList = useMemo(() => lSorted.filter((l) =>
@@ -51,7 +55,7 @@ export default function TopicsView({ q, letters, composer, onUseTopic, onOpenLet
   // közepes szélességen (721-1180px) az előnézet-oszlop rejtett: ilyenkor a
   // lista-kattintás azonnal a szerkesztőbe tölti a kiválasztott elemet
   const noPreview = () => typeof window !== 'undefined' && window.matchMedia('(min-width: 721px) and (max-width: 1180px)').matches;
-  const pickT = (t: TopicTemplate) => { setSelT(t.id); setMobileDetail(true); if (noPreview()) onUseTopic(t); };
+  const pickT = (t: TopicTemplate) => { setSelT(t.id); setOpenGroups((s) => new Set(s).add(t.group)); setMobileDetail(true); if (noPreview()) onUseTopic(t); };
   const pickL = (l: Letter) => { setSelL(l.id); setMobileDetail(true); if (noPreview()) onOpenLetter(l); };
 
   const curT = TOPIC_TEMPLATES.find((t) => t.id === selT) ?? null;
@@ -63,24 +67,16 @@ export default function TopicsView({ q, letters, composer, onUseTopic, onOpenLet
     <section className="wrap tpv">
       <div className="tp-headrow">
         <h2 className="tp-title">✉ Levelek</h2>
-        <div className="chipradio tp-tabs">
-          <button type="button" aria-pressed={tab === 'sablonok'} className={`crx c-blue${tab === 'sablonok' ? ' is-on' : ''}`}
+        <span className="tp-headhint">1 · válassz a listából → 2 · előnézet → 3 · a szerkesztőben fejezd be és küldd</span>
+        <div className="viewtoggle ag-mode">
+          <button type="button" className={tab === 'sablonok' ? 'is-on' : ''}
             onClick={() => { setTab('sablonok'); setMobileDetail(false); }}>Sablontár ({TOPIC_TEMPLATES.length})</button>
-          <button type="button" aria-pressed={tab === 'levelek'} className={`crx c-blue${tab === 'levelek' ? ' is-on' : ''}`}
+          <button type="button" className={tab === 'levelek' ? 'is-on' : ''}
             onClick={() => { setTab('levelek'); setMobileDetail(false); }}>Mentett levelek ({letters.length})</button>
         </div>
-        <span className="tp-headhint">1 · válassz a listából → 2 · előnézet → 3 · a szerkesztőben fejezd be és küldd</span>
       </div>
       <div className={`tp3${mobileDetail ? ' is-detail' : ''}`}>
         <div className="tp-listcol">
-          <div className="tp-filters">
-            {tab === 'sablonok' && (
-              <select className="tp-grpsel" value={grp} onChange={(e) => setGrp(e.target.value)} title="Szűrés csoportra">
-                <option value="">Minden csoport</option>
-                {TOPIC_GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
-              </select>
-            )}
-          </div>
           <div className="tp-scroll">
             {tab === 'sablonok' ? (
               <>
@@ -88,10 +84,14 @@ export default function TopicsView({ q, letters, composer, onUseTopic, onOpenLet
                 {TOPIC_GROUPS.map((g) => {
                   const items = tList.filter((t) => t.group === g);
                   if (!items.length) return null;
+                  const open = openGroups.has(g) || !!q.trim();
                   return (
                     <div key={g}>
-                      <div className="tp-gh">{g}</div>
-                      {items.map((t) => (
+                      <button type="button" className={`tp-ghbtn${open ? ' is-open' : ''}`} aria-expanded={open}
+                        title={open ? 'Csoport összecsukása' : 'Csoport kinyitása'} onClick={() => toggleGroup(g)}>
+                        <span className="ar">{open ? '▾' : '▸'}</span>{g}<span className="ct">{items.length}</span>
+                      </button>
+                      {open && items.map((t) => (
                         <button key={t.id} type="button" aria-pressed={selT === t.id}
                           className={`tp-item${selT === t.id ? ' is-on' : ''}`} onClick={() => pickT(t)}>
                           <span className="s">{t.label}</span>
@@ -109,7 +109,7 @@ export default function TopicsView({ q, letters, composer, onUseTopic, onOpenLet
                   <button key={l.id} type="button" aria-pressed={selL === l.id}
                     className={`tp-item${selL === l.id ? ' is-on' : ''}`} onClick={() => pickL(l)}>
                     <span className="s">{l.subject || '(tárgy nélkül)'}</span>
-                    <span className="d">{fmtDate(l.createdAt)} · {lKind(l)}{targetTitle(l) ? `: ${targetTitle(l)}` : ''} · {l.names.length} címzett</span>
+                    <span className="d">{fmtDate(l.createdAt)} · {(l.status ?? 'draft') === 'sent' ? '✓ kiküldve' : '✎ vázlat'} · {lKind(l)}{targetTitle(l) ? `: ${targetTitle(l)}` : ''} · {l.names.length} címzett</span>
                   </button>
                 ))}
               </>

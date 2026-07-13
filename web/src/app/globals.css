@@ -1026,18 +1026,24 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
   .nm-outlook { padding: 7px 10px; font-size: .72rem; }
 }
 
-/* ============ Levelek nezet (TopicsView): 3 oszlop = lista | elonezet | szerkeszto ============ */
-.tpv { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding: 14px var(--pad) 48px; }
-.tp-headrow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+/* ============ Levelek nezet (TopicsView): 3 oszlop = lista | elonezet | szerkeszto ============
+   Desktopon az OLDAL nem gorget: a fejlec fix, a harom oszlop toltike ki a magassagot,
+   es mindegyikben PONTOSAN EGY gorgeto van — nincs egymasba agyazott scroll. */
+.tpv { position: absolute; inset: 0; overflow: hidden; padding: 14px var(--pad) 14px; display: flex; flex-direction: column; }
+.tp-headrow { flex: none; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
 .tp-title { font-family: var(--ff-display); font-size: 1.3rem; margin: 0; }
 .tp-headhint { font-size: .7rem; color: var(--muted); }
-.tp3 { display: grid; grid-template-columns: minmax(250px, 320px) minmax(240px, 340px) minmax(360px, 1fr); gap: 12px; align-items: start; }
-.tp-listcol { display: flex; flex-direction: column; min-width: 0; }
+.tp3 { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(250px, 320px) minmax(240px, 340px) minmax(360px, 1fr); gap: 12px; align-items: stretch; }
+.tp-listcol { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .tp-filters { display: flex; gap: 6px; margin-bottom: 8px; }
 .tp-filters .nm-search { flex: 1; margin-bottom: 0; min-width: 0; }
 .tp-grpsel { max-width: 45%; font-size: .74rem; }
-.tp-scroll { height: calc(100dvh - 290px); min-height: 340px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
-.tp-gh { position: sticky; top: 0; z-index: 1; padding: 6px 12px 5px; font-size: .64rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--brand-text); background: var(--paper); border-bottom: 1px solid var(--line); }
+.tp-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
+/* csoport-accordion fejlec: alapbol osszecsukva, szamlaloval */
+.tp-ghbtn { display: flex; align-items: center; gap: 7px; width: 100%; text-align: left; padding: 8px 12px; font-family: var(--ff); font-size: .68rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--brand-text); background: var(--paper); border: 0; border-bottom: 1px solid var(--line); cursor: pointer; position: sticky; top: 0; z-index: 1; }
+.tp-ghbtn:hover { background: var(--brand-100); }
+.tp-ghbtn .ar { flex: none; width: 11px; font-size: .7rem; color: var(--muted); }
+.tp-ghbtn .ct { margin-left: auto; font-size: .62rem; font-weight: 700; color: var(--muted); background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; }
 .tp-item { display: block; width: 100%; text-align: left; padding: 9px 12px; background: none; border: 0; border-bottom: 1px solid var(--line); cursor: pointer; font-family: var(--ff); }
 .tp-item:hover { background: var(--brand-100); }
 .tp-item.is-on { background: var(--brand); }
@@ -1045,7 +1051,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .tp-item .s { display: block; font-size: .8rem; font-weight: 700; color: var(--ink); }
 .tp-item .d { display: block; margin-top: 2px; font-size: .68rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tp-empty { padding: 14px; color: var(--muted); font-size: .82rem; }
-.tp-preview { position: sticky; top: 10px; max-height: calc(100dvh - 250px); overflow: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 14px 16px; min-height: 340px; }
+.tp-preview { min-height: 0; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 14px 16px; }
 .tp-pv-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
 .tp-pv-cta { flex: none; white-space: nowrap; }
 .tp-back { display: none; margin-bottom: 10px; }
@@ -1056,9 +1062,9 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .tp-pv-hint { margin: 8px 0 0; font-size: .68rem; color: var(--muted); }
 .tp-pv-empty { display: grid; place-items: center; min-height: 260px; color: var(--muted); font-size: .84rem; text-align: center; padding: 20px; }
 /* a 3. oszlop: a beágyazott, egységes levélszerkesztő */
-.tp-composer { min-width: 0; }
+.tp-composer { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 /* beágyazott levélíró: az összegző sor + fülsor rögzített, CSAK a törzs görget (nincs dupla scroll) */
-.nm-inline { border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 4px 14px 12px; max-height: calc(100dvh - 250px); overflow: hidden; display: flex; flex-direction: column; }
+.nm-inline { flex: 1 1 auto; min-height: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 4px 14px 12px; overflow: hidden; display: flex; flex-direction: column; }
 .nm-inline .pm-body.nm-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .nm-inline .mt-sum { padding: 8px 4px 0; }
 .nm-inline .mt-tabs { padding: 6px 2px 0; }
@@ -1069,13 +1075,14 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
   .tp3 .tp-preview { display: none; }
 }
 @media (max-width: 720px) {
-  .tpv { padding: 10px var(--pad) 40px; }
+  /* mobilon egy oszlop van és CSAK AZ OLDAL gorget — a belso gorgetok kikapcsolva */
+  .tpv { overflow-y: auto; overflow-x: hidden; display: block; padding: 10px var(--pad) 40px; }
+  .tp-scroll { overflow: visible; border: 0; border-radius: 0; background: transparent; }
   .tp3 { grid-template-columns: 1fr; }
-  .tp-scroll { height: auto; max-height: 62dvh; }
   /* drill-in: a listáról az előnézet külön lapként nyílik, ← vissza gombbal;
      a szerkesztő itt modálként nyílik a Betöltés gombról */
   .tp3 .tp-preview { display: none; }
-  .tp3.is-detail .tp-preview { display: block; position: static; max-height: none; }
+  .tp3.is-detail .tp-preview { display: block; overflow: visible; }
   .tp3.is-detail .tp-listcol { display: none; }
   .tp3 .tp-composer { display: none; }
   .tp-back { display: inline-block; }

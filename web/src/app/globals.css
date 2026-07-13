@@ -371,6 +371,55 @@ body {
 .mfoot .sp { margin-left: auto; }
 .mfoot .btn--ink { padding: 10px 18px; }
 
+/* ---- szerkesztő-modál: állandó összegző sor + színes fülek (Feladat/Esemény) ---- */
+.mt-sum { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 10px 24px 2px; }
+.mt-chip { font-family: var(--ff); font-size: .72rem; font-weight: 650; color: var(--ink-2); background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; cursor: pointer; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mt-chip:hover { border-color: var(--line-2); color: var(--ink); }
+.mt-tabs { flex: none; display: flex; gap: 4px; padding: 8px 20px 0; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.mt-tabs::-webkit-scrollbar { display: none; }
+.mt-tab { --sec-c: var(--brand); flex: none; display: inline-flex; align-items: center; gap: 7px; font-family: var(--ff); font-size: .8rem; font-weight: 700; color: var(--ink-2); background: transparent; border: 1px solid transparent; border-bottom: none; border-radius: 10px 10px 0 0; padding: 8px 13px 9px; cursor: pointer; white-space: nowrap; }
+.mt-tab .n { width: 17px; height: 17px; border-radius: 6px; display: grid; place-items: center; font-size: .64rem; font-weight: 800; background: color-mix(in srgb, var(--sec-c) 16%, transparent); color: color-mix(in srgb, var(--sec-c) 72%, var(--ink)); }
+.mt-tab:hover { color: var(--ink); background: var(--paper-2); }
+.mt-tab.is-on { color: color-mix(in srgb, var(--sec-c) 70%, var(--ink)); background: color-mix(in srgb, var(--sec-c) 12%, transparent); border-color: color-mix(in srgb, var(--sec-c) 32%, var(--line)); box-shadow: inset 0 -3px 0 var(--sec-c); }
+.mt-tab.is-on .n { background: var(--sec-c); color: #fff; }
+.mt-tab.c-yellow { --sec-c: var(--yellow-deep); }
+.mt-tab.c-blue { --sec-c: var(--g1); }
+.mt-tab.c-green { --sec-c: var(--g0); }
+.mt-tab.c-purple { --sec-c: var(--g2); }
+
+/* alfeladat-szerkesztő (Feladat modál, Alfeladatok fül) */
+.se-wrap { display: flex; flex-direction: column; gap: 7px; }
+.se-empty { font-size: .8rem; color: var(--muted); padding: 4px 2px; }
+.se-row { border: 1px solid var(--line); border-radius: 10px; background: var(--paper); padding: 6px 8px; }
+.se-row.is-done { opacity: .62; }
+.se-row.is-done .se-text { text-decoration: line-through; }
+.se-main { display: flex; gap: 6px; align-items: center; }
+.se-check { width: 20px; height: 20px; margin: 0; flex: none; }
+.field .se-text { flex: 1 1 auto; min-width: 0; width: auto; border: none; background: transparent; border-radius: 0; padding: 4px 2px; font-size: .86rem; }
+.field .se-text:focus { outline: none; box-shadow: inset 0 -1.5px 0 var(--brand); background: transparent; }
+.se-btn { flex: none; width: 26px; height: 26px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--paper-2); color: var(--ink-2); font-size: .74rem; cursor: pointer; padding: 0; }
+.se-btn:hover { border-color: var(--line-2); color: var(--ink); }
+.se-btn:disabled { opacity: .35; cursor: default; }
+.se-btn.is-on { background: var(--g1); border-color: var(--g1); color: #fff; }
+.se-btn.se-del:hover { background: #c0392b; border-color: #c0392b; color: #fff; }
+.se-meta { flex: none; font-size: .68rem; font-weight: 650; color: var(--ink-2); background: color-mix(in srgb, var(--g1) 12%, transparent); border: 1px solid color-mix(in srgb, var(--g1) 25%, transparent); border-radius: 999px; padding: 3px 8px; cursor: pointer; white-space: nowrap; }
+.se-det { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 7px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.se-det .fld { flex: 1 1 200px; display: flex; flex-direction: column; gap: 4px; }
+.se-add { display: flex; gap: 7px; margin-top: 2px; }
+.se-add input { flex: 1 1 auto; }
+.se-add .btn { flex: none; }
+
+/* kapcsolt feladatok listája (Esemény modál, Feladatok fül) */
+.mt-tasklist { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.mt-task { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; text-align: left; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); padding: 8px 11px; cursor: pointer; font-family: var(--ff); }
+.mt-task:hover { border-color: var(--line-2); background: var(--paper-2); }
+.mt-task:disabled { cursor: default; }
+.mt-task .t { font-size: .86rem; font-weight: 700; color: var(--ink); }
+.mt-task .m { font-size: .7rem; color: var(--muted); }
+.mt-tst { flex: none; font-size: .62rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; border-radius: 6px; padding: 2px 7px; background: var(--paper-2); border: 1px solid var(--line); color: var(--ink-2); }
+.mt-tst.st-doing { background: color-mix(in srgb, var(--g1) 15%, transparent); border-color: color-mix(in srgb, var(--g1) 35%, transparent); color: color-mix(in srgb, var(--g1) 75%, var(--ink)); }
+.mt-tst.st-done { background: color-mix(in srgb, var(--g0) 15%, transparent); border-color: color-mix(in srgb, var(--g0) 35%, transparent); color: color-mix(in srgb, var(--g0) 75%, var(--ink)); }
+
 /* mobil: nagyobb alapbetű — a rem-alapú méretek (kártyák, listák, űrlapok) együtt nőnek */
 @media (max-width: 720px) {
   html { font-size: 18px; }
@@ -393,6 +442,16 @@ body {
   .f { grid-template-columns: 1fr; padding: 14px 18px 12px; gap: 14px; }
   .f-sec { margin-left: -6px; margin-right: -6px; }
   .field input, .field select, .field textarea { font-size: 16px; padding: 11px 13px; }
+  /* összegző sor + fülsor mobilon: kompakt, a fülsor vízszintesen görgethető */
+  .mt-sum { padding: 8px 16px 0; }
+  .mt-chip { max-width: 46vw; }
+  .mt-tabs { padding: 6px 10px 0; }
+  .mt-tab { padding: 10px 12px 11px; font-size: .84rem; }
+  /* alfeladat-sor mobilon: pipa+szöveg egy sorban, a gombok alá törnek */
+  .se-main { flex-wrap: wrap; }
+  .field .se-text { flex: 1 1 60%; font-size: 16px; }
+  .se-btn { width: 34px; height: 34px; }
+  .se-add { flex-wrap: wrap; }
   .crx { padding: 10px 15px; font-size: .86rem; }
   .mfoot { padding: 12px 18px calc(15px + env(safe-area-inset-bottom)); }
   .mfoot .btn--ink { flex: 1 1 auto; text-align: left; padding: 13px 16px; font-size: .95rem; }
@@ -542,6 +601,17 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .ag-ideas li { font-size: .76rem; line-height: 1.42; color: var(--ink-2); padding-left: 13px; position: relative; }
 .ag-ideas li::before { content: ''; position: absolute; left: 1px; top: .52em; width: 5px; height: 5px; border-radius: 2px; background: color-mix(in srgb, var(--brand) 55%, var(--line-2)); }
 .ag-more { margin-top: 6px; font-size: .66rem; font-weight: 700; letter-spacing: .03em; color: var(--muted); }
+/* pipálható alfeladatok a feladatkártyán */
+.ag-steps li { display: flex; align-items: flex-start; gap: 7px; padding-left: 0; }
+.ag-steps li::before { display: none; }
+.ag-steps li.is-done .tx { text-decoration: line-through; color: var(--muted); }
+.ag-scheck { flex: none; width: 16px; height: 16px; margin-top: 1px; border: 1.5px solid var(--line-2); border-radius: 5px; background: var(--card); cursor: pointer; display: grid; place-items: center; font-size: .58rem; font-weight: 900; color: #fff; line-height: 1; padding: 0; }
+.ag-scheck:hover { border-color: var(--g0); }
+.ag-scheck.is-on { background: var(--g0); border-color: var(--g0); }
+.ag-steps .tx { flex: 1 1 auto; min-width: 0; }
+.ag-smeta { flex: none; font-size: .64rem; font-weight: 650; color: var(--muted); white-space: nowrap; }
+.ag-stepsum { font-size: .68rem; font-weight: 750; color: var(--ink-2); background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; }
+.ag-stepsum.all-done { color: color-mix(in srgb, var(--g0) 80%, var(--ink)); background: color-mix(in srgb, var(--g0) 14%, transparent); border-color: color-mix(in srgb, var(--g0) 35%, transparent); }
 
 .ev-list { display: flex; flex-direction: column; gap: 12px; max-width: 920px; }
 .ev-card { display: flex; gap: 18px; align-items: flex-start; }
@@ -848,6 +918,8 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .viewer .ag-add, .viewer .ag-check, .viewer .ag-prio, .viewer .ag-doing,
 .viewer .ag-notify, .viewer .ev-task, .viewer .lockbtn, .viewer .alignbtn,
 .viewer .ag-intro-edit, .viewer .editonly { display: none !important; }
+/* nézőnek az alfeladat-pipa látszik (informatív), de nem kattintható */
+.viewer .ag-scheck { pointer-events: none; }
 .viewer-badge { position: fixed; bottom: 10px; right: 12px; z-index: 60; font-size: .72rem; font-weight: 800; letter-spacing: .04em; padding: 6px 12px; border-radius: 999px; background: var(--brand); color: #fff; box-shadow: 0 4px 14px rgba(16, 17, 20, .25); pointer-events: none; }
 
 /* félév-szűrő a katalógus tetején */

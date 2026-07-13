@@ -12,7 +12,7 @@ import EventsView from './EventsView';
 import ITView from './ITView';
 import DocsView from './DocsView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
-import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, Letter, emptyEvent, emptyTask, nextPriority, normalizeAgenda } from '@/data/agenda';
+import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, Letter, emptyEvent, emptyTask, nextPriority, normalizeAgenda, taskSteps } from '@/data/agenda';
 import { DEFAULT_PEOPLE, PeopleDB, PersonKind, buildRoster, normalizePeople, emailOf } from '@/data/people';
 import PeopleModal from './PeopleModal';
 import NotifyModal, { NotifyTarget } from './NotifyModal';
@@ -228,6 +228,19 @@ export default function CurriculumApp() {
     const cur = agendaRef.current;
     commitAgenda({ ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, priority: nextPriority(x.priority) } : x)) });
   }, [commitAgenda]);
+  // alfeladat-pipa a kártyáról: done váltás + az ideas tükör frissítése
+  const toggleStep = useCallback((taskId: string, ix: number) => {
+    if (!canEditRef.current) return;
+    const cur = agendaRef.current;
+    commitAgenda({
+      ...cur,
+      tasks: cur.tasks.map((t) => {
+        if (t.id !== taskId) return t;
+        const steps = taskSteps(t).map((s, i) => (i === ix ? { ...s, done: !s.done } : s));
+        return { ...t, steps, ideas: steps.map((s) => s.text) };
+      }),
+    });
+  }, [commitAgenda]);
   const saveEvent = useCallback((e: AgendaEvent) => {
     const cur = agendaRef.current;
     const exists = cur.events.some((x) => x.id === e.id);
@@ -268,19 +281,36 @@ export default function CurriculumApp() {
     try { localStorage.setItem(PEOPLE_LS_KEY, JSON.stringify(db)); } catch { /* ignore */ }
     setPeopleEdit(false);
   }, []);
+  // Új feladat egy eseményből: MINDENT örököl — ne kelljen kétszer beírni ugyanazt
+  const addTaskForEvent = useCallback((eid: string) => {
+    if (!canEditRef.current) return;
+    const e = agendaRef.current.events.find((x) => x.id === eid);
+    setTaskEdit({
+      t: {
+        ...emptyTask(),
+        eventId: eid,
+        owner: e?.owner ?? emptyTask().owner,
+        people: e ? [...e.people] : [],
+        dueDate: e?.day ?? null,
+        due: e?.when ?? null,
+        title: e ? `${e.title} — előkészítés` : '',
+      },
+      isNew: true,
+    });
+  }, []);
   // Levél-készítő megnyitása egy feladatból / eseményből — a sablon-szöveget a modál generálja
   const notifyTask = useCallback((id: string) => {
     if (!canEditRef.current) return;
     const t = agendaRef.current.tasks.find((x) => x.id === id);
     if (!t) return;
-    setNotify({ targetType: 'task', targetId: t.id, task: t, event: null, names: [t.owner, ...t.people].filter((n): n is string => !!n), steps: t.ideas.filter(Boolean), source: t.source ?? null });
+    setNotify({ targetType: 'task', targetId: t.id, task: t, event: null, names: [t.owner, ...t.people].filter((n): n is string => !!n), steps: taskSteps(t).map((s) => s.text).filter(Boolean), source: t.source ?? null });
   }, []);
   const notifyEvent = useCallback((id: string) => {
     if (!canEditRef.current) return;
     const e = agendaRef.current.events.find((x) => x.id === id);
     if (!e) return;
     // az eseményhez kötött feladatok lépései is választhatók a levélbe
-    const steps = agendaRef.current.tasks.filter((t) => t.eventId === e.id).flatMap((t) => t.ideas).filter(Boolean);
+    const steps = agendaRef.current.tasks.filter((t) => t.eventId === e.id).flatMap((t) => taskSteps(t).map((s) => s.text)).filter(Boolean);
     setNotify({ targetType: 'event', targetId: e.id, event: e, task: null, names: [e.owner, ...e.people].filter((n): n is string => !!n), steps, source: e.source ?? null });
   }, []);
   // levélírás a Levelek nézetből: kártya nélkül, a kiválasztott sablon előtöltve
@@ -308,9 +338,9 @@ export default function CurriculumApp() {
     const preload = { subject: l.subject, body: l.body, names: l.names };
     const t = l.targetType === 'task' ? cur.tasks.find((x) => x.id === l.targetId) : null;
     const e = l.targetType === 'event' ? cur.events.find((x) => x.id === l.targetId) : null;
-    if (t) setNotify({ targetType: 'task', targetId: t.id, task: t, event: null, names: [], steps: t.ideas.filter(Boolean), source: t.source ?? null, preload });
+    if (t) setNotify({ targetType: 'task', targetId: t.id, task: t, event: null, names: [], steps: taskSteps(t).map((s) => s.text).filter(Boolean), source: t.source ?? null, preload });
     else if (e) {
-      const steps = cur.tasks.filter((x) => x.eventId === e.id).flatMap((x) => x.ideas).filter(Boolean);
+      const steps = cur.tasks.filter((x) => x.eventId === e.id).flatMap((x) => taskSteps(x).map((s) => s.text)).filter(Boolean);
       setNotify({ targetType: 'event', targetId: e.id, event: e, task: null, names: [], steps, source: e.source ?? null, preload });
     } else setNotify({ targetType: null, targetId: null, task: null, event: null, names: [], steps: [], source: null, preload });
   }, []);
@@ -720,6 +750,7 @@ export default function CurriculumApp() {
               onToggleDone={toggleDone}
               onToggleDoing={toggleDoing}
               onCyclePriority={cyclePriority}
+              onToggleStep={toggleStep}
             />
           ) : view === 'events' ? (
             <EventsView
@@ -727,22 +758,7 @@ export default function CurriculumApp() {
               onAdd={() => { if (!canEdit) return; setEventEdit({ e: emptyEvent(), isNew: true }); }}
               onEdit={(id) => { if (!canEdit) return; const e = agendaRef.current.events.find((x) => x.id === id); if (e) setEventEdit({ e, isNew: false }); }}
               onEditTask={(id) => { if (!canEdit) return; const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
-              onAddTaskFor={(eid) => {
-                // az eseményből nyitott feladat MINDENT örököl — ne kelljen kétszer beírni ugyanazt
-                const e = agendaRef.current.events.find((x) => x.id === eid);
-                setTaskEdit({
-                  t: {
-                    ...emptyTask(),
-                    eventId: eid,
-                    owner: e?.owner ?? emptyTask().owner,
-                    people: e ? [...e.people] : [],
-                    dueDate: e?.day ?? null,
-                    due: e?.when ?? null,
-                    title: e ? `${e.title} — előkészítés` : '',
-                  },
-                  isNew: true,
-                });
-              }}
+              onAddTaskFor={addTaskForEvent}
               onPerson={onInstructor}
               onNotify={notifyEvent}
               emailFor={(n) => emailOf(peopleDB, n)}
@@ -893,6 +909,7 @@ export default function CurriculumApp() {
           isNew={taskEdit.isNew}
           events={agenda.events.map((e) => ({ id: e.id, title: e.title }))}
           roster={roster}
+          letters={(agenda.letters || []).filter((l) => l.targetType === 'task' && l.targetId === taskEdit.t.id)}
           onSave={saveTask}
           onDelete={() => { if (confirm('Törlöd ezt a feladatot?')) deleteTask(taskEdit.t.id); }}
           onNotify={taskEdit.isNew ? undefined : () => notifyTask(taskEdit.t.id)}
@@ -905,9 +922,13 @@ export default function CurriculumApp() {
           event={eventEdit.e}
           isNew={eventEdit.isNew}
           roster={roster}
+          tasks={agenda.tasks.filter((t) => t.eventId === eventEdit.e.id)}
+          letters={(agenda.letters || []).filter((l) => l.targetType === 'event' && l.targetId === eventEdit.e.id)}
           onSave={saveEvent}
           onDelete={() => { if (confirm('Törlöd ezt az eseményt?')) deleteEvent(eventEdit.e.id); }}
           onNotify={eventEdit.isNew ? undefined : () => notifyEvent(eventEdit.e.id)}
+          onOpenTask={eventEdit.isNew ? undefined : (id) => { const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
+          onAddTask={eventEdit.isNew ? undefined : () => addTaskForEvent(eventEdit.e.id)}
           onClose={() => setEventEdit(null)}
         />
       )}

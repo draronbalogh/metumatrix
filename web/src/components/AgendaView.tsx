@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import {
   Agenda, AgendaTask, STATUS_LABEL, PRIORITY_LABEL, PRIORITY_ORDER, TASK_CATEGORIES,
-  TaskPriority, taskHasPerson, eventHasPerson,
+  TaskPriority, taskHasPerson, eventHasPerson, taskSteps, stepsDone,
 } from '@/data/agenda';
 import { PersonKind } from '@/data/people';
 
@@ -21,7 +21,13 @@ interface Props {
   onToggleDone: (id: string) => void;  // pipa: kész / nem kész
   onToggleDoing: (id: string) => void; // Folyamatban jelölő
   onCyclePriority: (id: string) => void;
+  onToggleStep: (id: string, ix: number) => void; // alfeladat-pipa a kártyán
 }
+
+// rövid név az alfeladat-badge-hez: a titulusok nélküli első (vezeték)név
+const familyName = (n: string): string =>
+  n.trim().split(/\s+/).filter((p) => !/^dr\.?$/i.test(p) && !/^habil\.?$/i.test(p))[0] ?? n;
+const fmtStepDue = (d?: string | null): string => (d && d.length >= 10 ? `${d.slice(5, 7)}.${d.slice(8, 10)}.` : '');
 
 export function PersonChip({ name, star, on, kind, onClick }: { name: string; star?: boolean; on: boolean; kind?: PersonKind; onClick: () => void }) {
   return (
@@ -48,7 +54,7 @@ const createdKey = (t: AgendaTask): number => {
 export const isNewTask = (t: AgendaTask): boolean =>
   !!t.createdAt && Date.now() - Date.parse(t.createdAt) < 72 * 3600 * 1000;
 
-export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, onEdit, onEditIntro, onPerson, onNotify, onToggleDone, onToggleDoing, onCyclePriority }: Props) {
+export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, onEdit, onEditIntro, onPerson, onNotify, onToggleDone, onToggleDoing, onCyclePriority, onToggleStep }: Props) {
   const [groupBy, setGroupBy] = useState<GroupBy>('newest');
   const [catFilter, setCatFilter] = useState('');
 
@@ -58,7 +64,7 @@ export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, on
     if (!q) return true;
     const s = q.toLowerCase();
     return t.title.toLowerCase().includes(s) || t.summary.toLowerCase().includes(s)
-      || t.ideas.some((i) => i.toLowerCase().includes(s)) || (t.owner || '').toLowerCase().includes(s)
+      || taskSteps(t).some((st) => st.text.toLowerCase().includes(s)) || (t.owner || '').toLowerCase().includes(s)
       || t.people.some((p) => p.toLowerCase().includes(s)) || (t.category || '').toLowerCase().includes(s);
   };
   const shown = agenda.tasks.filter(matches);
@@ -161,7 +167,10 @@ export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, on
         <section className="cc-section" key={sec.key}>
           <div className={`cc-grp ag-grp ${sec.cls}`}>{sec.label} · {sec.items.length}</div>
           <div className="cc-grid">
-            {sec.items.map((t) => (
+            {sec.items.map((t) => {
+              const steps = taskSteps(t);
+              const doneN = stepsDone(t);
+              return (
               <article key={t.id} className={`cc-card ag-card prio-${t.priority}${t.status === 'doing' ? ' is-doing' : ''}`} onClick={() => onEdit(t.id)}>
                 <div className="cc-accent" />
                 <div className="ag-cardtop">
@@ -172,14 +181,26 @@ export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, on
                   <button className={`ag-prio ${t.priority}`} title={`Prioritás: ${PRIORITY_LABEL[t.priority]} — kattints a váltáshoz`} onClick={(e) => { e.stopPropagation(); onCyclePriority(t.id); }}>⚑ {PRIORITY_LABEL[t.priority]}</button>
                   {t.category && <button className="ag-cat on-card" title={`Szűrés: ${t.category}`} onClick={(e) => { e.stopPropagation(); setCatFilter((v) => (v === t.category ? '' : (t.category as string))); }}>{t.category}</button>}
                   <button className={`ag-doing${t.status === 'doing' ? ' is-on' : ''}`} title="Folyamatban jelölő" onClick={(e) => { e.stopPropagation(); onToggleDoing(t.id); }}>▶ Folyamatban</button>
+                  {steps.length > 0 && <span className={`ag-stepsum${doneN === steps.length ? ' all-done' : ''}`} title="Kész alfeladatok / összes">☑ {doneN}/{steps.length}</span>}
                 </div>
                 {t.summary && <div className="cc-desc">{t.summary}</div>}
-                {t.ideas.length > 0 && (
-                  <ul className="ag-ideas">
-                    {t.ideas.slice(0, IDEAS_ON_CARD).map((i, ix) => <li key={ix}>{i}</li>)}
+                {steps.length > 0 && (
+                  <ul className="ag-ideas ag-steps">
+                    {steps.slice(0, IDEAS_ON_CARD).map((s, ix) => (
+                      <li key={ix} className={s.done ? 'is-done' : ''}>
+                        <button className={`ag-scheck${s.done ? ' is-on' : ''}`} title={s.done ? 'Visszaállítás nyitottra' : 'Alfeladat kész — pipa'}
+                          onClick={(e) => { e.stopPropagation(); onToggleStep(t.id, ix); }}>{s.done ? '✓' : ''}</button>
+                        <span className="tx">{s.text}</span>
+                        {(s.owner || s.due) && (
+                          <span className="ag-smeta">
+                            {s.owner ? `👤 ${familyName(s.owner)}` : ''}{s.owner && s.due ? ' · ' : ''}{s.due ? `📅 ${fmtStepDue(s.due)}` : ''}
+                          </span>
+                        )}
+                      </li>
+                    ))}
                   </ul>
                 )}
-                {t.ideas.length > IDEAS_ON_CARD && <div className="ag-more">+ {t.ideas.length - IDEAS_ON_CARD} további pont…</div>}
+                {steps.length > IDEAS_ON_CARD && <div className="ag-more">+ {steps.length - IDEAS_ON_CARD} további alfeladat…</div>}
                 {(t.owner || t.due || t.dueDate || t.people.length > 0 || t.eventId) && (
                   <div className="cc-meta">
                     {t.owner && <PersonChip name={t.owner} star on={instr === t.owner} kind={kindOf[t.owner]} onClick={() => onPerson(t.owner as string)} />}
@@ -190,7 +211,8 @@ export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, on
                 )}
                 <button className="ag-notify" title="Értesítés küldése a résztvevőknek" onClick={(e) => { e.stopPropagation(); onNotify(t.id); }}>✉ Értesítés</button>
               </article>
-            ))}
+              );
+            })}
           </div>
         </section>
       ))}

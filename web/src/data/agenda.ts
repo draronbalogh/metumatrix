@@ -36,11 +36,21 @@ export interface AgendaSource {
   subject?: string | null; // az eredeti levél tárgya (a Re: válaszhoz)
 }
 
+// Alfeladat: kipipálható lépés, opcionális saját felelőssel és határidővel
+export interface TaskStep {
+  text: string;
+  done: boolean;
+  owner?: string | null; // a lépés felelőse — üresen a feladat felelőse viszi
+  due?: string | null;   // a lépés pontos határideje (ÉÉÉÉ-HH-NN)
+}
+
 export interface AgendaTask {
   id: string;
   title: string;
   summary: string;
+  /** @deprecated a régi soronkénti lépéslista — olvasni a taskSteps()-szel kell, mentéskor a steps tükre */
   ideas: string[];
+  steps?: TaskStep[];
   status: TaskStatus;
   priority: TaskPriority;   // Magas / Közepes / Alacsony
   category: string | null;  // egy kategória a TASK_CATEGORIES-ból (null = besorolatlan)
@@ -77,6 +87,7 @@ export interface Letter {
   subject: string;
   body: string;
   names: string[];                 // a címzett-nevek a mentés pillanatában
+  status?: 'draft' | 'sent';       // vázlat / kiküldve — hiányzó érték = vázlat
 }
 
 export interface Agenda {
@@ -92,18 +103,29 @@ export const DEFAULT_OWNER = 'Dr. Balogh Áron';
 
 export const emptyTask = (): AgendaTask => ({
   id: `t-${Date.now().toString(36)}`,
-  title: '', summary: '', ideas: [], status: 'todo', priority: 'normal', category: null, owner: DEFAULT_OWNER, due: null, dueDate: null, people: [], eventId: null,
+  title: '', summary: '', ideas: [], steps: [], status: 'todo', priority: 'normal', category: null, owner: DEFAULT_OWNER, due: null, dueDate: null, people: [], eventId: null,
   createdAt: new Date().toISOString(),
 });
+
+// Az alfeladatok EGYETLEN olvasási útja: a régi (csak ideas-os) kártyák soraiból
+// pipálatlan lépéseket képez, az újaknál a steps mezőt adja vissza.
+export const taskSteps = (t: AgendaTask): TaskStep[] =>
+  t.steps ?? (t.ideas ?? []).filter(Boolean).map((text) => ({ text, done: false }));
+export const stepsDone = (t: AgendaTask): number => taskSteps(t).filter((s) => s.done).length;
 export const emptyEvent = (): AgendaEvent => ({
   id: `e-${Date.now().toString(36)}`,
   title: '', when: '', sort: null, day: null, dayEnd: null, featured: false, note: null, place: null, owner: DEFAULT_OWNER, people: [],
 });
 
 // Korábban mentett (régebbi sémájú) adat kiegészítése az új mezőkkel.
+// A steps itt materializálódik az ideas-ból, és az ideas a steps tükre marad —
+// az első mentés így az egész fájlt átviszi az új sémára, adatvesztés nélkül.
 export const normalizeAgenda = (a: Partial<Agenda>): Agenda => ({
   intro: a.intro ?? DEFAULT_AGENDA.intro,
-  tasks: (a.tasks ?? []).map((t) => ({ ...t, people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null, priority: t.priority ?? 'normal', category: t.category ?? null, createdAt: t.createdAt ?? null, source: t.source ?? null })),
+  tasks: (a.tasks ?? []).map((t) => {
+    const steps = taskSteps(t);
+    return { ...t, steps, ideas: steps.map((s) => s.text), people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null, priority: t.priority ?? 'normal', category: t.category ?? null, createdAt: t.createdAt ?? null, source: t.source ?? null };
+  }),
   events: (a.events ?? []).map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null, featured: e.featured ?? false, source: e.source ?? null })),
   letters: a.letters ?? [],
   topicLinks: a.topicLinks ?? {},

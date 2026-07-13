@@ -379,6 +379,7 @@ body {
 .mt-sum { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 10px 24px 2px; }
 .mt-chip { font-family: var(--ff); font-size: .72rem; font-weight: 650; color: var(--ink-2); background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; cursor: pointer; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mt-chip:hover { border-color: var(--line-2); color: var(--ink); }
+.mt-chip.mt-warn { color: color-mix(in srgb, var(--yellow-deep) 75%, var(--ink)); border-color: color-mix(in srgb, var(--yellow-deep) 45%, transparent); background: color-mix(in srgb, var(--yellow-deep) 12%, transparent); }
 .mt-tabs { flex: none; display: flex; gap: 4px; padding: 8px 20px 0; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
 .mt-tabs::-webkit-scrollbar { display: none; }
 .mt-tab { --sec-c: var(--brand); flex: none; display: inline-flex; align-items: center; gap: 7px; font-family: var(--ff); font-size: .8rem; font-weight: 700; color: var(--ink-2); background: transparent; border: 1px solid transparent; border-bottom: none; border-radius: 10px 10px 0 0; padding: 8px 13px 9px; cursor: pointer; white-space: nowrap; }
@@ -472,7 +473,7 @@ body {
   .mt-tab { padding: 10px 12px 11px; font-size: .84rem; }
   /* mobilon a fülsor ALUL van, a hüvelykujj-zónában (a mentés-sáv felett):
      nem kell átnyúlni a képernyőn, a tartalom felül görget */
-  .modal--tabs form.f { order: 1; }
+  .modal--tabs form.f, .modal--tabs > .pm-body { order: 1; }
   .modal--tabs .mt-tabs { order: 2; border-top: 1px solid var(--line); border-bottom: none; padding: 5px 10px 4px; background: var(--card); }
   .modal--tabs .mt-tab { border-radius: 0 0 10px 10px; }
   .modal--tabs .mt-tab.is-on { box-shadow: inset 0 3px 0 var(--sec-c); }
@@ -1056,7 +1057,11 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .tp-pv-empty { display: grid; place-items: center; min-height: 260px; color: var(--muted); font-size: .84rem; text-align: center; padding: 20px; }
 /* a 3. oszlop: a beágyazott, egységes levélszerkesztő */
 .tp-composer { min-width: 0; }
-.nm-inline { border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 4px 14px 12px; max-height: calc(100dvh - 250px); overflow: auto; }
+/* beágyazott levélíró: az összegző sor + fülsor rögzített, CSAK a törzs görget (nincs dupla scroll) */
+.nm-inline { border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 4px 14px 12px; max-height: calc(100dvh - 250px); overflow: hidden; display: flex; flex-direction: column; }
+.nm-inline .pm-body.nm-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.nm-inline .mt-sum { padding: 8px 4px 0; }
+.nm-inline .mt-tabs { padding: 6px 2px 0; }
 .nm-inline .nm-topicpanel { display: none; } /* a sablontár itt a bal oszlop, nem duplikáljuk */
 @media (max-width: 1180px) {
   /* szűkebb kijelzőn az előnézet-oszlop elmarad, a lista egyből a szerkesztőbe tölt */

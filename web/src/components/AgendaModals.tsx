@@ -136,8 +136,9 @@ function PeoplePicker({ selected, roster, onToggle, onSet }: { selected: string[
 }
 
 // A szerkesztő-modálok közös, színes fülsora — szabad ugrálás, egyszerre egy egység
-interface TabDef { id: string; label: string; cls?: string }
-function ModalTabs({ tabs, active, onPick }: { tabs: TabDef[]; active: string; onPick: (id: string) => void }) {
+// (a NotifyModal is ezt használja, ezért exportált)
+export interface TabDef { id: string; label: string; cls?: string }
+export function ModalTabs({ tabs, active, onPick }: { tabs: TabDef[]; active: string; onPick: (id: string) => void }) {
   return (
     <div className="mt-tabs" role="tablist">
       {tabs.map((t, i) => (

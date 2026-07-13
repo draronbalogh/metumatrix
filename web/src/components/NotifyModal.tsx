@@ -6,6 +6,7 @@ import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster, fo
 import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, LetterKind, MeetingMode, MeetingPlan } from '@/lib/letters';
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
+import { ModalTabs, TabDef } from './AgendaModals';
 import { editHeaders } from '@/lib/editkey';
 import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate, autoFill, fmtDay, paraphrase, normText, LINK_STOP } from '@/lib/topics';
 
@@ -89,6 +90,9 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [tq, setTq] = useState(''); // keresés a jobb oldali sablonpanelben
+  // multistep fülek: Címzettek → Tartalom → Szöveg és küldés → Mentett levelek;
+  // beágyazva (Levelek nézet) a Szöveg fül a kiindulás, mert oda töltődik a sablon
+  const [tab, setTab] = useState(inline ? 'text' : 'to');
 
   // Kártya nélküli (önálló) levélnél is legyen honnan adatot húzni: a naptár
   // eseményei / feladatai közül kapcsolható egy tétel, és a dátum, helyszín,
@@ -337,21 +341,23 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       setAdhoc(target.preload.names.filter((n) => n.includes('@')));
       setBodyDirty(true); // kész levél: sablon / 🎲 csak rákérdezés után írhatja felül
       loadedLetterRef.current = target.preload.letterId ?? null;
+      setTab('text'); // kész tartalommal a szöveg-fül a lényeg
       return;
     }
     if (!target.topicId) return;
     const t = TOPIC_TEMPLATES.find((x) => x.id === target.topicId);
-    if (t) applyTopic(t);
+    if (t) { applyTopic(t); setTab('text'); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
     if (!topicReq) return;
     if (typedRef.current && !confirm('A kézi módosításaid elvesznek. Betöltsem az új sablont?')) return;
     applyTopic(topicReq.t);
+    setTab('text');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topicReq]);
   useEffect(() => {
-    if (letterReq) loadLetter(letterReq.l);
+    if (letterReq) { loadLetter(letterReq.l); setTab('text'); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [letterReq]);
 
@@ -414,6 +420,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     setActiveTopic(null);
     typedRef.current = true;
     loadedLetterRef.current = l.id; // küldéskor ezt jelöljük kiküldöttre
+    setTab('text');
     setResult('✓ Mentett levél betöltve.');
   };
 
@@ -445,10 +452,26 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
 
   const fmtDate = (iso: string) => iso.slice(0, 16).replace('T', ' ');
 
-  // ugyanaz a szerkesztő fut modálként (feladat/esemény ✉) és beágyazva (Levelek nézet)
+  // ugyanaz a szerkesztő fut modálként (feladat/esemény ✉) és beágyazva (Levelek nézet);
+  // a tartalom füleken oszlik el, felül állandó összegző sorral
+  const NM_TABS: TabDef[] = [
+    { id: 'to', label: 'Címzettek', cls: 'c-blue' },
+    { id: 'about', label: 'Tartalom', cls: 'c-yellow' },
+    { id: 'text', label: 'Szöveg és küldés', cls: 'c-green' },
+    { id: 'saved', label: `Mentett (${letters.length})`, cls: 'c-purple' },
+  ];
+  const kindLabel = LETTER_KINDS.find((k) => k.id === kind)?.label ?? '';
   const content = (
     <>
+        <div className="mt-sum">
+          <button type="button" className="mt-chip" title="Címzettek — 1. fül" onClick={() => setTab('to')}>👥 {selected.length + adhoc.length} címzett · {emails.length} email</button>
+          {missing.length > 0 && <button type="button" className="mt-chip mt-warn" title={`Nincs email-címük: ${missing.join(', ')}`} onClick={() => setTab('to')}>⚠ {missing.length} cím hiányzik</button>}
+          <button type="button" className="mt-chip" title="Tartalom: sablon, helyszín, meeting — 2. fül" onClick={() => setTab('about')}>📄 {activeTopic ? activeTopic.label : `${kindLabel} (hangnem-motor)`}</button>
+          <button type="button" className="mt-chip" title="A levél tárgya — 3. fül" onClick={() => setTab('text')}>✎ {subject.trim() || 'nincs tárgy'}</button>
+        </div>
+        <ModalTabs tabs={NM_TABS} active={tab} onPick={setTab} />
         <div className="pm-body nm-body">
+          {tab === 'to' && (<>
           <div className="f-sec c-blue">1 · Kinek megy a levél?</div>
           <div className="field full">
             <label>A levél feladója (neki egy gombbal válaszolhatsz)</label>
@@ -456,7 +479,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               <div className="nm-groups">
                 <span className="chip is-on" title={src.email}>✉ {src.name || src.email}</span>
                 <button type="button" className="chip" title="Csak a feladó lesz a címzett, és Válasz-sablon készül (Re: az eredeti tárggyal)"
-                  onClick={() => { setSelected([]); setAdhoc([src.email]); if (confirmIfDirty()) regenerate('valasz'); }}>↩ Válasz a feladónak</button>
+                  onClick={() => { setSelected([]); setAdhoc([src.email]); if (confirmIfDirty()) { regenerate('valasz'); setTab('text'); } }}>↩ Válasz a feladónak</button>
                 <button type="button" className="chip" title="A feladó hozzáadása a mostani címzettekhez"
                   onClick={() => setAdhoc((a) => (a.includes(src.email) ? a : [...a, src.email]))}>+ címzettnek</button>
                 <button type="button" className="chip chip--danger" title="Feladó törlése a kártyáról"
@@ -478,7 +501,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               <div className="chipradio">
                 <button type="button" className="crx c-amber" disabled={!src}
                   title={src ? `Válasz a feladónak: ${src.email}` : 'Előbb add meg fent a feladót (név + email), utána egy koppintás a válasz'}
-                  onClick={() => { if (!src) return; setSelected([]); setAdhoc([src.email]); if (confirmIfDirty()) regenerate('valasz'); }}>↩ A feladónak</button>
+                  onClick={() => { if (!src) return; setSelected([]); setAdhoc([src.email]); if (confirmIfDirty()) { regenerate('valasz'); setTab('text'); } }}>↩ A feladónak</button>
                 <button type="button" className="crx c-blue" title="A kártya felelőse és résztvevői"
                   onClick={() => { setSelected([...new Set(target.names)]); setAdhoc([]); }}>Résztvevők</button>
                 {([
@@ -538,32 +561,47 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                 ))}
               </div>
             </div>
-            <input className="nm-search" value={rq} onChange={(e) => setRq(e.target.value)} placeholder="Szűrés névre…" />
-            <div className="cat-picker pp-picker">
+            {/* a kiválasztottak MINDIG látszanak; a teljes névfal csak keresésre / megnyitott listára */}
+            <div className="pp-selrow">
+              <span className="pp-selcount">{selected.length + adhoc.length || 'Nincs'} címzett</span>
               {adhoc.map((e) => (
-                <button key={e} type="button" className="chip is-on" title="Egyedi email-címzett — kattints a levételhez" onClick={() => setAdhoc((a) => a.filter((x) => x !== e))}>@ {e}</button>
+                <button key={e} type="button" className="chip is-on pp-selchip" title="Egyedi email-címzett — kattints a levételhez" onClick={() => setAdhoc((a) => a.filter((x) => x !== e))}>@ {e}<span className="pp-x">✕</span></button>
               ))}
-              {selected.filter((n) => !roster.some((r) => r.name === n)).map((n) => (
-                <button key={n} type="button" className="chip is-on" title="Listán kívüli (régi) név — kattints a levételhez" onClick={() => toggle(n)}>{n}</button>
-              ))}
-              {roster
-                .filter((r) => (!kindFilter || r.kind === kindFilter)
-                  && (!statusFilter || statusSets[statusFilter]?.has(r.name))
-                  && (!rq.trim() || norm(r.name).includes(norm(rq))))
-                .map((r) => {
-                  const on = selected.includes(r.name);
-                  const has = !!emailOf(db, r.name);
-                  return (
-                    <button key={`${r.kind}-${r.name}`} type="button" aria-pressed={on} className={`chip${on ? ' is-on' : ''}${on && !has ? ' nm-noemail' : ''}`}
-                      title={has ? (emailOf(db, r.name) as string) : 'nincs email-cím, a Névjegyzékben add meg'}
-                      onClick={() => { if (!on && rq.trim()) setRq(''); toggle(r.name); }}>
-                      <span className={`pb ${r.kind.toLowerCase()}`}>{r.kind}</span>{r.name}{on && !has ? ' ⚠' : ''}
-                    </button>
-                  );
-                })}
+              {selected.map((n) => {
+                const k = roster.find((r) => r.name === n)?.kind ?? null;
+                return (
+                  <button key={n} type="button" className="chip is-on pp-selchip" title="Kattints az eltávolításhoz" onClick={() => toggle(n)}>
+                    {k && <span className={`pb ${k.toLowerCase()}`}>{k}</span>}{n}<span className="pp-x">✕</span>
+                  </button>
+                );
+              })}
             </div>
+            <input className="nm-search" value={rq} onChange={(e) => setRq(e.target.value)} placeholder="Keress névre a hozzáadáshoz…" />
+            {kindFilter || statusFilter || rq.trim() ? (
+              <div className="cat-picker pp-picker pp-scroll">
+                {roster
+                  .filter((r) => (!kindFilter || r.kind === kindFilter)
+                    && (!statusFilter || statusSets[statusFilter]?.has(r.name))
+                    && (!rq.trim() || norm(r.name).includes(norm(rq))))
+                  .map((r) => {
+                    const on = selected.includes(r.name);
+                    const has = !!emailOf(db, r.name);
+                    return (
+                      <button key={`${r.kind}-${r.name}`} type="button" aria-pressed={on} className={`chip${on ? ' is-on' : ''}${on && !has ? ' nm-noemail' : ''}`}
+                        title={has ? (emailOf(db, r.name) as string) : 'nincs email-cím, a Névjegyzékben add meg'}
+                        onClick={() => { if (!on && rq.trim()) setRq(''); toggle(r.name); }}>
+                        <span className={`pb ${r.kind.toLowerCase()}`}>{r.kind}</span>{r.name}{on && !has ? ' ⚠' : ''}
+                      </button>
+                    );
+                  })}
+              </div>
+            ) : (
+              <div className="pp-nohit">A teljes névfal nem jelenik meg magától — keress névre, vagy nyisd meg fent az egyik listát (Tanár, Hallgató, státusz…).</div>
+            )}
             {missing.length > 0 && <div className="nm-missing">⚠ Nincs email-címük (kimaradnak): {missing.join(', ')}. A ☎ Névjegyzékben pótolható.</div>}
           </div>
+          </>)}
+          {tab === 'about' && (<>
           <div className="f-sec c-green">2 · Miről szóljon?</div>
           {!target.event && !target.task && ((ctxEvents?.length ?? 0) + (ctxTasks?.length ?? 0)) > 0 && (
             <div className="field full">
@@ -599,7 +637,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             <label>Sablon (ugyanarra újra koppintva új megfogalmazás)</label>
             <div className="chipradio">
               {LETTER_KINDS.map((k) => (
-                <button type="button" key={k.id} aria-pressed={kind === k.id} className={`crx c-blue${kind === k.id ? ' is-on' : ''}`} onClick={() => { if (confirmIfDirty()) regenerate(k.id); }}>{k.label}</button>
+                <button type="button" key={k.id} aria-pressed={kind === k.id} className={`crx c-blue${kind === k.id ? ' is-on' : ''}`} onClick={() => { if (confirmIfDirty()) { regenerate(k.id); setTab('text'); } }}>{k.label}</button>
               ))}
             </div>
           </div>
@@ -610,6 +648,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               if (!t) return;
               if (typedRef.current && !confirm('A kézi módosításaid elvesznek. Betöltsem az új sablont?')) return;
               applyTopic(t);
+              setTab('text');
             }}>
               <option value="">{activeTopic ? 'Sablon nélkül (hangnem-motor)' : 'Válassz témasablont…'}</option>
               {TOPIC_GROUPS.map((g) => (
@@ -650,6 +689,8 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               </div>
             )}
           </div>
+          </>)}
+          {tab === 'text' && (<>
           <div className="f-sec">3 · A levél szövege és küldése</div>
           <div className="field full">
             <label>Tárgy</label>
@@ -741,10 +782,11 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               {emails.length ? `✉ Outlook: új levél előtöltve (${emails.length} címzett) ↗` : '✉ Outlook megnyitása ↗'}
             </a>
           </div>
-          {result && <div aria-live="polite" className={`nm-result${result.startsWith('✓') ? ' ok' : ' err'}`}>{result}</div>}
-          {letters.length > 0 && (
+          </>)}
+          {tab === 'saved' && (
             <div className="field full">
-              <label>Mentett levelek ehhez a tételhez</label>
+              <label>Mentett levelek ehhez a tételhez ({letters.length})</label>
+              {letters.length === 0 && <div className="pp-nohit">Még nincs mentett levél — a kész vázlatot a 💾 gombbal mentheted el.</div>}
               <div className="nm-letters">
                 {letters.map((l) => {
                   const st = l.status ?? 'draft';
@@ -768,6 +810,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               </div>
             </div>
           )}
+          {result && <div aria-live="polite" className={`nm-result${result.startsWith('✓') ? ' ok' : ' err'}`}>{result}</div>}
         </div>
         <div className="mfoot">
           <button className={`btn${configured ? '' : ' btn--ink'}`} onClick={saveLetter} disabled={!subject.trim()}>💾 Levél mentése</button>
@@ -786,7 +829,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   if (inline) return <div className="nm-inline">{content}</div>;
   return (
     <div className="ovl" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal modal--wide" role="dialog" aria-modal="true" aria-label="Levél készítése">
+      <div className="modal modal--wide modal--tabs" role="dialog" aria-modal="true" aria-label="Levél készítése">
         <h3>✉ Levél készítése{target.event ? ` · ${target.event.title}` : target.task ? ` · ${target.task.title}` : ''}</h3>
         {content}
       </div>

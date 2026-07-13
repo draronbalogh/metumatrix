@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 
 // Média Design órarend: az Excelből MD-re szűrt digitális táblázat.
 // Két nézet: heti naptár-rács (alapértelmezett) és napok szerinti lista.
@@ -38,37 +38,22 @@ const parseIdo = (ido: string | null): { start: number; end: number } | null => 
   return end > start ? { start, end } : null;
 };
 
-const PX = 0.95; // 1 perc = ennyi px a heti rácsban
-
-interface Block extends Entry { start: number; end: number; lane: number; cols: number; }
-
-// átfedő órák sávokba rendezése: fürtönként (transzitívan átfedő csoport)
-// annyi hasáb, ahány párhuzamos óra — a hasáb szélessége ebből jön
-const layoutDay = (items: Entry[]): Block[] => {
-  const timed = items
-    .map((e) => ({ e, t: parseIdo(e.ido) }))
-    .filter((x): x is { e: Entry; t: { start: number; end: number } } => !!x.t)
-    .sort((a, b) => a.t.start - b.t.start || a.t.end - b.t.end || a.e.targy.localeCompare(b.e.targy, 'hu'));
-  const blocks: Block[] = [];
-  let cluster: Block[] = [];
-  let clusterEnd = -1;
-  const laneEnds: number[] = [];
-  const closeCluster = () => {
-    const cols = Math.max(1, ...cluster.map((b) => b.lane + 1));
-    cluster.forEach((b) => { b.cols = cols; });
-    cluster = []; laneEnds.length = 0;
-  };
-  timed.forEach(({ e, t }) => {
-    if (cluster.length > 0 && t.start >= clusterEnd) closeCluster();
-    let lane = laneEnds.findIndex((end) => end <= t.start);
-    if (lane === -1) { lane = laneEnds.length; laneEnds.push(0); }
-    laneEnds[lane] = t.end;
-    const b: Block = { ...e, start: t.start, end: t.end, lane, cols: 1 };
-    cluster.push(b); blocks.push(b);
-    clusterEnd = Math.max(clusterEnd, t.end);
-  });
-  if (cluster.length > 0) closeCluster();
-  return blocks;
+// A METU szabvány idősávjai: sorok a heti táblában. Minden óra a KEZDŐ
+// sávjába kerül (a hosszabbak idejéből úgyis látszik, meddig tartanak),
+// a párhuzamos órák a cellában egymás alatt, teljes szélességben olvashatók.
+const BANDS = [
+  { from: '8:00', to: '9:30', s: 8 * 60 },
+  { from: '9:40', to: '11:10', s: 9 * 60 + 40 },
+  { from: '11:20', to: '12:50', s: 11 * 60 + 20 },
+  { from: '13:20', to: '14:50', s: 13 * 60 + 20 },
+  { from: '15:00', to: '16:30', s: 15 * 60 },
+  { from: '16:40', to: '18:10', s: 16 * 60 + 40 },
+  { from: '18:20', to: '19:50', s: 18 * 60 + 20 },
+];
+const bandOf = (startMin: number): number => {
+  let bi = 0;
+  BANDS.forEach((b, i) => { if (startMin >= b.s) bi = i; });
+  return bi;
 };
 
 export default function OrarendView({ knownNames, q }: { knownNames: string[]; q: string }) {
@@ -97,14 +82,21 @@ export default function OrarendView({ knownNames, q }: { knownNames: string[]; q
     { label: 'Időpont nélkül (egyeztetés alatt)', items: list.filter((e) => !e.nap) },
   ].filter((g) => g.items.length > 0);
 
-  // heti rács: nap-szűrővel az oszlopok szűkülnek; időtengely a tényleges órákhoz
+  // heti tábla: cells[sáv][nap] = az ott kezdődő órák; nap-szűrővel az oszlopok szűkülnek
   const calDays = DAYS.filter((d) => !day || d === day);
-  const dayBlocks = calDays.map((d) => ({ day: d, blocks: layoutDay(list.filter((e) => e.nap === d)) }));
-  const allBlocks = dayBlocks.flatMap((x) => x.blocks);
+  const cells: Entry[][][] = BANDS.map(() => calDays.map(() => []));
+  let timedCount = 0;
+  list.forEach((e) => {
+    const di = calDays.indexOf(e.nap ?? '');
+    const t = parseIdo(e.ido);
+    if (di === -1 || !t) return;
+    cells[bandOf(t.start)][di].push(e);
+    timedCount++;
+  });
+  cells.forEach((row) => row.forEach((c) => c.sort((a, b) =>
+    (parseIdo(a.ido)?.start ?? 0) - (parseIdo(b.ido)?.start ?? 0) || a.targy.localeCompare(b.targy, 'hu'))));
+  const usedBands = BANDS.map((_, bi) => cells[bi].some((c) => c.length > 0));
   const noTime = list.filter((e) => !e.nap || !parseIdo(e.ido));
-  const startH = allBlocks.length > 0 ? Math.min(8, Math.floor(Math.min(...allBlocks.map((b) => b.start)) / 60)) : 8;
-  const endH = allBlocks.length > 0 ? Math.max(18, Math.ceil(Math.max(...allBlocks.map((b) => b.end)) / 60)) : 20;
-  const gridH = (endH - startH) * 60 * PX;
 
   const warn = (name: string | null) =>
     name && !known.has(normName(name)) ? <span className="or-warn" title="Ez a név nem szerepel a ☎ Névjegyzékben — érdemes felvenni az elérhetőségét">⚠</span> : null;
@@ -131,32 +123,27 @@ export default function OrarendView({ knownNames, q }: { knownNames: string[]; q
       {mode === 'cal' ? (
         <>
           <div className="orc-scroll">
-            <div className="orc" style={{ gridTemplateColumns: `44px repeat(${calDays.length}, minmax(150px, 1fr))` }}>
-              <div className="orc-corner" />
+            <div className={`orc${calDays.length === 1 ? ' orc--single' : ''}`} style={{ gridTemplateColumns: `72px repeat(${calDays.length}, minmax(170px, 1fr))` }}>
+              <div className="orc-corner">idősáv</div>
               {calDays.map((d, i) => <div key={d} className={`orc-dh${i % 2 ? ' alt' : ''}`}>{d}</div>)}
-              <div className="orc-axis" style={{ height: gridH }}>
-                {Array.from({ length: endH - startH + 1 }, (_, i) => (
-                  <span key={i} style={{ top: i * 60 * PX }}>{startH + i}:00</span>
-                ))}
-              </div>
-              {dayBlocks.map(({ day: d, blocks }, di) => (
-                <div key={d} className={`orc-col${di % 2 ? ' alt' : ''}`} style={{ height: gridH, backgroundSize: `100% ${60 * PX}px` }}>
-                  {blocks.map((b, i) => {
-                    const w = 100 / b.cols;
-                    const tip = [b.ido, b.targy, b.oktato, b.terem, b.tankor, b.szint].filter(Boolean).join(' · ');
-                    return (
-                      <div key={i} className="orc-ev" title={tip} style={{
-                        top: (b.start - startH * 60) * PX, height: Math.max(26, (b.end - b.start) * PX - 2),
-                        left: `calc(${b.lane * w}% + 1px)`, width: `calc(${w}% - 3px)`,
-                        borderLeftColor: colorOf(b.targy),
-                      }}>
-                        <span className="orc-ev-t">{b.targy}</span>
-                        <span className="orc-ev-m">{b.ido}{b.terem ? ` · ${b.terem}` : ''}</span>
-                        {b.oktato && <span className="orc-ev-o">{b.oktato}{warn(b.oktato)}</span>}
-                      </div>
-                    );
-                  })}
-                </div>
+              {BANDS.map((b, bi) => usedBands[bi] && (
+                <Fragment key={b.from}>
+                  <div className="orc-time"><b>{b.from}</b><span>{b.to}</span></div>
+                  {calDays.map((d, di) => (
+                    <div key={d} className={`orc-cell${di % 2 ? ' alt' : ''}`}>
+                      {cells[bi][di].map((e, i) => {
+                        const tip = [e.ido, e.targy, e.oktato, e.terem, e.tankor, e.szint].filter(Boolean).join(' · ');
+                        return (
+                          <div key={i} className="orc-card" title={tip} style={{ borderLeftColor: colorOf(e.targy) }}>
+                            <span className="orc-card-t">{e.targy}</span>
+                            <span className="orc-card-m">{e.ido}{e.terem ? ` · ${e.terem}` : ''}</span>
+                            {e.oktato && <span className="orc-card-o">{e.oktato}{warn(e.oktato)}</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </Fragment>
               ))}
             </div>
           </div>
@@ -170,7 +157,7 @@ export default function OrarendView({ knownNames, q }: { knownNames: string[]; q
               ))}
             </div>
           )}
-          {allBlocks.length === 0 && noTime.length === 0 && <p className="tp-empty">Nincs találat.</p>}
+          {timedCount === 0 && noTime.length === 0 && <p className="tp-empty">Nincs találat.</p>}
         </>
       ) : (
         <>
@@ -205,7 +192,7 @@ export default function OrarendView({ knownNames, q }: { knownNames: string[]; q
           {groups.filter((g) => !day || g.label === day).length === 0 && <p className="tp-empty">Nincs találat.</p>}
         </>
       )}
-      <p className="tp-pv-hint">Forrás: {data.forras} · frissítve: {data.frissitve}. Csak a Média Design szak (magyar nyelvű BA + MA) órái — az animációs és angol nyelvű sorok az Excelből ki vannak szűrve a mintatanterv kurzuslistája alapján. A ⚠ jel oktatót jelöl, aki még nincs a Névjegyzékben. A heti rácsban a többhetes bontású órák az első időtartományukkal jelennek meg, a részletek a kártya fölé állva olvashatók.</p>
+      <p className="tp-pv-hint">Forrás: {data.forras} · frissítve: {data.frissitve}. Csak a Média Design szak (magyar nyelvű BA + MA) órái — az animációs és angol nyelvű sorok az Excelből ki vannak szűrve a mintatanterv kurzuslistája alapján. A ⚠ jel oktatót jelöl, aki még nincs a Névjegyzékben. A heti táblában minden óra a kezdő idősávjában szerepel — a kártyán a pontos idő olvasható, a hosszabb (több sávot átfogó) óráké is; a részletek a kártya fölé állva jelennek meg.</p>
     </section>
   );
 }

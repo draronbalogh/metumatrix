@@ -45,46 +45,91 @@ function ChipRadio<T extends string>({ value, options, onChange }: { value: T; o
   );
 }
 
-// Résztvevő-választó: több név az ÖT állandó listából (T/H/I/A/P badge-dzsel),
-// a levél-címzettválasztóval azonos gyorsműveletekkel: Senki / Mindenki / kategóriánkénti
-// hozzáadás + névszűrő. Az onSet a teljes lista cseréjéhez kell (gyorsgombok).
+// Résztvevő-választó — áttekinthető, keresés-első felépítés:
+//   1. felül CSAK a kiválasztottak (✕-szel eltávolíthatók),
+//   2. hozzáadni kereséssel lehet (gépelésre max 40 találat),
+//   3. böngészni kategória-fülből lehet — a teljes, több száz fős névfal
+//      SOHA nem jelenik meg egyszerre.
 const normName = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 function PeoplePicker({ selected, roster, onToggle, onSet }: { selected: string[]; roster: RosterEntry[]; onToggle: (name: string) => void; onSet?: (names: string[]) => void }) {
   const [q, setQ] = useState('');
+  const [cat, setCat] = useState<PersonKind | null>(null);
   const legacy = selected.filter((n) => !roster.some((r) => r.name === n));
   const uniq = (arr: string[]) => [...new Set(arr)];
   const kindNames = (k: PersonKind) => roster.filter((r) => r.kind === k).map((r) => r.name);
+  const kindOf = (n: string): PersonKind | null => roster.find((r) => r.name === n)?.kind ?? null;
+  const hits = q.trim()
+    ? roster.filter((r) => normName(r.name).includes(normName(q)) && !selected.includes(r.name)).slice(0, 40)
+    : [];
   return (
     <div className="pp-wrap">
-      {onSet && (
-        <div className="nm-groups pp-quick">
-          <button type="button" className="chip chip--danger" title="Minden résztvevő törlése" onClick={() => onSet([])}>✕ Senki</button>
-          <button type="button" className="chip" title="Mindenki hozzáadása az öt listából" onClick={() => onSet(uniq([...selected, ...roster.map((r) => r.name)]))}>+ Mindenki</button>
-          {(['T', 'H', 'I', 'A', 'O', 'P'] as PersonKind[]).map((k) => {
-            const n = kindNames(k).length;
-            return (
-              <button key={k} type="button" className="chip" disabled={!n}
-                title={n ? `${KIND_LABEL[k]} lista hozzáadása (${n} név)` : `A(z) ${KIND_LABEL[k]} lista még üres. A ☎ Névjegyzékben tudod feltölteni.`}
-                onClick={() => onSet(uniq([...selected, ...kindNames(k)]))}>
-                + <span className={`pb ${k.toLowerCase()}`}>{k}</span>{KIND_LABEL[k]}{n ? ` (${n})` : ''}
-              </button>
-            );
-          })}
-        </div>
-      )}
-      <input className="nm-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szűrés névre…" />
-      <div className="cat-picker pp-picker">
-        {roster.filter((r) => !q.trim() || normName(r.name).includes(normName(q))).map((r) => (
-          <button type="button" key={`${r.kind}-${r.name}`} className={`chip${selected.includes(r.name) ? ' is-on' : ''}`}
-            onClick={() => { if (!selected.includes(r.name) && q.trim()) setQ(''); onToggle(r.name); }}>
-            <span className={`pb ${r.kind.toLowerCase()}`}>{r.kind}</span>{r.name}
-          </button>
-        ))}
+      {/* 1) a kiválasztottak — csak ők látszanak mindig */}
+      <div className="pp-selrow">
+        <span className="pp-selcount">{selected.length || 'Nincs'} résztvevő</span>
+        {selected.map((n) => {
+          const k = kindOf(n);
+          return (
+            <button key={n} type="button" className="chip is-on pp-selchip" title="Kattints az eltávolításhoz"
+              onClick={() => onToggle(n)}>
+              {k && <span className={`pb ${k.toLowerCase()}`}>{k}</span>}{n}<span className="pp-x">✕</span>
+            </button>
+          );
+        })}
         {legacy.map((n) => (
-          <button type="button" key={n} className="chip is-on" title="Régi, listán kívüli bejegyzés — kattintva lekerül"
-            onClick={() => onToggle(n)}>{n}</button>
+          <button key={n} type="button" className="chip is-on pp-selchip" title="Régi, listán kívüli bejegyzés — kattintva lekerül"
+            onClick={() => onToggle(n)}>{n}<span className="pp-x">✕</span></button>
         ))}
+        {selected.length > 1 && onSet && (
+          <button type="button" className="chip chip--danger" title="Minden résztvevő törlése" onClick={() => onSet([])}>✕ mind</button>
+        )}
       </div>
+      {/* 2) hozzáadás kereséssel */}
+      <input className="nm-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Írj be egy nevet a hozzáadáshoz…" />
+      {q.trim() ? (
+        <div className="cat-picker pp-picker">
+          {hits.map((r) => (
+            <button type="button" key={`${r.kind}-${r.name}`} className="chip"
+              onClick={() => { onToggle(r.name); setQ(''); }}>
+              + <span className={`pb ${r.kind.toLowerCase()}`}>{r.kind}</span>{r.name}
+            </button>
+          ))}
+          {hits.length === 0 && <span className="pp-nohit">Nincs ilyen név a listákban — a ☎ Névjegyzékben tudod felvenni.</span>}
+        </div>
+      ) : (
+        <>
+          {/* 3) böngészés kategóriánként — csak a megnyitott fül nevei látszanak */}
+          <div className="pp-cats">
+            {(['T', 'H', 'I', 'A', 'O', 'P'] as PersonKind[]).map((k) => {
+              const n = kindNames(k).length;
+              return (
+                <button key={k} type="button" className={`chip${cat === k ? ' is-on' : ''}`} disabled={!n}
+                  title={n ? `${KIND_LABEL[k]} lista megnyitása (${n} név)` : `A(z) ${KIND_LABEL[k]} lista még üres. A ☎ Névjegyzékben tudod feltölteni.`}
+                  onClick={() => setCat((c) => (c === k ? null : k))}>
+                  <span className={`pb ${k.toLowerCase()}`}>{k}</span>{KIND_LABEL[k]}{n ? ` (${n})` : ''}
+                </button>
+              );
+            })}
+          </div>
+          {cat && (
+            <div className="pp-browse">
+              {onSet && (
+                <button type="button" className="chip pp-addall"
+                  onClick={() => onSet(uniq([...selected, ...kindNames(cat)]))}>
+                  + a teljes {KIND_LABEL[cat]} lista hozzáadása ({kindNames(cat).length})
+                </button>
+              )}
+              <div className="cat-picker pp-picker pp-scroll">
+                {roster.filter((r) => r.kind === cat).map((r) => (
+                  <button type="button" key={`${r.kind}-${r.name}`} className={`chip${selected.includes(r.name) ? ' is-on' : ''}`}
+                    onClick={() => onToggle(r.name)}>
+                    <span className={`pb ${r.kind.toLowerCase()}`}>{r.kind}</span>{r.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -188,7 +233,7 @@ export function TaskModal({ task, isNew, events, roster, onSave, onDelete, onNot
             <OwnerSelect value={d.owner} roster={roster} onChange={(v) => set('owner', v)} />
           </div>
           <div className="field full">
-            <label>Résztvevők — tanárok (T) és hallgatók (H), többet is választhatsz</label>
+            <label>Résztvevők — keress névre, vagy nyiss meg egy kategóriát</label>
             <PeoplePicker selected={people} roster={roster} onToggle={togglePerson} onSet={setPeople} />
           </div>
           <div className="field">
@@ -311,7 +356,7 @@ export function EventModal({ event, isNew, roster, onSave, onDelete, onNotify, o
             <OwnerSelect value={d.owner} roster={roster} onChange={(v) => set('owner', v)} />
           </div>
           <div className="field full">
-            <label>Résztvevők — tanárok (T) és hallgatók (H), többet is választhatsz</label>
+            <label>Résztvevők — keress névre, vagy nyiss meg egy kategóriát</label>
             <PeoplePicker selected={people} roster={roster} onToggle={togglePerson} onSet={setPeople} />
           </div>
           <div className="f-sec c-green">Leírás</div>

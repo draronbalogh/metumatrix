@@ -637,6 +637,18 @@ html[data-theme='dark'] .pb.p { color: var(--yellow-deep); }
 .chip.is-on .pb.t, .chip.is-on .pb.h { background: rgba(255, 255, 255, .25); color: #fff; }
 /* NINCS belső görgetés: a lista a tartalommal együtt nő, csak a modál törzse görget */
 .pp-picker { border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+/* Resztvevo-valaszto (attekintheto): kivalasztottak felul, kereses-elso hozzaadas,
+   kategoria-fulek — a teljes nevfal sosem latszik egyben */
+.pp-wrap { display: flex; flex-direction: column; gap: 7px; }
+.pp-selrow { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; padding: 7px 9px; border: 1px dashed var(--line); border-radius: 10px; background: var(--paper-2); }
+.pp-selcount { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-right: 3px; }
+.pp-selchip .pp-x { margin-left: 6px; opacity: .7; font-size: .72rem; }
+.pp-selchip:hover .pp-x { opacity: 1; }
+.pp-cats { display: flex; flex-wrap: wrap; gap: 5px; }
+.pp-browse { display: flex; flex-direction: column; gap: 6px; }
+.pp-addall { align-self: flex-start; border-style: dashed; font-weight: 700; }
+.pp-scroll { max-height: 220px; overflow-y: auto; }
+.pp-nohit { font-size: .78rem; color: var(--muted); padding: 2px 4px; }
 
 .modal--wide { width: min(1080px, 100%); }
 .pm-body { padding: 14px 20px 6px; }

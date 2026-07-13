@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import PageHead from './PageHead';
 
 // IT és szoftverek: az Infopark termeiben telepített szoftverek (xlsx-ből generálva),
 // kétféle nézetben (termek szerint / szoftverek szerint), a globális keresővel szűrve.
@@ -65,10 +66,7 @@ export default function ITView({ q }: { q: string }) {
 
   return (
     <section className="wrap orv itv">
-      <div className="tp-headrow">
-        <h2 className="tp-title">🖥 {data.cim}</h2>
-        <span className="tp-headhint">frissítve: {data.frissitve} · {rooms.length} terem · {swList.length} szoftver</span>
-      </div>
+      <PageHead title={`🖥 ${data.cim}`} sub={`frissítve: ${data.frissitve} · ${rooms.length} terem · ${swList.length} szoftver`} />
       <div className="or-tools">
         <div className="cat-picker">
           <button type="button" className={`chip${mode === 'terem' ? ' is-on' : ''}`} onClick={() => setMode('terem')}>Termek szerint</button>

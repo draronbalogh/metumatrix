@@ -6,6 +6,7 @@ import {
   TaskPriority, taskHasPerson, eventHasPerson, taskSteps, stepsDone,
 } from '@/data/agenda';
 import { PersonKind } from '@/data/people';
+import PageHead from './PageHead';
 
 interface Props {
   agenda: Agenda;
@@ -113,9 +114,7 @@ export default function AgendaView({ agenda, q, instr, taught, kindOf, letterSta
 
   return (
     <main className="catalog agenda">
-      <div className="cat-block-head">
-        <span className="pl">Feladatok</span>
-        <span className="nm">Média Design tanszék · 2026/27 ősz</span>
+      <PageHead title="Feladatok" sub="Média Design tanszék · 2026/27 ősz">
         <div className="viewtoggle ag-mode">
           <button className={groupBy === 'newest' ? 'is-on' : ''} onClick={() => setGroupBy('newest')} title="Dátum szerint: a legújabb feladat legelöl">📅 Új elöl</button>
           <button className={groupBy === 'oldest' ? 'is-on' : ''} onClick={() => setGroupBy('oldest')} title="Dátum szerint: a legrégebbi feladat legelöl">📅 Régi elöl</button>
@@ -124,7 +123,7 @@ export default function AgendaView({ agenda, q, instr, taught, kindOf, letterSta
           <button className={groupBy === 'status' ? 'is-on' : ''} onClick={() => setGroupBy('status')}>◔ Állapot</button>
         </div>
         <button className="btn btn--ink ag-add" onClick={onAdd}>+ Új feladat</button>
-      </div>
+      </PageHead>
 
       {instr ? (
         <div className="ag-person">

@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, useEffect, useMemo, useState } from 'react';
+import PageHead from './PageHead';
 
 // Média Design órarend: az Excelből MD-re szűrt digitális táblázat.
 // Két nézet: heti naptár-rács (alapértelmezett) és napok szerinti lista.
@@ -116,14 +117,12 @@ export default function OrarendView({ knownNames, q }: { knownNames: string[]; q
 
   return (
     <section className="wrap orv">
-      <div className="cat-block-head">
-        <span className="pl">Órarend</span>
-        <span className="nm">{data.cim} · {list.length} óra, {teacherCount} oktató</span>
+      <PageHead title="Órarend" sub={`${data.cim} · ${list.length} óra, ${teacherCount} oktató`}>
         <div className="viewtoggle ag-mode or-mode">
           <button type="button" className={mode === 'list' ? 'is-on' : ''} onClick={() => setMode('list')}>≡ Lista</button>
           <button type="button" className={mode === 'cal' ? 'is-on' : ''} onClick={() => setMode('cal')}>▦ Naptár</button>
         </div>
-      </div>
+      </PageHead>
       <div className="or-key">
         {KEY_DATES.map((k) => (
           <span key={k.l} className="or-kd"><b>{k.l}</b> {k.d}</span>

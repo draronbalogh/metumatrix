@@ -5,6 +5,7 @@ import { Course, Curriculum, catList, cohortTotals, semLabel, specShort, courseG
 import type { Filter, View } from '@/lib/buildGraph';
 import { instrList } from '@/lib/buildGraph';
 import CourseCardStd from './CourseCardStd';
+import PageHead from './PageHead';
 
 interface Props {
   data: Curriculum;
@@ -48,10 +49,7 @@ export default function CatalogView({ data, filter, view, onDetails, onEdit, onA
 
   return (
     <main className="catalog">
-      <div className="cat-block-head">
-        <span className="pl">Katalógus</span>
-        <span className="nm">Média Design {view.prog === 'ALL' ? 'BA + MA' : view.prog} · {view.ver}</span>
-      </div>
+      <PageHead title="Katalógus" sub={`Média Design ${view.prog === 'ALL' ? 'BA + MA' : view.prog} · ${view.ver}`} />
       {allVisible.length > 0 && (
         <div className="viewtoggle cat-semfilter">
           <button className={!semActive ? 'is-on' : ''} onClick={() => setSem(0)}>Mind</button>
@@ -62,20 +60,14 @@ export default function CatalogView({ data, filter, view, onDetails, onEdit, onA
       )}
       {visible.length === 0 && (
         <>
-          <div className="cat-block-head">
-            <span className="pl">{view.prog === 'ALL' ? 'BA+MA' : view.prog}</span>
-            <span className="nm">Média Design {view.prog === 'ALL' ? 'BA + MA' : view.prog} · {view.ver}</span>
-          </div>
+          <PageHead title={view.prog === 'ALL' ? 'BA+MA' : view.prog} sub={`Média Design ${view.prog === 'ALL' ? 'BA + MA' : view.prog} · ${view.ver}`} />
           <div className="cc-empty"><span>Ehhez a verzióhoz / programhoz nincs adat.</span></div>
         </>
       )}
 
       {progs.map((p) => (
         <div key={p}>
-          <div className="cat-block-head">
-            <span className="pl">{p}</span>
-            <span className="nm">Média Design {p} · {view.ver}</span>
-          </div>
+          <PageHead title={p} sub={`Média Design ${p} · ${view.ver}`} />
           {visible.filter(({ c }) => c.program === p).map(({ c, ci }) => {
         const t = cohortTotals(c);
         const isSpring = (c.semester || 0) % 2 === 0;

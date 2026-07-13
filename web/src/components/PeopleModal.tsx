@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { PeopleDB, PeopleGroup, Person, normalizePhone, TEACHER_STATUSES, STUDENT_STATUSES, studentCohorts } from '@/data/people';
 import GrowArea from './GrowArea';
+import PageHead from './PageHead';
 
 interface Props {
   teacherNames: string[]; // a tantervből — itt nem szerkeszthető, csak elérhetőség adható hozzá
@@ -256,7 +257,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
   if (inline) {
     return (
       <section className="wrap pmv">
-        <div className="tp-headrow"><h2 className="tp-title">☎ Névjegyzék — elérhetőségek</h2></div>
+        <PageHead title="☎ Névjegyzék" sub="elérhetőségek: oktatók, hallgatók, intézményi / alumni / opponens / piaci kapcsolatok" />
         {content}
       </section>
     );

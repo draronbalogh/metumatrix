@@ -244,10 +244,13 @@ body {
 /* ============================================================
    CATALOG VIEW
    ============================================================ */
-.catalog { position: absolute; inset: 0; overflow: auto; padding: 22px var(--pad) 80px; }
-.cat-block-head { display: flex; align-items: baseline; gap: 11px; margin: 24px 0 14px; }
-.cat-block-head .pl { font-family: var(--ff-display); font-size: 1.7rem; font-weight: 700; color: var(--brand-text); letter-spacing: -.02em; }
+.catalog { position: absolute; inset: 0; overflow: auto; padding: 18px var(--pad) 80px; }
+/* Egységes nézet-fejléc (PageHead): minden főnézet azonos címsorral, azonos pozícióban indul */
+.cat-block-head { display: flex; align-items: baseline; gap: 11px; margin: 0 0 14px; }
+.cat-block-head .pl { margin: 0; font-family: var(--ff-display); font-size: 1.7rem; font-weight: 700; color: var(--brand-text); letter-spacing: -.02em; }
 .cat-block-head .nm { font-size: .74rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+/* a Katalógus programonkénti (BA/MA) blokk-fejei kapnak felső térközt */
+.catalog > div > .cat-block-head { margin-top: 26px; }
 .cc-section { margin-bottom: 24px; }
 .cc-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding-bottom: 8px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
 .cc-sem { font-family: var(--ff-display); font-size: 1.25rem; font-weight: 700; letter-spacing: var(--head-ls); }
@@ -700,16 +703,26 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .cal-mh { font-family: var(--ff-display); font-size: 1.02rem; font-weight: 700; letter-spacing: var(--head-ls); margin-bottom: 10px; }
 .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
 .cal-days .wd { font-size: .58rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); text-align: center; padding-bottom: 4px; }
-.cal-days .dd { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 34px; padding: 3px 1px; border-radius: 6px; background: color-mix(in srgb, var(--paper-2) 55%, transparent); }
+.cal-days .dd { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 34px; padding: 3px 1px; border-radius: 6px; background: color-mix(in srgb, var(--paper-2) 55%, transparent); }
+.cal-days .dd:hover { background: color-mix(in srgb, var(--brand) 9%, var(--paper-2)); }
 .cal-days .dd b { font-family: var(--ff-mono); font-size: .68rem; font-weight: 500; color: var(--ink-2); line-height: 1; }
 .cal-days .dd.today { outline: 2px solid var(--brand); outline-offset: -2px; }
 .cal-days .dd.today b { color: var(--brand-text); font-weight: 800; }
 .cal-days .dd .bars { display: flex; flex-direction: column; gap: 1.5px; width: 82%; }
-.cal-days .dd .bars i { display: block; height: 3.5px; border-radius: 2px; }
 .cal-days .dd .bars em { font-style: normal; font-size: .5rem; line-height: 1; color: var(--muted); text-align: center; }
+/* a napok színcsíkja: kattintható gomb, hoverre kiemelés + AZONNALI tooltip
+   (a natív title 1 mp késése helyett), kattintásra az esemény szerkesztője nyílik */
+.cal-bar { position: relative; display: block; width: 100%; height: 4.5px; border: 0; border-radius: 2px; padding: 0; cursor: pointer; }
+.cal-bar.ft { height: 6px; border-radius: 3px; }
+.cal-bar:hover, .cal-bar:focus-visible { filter: brightness(1.22) saturate(1.15); box-shadow: 0 0 0 1.5px var(--card), 0 0 0 3px color-mix(in srgb, var(--ink) 35%, transparent); z-index: 5; }
+.cal-bar::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%); z-index: 30; display: none; width: max-content; max-width: 230px; white-space: normal; text-align: left; font-family: var(--ff); font-size: .68rem; font-weight: 600; line-height: 1.35; color: #fff; background: color-mix(in srgb, var(--ink) 94%, transparent); border-radius: 8px; padding: 6px 9px; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); }
+.cal-bar:hover::after, .cal-bar:focus-visible::after { display: block; }
+.cal-bar.tip-left::after { left: 0; transform: none; }
+.cal-bar.tip-right::after { left: auto; right: 0; transform: none; }
+.viewer .cal-bar, .viewer .cal-ev { cursor: default; }
 .cal-evs { display: flex; flex-direction: column; gap: 4px; margin-top: 11px; padding-top: 9px; border-top: 1px dashed var(--line); }
 .cal-ev { display: flex; align-items: baseline; gap: 8px; text-align: left; font-family: var(--ff); font-size: .78rem; font-weight: 600; color: var(--ink); background: transparent; border: 0; padding: 3px; border-radius: 5px; cursor: pointer; }
-.cal-ev:hover { background: var(--paper-2); }
+.cal-ev:hover { background: var(--brand-100); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 25%, transparent); }
 .cal-dot { flex: none; width: 10px; height: 10px; border-radius: 3px; align-self: center; }
 .cal-dot.hollow { background: transparent; border: 2px dashed var(--line-2); }
 .cal-ev .d { flex: none; font-family: var(--ff-mono); font-size: .68rem; font-weight: 700; color: var(--ink-2); min-width: 46px; }
@@ -865,7 +878,7 @@ html[data-theme='dark'] .pb.p { color: var(--yellow-deep); }
 /* ---- kiemelt események: a NAPTÁRBAN lüktetnek, a kártyán csillag ---- */
 .ev-card.is-featured { border-color: color-mix(in srgb, var(--brand) 36%, var(--line)); background: linear-gradient(135deg, color-mix(in srgb, var(--brand) 5%, var(--card)), var(--card) 55%); }
 .ev-star { color: var(--yellow-deep); }
-.cal-days .dd .bars i.ft { height: 5.5px; border-radius: 3px; }
+.cal-days .dd .bars .cal-bar.ft { height: 6px; border-radius: 3px; }
 /* a kiemelt esemény NAPJA: lüktető keret + halvány kiemelő háttér */
 @keyframes featDayPulse {
   0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand) 55%, transparent); }
@@ -1029,10 +1042,9 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 /* ============ Levelek nezet (TopicsView): 3 oszlop = lista | elonezet | szerkeszto ============
    Desktopon az OLDAL nem gorget: a fejlec fix, a harom oszlop toltike ki a magassagot,
    es mindegyikben PONTOSAN EGY gorgeto van — nincs egymasba agyazott scroll. */
-.tpv { position: absolute; inset: 0; overflow: hidden; padding: 14px var(--pad) 14px; display: flex; flex-direction: column; }
-.tp-headrow { flex: none; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
-.tp-title { font-family: var(--ff-display); font-size: 1.3rem; margin: 0; }
-.tp-headhint { font-size: .7rem; color: var(--muted); }
+.tpv { position: absolute; inset: 0; overflow: hidden; padding: 18px var(--pad) 14px; display: flex; flex-direction: column; }
+/* (a régi tp-headrow/tp-title fejléc-minta megszűnt — mindenhol a PageHead / .cat-block-head él) */
+.tpv > .cat-block-head { flex: none; }
 .tp3 { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(250px, 320px) minmax(240px, 340px) minmax(360px, 1fr); gap: 12px; align-items: stretch; }
 .tp-listcol { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .tp-filters { display: flex; gap: 6px; margin-bottom: 8px; }
@@ -1107,8 +1119,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 @media (max-width: 720px) { .pm-toolbar .pm-cohsel { align-self: stretch; min-width: 0; font-size: 16px; padding: 9px 12px; } }
 
 /* Orarend nezet */
-.orv { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding: 0 var(--pad) 48px; }
-.orv > .tp-headrow { padding-top: 14px; }
+.orv { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding: 18px var(--pad) 48px; }
 /* A felev kulcsdatumai az orarend tetejen (a hivatalos Tanev rendjebol) */
 .or-key { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .or-kd { font-size: .7rem; color: var(--ink-2); background: var(--card); border: 1px solid var(--line); border-radius: 9px; padding: 4px 9px; white-space: nowrap; }
@@ -1157,6 +1168,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
   background: var(--paper); box-shadow: var(--shadow-1);
   font-size: .74rem; line-height: 1.3; cursor: help;
 }
+.orc-card:hover { border-color: var(--line-2); background: var(--card); box-shadow: 0 3px 10px rgba(0, 0, 0, .12); }
 .orc-card-t { font-weight: 800; color: var(--ink); }
 .orc-card-m { color: var(--ink-2); }
 .orc-card-o { color: var(--ink-2); font-style: italic; }
@@ -1178,8 +1190,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 }
 
 /* Nevjegyzek nezetkent: a fomenu latszik felette, az oldal gorgeti (nem modal) */
-.pmv { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding: 0 var(--pad); }
-.pmv > .tp-headrow { padding-top: 14px; }
+.pmv { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding: 18px var(--pad) 0; }
 .pmv .pm-body { padding-bottom: 14px; }
 .pmv .pm-body { padding: 0; }
 .pmv .pm-toolbar { top: 0; border-radius: 0 0 10px 10px; }

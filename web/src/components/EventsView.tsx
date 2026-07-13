@@ -5,6 +5,7 @@ import { Agenda, AgendaEvent, STATUS_LABEL, eventHasPerson } from '@/data/agenda
 import { PersonKind } from '@/data/people';
 import EventsCalendar from './EventsCalendar';
 import { PersonChip } from './AgendaView';
+import PageHead from './PageHead';
 
 interface Props {
   agenda: Agenda;
@@ -64,15 +65,13 @@ export default function EventsView({ agenda, q, instr, kindOf, letterStats, onAd
 
   return (
     <main className="catalog agenda">
-      <div className="cat-block-head">
-        <span className="pl">Események</span>
-        <span className="nm">szakos események · 2026/27 ősz</span>
+      <PageHead title="Események" sub="szakos események · 2026/27 ősz">
         <div className="viewtoggle ag-mode">
           <button className={mode === 'list' ? 'is-on' : ''} onClick={() => setMode('list')}>≡ Lista</button>
           <button className={mode === 'cal' ? 'is-on' : ''} onClick={() => setMode('cal')}>▦ Naptár</button>
         </div>
         <button className="btn btn--ink ag-add" onClick={onAdd}>+ Új esemény</button>
-      </div>
+      </PageHead>
 
       {instr && (
         <div className="ag-person slim">

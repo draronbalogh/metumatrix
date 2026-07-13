@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react';
 import { getEditKey } from '@/lib/editkey';
+import PageHead from './PageHead';
 
 // 📚 Segédletek: belső útmutatók saját főmenü-fülként. CSAK a LEGFRISSEBB
 // változatok érhetők el (a 2024/25-ös segédletek lekerültek). Minden
@@ -175,10 +176,7 @@ export default function DocsView({ q }: { q: string }) {
 
   return (
     <section className="wrap orv docsv">
-      <div className="tp-headrow">
-        <h2 className="tp-title">📚 Segédletek és útmutatók</h2>
-        <span className="tp-headhint">{total} dokumentum — mindig csak a LEGFRISSEBB kiadás · csak szerkesztő módban látszik</span>
-      </div>
+      <PageHead title="📚 Segédletek és útmutatók" sub={`${total} dokumentum — mindig csak a LEGFRISSEBB kiadás · csak szerkesztő módban látszik`} />
       {groups.map((g) => (
         <div key={g.cim}>
           <h3 className="tp-gh">{g.cim} <span className="tp-gcount">{g.docs.length}</span></h3>

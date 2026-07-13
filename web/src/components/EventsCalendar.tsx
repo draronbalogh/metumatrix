@@ -23,7 +23,7 @@ const EV_COLORS = ['#d7144b', '#2f6fe0', '#17935f', '#7b3fe4', '#e08b00', '#0e9a
 const mkey = (y: number, m: number) => `${y}-${String(m + 1).padStart(2, '0')}`;
 const parseYMD = (s: string) => new Date(Number(s.slice(0, 4)), Number(s.slice(5, 7)) - 1, Number(s.slice(8, 10)));
 
-interface DayHit { id: string; color: string; featured?: boolean; }
+interface DayHit { id: string; color: string; featured?: boolean; tip: string; }
 interface MonthRow { e: AgendaEvent; color: string; label: string; long: boolean; }
 
 // ennél hosszabb tartomány = háttér-időszak: NEM fest napokat, csak a listában jelenik meg
@@ -52,7 +52,7 @@ export default function EventsCalendar({ events, onEdit }: Props) {
       const k = mkey(cur.getFullYear(), cur.getMonth());
       const day = cur.getDate();
       // hosszú háttér-időszak nem fest napokat — csak a listában szerepel
-      if (!isLong) ((dayHits[k] ||= {})[day] ||= []).push({ id: e.id, color: colorOf[e.id], featured: e.featured });
+      if (!isLong) ((dayHits[k] ||= {})[day] ||= []).push({ id: e.id, color: colorOf[e.id], featured: e.featured, tip: `${e.title} · ${e.when}${e.place ? ` · ${e.place}` : ''}` });
       if (k !== curMonth) {
         curMonth = k; segStart = day;
         (monthRows[k] ||= []).push({ e, color: colorOf[e.id], label: '', long: isLong });
@@ -104,7 +104,19 @@ export default function EventsCalendar({ events, onEdit }: Props) {
                     <span key={d} className={`dd${dk === todayKey ? ' today' : ''}${hasFeat ? ' has-feat' : ''}`}>
                       <b>{d}</b>
                       <span className="bars">
-                        {h.slice(0, 4).map((x, ix) => <i key={ix} className={x.featured ? 'ft' : undefined} style={{ background: x.color }} />)}
+                        {/* a színcsík interaktív: hoverre kiemelés + azonnali tooltip, kattintásra
+                            ugyanúgy a szerkesztő nyílik, mint a hónap alatti soroknál */}
+                        {h.slice(0, 4).map((x, ix) => (
+                          <button key={ix} type="button" className={`cal-bar${x.featured ? ' ft' : ''}`}
+                            data-tip={x.tip} aria-label={x.tip} style={{ background: x.color }}
+                            onMouseEnter={(ev) => {
+                              // a tooltip a képernyő szélén nem középre, hanem befelé igazítva nyílik
+                              const b = ev.currentTarget.getBoundingClientRect();
+                              ev.currentTarget.classList.toggle('tip-left', b.left < 130);
+                              ev.currentTarget.classList.toggle('tip-right', window.innerWidth - b.right < 130);
+                            }}
+                            onClick={(ev) => { ev.stopPropagation(); onEdit(x.id); }} />
+                        ))}
                         {h.length > 4 && <em>+</em>}
                       </span>
                     </span>

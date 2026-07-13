@@ -3,6 +3,7 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate, TopicCtx, autoFill } from '@/lib/topics';
 import { Letter } from '@/data/agenda';
+import PageHead from './PageHead';
 
 // Levelek központ: HÁROM oszlop, levelezőkliens-logika.
 // 1. oszlop: kereshető lista (sablontár / mentett levelek), 2. oszlop: előnézet
@@ -65,16 +66,14 @@ export default function TopicsView({ q, letters, composer, onUseTopic, onOpenLet
 
   return (
     <section className="wrap tpv">
-      <div className="tp-headrow">
-        <h2 className="tp-title">✉ Levelek</h2>
-        <span className="tp-headhint">1 · válassz a listából → 2 · előnézet → 3 · a szerkesztőben fejezd be és küldd</span>
+      <PageHead title="✉ Levelek" sub="1 · válassz a listából → 2 · előnézet → 3 · a szerkesztőben fejezd be és küldd">
         <div className="viewtoggle ag-mode">
           <button type="button" className={tab === 'sablonok' ? 'is-on' : ''}
             onClick={() => { setTab('sablonok'); setMobileDetail(false); }}>Sablontár ({TOPIC_TEMPLATES.length})</button>
           <button type="button" className={tab === 'levelek' ? 'is-on' : ''}
             onClick={() => { setTab('levelek'); setMobileDetail(false); }}>Mentett levelek ({letters.length})</button>
         </div>
-      </div>
+      </PageHead>
       <div className={`tp3${mobileDetail ? ' is-detail' : ''}`}>
         <div className="tp-listcol">
           <div className="tp-scroll">

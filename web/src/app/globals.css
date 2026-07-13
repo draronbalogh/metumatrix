@@ -353,7 +353,7 @@ body {
 .f-sec.c-purple { --sec-c: var(--g2); }
 .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .field.full { grid-column: 1 / -1; }
-.field label { font-size: .64rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.field label { font-size: .64rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); line-height: 1.4; }
 .field input, .field select, .field textarea { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; font-size: .9rem; font-family: var(--ff); color: var(--ink); background: var(--paper); resize: vertical; transition: border-color .12s, background .12s; }
 .field input:hover, .field select:hover, .field textarea:hover { border-color: var(--line-2); }
 .field textarea { min-height: 104px; line-height: 1.55; }
@@ -372,6 +372,10 @@ body {
 .mfoot .btn--ink { padding: 10px 18px; }
 
 /* ---- szerkesztő-modál: állandó összegző sor + színes fülek (Feladat/Esemény) ---- */
+/* fix magasság: fülváltáskor a modál NEM ugrál, a gombok mindig ugyanott vannak,
+   a tartalom belül görget; az utolsó mező alatt bő térköz, hogy semmi ne lógjon ki */
+.modal--tabs { height: min(92vh, 800px); }
+.modal--tabs .f { padding-bottom: 34px; align-content: start; }
 .mt-sum { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 10px 24px 2px; }
 .mt-chip { font-family: var(--ff); font-size: .72rem; font-weight: 650; color: var(--ink-2); background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; cursor: pointer; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mt-chip:hover { border-color: var(--line-2); color: var(--ink); }
@@ -420,6 +424,25 @@ body {
 .mt-tst.st-doing { background: color-mix(in srgb, var(--g1) 15%, transparent); border-color: color-mix(in srgb, var(--g1) 35%, transparent); color: color-mix(in srgb, var(--g1) 75%, var(--ink)); }
 .mt-tst.st-done { background: color-mix(in srgb, var(--g0) 15%, transparent); border-color: color-mix(in srgb, var(--g0) 35%, transparent); color: color-mix(in srgb, var(--g0) 75%, var(--ink)); }
 
+/* kapcsolt levelek (Levelezés fül + a levélíró mentett-levél listája) */
+.mt-letters { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+.mt-letter { display: flex; gap: 6px; align-items: center; }
+.mt-letter-open { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: left; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); padding: 7px 11px; cursor: pointer; font-family: var(--ff); }
+.mt-letter-open:hover { border-color: var(--line-2); background: var(--paper-2); }
+.mt-letter-open .s { font-size: .84rem; font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mt-letter-open .d { font-size: .68rem; color: var(--muted); }
+.mt-lst { flex: none; font-family: var(--ff); font-size: .66rem; font-weight: 800; letter-spacing: .04em; border-radius: 999px; padding: 5px 10px; cursor: pointer; border: 1px solid; white-space: nowrap; }
+.mt-lst.draft { background: color-mix(in srgb, var(--yellow-deep) 14%, transparent); border-color: color-mix(in srgb, var(--yellow-deep) 40%, transparent); color: color-mix(in srgb, var(--yellow-deep) 72%, var(--ink)); }
+.mt-lst.sent { background: color-mix(in srgb, var(--g0) 14%, transparent); border-color: color-mix(in srgb, var(--g0) 40%, transparent); color: color-mix(in srgb, var(--g0) 75%, var(--ink)); }
+.mt-sublabel { display: block; margin-top: 10px; }
+
+/* ✉ levél-jelzés a feladat- és esemény-kártyákon */
+.ag-mailsum { font-family: var(--ff); font-size: .68rem; font-weight: 750; color: var(--ink-2); background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; cursor: pointer; position: relative; }
+.ag-mailsum:hover { border-color: var(--line-2); color: var(--ink); }
+.ag-mailsum.has-draft::after { content: ''; position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; border-radius: 50%; background: var(--yellow-deep); border: 1.5px solid var(--card); }
+.viewer .ag-mailsum { pointer-events: none; }
+.ev-card .cc-name .ag-mailsum { margin-left: 8px; vertical-align: 2px; }
+
 /* mobil: nagyobb alapbetű — a rem-alapú méretek (kártyák, listák, űrlapok) együtt nőnek */
 @media (max-width: 720px) {
   html { font-size: 18px; }
@@ -447,6 +470,13 @@ body {
   .mt-chip { max-width: 46vw; }
   .mt-tabs { padding: 6px 10px 0; }
   .mt-tab { padding: 10px 12px 11px; font-size: .84rem; }
+  /* mobilon a fülsor ALUL van, a hüvelykujj-zónában (a mentés-sáv felett):
+     nem kell átnyúlni a képernyőn, a tartalom felül görget */
+  .modal--tabs form.f { order: 1; }
+  .modal--tabs .mt-tabs { order: 2; border-top: 1px solid var(--line); border-bottom: none; padding: 5px 10px 4px; background: var(--card); }
+  .modal--tabs .mt-tab { border-radius: 0 0 10px 10px; }
+  .modal--tabs .mt-tab.is-on { box-shadow: inset 0 3px 0 var(--sec-c); }
+  .modal--tabs .mfoot { order: 3; }
   /* alfeladat-sor mobilon: pipa+szöveg egy sorban, a gombok alá törnek */
   .se-main { flex-wrap: wrap; }
   .field .se-text { flex: 1 1 60%; font-size: 16px; }

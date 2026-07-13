@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AgendaEvent, AgendaTask, Letter, STATUS_LABEL, TaskStatus, TaskStep, PRIORITY_LABEL, TaskPriority, TASK_CATEGORIES, taskSteps, stepsDone } from '@/data/agenda';
 import { RosterEntry, PersonKind, KIND_LABEL } from '@/data/people';
+import { suggestTemplatesFor } from '@/lib/topics';
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
 
@@ -213,6 +214,73 @@ function StepsEditor({ steps, roster, onChange }: { steps: TaskStep[]; roster: R
   );
 }
 
+// Levelezés fül (Feladat + Esemény modál közösen): kapcsolt levelek állapot-badge-dzsel,
+// új levél gomb és a kártya címéhez illő sablon-ajánlások — minden útvonal előbb MENT
+function MailTab({ letters, title, saveFirst, onOpenLetter, onLetterStatus, onNotify, onNotifyTopic }: {
+  letters: Letter[];
+  title: string;
+  saveFirst: () => boolean; // ment; false, ha nem lehet (üres cím)
+  onOpenLetter?: (l: Letter) => void;
+  onLetterStatus?: (id: string, status: 'draft' | 'sent') => void;
+  onNotify?: () => void;
+  onNotifyTopic?: (topicId: string) => void;
+}) {
+  const suggested = suggestTemplatesFor(title);
+  const fmt = (iso: string) => iso.slice(0, 16).replace('T', ' ');
+  return (
+    <>
+      <div className="f-sec c-green">Levelezés</div>
+      <div className="field full">
+        <label>Kapcsolt levelek ({letters.length}){letters.length && onOpenLetter ? ' — kattintásra mentés után a levélíróban nyílik meg' : ''}</label>
+        {letters.length === 0 && <div className="se-empty">Ehhez a tételhez még nincs mentett levél.</div>}
+        {letters.length > 0 && (
+          <div className="mt-letters">
+            {letters.map((l) => {
+              const st = l.status ?? 'draft';
+              return (
+                <div key={l.id} className="mt-letter">
+                  <button type="button" className="mt-letter-open" disabled={!onOpenLetter}
+                    onClick={() => { if (!onOpenLetter || !saveFirst()) return; onOpenLetter(l); }}>
+                    <span className="s">{l.subject}</span>
+                    <span className="d">{fmt(l.createdAt)} · {l.names.length} címzett</span>
+                  </button>
+                  <button type="button" className={`mt-lst ${st}`} disabled={!onLetterStatus}
+                    title={st === 'sent' ? 'Kiküldve — kattints, ha mégis vázlat' : 'Vázlat — kattints, ha már kiküldted (pl. Outlookból)'}
+                    onClick={() => onLetterStatus?.(l.id, st === 'sent' ? 'draft' : 'sent')}>
+                    {st === 'sent' ? '✓ Kiküldve' : '✎ Vázlat'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      {onNotify ? (
+        <div className="field full">
+          <label>Új levél</label>
+          <div className="nm-groups">
+            <button type="button" className="btn nm-jump" title="Ment, és megnyitja a levélírót (értesítés, meghívó, felkérés, válasz)"
+              onClick={() => { if (saveFirst()) onNotify(); }}>✉ Mentés és levélírás</button>
+          </div>
+          {onNotifyTopic && suggested.length > 0 && (
+            <>
+              <label className="mt-sublabel">Ehhez illő sablonok — kattintásra a levélíró a sablonnal nyílik</label>
+              <div className="nm-groups">
+                {suggested.map((t) => (
+                  <button key={t.id} type="button" className="chip" title={t.group}
+                    onClick={() => { if (saveFirst()) onNotifyTopic(t.id); }}>✉ {t.label}</button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="field full"><div className="se-empty">Az új tételt előbb mentsd el, utána nyithatod rá a levélírót.</div></div>
+      )}
+    </>
+  );
+}
+
 // ---- Feladat ----
 
 interface TaskProps {
@@ -224,6 +292,9 @@ interface TaskProps {
   onSave: (t: AgendaTask) => void;
   onDelete: () => void;
   onNotify?: () => void; // mentés után egyből a levélíró nyílik erre a feladatra
+  onOpenLetter?: (l: Letter) => void;                              // mentett levél megnyitása a levélíróban
+  onLetterStatus?: (id: string, status: 'draft' | 'sent') => void; // vázlat/kiküldve váltás
+  onNotifyTopic?: (topicId: string) => void;                       // levélíró nyitása ajánlott sablonnal
   onClose: () => void;
 }
 
@@ -234,7 +305,7 @@ const TASK_TABS: TabDef[] = [
   { id: 'mail', label: 'Levelezés', cls: 'c-green' },
 ];
 
-export function TaskModal({ task, isNew, events, roster, letters, onSave, onDelete, onNotify, onClose }: TaskProps) {
+export function TaskModal({ task, isNew, events, roster, letters, onSave, onDelete, onNotify, onOpenLetter, onLetterStatus, onNotifyTopic, onClose }: TaskProps) {
   const [d, setD] = useState(() => ({
     title: task.title, summary: task.summary,
     status: task.status as string, priority: task.priority as string, category: task.category ?? '',
@@ -281,7 +352,7 @@ export function TaskModal({ task, isNew, events, roster, letters, onSave, onDele
 
   return (
     <div className="ovl" onMouseDown={(e) => { if (e.target === e.currentTarget) tryClose(); }}>
-      <div className="modal">
+      <div className="modal modal--tabs">
         <h3>{d.title.trim() || (isNew ? 'Új feladat' : 'Feladat szerkesztése')}</h3>
         <div className="mt-sum">
           <button type="button" className="mt-chip" title="Határidő — az Alap fülön" onClick={() => setTab('alap')}>🕑 {d.dueDate || d.due.trim() || 'nincs határidő'}</button>
@@ -360,16 +431,11 @@ export function TaskModal({ task, isNew, events, roster, letters, onSave, onDele
               <input type="email" value={d.srcEmail} onChange={(e) => set('srcEmail', e.target.value)} placeholder="valaki@metropolitan.hu" />
             </div>
           </>)}
-          {tab === 'mail' && (<>
-            <div className="f-sec c-green">Levelezés</div>
-            <div className="field full">
-              <label>Kapcsolt levelek ({letters?.length ?? 0})</label>
-              {(letters?.length ?? 0) === 0 && <div className="se-empty">Ehhez a feladathoz még nincs mentett levél.</div>}
-              {onNotify
-                ? <button type="button" className="btn nm-jump" title="Menti a feladatot, és megnyitja a levélírót (értesítés, felkérés, válasz a feladónak)" onClick={saveAndNotify}>✉ Mentés és levélírás</button>
-                : <div className="se-empty">Az új feladatot előbb mentsd el, utána nyithatod rá a levélírót.</div>}
-            </div>
-          </>)}
+          {tab === 'mail' && (
+            <MailTab letters={letters ?? []} title={d.title} onNotify={onNotify}
+              saveFirst={() => { if (!d.title.trim()) return false; save(); return true; }}
+              onOpenLetter={onOpenLetter} onLetterStatus={onLetterStatus} onNotifyTopic={onNotifyTopic} />
+          )}
         </form>
         <div className="mfoot">
           {!isNew && <button className="btn btn--danger" onClick={onDelete}>Törlés</button>}
@@ -396,6 +462,9 @@ interface EventProps {
   onNotify?: () => void;             // mentés után egyből a levélíró nyílik erre az eseményre
   onOpenTask?: (id: string) => void; // mentés után a kapcsolt feladat szerkesztője nyílik
   onAddTask?: () => void;            // mentés után új, előtöltött feladat nyílik ehhez az eseményhez
+  onOpenLetter?: (l: Letter) => void;                              // mentett levél megnyitása a levélíróban
+  onLetterStatus?: (id: string, status: 'draft' | 'sent') => void; // vázlat/kiküldve váltás
+  onNotifyTopic?: (topicId: string) => void;                       // levélíró nyitása ajánlott sablonnal
   onClose: () => void;
 }
 
@@ -406,7 +475,7 @@ const EVENT_TABS: TabDef[] = [
   { id: 'mail', label: 'Levelezés', cls: 'c-green' },
 ];
 
-export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDelete, onNotify, onOpenTask, onAddTask, onClose }: EventProps) {
+export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDelete, onNotify, onOpenTask, onAddTask, onOpenLetter, onLetterStatus, onNotifyTopic, onClose }: EventProps) {
   const [d, setD] = useState(() => ({
     title: event.title, when: event.when, sort: event.sort ?? '', day: event.day ?? '', dayEnd: event.dayEnd ?? '',
     note: event.note ?? '', place: event.place ?? '', owner: event.owner ?? '',
@@ -442,7 +511,7 @@ export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDel
 
   return (
     <div className="ovl" onMouseDown={(e) => { if (e.target === e.currentTarget) tryClose(); }}>
-      <div className="modal">
+      <div className="modal modal--tabs">
         <h3>{d.title.trim() || (isNew ? 'Új esemény' : 'Esemény szerkesztése')}</h3>
         <div className="mt-sum">
           <button type="button" className="mt-chip" title="Időpont — az Alap fülön" onClick={() => setTab('alap')}>🕑 {d.day || d.when.trim() || 'nincs időpont'}</button>
@@ -527,16 +596,11 @@ export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDel
               <PeoplePicker selected={people} roster={roster} onToggle={togglePerson} onSet={setPeople} />
             </div>
           </>)}
-          {tab === 'mail' && (<>
-            <div className="f-sec c-green">Levelezés</div>
-            <div className="field full">
-              <label>Kapcsolt levelek ({letters?.length ?? 0})</label>
-              {(letters?.length ?? 0) === 0 && <div className="se-empty">Ehhez az eseményhez még nincs mentett levél.</div>}
-              {onNotify
-                ? <button type="button" className="btn nm-jump" title="Menti az eseményt, és megnyitja a levélírót (meghívó, emlékeztető, felkérés)" onClick={saveAndNotify}>✉ Mentés és levélírás</button>
-                : <div className="se-empty">Az új eseményt előbb mentsd el, utána nyithatod rá a levélírót.</div>}
-            </div>
-          </>)}
+          {tab === 'mail' && (
+            <MailTab letters={letters ?? []} title={d.title} onNotify={onNotify}
+              saveFirst={() => { if (!d.title.trim()) return false; save(); return true; }}
+              onOpenLetter={onOpenLetter} onLetterStatus={onLetterStatus} onNotifyTopic={onNotifyTopic} />
+          )}
         </form>
         <div className="mfoot">
           {!isNew && <button className="btn btn--danger" onClick={onDelete}>Törlés</button>}

@@ -13,6 +13,7 @@ interface Props {
   instr: string;                       // aktív név-szűrő (oktató vagy hallgató) — üres = mindenki
   taught: string[];                    // a szűrt személy tanított tárgyai (tantervből)
   kindOf: Record<string, PersonKind>;  // név -> Tanár/Hallgató badge
+  letterStats: Record<string, { n: number; drafts: number }>; // tétel-id → kapcsolt levelek száma / vázlatok
   onAdd: () => void;
   onEdit: (id: string) => void;
   onEditIntro: () => void;
@@ -54,7 +55,7 @@ const createdKey = (t: AgendaTask): number => {
 export const isNewTask = (t: AgendaTask): boolean =>
   !!t.createdAt && Date.now() - Date.parse(t.createdAt) < 72 * 3600 * 1000;
 
-export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, onEdit, onEditIntro, onPerson, onNotify, onToggleDone, onToggleDoing, onCyclePriority, onToggleStep }: Props) {
+export default function AgendaView({ agenda, q, instr, taught, kindOf, letterStats, onAdd, onEdit, onEditIntro, onPerson, onNotify, onToggleDone, onToggleDoing, onCyclePriority, onToggleStep }: Props) {
   const [groupBy, setGroupBy] = useState<GroupBy>('newest');
   const [catFilter, setCatFilter] = useState('');
 
@@ -182,6 +183,11 @@ export default function AgendaView({ agenda, q, instr, taught, kindOf, onAdd, on
                   {t.category && <button className="ag-cat on-card" title={`Szűrés: ${t.category}`} onClick={(e) => { e.stopPropagation(); setCatFilter((v) => (v === t.category ? '' : (t.category as string))); }}>{t.category}</button>}
                   <button className={`ag-doing${t.status === 'doing' ? ' is-on' : ''}`} title="Folyamatban jelölő" onClick={(e) => { e.stopPropagation(); onToggleDoing(t.id); }}>▶ Folyamatban</button>
                   {steps.length > 0 && <span className={`ag-stepsum${doneN === steps.length ? ' all-done' : ''}`} title="Kész alfeladatok / összes">☑ {doneN}/{steps.length}</span>}
+                  {letterStats[t.id] && (
+                    <button className={`ag-mailsum${letterStats[t.id].drafts ? ' has-draft' : ''}`}
+                      title={`${letterStats[t.id].n} kapcsolt levél${letterStats[t.id].drafts ? `, ebből ${letterStats[t.id].drafts} vázlat` : ''} — megnyitás a levélíróban`}
+                      onClick={(e) => { e.stopPropagation(); onNotify(t.id); }}>✉ {letterStats[t.id].n}</button>
+                  )}
                 </div>
                 {t.summary && <div className="cc-desc">{t.summary}</div>}
                 {steps.length > 0 && (

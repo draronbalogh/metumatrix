@@ -11,6 +11,7 @@ interface Props {
   q: string;
   instr: string;                          // aktív név-szűrő — üres = mindenki
   kindOf: Record<string, PersonKind>;     // név -> Tanár/Hallgató badge
+  letterStats: Record<string, { n: number; drafts: number }>; // esemény-id → kapcsolt levelek száma / vázlatok
   onAdd: () => void;
   onEdit: (id: string) => void;
   onEditTask: (id: string) => void;       // eseményhez kötött feladat megnyitása
@@ -40,7 +41,7 @@ const meetUrl = (e: AgendaEvent, emails: string[]): string => {
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&${p.toString()}`;
 };
 
-export default function EventsView({ agenda, q, instr, kindOf, onAdd, onEdit, onEditTask, onAddTaskFor, onPerson, onNotify, emailFor }: Props) {
+export default function EventsView({ agenda, q, instr, kindOf, letterStats, onAdd, onEdit, onEditTask, onAddTaskFor, onPerson, onNotify, emailFor }: Props) {
   const [mode, setMode] = useState<'list' | 'cal'>('cal'); // alapból a naptár nyílik
 
   const matches = (e: AgendaEvent) => {
@@ -109,6 +110,11 @@ export default function EventsView({ agenda, q, instr, kindOf, onAdd, onEdit, on
                       <span className={`ev-progress${doneN === linked.length ? ' all-done' : ''}`} title="Kapcsolt feladatok készültsége">
                         {doneN}/{linked.length} kész
                       </span>
+                    )}
+                    {letterStats[e.id] && (
+                      <button className={`ag-mailsum${letterStats[e.id].drafts ? ' has-draft' : ''}`}
+                        title={`${letterStats[e.id].n} kapcsolt levél${letterStats[e.id].drafts ? `, ebből ${letterStats[e.id].drafts} vázlat` : ''} — megnyitás a levélíróban`}
+                        onClick={(ev) => { ev.stopPropagation(); onNotify(e.id); }}>✉ {letterStats[e.id].n}</button>
                     )}
                   </div>
                   {e.note && <div className="cc-desc">{e.note}</div>}

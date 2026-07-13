@@ -7,7 +7,7 @@ import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, 
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
 import { editHeaders } from '@/lib/editkey';
-import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate, autoFill, fmtDay, paraphrase } from '@/lib/topics';
+import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate, autoFill, fmtDay, paraphrase, normText, LINK_STOP } from '@/lib/topics';
 
 export interface NotifyTarget {
   targetType: 'event' | 'task' | null;
@@ -18,7 +18,7 @@ export interface NotifyTarget {
   steps?: string[]; // a kártya (ill. eseménynél a kötött feladatok) lépései — választhatóan a levélbe
   source?: { name: string; email: string; subject?: string | null } | null; // a kiváltó email feladója
   topicId?: string | null; // a Levelek nézetből indított levél előtöltött témasablonja
-  preload?: { subject: string; body: string; names: string[] } | null; // mentett levél megnyitása kész tartalommal
+  preload?: { subject: string; body: string; names: string[]; letterId?: string } | null; // mentett levél megnyitása kész tartalommal
 }
 
 interface Props {
@@ -28,6 +28,7 @@ interface Props {
   letters: Letter[];                    // a tételhez mentett levelek
   onSaveLetter: (l: Letter) => void;
   onDeleteLetter: (id: string) => void;
+  onLetterStatus?: (id: string, status: 'draft' | 'sent') => void; // vázlat/kiküldve váltás
   onPlaceChange?: (place: string) => void; // esemény helyszínének visszamentése az eseményre
   onSourceChange?: (s: { name: string; email: string; subject?: string | null } | null) => void; // feladó visszamentése a kártyára
   onClose: () => void;
@@ -56,15 +57,12 @@ const loadUi = (): { kind: LetterKind; sigOn: boolean } => {
 const saveUi = (kind: LetterKind, sigOn: boolean): void => {
   try { localStorage.setItem(UI_KEY, JSON.stringify({ kind, sigOn })); } catch { /* privát mód */ }
 };
-// ékezet-független névszűréshez
-const norm = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-// az automatikus naptár-hozzárendelés NEM köthet általános folyamat-szavakra
-// (egyeztetés, emlékeztető...), csak megkülönböztető nevekre (Erasmus, Educatio...)
-const LINK_STOP = new Set(['egyeztetes', 'egyeztetese', 'emlekezteto', 'meghivo', 'felkeres', 'felkerese', 'korlevel', 'hatarido', 'hataridok', 'tajekoztato', 'osszefoglalo', 'szervezes', 'szervezese', 'beosztas', 'bekeres', 'bekerese', 'megbeszeles', 'visszajelzes', 'visszaigazolas', 'jovahagyas', 'elokeszites', 'elojelzes', 'kezeles', 'kezelese', 'valasz', 'kerdes', 'altalanos', 'hallgato', 'hallgatoi', 'hallgatok', 'hallgatoknak', 'oktato', 'oktatoi', 'oktatok', 'oktatoknak', 'kollega', 'kollegak', 'idopont', 'idozites', 'tudnivalok', 'reszletek', 'egyeni', 'ertekezlet', 'ertekeles', 'ertekelesi', 'leadas', 'leadasi', 'frissites', 'kikuldese', 'veglegesites', 'megosztasa', 'tovabbitasa', 'osszehivasa', 'surgetese', 'nyugtazasa', 'lemondasa', 'elfogadasa', 'esemeny', 'esemenyek', 'esemenyre', 'esemenyekre', 'kozelgo', 'rendezveny', 'rendezvenyek', 'elokeszitese', 'reszvetel', 'reszvetele', 'reszvetelt']);
+// ékezet-független névszűréshez — a sablon-egyeztetéssel közös helper (topics.ts)
+const norm = normText;
 
 // Levél-készítő: sablonból generált szöveg + 3 numerikus másolás-gomb (Outlookba illesztéshez).
 // A küldés (Brevo/SMTP) opcionális — csak akkor jelenik meg, ha a szerveren be van állítva.
-export default function NotifyModal({ target, teacherNames, db, letters, onSaveLetter, onDeleteLetter, onPlaceChange, onSourceChange, onClose, inline, topicReq, letterReq, ctxEvents, ctxTasks, topicLinks, onLinkTopic }: Props) {
+export default function NotifyModal({ target, teacherNames, db, letters, onSaveLetter, onDeleteLetter, onLetterStatus, onPlaceChange, onSourceChange, onClose, inline, topicReq, letterReq, ctxEvents, ctxTasks, topicLinks, onLinkTopic }: Props) {
   const ui0 = useMemo(loadUi, []);
   const [kind, setKind] = useState<LetterKind>(ui0.kind);
   const [sigOn, setSigOn] = useState(ui0.sigOn); // hivatalos aláírás a levélben (a link-blokk mindig ott van)
@@ -100,6 +98,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const effEvent = useMemo(() => (ctxSel.startsWith('e:') ? (ctxEvents ?? []).find((e) => e.id === ctxSel.slice(2)) ?? null : null), [ctxSel, ctxEvents]);
   const effTask = useMemo(() => (ctxSel.startsWith('t:') ? (ctxTasks ?? []).find((t) => t.id === ctxSel.slice(2)) ?? null : null), [ctxSel, ctxTasks]);
   const lastTopicRef = useRef<TopicTemplate | null>(null); // az utoljára betöltött sablon (újratöltéshez)
+  const loadedLetterRef = useRef<string | null>(null); // a betöltött mentett levél id-je — küldéskor ezt jelöljük kiküldöttre
   const [linkSuggestion, setLinkSuggestion] = useState<{ sel: string; title: string } | null>(null); // névegyezéses JAVASLAT — csak gombbal rögzül
   const [activeTopic, setActiveTopic] = useState<TopicTemplate | null>(null); // ugyanez a felületnek
   const typedRef = useRef(false); // írt-e bele kézzel — csak akkor kérdezünk rá a felülírásra
@@ -337,6 +336,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       setSelected(target.preload.names.filter((n) => !n.includes('@')));
       setAdhoc(target.preload.names.filter((n) => n.includes('@')));
       setBodyDirty(true); // kész levél: sablon / 🎲 csak rákérdezés után írhatja felül
+      loadedLetterRef.current = target.preload.letterId ?? null;
       return;
     }
     if (!target.topicId) return;
@@ -402,16 +402,18 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       targetType: target.targetType,
       targetId: target.targetId,
       subject, body, names: [...selected, ...adhoc],
+      status: 'draft',
     });
-    setResult('✓ Levél elmentve, lent a listában');
+    setResult('✓ Levél elmentve vázlatként, lent a listában');
   };
 
   const loadLetter = (l: Letter) => {
-    setSubject(l.subject); setBody(l.body); setSelected(l.names);
+    setSubject(l.subject); setBody(l.body); setSelected(l.names.filter((n) => !n.includes('@'))); setAdhoc(l.names.filter((n) => n.includes('@')));
     setBodyDirty(true); // a betöltött (kész) levelet a sablon-chipek ne írhassák felül rákérdezés nélkül
     lastTopicRef.current = null; // kész levél: a kapcsolt tétel változása ne írja át
     setActiveTopic(null);
     typedRef.current = true;
+    loadedLetterRef.current = l.id; // küldéskor ezt jelöljük kiküldöttre
     setResult('✓ Mentett levél betöltve.');
   };
 
@@ -425,8 +427,18 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
         body: JSON.stringify({ subject: subject.trim(), text: body, html, bcc: emails }),
       });
       const j = await r.json();
-      if (j.ok) setResult(`✓ Elküldve ${j.sent} címzettnek.`);
-      else setResult(`Hiba: ${j.error || 'küldés sikertelen'}`);
+      if (j.ok) {
+        // a küldés automatikusan bekerül a levél-történetbe kiküldöttként:
+        // betöltött mentett levélnél átjelöljük, különben új bejegyzés készül
+        if (loadedLetterRef.current && onLetterStatus) {
+          onLetterStatus(loadedLetterRef.current, 'sent');
+        } else {
+          const id = `l-${Date.now().toString(36)}`;
+          onSaveLetter({ id, createdAt: new Date().toISOString(), targetType: target.targetType, targetId: target.targetId, subject: subject.trim(), body, names: [...selected, ...adhoc], status: 'sent' });
+          loadedLetterRef.current = id;
+        }
+        setResult(`✓ Elküldve ${j.sent} címzettnek — a levél kiküldöttként mentve.`);
+      } else setResult(`Hiba: ${j.error || 'küldés sikertelen'}`);
     } catch (e) { setResult(`Hiba: ${String(e)}`); }
     setSending(false);
   };
@@ -734,15 +746,25 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             <div className="field full">
               <label>Mentett levelek ehhez a tételhez</label>
               <div className="nm-letters">
-                {letters.map((l) => (
-                  <div key={l.id} className="nm-letter">
-                    <button className="nm-letter-load" onClick={() => loadLetter(l)} title="Betöltés">
-                      <span className="s">{l.subject}</span>
-                      <span className="d">{fmtDate(l.createdAt)} · {l.names.length} címzett</span>
-                    </button>
-                    <button className="btn btn--danger pm-del" title="Levél törlése" onClick={() => onDeleteLetter(l.id)}>✕</button>
-                  </div>
-                ))}
+                {letters.map((l) => {
+                  const st = l.status ?? 'draft';
+                  return (
+                    <div key={l.id} className="nm-letter">
+                      <button className="nm-letter-load" onClick={() => loadLetter(l)} title="Betöltés">
+                        <span className="s">{l.subject}</span>
+                        <span className="d">{fmtDate(l.createdAt)} · {l.names.length} címzett</span>
+                      </button>
+                      {onLetterStatus && (
+                        <button type="button" className={`mt-lst ${st}`}
+                          title={st === 'sent' ? 'Kiküldve — kattints, ha mégis vázlat' : 'Vázlat — kattints, ha már kiküldted (pl. Outlookból)'}
+                          onClick={() => onLetterStatus(l.id, st === 'sent' ? 'draft' : 'sent')}>
+                          {st === 'sent' ? '✓ Kiküldve' : '✎ Vázlat'}
+                        </button>
+                      )}
+                      <button className="btn btn--danger pm-del" title="Levél törlése" onClick={() => onDeleteLetter(l.id)}>✕</button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

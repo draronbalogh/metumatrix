@@ -298,20 +298,21 @@ export default function CurriculumApp() {
       isNew: true,
     });
   }, []);
-  // Levél-készítő megnyitása egy feladatból / eseményből — a sablon-szöveget a modál generálja
-  const notifyTask = useCallback((id: string) => {
+  // Levél-készítő megnyitása egy feladatból / eseményből — a sablon-szöveget a modál
+  // generálja; topicId-vel egy ajánlott témasablon rögtön be is töltődik
+  const notifyTask = useCallback((id: string, topicId?: string) => {
     if (!canEditRef.current) return;
     const t = agendaRef.current.tasks.find((x) => x.id === id);
     if (!t) return;
-    setNotify({ targetType: 'task', targetId: t.id, task: t, event: null, names: [t.owner, ...t.people].filter((n): n is string => !!n), steps: taskSteps(t).map((s) => s.text).filter(Boolean), source: t.source ?? null });
+    setNotify({ targetType: 'task', targetId: t.id, task: t, event: null, names: [t.owner, ...t.people].filter((n): n is string => !!n), steps: taskSteps(t).map((s) => s.text).filter(Boolean), source: t.source ?? null, topicId: topicId ?? null });
   }, []);
-  const notifyEvent = useCallback((id: string) => {
+  const notifyEvent = useCallback((id: string, topicId?: string) => {
     if (!canEditRef.current) return;
     const e = agendaRef.current.events.find((x) => x.id === id);
     if (!e) return;
     // az eseményhez kötött feladatok lépései is választhatók a levélbe
     const steps = agendaRef.current.tasks.filter((t) => t.eventId === e.id).flatMap((t) => taskSteps(t).map((s) => s.text)).filter(Boolean);
-    setNotify({ targetType: 'event', targetId: e.id, event: e, task: null, names: [e.owner, ...e.people].filter((n): n is string => !!n), steps, source: e.source ?? null });
+    setNotify({ targetType: 'event', targetId: e.id, event: e, task: null, names: [e.owner, ...e.people].filter((n): n is string => !!n), steps, source: e.source ?? null, topicId: topicId ?? null });
   }, []);
   // levélírás a Levelek nézetből: kártya nélkül, a kiválasztott sablon előtöltve
   const composeFromTopic = useCallback((t: TopicTemplate) => {
@@ -335,7 +336,7 @@ export default function CurriculumApp() {
   // kontextusában (lépések, feladó, mentett levelek listája), különben önállóan
   const openSavedLetter = useCallback((l: Letter) => {
     const cur = agendaRef.current;
-    const preload = { subject: l.subject, body: l.body, names: l.names };
+    const preload = { subject: l.subject, body: l.body, names: l.names, letterId: l.id };
     const t = l.targetType === 'task' ? cur.tasks.find((x) => x.id === l.targetId) : null;
     const e = l.targetType === 'event' ? cur.events.find((x) => x.id === l.targetId) : null;
     if (t) setNotify({ targetType: 'task', targetId: t.id, task: t, event: null, names: [], steps: taskSteps(t).map((s) => s.text).filter(Boolean), source: t.source ?? null, preload });
@@ -374,6 +375,22 @@ export default function CurriculumApp() {
     const cur = agendaRef.current;
     commitAgenda({ ...cur, letters: (cur.letters || []).filter((x) => x.id !== id) });
   }, [commitAgenda]);
+  const setLetterStatus = useCallback((id: string, status: 'draft' | 'sent') => {
+    if (!canEditRef.current) return;
+    const cur = agendaRef.current;
+    commitAgenda({ ...cur, letters: (cur.letters || []).map((l) => (l.id === id ? { ...l, status } : l)) });
+  }, [commitAgenda]);
+  // ✉ jelzés a kártyákon: tételenkénti levélszám + hány vázlat vár még kiküldésre
+  const letterStats = useMemo(() => {
+    const m: Record<string, { n: number; drafts: number }> = {};
+    (agenda.letters || []).forEach((l) => {
+      if (!l.targetId) return;
+      const e = (m[l.targetId] ??= { n: 0, drafts: 0 });
+      e.n += 1;
+      if ((l.status ?? 'draft') === 'draft') e.drafts += 1;
+    });
+    return m;
+  }, [agenda.letters]);
 
   const histRef = useRef<Curriculum[]>([]);
   const futRef = useRef<Curriculum[]>([]);
@@ -741,7 +758,7 @@ export default function CurriculumApp() {
             <CatalogView data={data} filter={filter} view={vp} onDetails={onDetails} onEdit={onEdit} onAdd={onAdd} onInstructor={onInstructor} onCategory={onCategory} onCatEdit={onCatEdit} />
           ) : view === 'tasks' ? (
             <AgendaView
-              agenda={agenda} q={q} instr={instr} taught={taught} kindOf={kindOf}
+              agenda={agenda} q={q} instr={instr} taught={taught} kindOf={kindOf} letterStats={letterStats}
               onAdd={() => { if (!canEdit) return; setTaskEdit({ t: emptyTask(), isNew: true }); }}
               onEdit={(id) => { if (!canEdit) return; const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
               onEditIntro={() => { if (!canEdit) return; setIntroEdit(true); }}
@@ -754,7 +771,7 @@ export default function CurriculumApp() {
             />
           ) : view === 'events' ? (
             <EventsView
-              agenda={agenda} q={q} instr={instr} kindOf={kindOf}
+              agenda={agenda} q={q} instr={instr} kindOf={kindOf} letterStats={letterStats}
               onAdd={() => { if (!canEdit) return; setEventEdit({ e: emptyEvent(), isNew: true }); }}
               onEdit={(id) => { if (!canEdit) return; const e = agendaRef.current.events.find((x) => x.id === id); if (e) setEventEdit({ e, isNew: false }); }}
               onEditTask={(id) => { if (!canEdit) return; const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
@@ -800,6 +817,7 @@ export default function CurriculumApp() {
                   letters={(agenda.letters || []).filter((l) => l.targetId === null)}
                   onSaveLetter={saveLetter}
                   onDeleteLetter={deleteLetter}
+                  onLetterStatus={setLetterStatus}
                   onClose={() => { /* beágyazva nincs bezárás */ }}
                 />
               )}
@@ -913,6 +931,9 @@ export default function CurriculumApp() {
           onSave={saveTask}
           onDelete={() => { if (confirm('Törlöd ezt a feladatot?')) deleteTask(taskEdit.t.id); }}
           onNotify={taskEdit.isNew ? undefined : () => notifyTask(taskEdit.t.id)}
+          onOpenLetter={taskEdit.isNew ? undefined : openSavedLetter}
+          onLetterStatus={setLetterStatus}
+          onNotifyTopic={taskEdit.isNew ? undefined : (tid) => notifyTask(taskEdit.t.id, tid)}
           onClose={() => setTaskEdit(null)}
         />
       )}
@@ -929,6 +950,9 @@ export default function CurriculumApp() {
           onNotify={eventEdit.isNew ? undefined : () => notifyEvent(eventEdit.e.id)}
           onOpenTask={eventEdit.isNew ? undefined : (id) => { const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
           onAddTask={eventEdit.isNew ? undefined : () => addTaskForEvent(eventEdit.e.id)}
+          onOpenLetter={eventEdit.isNew ? undefined : openSavedLetter}
+          onLetterStatus={setLetterStatus}
+          onNotifyTopic={eventEdit.isNew ? undefined : (tid) => notifyEvent(eventEdit.e.id, tid)}
           onClose={() => setEventEdit(null)}
         />
       )}
@@ -948,6 +972,7 @@ export default function CurriculumApp() {
           letters={(agenda.letters || []).filter((l) => l.targetId === notify.targetId)}
           onSaveLetter={saveLetter}
           onDeleteLetter={deleteLetter}
+          onLetterStatus={setLetterStatus}
           onPlaceChange={notify.targetType === 'event' && notify.targetId ? (p: string) => {
             const cur = agendaRef.current;
             commitAgenda({ ...cur, events: cur.events.map((ev) => (ev.id === notify.targetId ? { ...ev, place: p.trim() || null } : ev)) });

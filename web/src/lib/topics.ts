@@ -995,3 +995,24 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
 ];
 
 export const TOPIC_GROUPS: string[] = [...new Set(TOPIC_TEMPLATES.map((t) => t.group))];
+
+// ---- kártya ↔ sablon egyeztetés (a NotifyModal és a szerkesztők közös segédei) ----
+
+// ékezet-független kisbetűsítés a szöveg-egyeztetéshez
+export const normText = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+// Általános folyamat-szavak, amelyekre NEM szabad kapcsolatot/ajánlást építeni
+// (egyeztetés, emlékeztető...) — csak megkülönböztető nevek számítanak (Erasmus, Educatio...).
+export const LINK_STOP = new Set(['egyeztetes', 'egyeztetese', 'emlekezteto', 'meghivo', 'felkeres', 'felkerese', 'korlevel', 'hatarido', 'hataridok', 'tajekoztato', 'osszefoglalo', 'szervezes', 'szervezese', 'beosztas', 'bekeres', 'bekerese', 'megbeszeles', 'visszajelzes', 'visszaigazolas', 'jovahagyas', 'elokeszites', 'elokeszitese', 'elojelzes', 'kezeles', 'kezelese', 'valasz', 'kerdes', 'altalanos', 'hallgato', 'hallgatoi', 'hallgatok', 'hallgatoknak', 'oktato', 'oktatoi', 'oktatok', 'oktatoknak', 'kollega', 'kollegak', 'idopont', 'idozites', 'tudnivalok', 'reszletek', 'egyeni', 'ertekezlet', 'ertekeles', 'ertekelesi', 'leadas', 'leadasi', 'frissites', 'frissitese', 'kikuldese', 'veglegesites', 'megosztasa', 'tovabbitasa', 'osszehivasa', 'surgetese', 'nyugtazasa', 'lemondasa', 'elfogadasa', 'esemeny', 'esemenyek', 'esemenyre', 'esemenyekre', 'kozelgo', 'rendezveny', 'rendezvenyek', 'reszvetel', 'reszvetele', 'reszvetelt', 'feladat', 'feladatok', 'teljes', 'folyamat']);
+
+// A kártya címéhez illő témasablonok (a szerkesztők Levelezés fülének ajánlásaihoz):
+// a cím megkülönböztető szavait a sablonok azonosítójával/címkéjével vetjük össze.
+export const suggestTemplatesFor = (title: string, max = 3): TopicTemplate[] => {
+  const toks = [...new Set(title.split(/[^\wáéíóöőúüűÁÉÍÓÖŐÚÜŰ]+/).map(normText).filter((w) => w.length >= 5 && !LINK_STOP.has(w)))];
+  if (!toks.length) return [];
+  const scored = TOPIC_TEMPLATES
+    .map((t) => ({ t, score: toks.filter((w) => normText(`${t.id.replace(/-/g, ' ')} ${t.label}`).includes(w)).length }))
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score);
+  return scored.slice(0, max).map((x) => x.t);
+};

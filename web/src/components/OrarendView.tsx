@@ -56,6 +56,19 @@ const bandOf = (startMin: number): number => {
   return bi;
 };
 
+// A 2026/27. őszi félév kulcsdátumai a hivatalos Tanév rendjéből (MKK) —
+// az órarend tetején mindig szem előtt
+const KEY_DATES: { l: string; d: string }[] = [
+  { l: 'Projekthét', d: 'szept. 7–11.' },
+  { l: 'Szorgalmi időszak', d: 'szept. 7. – dec. 4.' },
+  { l: 'Őszi szünet', d: 'okt. 26–30.' },
+  { l: 'Alkotói hét', d: 'dec. 7–11.' },
+  { l: 'Vizsga + kiértékelés', d: 'dec. 7. – jan. 16.' },
+  { l: 'Utóvizsga hét', d: 'jan. 18–23.' },
+  { l: 'Jegyrögzítés', d: 'jan. 26.' },
+  { l: 'Oktatási szünet', d: 'okt. 23. · nov. 1. · dec. 24–26.' },
+];
+
 export default function OrarendView({ knownNames, q }: { knownNames: string[]; q: string }) {
   const [data, setData] = useState<Orarend | null>(null);
   const [failed, setFailed] = useState(false);
@@ -110,6 +123,11 @@ export default function OrarendView({ knownNames, q }: { knownNames: string[]; q
           <button type="button" className={mode === 'list' ? 'is-on' : ''} onClick={() => setMode('list')}>≡ Lista</button>
           <button type="button" className={mode === 'cal' ? 'is-on' : ''} onClick={() => setMode('cal')}>▦ Naptár</button>
         </div>
+      </div>
+      <div className="or-key">
+        {KEY_DATES.map((k) => (
+          <span key={k.l} className="or-kd"><b>{k.l}</b> {k.d}</span>
+        ))}
       </div>
       <div className="or-tools">
         <div className="cat-picker">

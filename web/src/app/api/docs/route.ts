@@ -9,12 +9,17 @@ import { canWrite } from '@/lib/editauth';
 // fejlécet küldeni, ezért a ?k=<kulcs> query param is elfogadott (= az EDIT_KEY).
 const DIR = process.env.DOCS_DIR || 'C:/node/metu_tanterv/grid/docs';
 
+const PPTX = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+// CSAK a legfrissebb változatok — a korábbi (2024/25-ös) segédletek lekerültek
 const FILES: Record<string, string> = {
-  'zoom-hasznalat.pdf': 'application/pdf',
-  'zoom-utmutato.pdf': 'application/pdf',
-  'fooallasu-oktatoi-segedlet.pdf': 'application/pdf',
-  'oraado-oktatoi-segedlet.pdf': 'application/pdf',
-  'rendszerhasznalati-trening.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'zoom-utmutato-2026-27.pdf': 'application/pdf',
+  'zoom-resztvevok.pptx': PPTX,
+  'fooallasu-oktatoi-segedlet-2026-27.pdf': 'application/pdf',
+  'oraado-oktatoi-segedlet-2026-27.pdf': 'application/pdf',
+  'orarend-letoltes-2026-27.pdf': 'application/pdf',
+  'teremhasznalat-mkk.pdf': 'application/pdf',
+  'mtmt-tutorial-2026.pptx': PPTX,
+  'rendszerhasznalati-trening.pptx': PPTX,
 };
 
 export const dynamic = 'force-dynamic';

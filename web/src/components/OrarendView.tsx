@@ -111,15 +111,15 @@ export default function OrarendView({ knownNames, q }: { knownNames: string[]; q
 
   return (
     <section className="wrap orv">
-      <div className="tp-headrow">
-        <h2 className="tp-title">🕒 {data.cim}</h2>
-        <span className="tp-headhint">{data.forras} · frissítve: {data.frissitve} · {list.length} órarendi sor, {teacherCount} oktató</span>
+      <div className="cat-block-head">
+        <span className="pl">Órarend</span>
+        <span className="nm">{data.cim} · {list.length} óra, {teacherCount} oktató</span>
+        <div className="viewtoggle ag-mode or-mode">
+          <button type="button" className={mode === 'list' ? 'is-on' : ''} onClick={() => setMode('list')}>≡ Lista</button>
+          <button type="button" className={mode === 'cal' ? 'is-on' : ''} onClick={() => setMode('cal')}>▦ Naptár</button>
+        </div>
       </div>
       <div className="or-tools">
-        <div className="viewtoggle or-mode">
-          <button type="button" className={mode === 'cal' ? 'is-on' : ''} onClick={() => setMode('cal')}>▦ Heti naptár</button>
-          <button type="button" className={mode === 'list' ? 'is-on' : ''} onClick={() => setMode('list')}>≡ Lista</button>
-        </div>
         <div className="cat-picker">
           <button type="button" className={`chip${day === '' ? ' is-on' : ''}`} onClick={() => setDay('')}>Minden nap</button>
           {DAYS.map((d) => (
@@ -133,14 +133,14 @@ export default function OrarendView({ knownNames, q }: { knownNames: string[]; q
           <div className="orc-scroll">
             <div className="orc" style={{ gridTemplateColumns: `44px repeat(${calDays.length}, minmax(150px, 1fr))` }}>
               <div className="orc-corner" />
-              {calDays.map((d) => <div key={d} className="orc-dh">{d}</div>)}
+              {calDays.map((d, i) => <div key={d} className={`orc-dh${i % 2 ? ' alt' : ''}`}>{d}</div>)}
               <div className="orc-axis" style={{ height: gridH }}>
                 {Array.from({ length: endH - startH + 1 }, (_, i) => (
                   <span key={i} style={{ top: i * 60 * PX }}>{startH + i}:00</span>
                 ))}
               </div>
-              {dayBlocks.map(({ day: d, blocks }) => (
-                <div key={d} className="orc-col" style={{ height: gridH, backgroundSize: `100% ${60 * PX}px` }}>
+              {dayBlocks.map(({ day: d, blocks }, di) => (
+                <div key={d} className={`orc-col${di % 2 ? ' alt' : ''}`} style={{ height: gridH, backgroundSize: `100% ${60 * PX}px` }}>
                   {blocks.map((b, i) => {
                     const w = 100 / b.cols;
                     const tip = [b.ido, b.targy, b.oktato, b.terem, b.tankor, b.szint].filter(Boolean).join(' · ');
@@ -205,7 +205,7 @@ export default function OrarendView({ knownNames, q }: { knownNames: string[]; q
           {groups.filter((g) => !day || g.label === day).length === 0 && <p className="tp-empty">Nincs találat.</p>}
         </>
       )}
-      <p className="tp-pv-hint">Csak a Média Design szak (magyar nyelvű BA + MA) órái — az animációs és angol nyelvű sorok az Excelből ki vannak szűrve a mintatanterv kurzuslistája alapján. A ⚠ jel oktatót jelöl, aki még nincs a Névjegyzékben. A heti rácsban a többhetes bontású órák az első időtartományukkal jelennek meg, a részletek a kártya fölé állva olvashatók.</p>
+      <p className="tp-pv-hint">Forrás: {data.forras} · frissítve: {data.frissitve}. Csak a Média Design szak (magyar nyelvű BA + MA) órái — az animációs és angol nyelvű sorok az Excelből ki vannak szűrve a mintatanterv kurzuslistája alapján. A ⚠ jel oktatót jelöl, aki még nincs a Névjegyzékben. A heti rácsban a többhetes bontású órák az első időtartományukkal jelennek meg, a részletek a kártya fölé állva olvashatók.</p>
     </section>
   );
 }

@@ -12,7 +12,7 @@ import EventsView from './EventsView';
 import ITView from './ITView';
 import DocsView from './DocsView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
-import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, Letter, agendaPeople, emptyEvent, emptyTask, nextPriority, normalizeAgenda } from '@/data/agenda';
+import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, Letter, emptyEvent, emptyTask, nextPriority, normalizeAgenda } from '@/data/agenda';
 import { DEFAULT_PEOPLE, PeopleDB, PersonKind, buildRoster, normalizePeople, emailOf } from '@/data/people';
 import PeopleModal from './PeopleModal';
 import NotifyModal, { NotifyTarget } from './NotifyModal';
@@ -576,12 +576,6 @@ export default function CurriculumApp() {
     roster.forEach((r) => { if (!m[r.name]) m[r.name] = r.kind; });
     return m;
   }, [roster]);
-  // a feladat/esemény nézet név-szűrőjéhez: az állandó lista + a feladatokban maradt régi nevek
-  const allPeople = useMemo(() => {
-    const s = new Set<string>(roster.map((r) => r.name));
-    agendaPeople(agenda).forEach((n) => s.add(n));
-    return [...s].sort((a, b) => a.localeCompare(b, 'hu'));
-  }, [roster, agenda]);
   // a név-szűrőre illesztett személy tanított tárgyai (a Feladatok nézet összegzőjéhez)
   const taught = useMemo(() => {
     if (!instr) return [];
@@ -653,12 +647,13 @@ export default function CurriculumApp() {
             title="Szűrők és eszközök"
           >{toolsOpen ? '✕' : '☰'}{(q || spec || ctype || instr || cat) && !toolsOpen ? ' •' : ''}</button>
           <div className={`toolbar-more${toolsOpen ? ' open' : ''}`}>
-          <select className={`presetsel instrsel${instr ? ' is-on' : ''}`} value={instr} onChange={(e) => setInstr(e.target.value)} title="Szűrés névre — tanterv, feladatok és események is erre szűrődnek">
-            <option value="">{isCurr ? 'Minden oktató' : 'Mindenki'}</option>
-            {(isCurr ? allInstructors : allPeople).map((n) => <option key={n} value={n}>{n}</option>)}
-          </select>
+          {/* név-lenyíló CSAK a tantervi nézeteken — máshol a kereső és a személy-chipek szűrnek */}
           {isCurr && (
           <>
+          <select className={`presetsel instrsel${instr ? ' is-on' : ''}`} value={instr} onChange={(e) => setInstr(e.target.value)} title="Szűrés névre — tanterv, feladatok és események is erre szűrődnek">
+            <option value="">Minden oktató</option>
+            {allInstructors.map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
           {allCats.length > 0 && (
             <select className={`presetsel instrsel${cat ? ' is-on' : ''}`} value={cat} onChange={(e) => setCat(e.target.value)} title="Szűrés kategóriára (mindkét nézetben)">
               <option value="">Minden kategória</option>

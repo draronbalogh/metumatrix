@@ -996,6 +996,32 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .or-warn { margin-left: 5px; cursor: help; }
 @media (max-width: 720px) { .or-table { font-size: .74rem; } .or-table th, .or-table td { padding: 6px 7px; } }
 
+/* Orarend HETI naptar-racs: napok oszlopokban, idotengely balra, atfedo orak
+   savokban egymas mellett; mobilon vizszintesen gorgetheto */
+.orc-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--card); margin-bottom: 14px; }
+.orc { display: grid; min-width: 640px; }
+.orc-corner, .orc-dh { position: sticky; top: 0; z-index: 2; padding: 8px 8px 7px; background: var(--paper); border-bottom: 1px solid var(--line); }
+.orc-dh { font-size: .68rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--brand-text); text-align: center; border-left: 1px solid var(--line); }
+.orc-axis { position: relative; font-size: .62rem; color: var(--ink-2); }
+.orc-axis span { position: absolute; right: 5px; transform: translateY(-50%); background: var(--card); padding: 0 2px; }
+.orc-col {
+  position: relative; border-left: 1px solid var(--line);
+  background-image: linear-gradient(to bottom, var(--line) 0, var(--line) 1px, transparent 1px);
+  background-repeat: repeat-y;
+}
+.orc-ev {
+  position: absolute; overflow: hidden; display: flex; flex-direction: column; gap: 1px;
+  padding: 3px 5px 3px 7px; border-radius: 7px; border: 1px solid var(--line);
+  border-left: 4px solid var(--brand); background: var(--paper); box-shadow: var(--shadow-1);
+  font-size: .66rem; line-height: 1.25; cursor: help;
+}
+.orc-ev-t { font-weight: 800; color: var(--ink); }
+.orc-ev-m { color: var(--ink-2); white-space: nowrap; }
+.orc-ev-o { color: var(--ink-2); font-style: italic; }
+.orc-notime { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 14px; }
+.orc-notime-h { font-size: .72rem; font-weight: 800; color: var(--ink-2); }
+@media (max-width: 720px) { .orc { min-width: 560px; } .orc-ev { font-size: .6rem; padding: 2px 4px 2px 6px; } }
+
 /* Fomenu mobilon: EGYETLEN vizszintesen (jobbra) gorgetheto sor — csak ~1 sornyi
    helyet foglal; nezetvaltaskor az aktiv ful scrollIntoView-val beuszik a kepbe */
 @media (max-width: 900px) {

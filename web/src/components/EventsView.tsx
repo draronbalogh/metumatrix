@@ -41,7 +41,7 @@ const meetUrl = (e: AgendaEvent, emails: string[]): string => {
 };
 
 export default function EventsView({ agenda, q, instr, kindOf, onAdd, onEdit, onEditTask, onAddTaskFor, onPerson, onNotify, emailFor }: Props) {
-  const [mode, setMode] = useState<'list' | 'cal'>('list');
+  const [mode, setMode] = useState<'list' | 'cal'>('cal'); // alapból a naptár nyílik
 
   const matches = (e: AgendaEvent) => {
     if (instr && !eventHasPerson(e, instr)) return false;

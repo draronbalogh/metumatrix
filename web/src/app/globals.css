@@ -449,7 +449,7 @@ body {
 
 /* mobil: nagyobb alapbetű — a rem-alapú méretek (kártyák, listák, űrlapok) együtt nőnek */
 @media (max-width: 720px) {
-  html { font-size: 18px; }
+  html { font-size: 20px; }
 }
 
 /* mobil: teljes képernyős szerkesztő (Material full-screen dialog minta) —
@@ -1239,6 +1239,72 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .nm-search:focus, .tp-grpsel:focus { outline: 2px solid color-mix(in srgb, var(--brand) 35%, transparent); outline-offset: 1px; border-color: var(--brand); background: var(--card); }
 .pm-row input, .pm-row6 select, .pm-group-head input { border-radius: 10px; padding: 9px 11px; font-size: .88rem; }
 .pm-row input:focus, .pm-row6 select:focus { outline: 2px solid color-mix(in srgb, var(--brand) 35%, transparent); outline-offset: 1px; border-color: var(--brand); }
+
+/* ---- MOBIL OLVASHATÓSÁG: nagyobb alap (html 20px) + minimum-méretek a kis szövegekre ----
+   A rem-alapú szövegek a 20px-es alappal nőnek, a legapróbb címkék/chipek/metaszövegek
+   pedig itt kapnak explicit padlót, hogy telefonon minden kényelmesen olvasható legyen.
+   (A fájl végén áll, hogy a korábbi mobil-szabályokat felülírja.) */
+@media (max-width: 720px) {
+  /* kártyák: Feladatok / Események */
+  .cc-name { font-size: 1.05rem; }
+  .cc-desc { font-size: .84rem; }
+  .ag-ideas li { font-size: .82rem; }
+  .ag-smeta { font-size: .72rem; white-space: normal; }
+  .ag-more { font-size: .72rem; }
+  .cc-grp { font-size: .7rem; }
+  .cc-tag, .ag-pp { font-size: .7rem; padding: 5px 10px; }
+  .ag-prio, .ag-cat, .ag-doing { font-size: .68rem; padding: 5px 11px; }
+  .ag-stepsum, .ag-mailsum { font-size: .74rem; padding: 5px 11px; }
+  .ag-notify, .ev-task { font-size: .76rem; padding: 7px 12px; }
+  .ag-scheck { width: 20px; height: 20px; font-size: .66rem; }
+  .ag-intro p { font-size: .88rem; }
+  .ag-person-sum { font-size: .82rem; }
+  .ag-person-h { font-size: .66rem; }
+  .ag-done-open { font-size: .84rem; }
+  .ag-done-open .cat { font-size: .7rem; }
+  .ag-done-open .pp { font-size: .74rem; }
+  .pb { width: 16px; height: 16px; font-size: .58rem; }
+  .chip { font-size: .82rem; padding: 8px 13px; }
+  /* esemény-naptár */
+  .cal-ev { font-size: .84rem; padding: 6px 4px; }
+  .cal-ev .d { font-size: .74rem; }
+  .cal-ev .w { font-size: .7rem; }
+  .cal-days .dd b { font-size: .74rem; }
+  .cal-bar { height: 7px; }
+  .cal-bar.ft { height: 8px; }
+  /* Levelek nézet */
+  .tp-item .s { font-size: .88rem; }
+  .tp-item .d { font-size: .74rem; white-space: normal; }
+  .tp-ghbtn { font-size: .72rem; padding: 10px 12px; }
+  .tp-pv-subj { font-size: .84rem; }
+  .tp-pv-body { font-size: .9rem; }
+  .tp-pv-hint, .tp-empty { font-size: .78rem; }
+  /* órarend */
+  .or-kd { font-size: .76rem; padding: 6px 10px; }
+  .or-table { font-size: .8rem; }
+  .or-table th { font-size: .66rem; }
+  .orc-card { font-size: .8rem; }
+  /* szerkesztő-modálok és levélíró */
+  .field label { font-size: .7rem; }
+  .f-sec { font-size: .8rem; }
+  .mt-chip { font-size: .78rem; padding: 6px 12px; }
+  .mt-lst { font-size: .7rem; }
+  .mt-tst { font-size: .66rem; }
+  .mt-task .t { font-size: .9rem; }
+  .mt-task .m { font-size: .76rem; }
+  .mt-letter-open .s, .nm-letter-load .s { font-size: .88rem; }
+  .mt-letter-open .d, .nm-letter-load .d { font-size: .74rem; }
+  .se-meta { font-size: .74rem; }
+  .se-empty, .pp-nohit { font-size: .84rem; }
+  .pp-selcount { font-size: .74rem; }
+  .nm-hint { font-size: .68rem; width: 64px; }
+  .nm-missing { font-size: .78rem; }
+  .nm-preview .more { font-size: .74rem; }
+  /* névjegyzék + IT / segédletek apróbetűi */
+  .pm-former { font-size: .64rem; }
+  .it-sw-vars, .it-room-pc { font-size: .76rem; }
+  .it-doc-sum summary, .it-swlist summary { font-size: .8rem; }
+}
 @media (max-width: 720px) {
   /* mobilon 16px betu: kenyelmes es az iOS sem zoomol ra */
   .nm-search, .tp-grpsel, .pm-row input, .pm-row6 select, .pm-group-head input { font-size: 16px; padding: 11px 12px; }

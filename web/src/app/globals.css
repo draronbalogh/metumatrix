@@ -1213,6 +1213,32 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 
 /* Orarendben a napfejlec nem ragad (a nap-szuro sav a ragados) es nem kulon csik */
 .orv .tp-gh { position: static; background: transparent; border-bottom: 0; border-left: 4px solid var(--brand); padding: 4px 0 4px 10px; }
+
+/* Segedletek: ket oszlop — bal a dokumentumok, jobb a Gyakori linkek sav.
+   A sav NEM onallo gorgeto (a .orv-scroll-lal egyutt gorog) — dupla scroll tilos. */
+.docs-cols { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 22px; align-items: start; }
+.docs-main { order: 1; min-width: 0; }
+.doc-links { order: 2; border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 12px 14px 14px; }
+.dl-title { font-weight: 800; font-size: .95rem; color: var(--ink); }
+.dl-group { margin-top: 10px; }
+.dl-h { font-size: .62rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--brand-text); margin-bottom: 3px; }
+.dl-link { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 8px; color: var(--ink); text-decoration: none; }
+.dl-link:hover { background: var(--brand-100); }
+.dl-ic { width: 20px; text-align: center; flex: none; }
+.dl-body { min-width: 0; display: flex; flex-direction: column; }
+.dl-t { font-size: .8rem; font-weight: 700; line-height: 1.25; }
+.dl-d { font-size: .68rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dl-open { margin-left: auto; color: var(--muted); font-size: .75rem; }
+@media (max-width: 900px) {
+  /* mobilon/keskeny ablakban a linkpanel a tartalom ELE kerul, kompakt pill-sorokkent */
+  .docs-cols { display: flex; flex-direction: column; }
+  .doc-links { order: 1; }
+  .docs-main { order: 2; }
+  .dl-group { margin-top: 8px; }
+  .dl-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dl-link { border: 1px solid var(--line); background: var(--paper); padding: 6px 10px; }
+  .dl-d, .dl-open { display: none; }
+}
 /* A ragados savok teljes szelessegben takarjanak (ne latsszon at a gorgo tartalom a szeleken) */
 .pmv .pm-toolbar { margin: 0 calc(-1 * var(--pad)) 6px; padding: 10px var(--pad) 10px; border-radius: 0; background: var(--paper); }
 .pmv .mfoot { margin: 0 calc(-1 * var(--pad)); padding: 10px var(--pad) calc(10px + env(safe-area-inset-bottom)); background: var(--paper); border-radius: 0; }

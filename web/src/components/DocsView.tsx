@@ -33,6 +33,60 @@ const P = ({ name }: { name: string }) => (
 interface Doc { f: string; icon: string; title: string; desc: string; kivonat: ReactNode; }
 interface DocGroup { cim: string; docs: Doc[]; }
 
+// 🔗 Gyakori linkek — a jobb oldali sáv tartalma: a leggyakrabban használt
+// rendszerek, a szakos felületek és a foglalási kontaktok EGY helyen
+interface QuickLink { ic: string; t: string; d?: string; href: string; }
+interface QuickLinkGroup { cim: string; links: QuickLink[]; }
+const QUICK_LINKS: QuickLinkGroup[] = [
+  {
+    cim: 'Rendszerek',
+    links: [
+      { ic: '🎓', t: 'CooSpace', d: 'belépés Neptun-azonosítóval', href: 'https://coospace.metropolitan.hu/' },
+      { ic: '🧾', t: 'Neptun — oktatói web', href: 'https://neptunweb1.metropolitan.hu/' },
+      { ic: '📄', t: 'Neptun — tematika-kitöltés', href: 'https://neptun.metropolitan.hu/tematika/' },
+      { ic: '🛠', t: 'TopDesk — IT- és teremhiba', href: 'https://metu.topdesk.net/' },
+      { ic: '📖', t: 'MTMT', d: 'tudományos művek tára', href: 'https://www.mtmt.hu/' },
+    ],
+  },
+  {
+    cim: 'Zoom',
+    links: [
+      { ic: '📹', t: 'Zoom belépés', href: 'https://zoom.us' },
+      { ic: '🔑', t: 'Egyszer használatos kód', d: 'zoomokt.metropolitan.hu', href: 'https://zoomokt.metropolitan.hu/' },
+      { ic: '⬇', t: 'Zoom kliens letöltése', href: 'https://zoom.us/download' },
+      { ic: '📅', t: 'Fiókfoglaló táblázat', d: 'SharePoint', href: ZOOM_FOGLALO },
+    ],
+  },
+  {
+    cim: 'Szak és social',
+    links: [
+      { ic: '🌐', t: 'metumediadesign.hu', d: 'szakos honlap', href: 'https://www.metumediadesign.hu' },
+      { ic: '💬', t: 'Discord — szakos szerver', href: 'https://discord.gg/KrmxpDS5T' },
+      { ic: '👥', t: 'Facebook-csoport', href: 'https://www.facebook.com/groups/metumediadesign' },
+      { ic: '📘', t: 'Facebook-oldal', href: 'https://www.facebook.com/metumediadesign' },
+      { ic: '📷', t: 'Instagram', href: 'https://www.instagram.com/metumediadesign' },
+      { ic: '🎵', t: 'TikTok', href: 'https://www.tiktok.com/@metumediadesign' },
+    ],
+  },
+  {
+    cim: 'Könyvtár',
+    links: [
+      { ic: '🕑', t: 'Nyitvatartás', href: 'https://www.metropolitan.hu/hu/konyvtar#nyitvatartas' },
+      { ic: '🗄', t: 'Adatbázisok', href: 'https://www.metropolitan.hu/hu/adatbazisok' },
+      { ic: '🧑‍🏫', t: 'Foglalj könyvtárost', href: 'https://www.metropolitan.hu/foglalj-konyvtarost/' },
+      { ic: '🔎', t: 'Corvina katalógus', href: 'https://corvina.metropolitan.hu/WebPac/CorvinaWeb' },
+    ],
+  },
+  {
+    cim: 'Foglalás, kontakt',
+    links: [
+      { ic: '🎙', t: 'Hangstúdió foglalás', d: 'hapongor@gmail.com', href: 'mailto:hapongor@gmail.com' },
+      { ic: '🎬', t: 'TV stúdió foglalás', d: 'infop.tvstudio@metropolitan.hu', href: 'mailto:infop.tvstudio@metropolitan.hu' },
+      { ic: '🏫', t: 'Teremügyek', d: 'terem@metropolitan.hu', href: 'mailto:terem@metropolitan.hu' },
+    ],
+  },
+];
+
 const GROUPS: DocGroup[] = [
   {
     cim: '📹 Zoom — online órák és meetingek',
@@ -179,6 +233,31 @@ export default function DocsView({ q }: { q: string }) {
       <PageHead title="📚 Segédletek és útmutatók" sub={`${total} dokumentum — mindig csak a LEGFRISSEBB kiadás · csak szerkesztő módban látszik`} />
       {/* a cím a görgetőn KÍVÜL: görgetéskor semmi nem úszik a cím mögé/fölé */}
       <div className="orv-scroll">
+      <div className="docs-cols">
+      {/* jobb oldali sáv: a leggyakrabban használt linkek — mobilon a tartalom ELŐTT, kompakt pill-ekként */}
+      <aside className="doc-links">
+        <div className="dl-title">🔗 Gyakori linkek</div>
+        {QUICK_LINKS.map((g) => (
+          <div key={g.cim} className="dl-group">
+            <div className="dl-h">{g.cim}</div>
+            <div className="dl-list">
+              {g.links.map((l) => (
+                <a key={l.href} className="dl-link" href={l.href}
+                  target={l.href.startsWith('mailto:') ? undefined : '_blank'} rel="noreferrer"
+                  title={l.d ? `${l.t} — ${l.d}` : l.t}>
+                  <span className="dl-ic">{l.ic}</span>
+                  <span className="dl-body">
+                    <span className="dl-t">{l.t}</span>
+                    {l.d && <span className="dl-d">{l.d}</span>}
+                  </span>
+                  <span className="dl-open">↗</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
+      </aside>
+      <div className="docs-main">
       {groups.map((g) => (
         <div key={g.cim}>
           <h3 className="tp-gh">{g.cim} <span className="tp-gcount">{g.docs.length}</span></h3>
@@ -204,6 +283,8 @@ export default function DocsView({ q }: { q: string }) {
       ))}
       {groups.length === 0 && <p className="tp-empty">Nincs a keresésnek megfelelő segédlet.</p>}
       <p className="tp-pv-hint">A kivonatok a dokumentumok tartalmából készültek; a teljes, hivatalos szöveghez az eredeti fájlt nyisd meg. A PDF-ek új lapon nyílnak, a pptx-ek letöltődnek. Régebbi kiadású segédletet nem tartunk kint — mindig az aktuális félévé érhető el.</p>
+      </div>
+      </div>
       </div>
     </section>
   );

@@ -124,7 +124,7 @@ export default function OrarendView({ knownNames, q, displayName, resolveCourse,
 
   return (
     <section className="wrap orv orv--fixhead">
-      <PageHead title="Órarend" sub={`${data.cim} · ${list.length} óra, ${teacherCount} oktató`}>
+      <PageHead title="🕒 Órarend" sub={`${data.cim} · ${list.length} óra, ${teacherCount} oktató`}>
         <div className="viewtoggle ag-mode or-mode">
           <button type="button" className={mode === 'list' ? 'is-on' : ''} onClick={() => setMode('list')}>≡ Lista</button>
           <button type="button" className={mode === 'cal' ? 'is-on' : ''} onClick={() => setMode('cal')}>▦ Naptár</button>

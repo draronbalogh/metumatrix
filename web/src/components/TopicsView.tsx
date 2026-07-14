@@ -66,7 +66,7 @@ export default function TopicsView({ q, letters, composer, onUseTopic, onOpenLet
 
   return (
     <section className="wrap tpv">
-      <PageHead title="✉ Levelek" sub="1 · válassz a listából → 2 · előnézet → 3 · a szerkesztőben fejezd be és küldd">
+      <PageHead title="✉️ Levelek" sub="1 · válassz a listából → 2 · előnézet → 3 · a szerkesztőben fejezd be és küldd">
         <div className="viewtoggle ag-mode">
           <button type="button" className={tab === 'sablonok' ? 'is-on' : ''}
             onClick={() => { setTab('sablonok'); setMobileDetail(false); }}>Sablontár ({TOPIC_TEMPLATES.length})</button>

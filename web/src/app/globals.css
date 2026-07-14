@@ -312,7 +312,7 @@ body {
 .dr-actrow { display: flex; gap: 8px; margin-top: 13px; }
 .dr-actrow .btn { flex: 1; justify-content: center; text-align: center; }
 .dr-edit-top { margin-top: 0; }
-.drawer-x { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border: 1px solid var(--line); background: var(--card); border-radius: 8px; cursor: pointer; font-size: .9rem; }
+/* a sarki ✕ megszűnt — a bezárás egységesen a feliratos "✕ Bezárás" gomb (felül + alul) */
 .dr-eyebrow { font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--brand-text); }
 .dr-name { margin: 6px 36px 0 0; font-family: var(--ff-display); font-size: 1.4rem; font-weight: 700; line-height: 1.1; letter-spacing: var(--head-ls); }
 .dr-spec { margin-top: 6px; display: inline-block; font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; color: var(--brand-text); background: var(--brand-100); padding: 3px 8px; border-radius: 6px; }
@@ -1451,3 +1451,17 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .load-pane--err { align-content: center; justify-items: center; gap: 14px; color: var(--ink); }
 .load-pane--err p { max-width: 560px; font-weight: 600; line-height: 1.5; margin: 0; }
 .load-banner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 10px var(--pad) 0; padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--line)); border-radius: 10px; background: color-mix(in srgb, var(--danger) 8%, var(--card)); font-size: .82rem; font-weight: 700; }
+
+/* Katalogus mobilon: kompakt felev-fejlecek — a program-fej (BA/MA) kicsi,
+   a felev + az osszesito (targy/kredit/ora) EGY karcsu sorban, kis paddingokkal */
+@media (max-width: 720px) {
+  .catalog > div > .cat-block-head { margin-top: 12px; margin-bottom: 4px; }
+  .catalog > div > .cat-block-head .pl { font-size: 1.1rem; }
+  .cc-section { margin-bottom: 14px; }
+  .cc-head { padding-bottom: 5px; margin-bottom: 8px; row-gap: 2px; }
+  .cc-sem { font-size: .95rem; }
+  .cc-totals { width: auto; margin-left: auto; gap: 10px; }
+  .cc-totals div { display: flex; align-items: baseline; gap: 3px; text-align: left; }
+  .cc-totals b { display: inline; font-size: .92rem; }
+  .cc-totals span { font-size: .64rem; }
+}

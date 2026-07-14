@@ -114,7 +114,7 @@ export default function AgendaView({ agenda, q, instr, taught, kindOf, letterSta
 
   return (
     <main className="catalog agenda">
-      <PageHead title="Feladatok" sub="Média Design tanszék · 2026/27 ősz">
+      <PageHead title="☑️ Feladatok" sub="Média Design tanszék · 2026/27 ősz">
         <div className="viewtoggle ag-mode">
           <button className={groupBy === 'newest' ? 'is-on' : ''} onClick={() => setGroupBy('newest')} title="Dátum szerint: a legújabb feladat legelöl">📅 Új elöl</button>
           <button className={groupBy === 'oldest' ? 'is-on' : ''} onClick={() => setGroupBy('oldest')} title="Dátum szerint: a legrégebbi feladat legelöl">📅 Régi elöl</button>

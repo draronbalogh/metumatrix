@@ -65,7 +65,7 @@ export default function EventsView({ agenda, q, instr, kindOf, letterStats, onAd
 
   return (
     <main className="catalog agenda">
-      <PageHead title="Események" sub="szakos események · 2026/27 ősz">
+      <PageHead title="📅 Események" sub="szakos események · 2026/27 ősz">
         <div className="viewtoggle ag-mode">
           <button className={mode === 'list' ? 'is-on' : ''} onClick={() => setMode('list')}>≡ Lista</button>
           <button className={mode === 'cal' ? 'is-on' : ''} onClick={() => setMode('cal')}>▦ Naptár</button>

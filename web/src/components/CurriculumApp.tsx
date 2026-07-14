@@ -777,15 +777,16 @@ export default function CurriculumApp() {
       <div className="toolbar">
         <div className="wrap toolbar__inner">
           <div className="viewtoggle viewtoggle--nav" ref={navRef}>
-            <button className={view === 'map' ? 'is-on' : ''} onClick={() => setView('map')}>◆ Mátrix</button>
-            <button className={view === 'catalog' ? 'is-on' : ''} onClick={() => setView('catalog')}>▦ Katalógus</button>
-            <button className={view === 'tasks' ? 'is-on' : ''} onClick={() => setView('tasks')}>☑ Feladatok</button>
-            <button className={view === 'events' ? 'is-on' : ''} onClick={() => setView('events')}>▤ Események</button>
-            <button className={`editonly${view === 'topics' ? ' is-on' : ''}`} onClick={() => { if (!canEdit) return; setView('topics'); }}>✉ Levelek</button>
+            {/* egységes, színes emoji-ikonok — a korábbi monokróm jelek (◆▦☑▤✉☎) vegyes képet adtak */}
+            <button className={view === 'map' ? 'is-on' : ''} onClick={() => setView('map')}>🗺️ Mátrix</button>
+            <button className={view === 'catalog' ? 'is-on' : ''} onClick={() => setView('catalog')}>🗂️ Katalógus</button>
+            <button className={view === 'tasks' ? 'is-on' : ''} onClick={() => setView('tasks')}>☑️ Feladatok</button>
+            <button className={view === 'events' ? 'is-on' : ''} onClick={() => setView('events')}>📅 Események</button>
+            <button className={`editonly${view === 'topics' ? ' is-on' : ''}`} onClick={() => { if (!canEdit) return; setView('topics'); }}>✉️ Levelek</button>
             <button className={`editonly${view === 'people' ? ' is-on' : ''}`} title="Elérhetőségek: oktatók, hallgatók, intézményi / alumni / opponens / piaci kapcsolatok"
-              onClick={() => { if (!canEdit) return; setView('people'); }}>☎ Névjegyzék</button>
+              onClick={() => { if (!canEdit) return; setView('people'); }}>☎️ Névjegyzék</button>
             <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>🕒 Órarend</button>
-            <button className={view === 'it' ? 'is-on' : ''} onClick={() => setView('it')}>🖥 IT és szoftverek</button>
+            <button className={view === 'it' ? 'is-on' : ''} onClick={() => setView('it')}>🖥️ IT és szoftverek</button>
             <button className={`editonly${view === 'docs' ? ' is-on' : ''}`} title="Belső útmutatók: Zoom, oktatói segédletek, tréning — csak szerkesztő módban"
               onClick={() => { if (!canEdit) return; setView('docs'); }}>📚 Segédletek</button>
           </div>
@@ -995,7 +996,6 @@ export default function CurriculumApp() {
             <div className="drawer-scrim" onClick={() => setDetails(null)} />
             <aside className="drawer">
               <div className="dr-top">
-                <button className="drawer-x" onClick={() => setDetails(null)}>✕</button>
                 <div className="dr-eyebrow">{c.program} · {semLabel(c.semester)} · {x.type}</div>
                 <h2 className="dr-name">{x.name}</h2>
                 {x.specialization && <div className="dr-spec">{x.specialization}</div>}

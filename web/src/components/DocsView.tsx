@@ -230,7 +230,7 @@ export default function DocsView({ q }: { q: string }) {
 
   return (
     <section className="wrap orv orv--fixhead docsv">
-      <PageHead title="📚 Segédletek és útmutatók" sub={`${total} dokumentum — mindig csak a LEGFRISSEBB kiadás · csak szerkesztő módban látszik`} />
+      <PageHead title="📚 Segédletek" sub={`${total} dokumentum — mindig csak a LEGFRISSEBB kiadás · csak szerkesztő módban látszik`} />
       {/* a cím a görgetőn KÍVÜL: görgetéskor semmi nem úszik a cím mögé/fölé */}
       <div className="orv-scroll">
       <div className="docs-cols">

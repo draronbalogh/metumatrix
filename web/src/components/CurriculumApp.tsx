@@ -35,6 +35,15 @@ const PEOPLE_LS_KEY = 'md-people-v1';
 const THEME_KEY = 'md-theme2'; // új kulcs: az ideiglenes sötét-alap időszak mentett 'dark' értékei ne ragadjanak be
 const PRESET_KEY = 'md-preset';
 type Preset = 'neue' | 'tordeles' | 'muszerfal' | 'muterem';
+// betöltési állapotgép: amíg nem 'ok', a fájl-automentés tilos (nehogy régi/beépített
+// adat írja felül a szerveren lévő legutolsó mentést), és a DEFAULT sosem renderelődik
+type LoadState = 'loading' | 'ok' | 'ls-fallback' | 'error';
+type SaveState =
+  | { kind: 'idle' }
+  | { kind: 'saving' }
+  | { kind: 'saved'; at: number }
+  | { kind: 'denied' }
+  | { kind: 'error'; msg: string };
 const PRESETS: { id: Preset; label: string }[] = [
   { id: 'muszerfal', label: 'Műszerfal — modern app' },
   { id: 'neue', label: 'Neue Papír — svájci' },
@@ -48,6 +57,15 @@ export default function CurriculumApp() {
   const [data, setData] = useState<Curriculum>(DEFAULT_DATA);
   const [hydrated, setHydrated] = useState(false);
   const [edited, setEdited] = useState(false);
+  const [loadState, setLoadState] = useState<LoadState>('loading');
+  const [loadErr, setLoadErr] = useState<string | null>(null);
+  const [loadN, setLoadN] = useState(0); // ↻ Újrapróbálás számláló — a betöltő effect újrafuttatásához
+  const [saveState, setSaveState] = useState<SaveState>({ kind: 'idle' });
+  const saveStateRef = useRef<SaveState>({ kind: 'idle' });
+  saveStateRef.current = saveState;
+  // az agenda/people fájl-mentése csak akkor engedélyezett, ha a saját GET-jük sikerült
+  const agendaFileOk = useRef(false);
+  const peopleFileOk = useRef(false);
 
   const [view, setView] = useState<'map' | 'catalog' | 'tasks' | 'events' | 'topics' | 'orarend' | 'it' | 'docs' | 'people'>('map');
   const [agenda, setAgenda] = useState<Agenda>(DEFAULT_AGENDA);
@@ -83,37 +101,52 @@ export default function CurriculumApp() {
   }, [view]);
 
   useEffect(() => {
+    // AbortController: dev StrictMode-ban a dupla mount első kérés-sorozatát a cleanup
+    // abortálja — nincs dupla setData, nincs verseny az automentéssel
+    const ac = new AbortController();
+    setLoadState('loading');
     (async () => {
-      let loaded = false;
       // 1) a mintatanterv-fájl a forrás — ezt töltjük be elsőként (helyi API-n át)
       try {
-        const r = await fetch('/api/curriculum', { cache: 'no-store' });
+        const r = await fetch('/api/curriculum', { cache: 'no-store', signal: ac.signal });
         const j = await r.json();
-        if (j?.ok && j.data?.cohorts) { setData(j.data as Curriculum); setEdited(true); loaded = true; }
-      } catch { /* ignore */ }
-      // 2) fallback: helyi vázlat (localStorage), majd a beépített DEFAULT_DATA
-      if (!loaded) {
-        try { const s = localStorage.getItem(LS_KEY); if (s) { setData(JSON.parse(s) as Curriculum); setEdited(true); } } catch { /* ignore */ }
+        if (j?.ok && j.data?.cohorts) {
+          skipFileSave.current = true; // a most betöltött állapotot nem írjuk vissza (retrynél is!)
+          setData(j.data as Curriculum); setEdited(true);
+          setLoadState('ok'); setLoadErr(null);
+        } else throw new Error('server-file');
+      } catch (e) {
+        if (ac.signal.aborted) return;
+        // 2) fallback: helyi vázlat (localStorage) — ilyenkor a fájlba mentés TILOS,
+        // nehogy egy régi vázlat felülírja a szerveren lévő legutolsó mentést
+        let fromLS = false;
+        try {
+          const s = localStorage.getItem(LS_KEY);
+          if (s) { skipFileSave.current = true; setData(JSON.parse(s) as Curriculum); setEdited(true); fromLS = true; }
+        } catch { /* ignore */ }
+        setLoadState(fromLS ? 'ls-fallback' : 'error');
+        setLoadErr(e instanceof Error && e.message === 'server-file' ? 'A tanterv-fájl nem olvasható a szerveren.' : 'A szerver nem érhető el.');
       }
+      if (ac.signal.aborted) return;
       // feladatok + események ugyanígy: fájl → localStorage → beépített DEFAULT_AGENDA
-      let agendaLoaded = false;
       try {
-        const r = await fetch('/api/agenda', { cache: 'no-store' });
+        const r = await fetch('/api/agenda', { cache: 'no-store', signal: ac.signal });
         const j = await r.json();
-        if (j?.ok && j.data?.tasks) { setAgenda(normalizeAgenda(j.data as Partial<Agenda>)); agendaLoaded = true; }
-      } catch { /* ignore */ }
-      if (!agendaLoaded) {
-        try { const s = localStorage.getItem(AGENDA_LS_KEY); if (s) setAgenda(normalizeAgenda(JSON.parse(s) as Partial<Agenda>)); } catch { /* ignore */ }
+        if (j?.ok && j.data?.tasks) { skipAgendaSave.current = true; setAgenda(normalizeAgenda(j.data as Partial<Agenda>)); agendaFileOk.current = true; }
+        else throw new Error('server-file');
+      } catch {
+        if (ac.signal.aborted) return;
+        try { const s = localStorage.getItem(AGENDA_LS_KEY); if (s) { skipAgendaSave.current = true; setAgenda(normalizeAgenda(JSON.parse(s) as Partial<Agenda>)); } } catch { /* ignore */ }
       }
       // személyi törzs (hallgatólista + elérhetőségek) — a tanárnevek forrása maga a tanterv
-      let peopleLoaded = false;
       try {
-        const r = await fetch('/api/people', { cache: 'no-store' });
+        const r = await fetch('/api/people', { cache: 'no-store', signal: ac.signal });
         const j = await r.json();
-        if (j?.ok && j.data) { setPeopleDB(normalizePeople(j.data as Partial<PeopleDB>)); peopleLoaded = true; }
-      } catch { /* ignore */ }
-      if (!peopleLoaded) {
-        try { const s = localStorage.getItem(PEOPLE_LS_KEY); if (s) setPeopleDB(normalizePeople(JSON.parse(s) as Partial<PeopleDB>)); } catch { /* ignore */ }
+        if (j?.ok && j.data) { skipPeopleSave.current = true; setPeopleDB(normalizePeople(j.data as Partial<PeopleDB>)); peopleFileOk.current = true; }
+        else throw new Error('server-file');
+      } catch {
+        if (ac.signal.aborted) return;
+        try { const s = localStorage.getItem(PEOPLE_LS_KEY); if (s) { skipPeopleSave.current = true; setPeopleDB(normalizePeople(JSON.parse(s) as Partial<PeopleDB>)); } } catch { /* ignore */ }
       }
       try {
         const t = localStorage.getItem(THEME_KEY); if (t === 'dark' || t === 'light') setTheme(t);
@@ -124,7 +157,8 @@ export default function CurriculumApp() {
       } catch { /* ignore */ }
       setHydrated(true);
     })();
-  }, []);
+    return () => ac.abort();
+  }, [loadN]);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     try { localStorage.setItem(THEME_KEY, theme); } catch { /* ignore */ }
@@ -173,15 +207,40 @@ export default function CurriculumApp() {
   // automentés a mintatanterv-fájlba (helyi API, debounce) — a betöltött állapotot nem írjuk vissza
   const saveTimer = useRef<number | null>(null);
   const skipFileSave = useRef(true);
+  // a POST kiemelve: az automentés ÉS a chip „újra" gombja is ezt hívja; saveSeq az
+  // átlapolódó válaszok ellen (mindig a legutolsó mentés eredménye számít)
+  const saveSeq = useRef(0);
+  const postCurriculum = useCallback(async () => {
+    const seq = ++saveSeq.current;
+    setSaveState({ kind: 'saving' });
+    try {
+      const r = await fetch('/api/curriculum', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(dataRef.current) });
+      const j: { ok?: boolean; error?: string } | null = await r.json().catch(() => null);
+      if (seq !== saveSeq.current) return;
+      if (r.status === 403) setSaveState({ kind: 'denied' });
+      else if (!r.ok || !j?.ok) setSaveState({ kind: 'error', msg: j?.error || `HTTP ${r.status}` });
+      else setSaveState({ kind: 'saved', at: Date.now() });
+    } catch {
+      if (seq === saveSeq.current) setSaveState({ kind: 'error', msg: 'hálózati hiba' });
+    }
+  }, []);
   useEffect(() => {
     if (!hydrated) return;
+    if (loadState !== 'ok') return; // sikertelen betöltés után SEMMIT nem írunk a fájlba
     if (skipFileSave.current) { skipFileSave.current = false; return; }
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
-    saveTimer.current = window.setTimeout(() => {
-      fetch('/api/curriculum', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(dataRef.current) }).catch(() => { /* ignore */ });
-    }, 1000);
+    saveTimer.current = window.setTimeout(() => { saveTimer.current = null; void postCurriculum(); }, 1000);
     return () => { if (saveTimer.current) window.clearTimeout(saveTimer.current); };
-  }, [data, hydrated]);
+  }, [data, hydrated, loadState, postCurriculum]);
+  // bezárás előtti védőháló: ha épp mentés fut vagy debounce-időzítő él, a böngésző rákérdez
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      const pending = saveTimer.current !== null || agendaTimer.current !== null || peopleTimer.current !== null || saveStateRef.current.kind === 'saving';
+      if (pending) { e.preventDefault(); e.returnValue = ''; }
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, []);
   // feladatok + események: automentés a saját fájlba (ugyanaz a minta, mint a tantervnél)
   const agendaRef = useRef(agenda);
   agendaRef.current = agenda;
@@ -189,9 +248,11 @@ export default function CurriculumApp() {
   const skipAgendaSave = useRef(true);
   useEffect(() => {
     if (!hydrated) return;
+    if (!agendaFileOk.current) return; // a fájl nem töltődött be — nem írjuk felül régi/beépített adattal
     if (skipAgendaSave.current) { skipAgendaSave.current = false; return; }
     if (agendaTimer.current) window.clearTimeout(agendaTimer.current);
     agendaTimer.current = window.setTimeout(() => {
+      agendaTimer.current = null;
       fetch('/api/agenda', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(agendaRef.current) }).catch(() => { /* ignore */ });
     }, 1000);
     return () => { if (agendaTimer.current) window.clearTimeout(agendaTimer.current); };
@@ -268,9 +329,11 @@ export default function CurriculumApp() {
   const skipPeopleSave = useRef(true);
   useEffect(() => {
     if (!hydrated) return;
+    if (!peopleFileOk.current) return; // a fájl nem töltődött be — nem írjuk felül régi/beépített adattal
     if (skipPeopleSave.current) { skipPeopleSave.current = false; return; }
     if (peopleTimer.current) window.clearTimeout(peopleTimer.current);
     peopleTimer.current = window.setTimeout(() => {
+      peopleTimer.current = null;
       fetch('/api/people', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(peopleRef.current) }).catch(() => { /* ignore */ });
     }, 1000);
     return () => { if (peopleTimer.current) window.clearTimeout(peopleTimer.current); };
@@ -465,6 +528,11 @@ export default function CurriculumApp() {
         post('/api/people', peopleRef.current),
         post('/api/snapshots', backupPayload()),
       ]);
+      // sikeres explicit mentés után a fájl a mostani állapotot tükrözi — az automentés
+      // (ha betöltési hiba miatt tiltva volt) újra engedélyezhető
+      if (c?.ok) { setLoadState('ok'); setLoadErr(null); setSaveState({ kind: 'saved', at: Date.now() }); }
+      if (a?.ok) agendaFileOk.current = true;
+      if (pe?.ok) peopleFileOk.current = true;
       if (c?.ok && a?.ok && pe?.ok && snap?.ok) {
         setSaveMsg(`✓ Minden elmentve (tanterv + feladatok + események + levelek + névjegyzék). Pillanatkép: grid/backups/${snap.name}`);
       } else setSaveMsg('⚠ A mentés részben sikertelen — nézd meg a Betöltés listát, és próbáld újra.');
@@ -503,9 +571,13 @@ export default function CurriculumApp() {
           fetch('/api/curriculum', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(d.curriculum ?? dataRef.current) }).catch(() => { /* ignore */ });
           fetch('/api/agenda', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(d.agenda ? normalizeAgenda(d.agenda) : agendaRef.current) }).catch(() => { /* ignore */ });
           fetch('/api/people', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(d.people ? normalizePeople(d.people) : peopleRef.current) }).catch(() => { /* ignore */ });
+          // a felhasználó explicit érvényes adatot töltött vissza — az automentés újra élhet
+          setLoadState('ok'); setLoadErr(null);
+          agendaFileOk.current = true; peopleFileOk.current = true;
         } else if (Array.isArray(d.cohorts)) {
           // régi formátum: csak tanterv
           commit(d as unknown as Curriculum);
+          setLoadState('ok'); setLoadErr(null);
         } else if (Array.isArray(d.tasks)) {
           // csak feladatok+események mentés
           const a = normalizeAgenda(d as Partial<Agenda>);
@@ -704,6 +776,18 @@ export default function CurriculumApp() {
             {versions.map((v) => <option key={v} value={v}>{v === 'régi (korábbi)' ? 'Régi (korábbi)' : v}</option>)}
           </select>
           )}
+          {/* automentés-állapot: eddig a hibák némán elvesztek — most mindig látszik, mi történt */}
+          {canEdit && loadState === 'ok' && (
+            saveState.kind === 'saving' ? <span className="autosave-chip">● mentés…</span>
+            : saveState.kind === 'saved' ? <span className="autosave-chip ok">✓ mentve {new Date(saveState.at).toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' })}</span>
+            : saveState.kind === 'denied' ? <span className="autosave-chip err" title="A szerver megtekintő módban lát — a módosítások nem íródnak a fájlba. Nyisd meg a ?ts= kulcsos linkkel.">⚠ nincs mentve — megtekintő mód</span>
+            : saveState.kind === 'error' ? (
+              <span className="autosave-chip err" title={saveState.msg}>
+                ⚠ mentési hiba
+                <button type="button" className="chip-retry" onClick={() => void postCurriculum()}>újra</button>
+              </span>
+            ) : null
+          )}
           <button
             className={`btn tools-toggle${q || spec || ctype || instr || cat ? ' has-f' : ''}`}
             onClick={() => setToolsOpen((o) => !o)}
@@ -748,7 +832,25 @@ export default function CurriculumApp() {
         </div>
       </div>
 
+        {loadState === 'loading' ? (
+          // amíg a szerverfájl nem jött meg, SEMMIT nem renderelünk a beépített DEFAULT-ból —
+          // így nem villan fel a régi/pozíció nélküli térkép
+          <div className="viewport"><div className="load-pane">Tanterv betöltése…</div></div>
+        ) : loadState === 'error' ? (
+          <div className="viewport">
+            <div className="load-pane load-pane--err">
+              <p>⚠ {loadErr} A szerkesztés és a mentés le van tiltva, hogy semmi ne írja felül a legutolsó mentésedet.</p>
+              <button type="button" className="btn" onClick={() => setLoadN((n) => n + 1)}>↻ Újrapróbálás</button>
+            </div>
+          </div>
+        ) : (
         <div className="viewport">
+          {loadState === 'ls-fallback' && (
+            <div className="load-banner">
+              ⚠ {loadErr} A böngészőben mentett helyi vázlatot látod — a fájlba mentés ki van kapcsolva.
+              <button type="button" className="btn" onClick={() => setLoadN((n) => n + 1)}>↻ Újrapróbálás</button>
+            </div>
+          )}
           {/* A Mátrix mindig mountolva marad (csak elrejtjük), hogy nézetváltáskor a zoom/pásztázás
               megőrződjön és ne igazítson újra — csak betöltéskor / ver-prog váltáskor illesztünk. */}
           <div className="view-pane" style={{ display: view === 'map' ? 'block' : 'none' }}>
@@ -824,6 +926,7 @@ export default function CurriculumApp() {
             />
           </div>
         </div>
+        )}
       </div>
 
       {catMenu && (() => {

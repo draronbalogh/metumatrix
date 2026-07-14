@@ -1391,3 +1391,16 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 /* mentes-visszajelzes az eszkozsorban */
 .save-msg { font-size: .72rem; font-weight: 700; color: var(--danger); }
 .save-msg.ok { color: var(--g0); }
+
+/* automentes-allapot chip (toolbar) — a nema mentesi hibak lathatova tetele */
+.autosave-chip { display: inline-flex; align-items: center; gap: 6px; font-size: .72rem; font-weight: 700; color: var(--muted); white-space: nowrap; padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); }
+.autosave-chip.ok { color: var(--g0); border-color: color-mix(in srgb, var(--g0) 40%, var(--line)); }
+.autosave-chip.err { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, var(--line)); }
+.autosave-chip .chip-retry { border: 1px solid currentColor; border-radius: 999px; background: transparent; color: inherit; font-size: .68rem; font-weight: 800; padding: 1px 8px; cursor: pointer; }
+.autosave-chip .chip-retry:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
+
+/* betoltes-allapot: teljes panel a viewportban (a DEFAULT terkep SOSEM renderelodik) */
+.load-pane { min-height: calc(100dvh - 220px); display: grid; place-items: center; color: var(--muted); font-weight: 700; text-align: center; padding: 24px; }
+.load-pane--err { align-content: center; justify-items: center; gap: 14px; color: var(--ink); }
+.load-pane--err p { max-width: 560px; font-weight: 600; line-height: 1.5; margin: 0; }
+.load-banner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 10px var(--pad) 0; padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--line)); border-radius: 10px; background: color-mix(in srgb, var(--danger) 8%, var(--card)); font-size: .82rem; font-weight: 700; }

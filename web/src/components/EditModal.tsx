@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CATEGORIES, Course, catList } from '@/data/curriculum';
 import GrowArea from './GrowArea';
+import { ModalTabs, TabDef } from './AgendaModals';
 
 interface Props {
   course: Course;
@@ -52,17 +53,35 @@ const numOrNull = (v: string): number | null => {
   return Number.isNaN(n) ? null : n;
 };
 
+// a Feladat/Esemény/Levél szerkesztőkkel azonos füles váz (mobilon a fülsor alul)
+const EDIT_TABS: TabDef[] = [
+  { id: 'alap', label: 'Alap' },
+  { id: 'people', label: 'Emberek', cls: 'c-blue' },
+  { id: 'content', label: 'Tartalom', cls: 'c-green' },
+  { id: 'other', label: 'Egyéb', cls: 'c-purple' },
+];
+
 export default function EditModal({ course, cohortLabel, isNew, teacherNames, students, onSave, onDelete, onClose }: Props) {
   const [d, setD] = useState<Draft>(() => toDraft(course));
   const [newInstr, setNewInstr] = useState(''); // új (a listában még nem szereplő) oktató felvétele
+  const [tab, setTab] = useState('alap');
+  // névfal-kapuzás: a teljes oktató-/hallgatólista csak szűréskor jelenik meg
+  const [instrQ, setInstrQ] = useState('');
+  const [demoQ, setDemoQ] = useState('');
+
+  // dirty-guard: módosítás után a Mégsem/overlay/Esc rákérdez a mentés nélküli bezárásra
+  const dirty = useRef(false);
+  const tryClose = () => { if (dirty.current && !confirm('Elmentetlen módosítások vannak. Bezárod mentés nélkül?')) return; onClose(); };
+  const tryCloseRef = useRef(tryClose);
+  tryCloseRef.current = tryClose;
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') tryCloseRef.current(); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, []);
 
-  const set = (k: keyof Draft, v: string) => setD((p) => ({ ...p, [k]: v }));
+  const set = (k: keyof Draft, v: string) => { dirty.current = true; setD((p) => ({ ...p, [k]: v })); };
 
   const save = () => {
     if (!d.name.trim()) return;
@@ -94,13 +113,21 @@ export default function EditModal({ course, cohortLabel, isNew, teacherNames, st
   };
 
   return (
-    <div className="ovl" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal modal--wide">
+    <div className="ovl" onMouseDown={(e) => { if (e.target === e.currentTarget) tryClose(); }}>
+      <div className="modal modal--wide modal--tabs">
         <h3>
           {!isNew && d.name.trim() && <span className="mh-name">{d.name.trim()}</span>}
           {isNew ? 'Új tárgy · ' : 'Tárgy szerkesztése · '}{cohortLabel}
         </h3>
+        <div className="mt-sum">
+          <button type="button" className="mt-chip" title="Óraszám és kredit — az Alap fülön" onClick={() => setTab('alap')}>⏱ {d.hours.trim() || '–'} óra · {d.credits.trim() || '–'} kr</button>
+          <button type="button" className="mt-chip" title="Felelős és oktatók" onClick={() => setTab('people')}>👥 {toList(d.instructors).length} oktató</button>
+          <button type="button" className="mt-chip" title="Kategóriák — a Tartalom fülön" onClick={() => setTab('content')}>🏷 {toList(d.category).length} kategória</button>
+          {!d.short.trim() && <button type="button" className="mt-chip mt-warn" title="A kártyán látszó rövid leírás hiányzik — a Tartalom fülön pótolhatod" onClick={() => setTab('content')}>⚠ nincs rövid leírás</button>}
+        </div>
+        <ModalTabs tabs={EDIT_TABS} active={tab} onPick={setTab} />
         <form className="f" onSubmit={(e) => { e.preventDefault(); save(); }}>
+          {tab === 'alap' && (<>
           <div className="f-sec">Alapadatok</div>
           <div className="field full">
             <label>Tárgy neve</label>
@@ -159,6 +186,8 @@ export default function EditModal({ course, cohortLabel, isNew, teacherNames, st
             <label>Tervezett csoportszám</label>
             <input value={d.groups} onChange={(e) => set('groups', e.target.value)} placeholder="pl. 2 vagy ??" />
           </div>
+          </>)}
+          {tab === 'people' && (<>
           <div className="f-sec c-blue">Felelős és oktatók</div>
           <div className="field">
             <label>Intézet</label>
@@ -176,17 +205,32 @@ export default function EditModal({ course, cohortLabel, isNew, teacherNames, st
             </select>
           </div>
           <div className="field full">
-            <label>Oktató(k) — koppints a nevekre, többet is választhatsz ({toList(d.instructors).length} kiválasztva)</label>
-            <div className="cat-picker pp-picker">
-              {(() => {
-                const sel = toList(d.instructors);
-                const extras = sel.filter((n) => !teacherNames.includes(n));
-                const toggle = (n: string) => set('instructors', (sel.includes(n) ? sel.filter((x) => x !== n) : [...sel, n]).join(', '));
-                return [...extras, ...teacherNames].map((n) => (
-                  <button type="button" key={n} className={`chip${sel.includes(n) ? ' is-on' : ''}`} onClick={() => toggle(n)}>{n}</button>
-                ));
-              })()}
-            </div>
+            <label>Oktató(k) — {toList(d.instructors).length} kiválasztva; a kiválasztott név kattintásra lekerül</label>
+            {(() => {
+              const sel = toList(d.instructors);
+              const toggle = (n: string) => set('instructors', (sel.includes(n) ? sel.filter((x) => x !== n) : [...sel, n]).join(', '));
+              const q = instrQ.trim().toLowerCase();
+              const matches = q === '' ? [] : teacherNames.filter((n) => n.toLowerCase().includes(q) && !sel.includes(n));
+              return (<>
+                {sel.length > 0 && (
+                  <div className="cat-picker pp-picker">
+                    {sel.map((n) => (
+                      <button type="button" key={n} className="chip is-on" title="Kattints az eltávolításhoz" onClick={() => toggle(n)}>{n}</button>
+                    ))}
+                  </div>
+                )}
+                <input value={instrQ} onChange={(e) => setInstrQ(e.target.value)}
+                  placeholder={`Szűrés névre — gépelj, és megjelenik a választható névsor (${teacherNames.length} oktató)`} />
+                {q !== '' && (
+                  <div className="cat-picker pp-picker pp-scroll">
+                    {matches.length === 0 && <span className="nm-empty">Nincs több találat — lent új névként felveheted.</span>}
+                    {matches.map((n) => (
+                      <button type="button" key={n} className="chip" onClick={() => toggle(n)}>{n}</button>
+                    ))}
+                  </div>
+                )}
+              </>);
+            })()}
             <div className="em-addrow">
               <input value={newInstr} onChange={(e) => setNewInstr(e.target.value)} placeholder="Új oktató neve (ha még nincs a listában)"
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const n = newInstr.trim(); if (n) { set('instructors', [...toList(d.instructors), n].join(', ')); setNewInstr(''); } } }} />
@@ -194,22 +238,40 @@ export default function EditModal({ course, cohortLabel, isNew, teacherNames, st
             </div>
           </div>
           <div className="field full">
-            <label>Hallgatói demonstrátor — a hallgatói adatbázisból, többet is választhatsz ({toList(d.demonstrators).length} kiválasztva)</label>
-            <div className="cat-picker pp-picker">
-              {(() => {
-                const sel = toList(d.demonstrators);
-                const extras = sel.filter((n) => !students.includes(n));
-                const toggle = (n: string) => set('demonstrators', (sel.includes(n) ? sel.filter((x) => x !== n) : [...sel, n]).join(', '));
-                const all = [...extras, ...students];
-                if (all.length === 0) return <span className="nm-empty">Még nincs hallgató a Névjegyzékben — a ☎ Névjegyzék „Hallgatók” részében vehetsz fel.</span>;
-                return all.map((n) => (
-                  <button type="button" key={n} className={`chip${sel.includes(n) ? ' is-on' : ''}`} onClick={() => toggle(n)}>
-                    <span className="pb h">H</span>{n}
-                  </button>
-                ));
-              })()}
-            </div>
+            <label>Hallgatói demonstrátor — {toList(d.demonstrators).length} kiválasztva</label>
+            {(() => {
+              const sel = toList(d.demonstrators);
+              const toggle = (n: string) => set('demonstrators', (sel.includes(n) ? sel.filter((x) => x !== n) : [...sel, n]).join(', '));
+              const q = demoQ.trim().toLowerCase();
+              const matches = q === '' ? [] : students.filter((n) => n.toLowerCase().includes(q) && !sel.includes(n));
+              if (students.length === 0 && sel.length === 0) return <span className="nm-empty">Még nincs hallgató a Névjegyzékben — a ☎ Névjegyzék „Hallgatók” részében vehetsz fel.</span>;
+              return (<>
+                {sel.length > 0 && (
+                  <div className="cat-picker pp-picker">
+                    {sel.map((n) => (
+                      <button type="button" key={n} className="chip is-on" title="Kattints az eltávolításhoz" onClick={() => toggle(n)}>
+                        <span className="pb h">H</span>{n}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <input value={demoQ} onChange={(e) => setDemoQ(e.target.value)}
+                  placeholder={`Szűrés névre — gépelj, és megjelenik a hallgatói névsor (${students.length} hallgató)`} />
+                {q !== '' && (
+                  <div className="cat-picker pp-picker pp-scroll">
+                    {matches.length === 0 && <span className="nm-empty">Nincs találat.</span>}
+                    {matches.map((n) => (
+                      <button type="button" key={n} className="chip" onClick={() => toggle(n)}>
+                        <span className="pb h">H</span>{n}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>);
+            })()}
           </div>
+          </>)}
+          {tab === 'content' && (<>
           <div className="f-sec c-green">Tartalom</div>
           <div className="field full">
             <label>A tárgy célja</label>
@@ -244,6 +306,8 @@ export default function EditModal({ course, cohortLabel, isNew, teacherNames, st
               })}
             </div>
           </div>
+          </>)}
+          {tab === 'other' && (<>
           <div className="f-sec c-purple">Előfeltétel, követelmény, egyéb</div>
           <div className="field">
             <label>Előfeltétel</label>
@@ -261,11 +325,12 @@ export default function EditModal({ course, cohortLabel, isNew, teacherNames, st
             <label>Megjegyzés</label>
             <input value={d.note} onChange={(e) => set('note', e.target.value)} />
           </div>
+          </>)}
         </form>
         <div className="mfoot">
           {!isNew && <button className="btn btn--danger" onClick={onDelete}>Törlés</button>}
           <span className="sp" />
-          <button className="btn" onClick={onClose}>Mégsem</button>
+          <button className="btn" onClick={tryClose}>Mégsem</button>
           <button className="btn btn--ink" onClick={save}>Mentés</button>
         </div>
       </div>

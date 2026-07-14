@@ -13,7 +13,8 @@ import ITView from './ITView';
 import DocsView from './DocsView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
 import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, Letter, emptyEvent, emptyTask, nextPriority, normalizeAgenda, taskSteps } from '@/data/agenda';
-import { DEFAULT_PEOPLE, PeopleDB, PersonKind, buildRoster, normalizePeople, emailOf } from '@/data/people';
+import { DEFAULT_PEOPLE, PeopleDB, PersonKind, buildCanonicalNames, buildRoster, normalizePeople, emailOf } from '@/data/people';
+import { normName, normTitle } from '@/lib/normalize';
 import PeopleModal from './PeopleModal';
 import NotifyModal, { NotifyTarget } from './NotifyModal';
 import TopicsView from './TopicsView';
@@ -706,6 +707,35 @@ export default function CurriculumApp() {
   }, [data, ver]);
   // állandó választólista: tantervi tanárok + hallgatók (personDB) — T/H badge-dzsel
   const roster = useMemo(() => buildRoster(teacherNames, peopleDB), [teacherNames, peopleDB]);
+  // a név kanonikus (Névjegyzék-beli) írásmódja titulussal — csak megjelenítéshez
+  const canonName = useMemo(() => {
+    const m = buildCanonicalNames(peopleDB);
+    return (n: string) => m.get(normName(n)) ?? n;
+  }, [peopleDB]);
+  // Órarend → tanterv: "PROGRAM|normalizált tárgynév" → {ci,xi}. Az aktuális tanév
+  // (VERSION_ORDER eleje) nyer; azonos verzión belül az őszi (páratlan) félév, majd a kisebb.
+  const courseLookup = useMemo(() => {
+    const vi = (v: string) => { const i = VERSION_ORDER.indexOf(v); return i === -1 ? VERSION_ORDER.length : i; };
+    const order = data.cohorts.map((_, i) => i).sort((a, b) => {
+      const A = data.cohorts[a], B = data.cohorts[b];
+      const v = vi(A.version) - vi(B.version);
+      if (v) return v;
+      const odd = ((B.semester ?? 0) % 2) - ((A.semester ?? 0) % 2);
+      return odd || (A.semester ?? 0) - (B.semester ?? 0);
+    });
+    const m = new Map<string, Ref2>();
+    order.forEach((ci) => data.cohorts[ci].courses.forEach((x, xi) => {
+      const k = `${data.cohorts[ci].program}|${normTitle(x.name)}`;
+      if (!m.has(k)) m.set(k, { ci, xi });
+    }));
+    return m;
+  }, [data]);
+  const resolveOrarendCourse = useCallback((targy: string, szint: string | null): Ref2 | null => {
+    const n = normTitle(targy);
+    const progs = szint === 'BA' || szint === 'MA' ? [szint] : ['BA', 'MA'];
+    for (const p of progs) { const hit = courseLookup.get(`${p}|${n}`); if (hit) return hit; }
+    return null;
+  }, [courseLookup]);
   const kindOf = useMemo(() => {
     const m: Record<string, PersonKind> = {};
     roster.forEach((r) => { if (!m[r.name]) m[r.name] = r.kind; });
@@ -857,7 +887,7 @@ export default function CurriculumApp() {
             <MapView data={data} filter={filter} handlers={mapHandlers} persist={persist} theme={theme} view={vp} locked={locked || !canEdit} onToggleLock={canEdit ? toggleLock : () => { /* bemutató mód */ }} active={view === 'map'} focusId={details ? `c-${details.ci}-${details.xi}` : null} />
           </div>
           {view === 'catalog' ? (
-            <CatalogView data={data} filter={filter} view={vp} onDetails={onDetails} onEdit={onEdit} onAdd={onAdd} onInstructor={onInstructor} onCategory={onCategory} onCatEdit={onCatEdit} />
+            <CatalogView data={data} filter={filter} view={vp} onDetails={onDetails} onEdit={onEdit} onAdd={onAdd} onInstructor={onInstructor} onCategory={onCategory} onCatEdit={onCatEdit} displayName={canonName} />
           ) : view === 'tasks' ? (
             <AgendaView
               agenda={agenda} q={q} instr={instr} taught={taught} kindOf={kindOf} letterStats={letterStats}
@@ -889,7 +919,8 @@ export default function CurriculumApp() {
               ? <PeopleModal inline externalQuery={q} teacherNames={teacherNames} db={peopleDB} onSave={savePeople} onClose={() => { /* nézetként nincs bezárás */ }} />
               : <section className="wrap orv"><p className="tp-empty">Névjegyzék betöltése…</p></section>
           ) : view === 'orarend' ? (
-            <OrarendView q={q} knownNames={[...teacherNames, ...peopleDB.teachers.map((p) => p.name), ...peopleDB.institution.map((p) => p.name), ...peopleDB.alumni.map((p) => p.name)]} />
+            <OrarendView q={q} knownNames={[...teacherNames, ...peopleDB.teachers.map((p) => p.name), ...peopleDB.institution.map((p) => p.name), ...peopleDB.alumni.map((p) => p.name)]}
+              displayName={canonName} resolveCourse={resolveOrarendCourse} onOpenCourse={onDetails} />
           ) : view === 'it' ? (
             <ITView q={q} />
           ) : view === 'docs' ? (
@@ -986,9 +1017,9 @@ export default function CurriculumApp() {
                 <div><b>{x.groups || '–'}</b><span>csoport</span></div>
                 <div><b>{x.institute}</b><span>intézet</span></div>
               </div>
-              {x.felelos && <div className="dr-field"><h4>Felelős</h4><p>{x.felelos}</p></div>}
-              <div className="dr-field"><h4>Oktató</h4><p className={x.instructors ? '' : 'none'}>{x.instructors || 'még nincs megadva'}</p></div>
-              {(x.demonstrators ?? []).length > 0 && <div className="dr-field"><h4>Hallgatói demonstrátor</h4><p>{(x.demonstrators ?? []).join(', ')}</p></div>}
+              {x.felelos && <div className="dr-field"><h4>Felelős</h4><p>{canonName(x.felelos)}</p></div>}
+              <div className="dr-field"><h4>Oktató</h4><p className={x.instructors ? '' : 'none'}>{x.instructors ? instrList(x).map(canonName).join(', ') : 'még nincs megadva'}</p></div>
+              {(x.demonstrators ?? []).length > 0 && <div className="dr-field"><h4>Hallgatói demonstrátor</h4><p>{(x.demonstrators ?? []).map(canonName).join(', ')}</p></div>}
               {x.cel && <div className="dr-field"><h4>A tárgy célja</h4><p>{x.cel}</p></div>}
               <div className="dr-field"><h4>Összegzés</h4><p className={x.description ? '' : 'none'}>{x.description || 'még nincs megadva'}</p></div>
               {x.software.length > 0 && <div className="dr-field"><h4>Szoftverek</h4><div className="dr-chips">{x.software.map((s) => <span key={s} className="dr-chip sw">{s}</span>)}</div></div>}

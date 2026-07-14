@@ -8,16 +8,19 @@ interface Props {
   onEdit: () => void;
   onCategory: (cat: string) => void;
   onCatEdit: (x: number, y: number) => void;
+  displayName?: (n: string) => string; // a Névjegyzék szerinti (titulusos) írásmód
 }
 
-export default function CourseCardStd({ course: x, onDetails, onEdit, onCategory, onCatEdit }: Props) {
+export default function CourseCardStd({ course: x, onDetails, onEdit, onCategory, onCatEdit, displayName }: Props) {
   const ea = x.courseType === 'előadás';
+  const dn = displayName ?? ((n: string) => n);
+  const okt = x.instructors ? x.instructors.split(',').map((s) => s.trim()).filter(Boolean).map(dn).join(', ') : '';
   return (
     <div className={`cc-card ${groupClass(x)}`} onClick={onDetails}>
       <div className="cc-accent" />
       <button className="cc-edit" title="Szerkesztés" onClick={(e) => { e.stopPropagation(); onEdit(); }}>✎</button>
       <div className="cc-name">{x.name}</div>
-      <div className={`cc-okt${x.instructors ? '' : ' none'}`}>{x.instructors || 'oktató: —'}</div>
+      <div className={`cc-okt${okt ? '' : ' none'}`}>{okt || 'oktató: —'}</div>
       <div className="cc-meta">
         <span className={`cc-tag${ea ? ' ea' : ''}`}>{ea ? 'előadás' : 'gyakorlat'}</span>
         {x.hours != null && <span className="cc-h">{x.hours} óra</span>}

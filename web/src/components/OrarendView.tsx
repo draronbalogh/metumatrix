@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import PageHead from './PageHead';
+import { norm, normName } from '@/lib/normalize';
 
 // Média Design órarend: az Excelből MD-re szűrt digitális táblázat.
 // Két nézet: heti naptár-rács (alapértelmezett) és napok szerinti lista.
@@ -16,9 +17,6 @@ interface Entry {
 interface Orarend { cim: string; forras: string; frissitve: string; entries: Entry[]; }
 
 const DAYS = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek'];
-const norm = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-// a Névjegyzék-egyeztetéshez: Dr. / habil előtagok nélkül hasonlítunk
-const normName = (s: string): string => norm(s.replace(/\b(dr|habil)\.?\s*/gi, '').trim());
 
 // az EventsCalendar palettája — tantárgyanként stabil szín (név-hash alapján)
 const PALETTE = ['#d7144b', '#2f6fe0', '#17935f', '#7b3fe4', '#e08b00', '#0e9aa7', '#c2185b', '#5d7a12', '#b3541e', '#4b5bd7', '#8e24aa', '#00796b'];
@@ -70,7 +68,15 @@ const KEY_DATES: { l: string; d: string }[] = [
   { l: 'Oktatási szünet', d: 'okt. 23. · nov. 1. · dec. 24–26.' },
 ];
 
-export default function OrarendView({ knownNames, q }: { knownNames: string[]; q: string }) {
+export default function OrarendView({ knownNames, q, displayName, resolveCourse, onOpenCourse }: {
+  knownNames: string[];
+  q: string;
+  // a név Névjegyzék-beli, titulusos írásmódja ("Balogh Áron" → "Dr. Balogh Áron")
+  displayName: (n: string) => string;
+  // órarendi tárgynév → tantervi kártya {ci,xi}; null, ha nincs egyezés
+  resolveCourse: (targy: string, szint: string | null) => { ci: number; xi: number } | null;
+  onOpenCourse: (ci: number, xi: number) => void;
+}) {
   const [data, setData] = useState<Orarend | null>(null);
   const [failed, setFailed] = useState(false);
   const [day, setDay] = useState('');
@@ -112,8 +118,9 @@ export default function OrarendView({ knownNames, q }: { knownNames: string[]; q
   const usedBands = BANDS.map((_, bi) => cells[bi].some((c) => c.length > 0));
   const noTime = list.filter((e) => !e.nap || !parseIdo(e.ido));
 
+  // U+FE0F variációs szelektorral: e nélkül Windowson tofu/kérdőjelként renderelt
   const warn = (name: string | null) =>
-    name && !known.has(normName(name)) ? <span className="or-warn" title="Ez a név nem szerepel a ☎ Névjegyzékben — érdemes felvenni az elérhetőségét">⚠</span> : null;
+    name && !known.has(normName(name)) ? <span className="or-warn" title="Ez a név nem szerepel a ☎ Névjegyzékben — érdemes felvenni az elérhetőségét">⚠️</span> : null;
 
   return (
     <section className="wrap orv">
@@ -149,12 +156,19 @@ export default function OrarendView({ knownNames, q }: { knownNames: string[]; q
                   {calDays.map((d, di) => (
                     <div key={d} className={`orc-cell${di % 2 ? ' alt' : ''}`}>
                       {cells[bi][di].map((e, i) => {
-                        const tip = [e.ido, e.targy, e.oktato, e.terem, e.tankor, e.szint].filter(Boolean).join(' · ');
+                        const okt = e.oktato ? displayName(e.oktato) : null;
+                        const tip = [e.ido, e.targy, okt, e.terem, e.tankor, e.szint].filter(Boolean).join(' · ');
+                        const ref = resolveCourse(e.targy, e.szint);
                         return (
-                          <div key={i} className="orc-card" title={tip} style={{ borderLeftColor: colorOf(e.targy) }}>
+                          <div key={i} className={`orc-card${ref ? ' orc-card--link' : ''}`}
+                            title={ref ? `${tip} — kattints a tárgy kártyájáért` : tip}
+                            style={{ borderLeftColor: colorOf(e.targy) }}
+                            role={ref ? 'button' : undefined} tabIndex={ref ? 0 : undefined}
+                            onClick={ref ? () => onOpenCourse(ref.ci, ref.xi) : undefined}
+                            onKeyDown={ref ? (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); onOpenCourse(ref.ci, ref.xi); } } : undefined}>
                             <span className="orc-card-t">{e.targy}</span>
                             <span className="orc-card-m">{e.ido}{e.terem ? ` · ${e.terem}` : ''}</span>
-                            {e.oktato && <span className="orc-card-o">{e.oktato}{warn(e.oktato)}</span>}
+                            {okt && <span className="orc-card-o">{okt}{warn(e.oktato)}</span>}
                           </div>
                         );
                       })}
@@ -167,11 +181,19 @@ export default function OrarendView({ knownNames, q }: { knownNames: string[]; q
           {noTime.length > 0 && (
             <div className="orc-notime">
               <span className="orc-notime-h">Időpont nélkül (egyeztetés alatt):</span>
-              {noTime.map((e, i) => (
-                <span key={i} className="cc-tag" title={[e.oktato, e.tankor, e.szint].filter(Boolean).join(' · ')}>
-                  {e.targy}{e.oktato ? ` · ${e.oktato}` : ''}{warn(e.oktato)}
-                </span>
-              ))}
+              {noTime.map((e, i) => {
+                const okt = e.oktato ? displayName(e.oktato) : null;
+                const ref = resolveCourse(e.targy, e.szint);
+                return (
+                  <span key={i} className={`cc-tag${ref ? ' orc-card--link' : ''}`}
+                    title={[okt, e.tankor, e.szint].filter(Boolean).join(' · ') + (ref ? ' — kattints a tárgy kártyájáért' : '')}
+                    role={ref ? 'button' : undefined} tabIndex={ref ? 0 : undefined}
+                    onClick={ref ? () => onOpenCourse(ref.ci, ref.xi) : undefined}
+                    onKeyDown={ref ? (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); onOpenCourse(ref.ci, ref.xi); } } : undefined}>
+                    {e.targy}{okt ? ` · ${okt}` : ''}{warn(e.oktato)}
+                  </span>
+                );
+              })}
             </div>
           )}
           {timedCount === 0 && noTime.length === 0 && <p className="tp-empty">Nincs találat.</p>}
@@ -190,9 +212,16 @@ export default function OrarendView({ knownNames, q }: { knownNames: string[]; q
                     {[...g.items].sort((a, b) => (a.ido ?? '99').localeCompare(b.ido ?? '99')).map((e, i) => (
                       <tr key={i}>
                         <td className="or-ido">{e.ido ?? '—'}</td>
-                        <td className="or-targy">{e.targy}</td>
+                        <td className="or-targy">
+                          {(() => {
+                            const ref = resolveCourse(e.targy, e.szint);
+                            return ref
+                              ? <button type="button" className="or-targy-link" title="A tárgy tantervi kártyájának megnyitása" onClick={() => onOpenCourse(ref.ci, ref.xi)}>{e.targy}</button>
+                              : e.targy;
+                          })()}
+                        </td>
                         <td>
-                          {e.oktato ?? 'nincs megadva'}
+                          {e.oktato ? displayName(e.oktato) : 'nincs megadva'}
                           {warn(e.oktato)}
                         </td>
                         <td>{e.terem ?? '—'}</td>
@@ -209,7 +238,7 @@ export default function OrarendView({ knownNames, q }: { knownNames: string[]; q
           {groups.filter((g) => !day || g.label === day).length === 0 && <p className="tp-empty">Nincs találat.</p>}
         </>
       )}
-      <p className="tp-pv-hint">Forrás: {data.forras} · frissítve: {data.frissitve}. Csak a Média Design szak (magyar nyelvű BA + MA) órái — az animációs és angol nyelvű sorok az Excelből ki vannak szűrve a mintatanterv kurzuslistája alapján. A ⚠ jel oktatót jelöl, aki még nincs a Névjegyzékben. A heti táblában minden óra a kezdő idősávjában szerepel — a kártyán a pontos idő olvasható, a hosszabb (több sávot átfogó) óráké is; a részletek a kártya fölé állva jelennek meg.</p>
+      <p className="tp-pv-hint">Forrás: {data.forras} · frissítve: {data.frissitve}. Csak a Média Design szak (magyar nyelvű BA + MA) órái — az animációs és angol nyelvű sorok az Excelből ki vannak szűrve a mintatanterv kurzuslistája alapján. Az oktatónevek a ☎ Névjegyzék szerinti írásmóddal (titulussal) jelennek meg; a ⚠️ jel oktatót jelöl, aki még nincs a Névjegyzékben. Az órákra kattintva a tárgy tantervi kártyája nyílik meg — ugyanaz, mint a Mátrixban és a Katalógusban. A heti táblában minden óra a kezdő idősávjában szerepel — a kártyán a pontos idő olvasható, a hosszabb (több sávot átfogó) óráké is.</p>
     </section>
   );
 }

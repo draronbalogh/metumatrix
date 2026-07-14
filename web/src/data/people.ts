@@ -1,6 +1,9 @@
 // Személyi törzs — FONTOS: a tanárnevek egyetlen forrása a TANTERV (a kurzusok oktató-mezői),
 // itt tanároknak csak az elérhetőségeit tároljuk név szerint. A hallgatói (demonstrátor) lista
 // viszont itt él, ez az egyetlen forrása. Email + telefon: a későbbi email-értesítéshez.
+// A név ÍRÁSMÓDJÁNAK (titulusok, pl. "Dr.") forrása viszont a Névjegyzék: buildCanonicalNames.
+
+import { normName } from '@/lib/normalize';
 
 export interface Person {
   name: string;
@@ -123,6 +126,18 @@ export const normalizePeople = (p: Partial<PeopleDB>): PeopleDB => {
     signature: sig || DEFAULT_SIGNATURE,
     signatureLinks: (p.signatureLinks ?? '').trim() || inheritedLinks || DEFAULT_SIGNATURE_LINKS,
   };
+};
+
+// A név KANONIKUS (Névjegyzék-beli) írásmódja titulussal — pl. "Balogh Áron" (Excel-forma)
+// → "Dr. Balogh Áron". Az illesztés dr./habil- és ékezet-toleráns; a Névjegyzékben nem
+// szereplő név változatlanul jön vissza. Az ADAT nem változik, csak a megjelenítés.
+export const buildCanonicalNames = (db: PeopleDB): Map<string, string> => {
+  const m = new Map<string, string>();
+  [...db.teachers, ...db.institution, ...db.alumni, ...db.opponents].forEach((p) => {
+    const k = normName(p.name);
+    if (!m.has(k)) m.set(k, p.name);
+  });
+  return m;
 };
 
 // Egy név elérhetőségének feloldása a törzsből (bármelyik állandó listából).

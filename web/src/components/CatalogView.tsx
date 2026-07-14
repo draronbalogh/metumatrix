@@ -17,9 +17,10 @@ interface Props {
   onInstructor: (name: string) => void;
   onCategory: (cat: string) => void;
   onCatEdit: (ci: number, xi: number, x: number, y: number) => void;
+  displayName?: (n: string) => string; // a Névjegyzék szerinti (titulusos) írásmód a kártyákon
 }
 
-export default function CatalogView({ data, filter, view, onDetails, onEdit, onAdd, onInstructor, onCategory, onCatEdit }: Props) {
+export default function CatalogView({ data, filter, view, onDetails, onEdit, onAdd, onInstructor, onCategory, onCatEdit, displayName }: Props) {
   // félév-szűrő: 0 = mind, egyébként a kiválasztott félév blokkja látszik csak
   const [sem, setSem] = useState(0);
   const matches = (x: Course) => {
@@ -118,7 +119,7 @@ export default function CatalogView({ data, filter, view, onDetails, onEdit, onA
                   <div className={`cc-grp g${g}`}>{GROUP_LABEL[g]}</div>
                   <div className="cc-grid">
                     {items.map(({ x, xi }) => (
-                      <CourseCardStd key={xi} course={x} onDetails={() => onDetails(ci, xi)} onEdit={() => onEdit(ci, xi)} onCategory={onCategory} onCatEdit={(mx, my) => onCatEdit(ci, xi, mx, my)} />
+                      <CourseCardStd key={xi} course={x} displayName={displayName} onDetails={() => onDetails(ci, xi)} onEdit={() => onEdit(ci, xi)} onCategory={onCategory} onCatEdit={(mx, my) => onCatEdit(ci, xi, mx, my)} />
                     ))}
                   </div>
                 </div>

@@ -65,8 +65,11 @@ export default function ITView({ q }: { q: string }) {
   if (!data) return <section className="wrap orv"><p className="tp-empty">Betöltés…</p></section>;
 
   return (
-    <section className="wrap orv itv">
+    <section className="wrap orv orv--fixhead itv">
       <PageHead title={`🖥 ${data.cim}`} sub={`frissítve: ${data.frissitve} · ${rooms.length} terem · ${swList.length} szoftver`} />
+      {/* a cím a görgetőn KÍVÜL: a szűrősáv közvetlenül a felső sorhoz tapad,
+          görgetéskor nem látszik mögötte/fölötte elhaladó szöveg */}
+      <div className="orv-scroll">
       <div className="or-tools">
         <div className="cat-picker">
           <button type="button" className={`chip${mode === 'terem' ? ' is-on' : ''}`} onClick={() => setMode('terem')}>Termek szerint</button>
@@ -111,6 +114,7 @@ export default function ITView({ q }: { q: string }) {
       )}
 
       <p className="tp-pv-hint">Forrás: {data.forras} — újrageneráláskor a lista frissül. A kereső teremre és szoftverre is illeszkedik (pl. „Maya", „225", „Avid").</p>
+      </div>
     </section>
   );
 }

@@ -658,6 +658,8 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 
 @media (max-width: 720px) {
   .cat-block-head { flex-wrap: wrap; }
+  /* mobilon az alcim csak helyet foglal — a cim alatti kis szurke sor elrejtve */
+  .cat-block-head > .nm { display: none; }
   .ag-intro { flex-direction: column; }
   .ag-intro-edit { margin-left: 0; }
   .ev-card { flex-direction: column; gap: 7px; }
@@ -1091,8 +1093,9 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
   .tp3 .tp-preview { display: none; }
 }
 @media (max-width: 720px) {
-  /* mobilon egy oszlop van és CSAK AZ OLDAL gorget — a belso gorgetok kikapcsolva */
-  .tpv { overflow-y: auto; overflow-x: hidden; display: block; padding: 10px var(--pad) 40px; }
+  /* mobilon egy oszlop van és CSAK AZ OLDAL gorget — a belso gorgetok kikapcsolva;
+     a felso padding a tobbi nezettel azonos (18px), hogy a cim ne uljon feljebb */
+  .tpv { overflow-y: auto; overflow-x: hidden; display: block; padding: 18px var(--pad) 40px; }
   .tp-scroll { overflow: visible; border: 0; border-radius: 0; background: transparent; }
   .tp3 { grid-template-columns: 1fr; }
   /* drill-in: a listáról az előnézet külön lapként nyílik, ← vissza gombbal;

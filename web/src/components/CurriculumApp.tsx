@@ -999,7 +999,10 @@ export default function CurriculumApp() {
                 <div className="dr-eyebrow">{c.program} · {semLabel(c.semester)} · {x.type}</div>
                 <h2 className="dr-name">{x.name}</h2>
                 {x.specialization && <div className="dr-spec">{x.specialization}</div>}
-                <button className="btn btn--ink dr-edit-top" onClick={() => { setEditor({ ci: details.ci, xi: details.xi }); setDetails(null); }}>✎ Szerkesztés</button>
+                <div className="dr-actrow">
+                  <button className="btn btn--ink dr-edit-top" onClick={() => { setEditor({ ci: details.ci, xi: details.xi }); setDetails(null); }}>✎ Szerkesztés</button>
+                  <button className="btn" onClick={() => setDetails(null)}>✕ Bezárás</button>
+                </div>
               </div>
               <div className="dr-scroll">
               {catList(x).length > 0 && (
@@ -1031,6 +1034,7 @@ export default function CurriculumApp() {
               </div>
               <div className="dr-foot">
                 <button className="btn btn--ink dr-edit" onClick={() => { setEditor({ ci: details.ci, xi: details.xi }); setDetails(null); }}>✎ Szerkesztés</button>
+                <button className="btn" onClick={() => setDetails(null)}>✕ Bezárás</button>
               </div>
             </aside>
           </>

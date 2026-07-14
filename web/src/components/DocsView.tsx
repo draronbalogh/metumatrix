@@ -175,8 +175,10 @@ export default function DocsView({ q }: { q: string }) {
   const total = GROUPS.reduce((n, g) => n + g.docs.length, 0);
 
   return (
-    <section className="wrap orv docsv">
+    <section className="wrap orv orv--fixhead docsv">
       <PageHead title="📚 Segédletek és útmutatók" sub={`${total} dokumentum — mindig csak a LEGFRISSEBB kiadás · csak szerkesztő módban látszik`} />
+      {/* a cím a görgetőn KÍVÜL: görgetéskor semmi nem úszik a cím mögé/fölé */}
+      <div className="orv-scroll">
       {groups.map((g) => (
         <div key={g.cim}>
           <h3 className="tp-gh">{g.cim} <span className="tp-gcount">{g.docs.length}</span></h3>
@@ -202,6 +204,7 @@ export default function DocsView({ q }: { q: string }) {
       ))}
       {groups.length === 0 && <p className="tp-empty">Nincs a keresésnek megfelelő segédlet.</p>}
       <p className="tp-pv-hint">A kivonatok a dokumentumok tartalmából készültek; a teljes, hivatalos szöveghez az eredeti fájlt nyisd meg. A PDF-ek új lapon nyílnak, a pptx-ek letöltődnek. Régebbi kiadású segédletet nem tartunk kint — mindig az aktuális félévé érhető el.</p>
+      </div>
     </section>
   );
 }

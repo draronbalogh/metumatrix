@@ -1120,6 +1120,11 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 
 /* Orarend nezet */
 .orv { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding: 18px var(--pad) 48px; }
+/* Orarend + Segedletek: a cim a gorgeton KIVUL all — gorgeteskor semmi nem uszik
+   a cim moge/fole; EGYETLEN fuggoleges gorgeto: .orv-scroll */
+.orv--fixhead { overflow: hidden; display: flex; flex-direction: column; padding-bottom: 0; }
+.orv--fixhead > .cat-block-head { flex: none; }
+.orv-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad) 48px; }
 /* A felev kulcsdatumai az orarend tetejen (a hivatalos Tanev rendjebol) */
 .or-key { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .or-kd { font-size: .7rem; color: var(--ink-2); background: var(--card); border: 1px solid var(--line); border-radius: 9px; padding: 4px 9px; white-space: nowrap; }
@@ -1195,8 +1200,11 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
   .viewtoggle--nav button { flex: none; white-space: nowrap; text-align: center; padding: 8px 12px; }
 }
 
-/* Nevjegyzek nezetkent: a fomenu latszik felette, az oldal gorgeti (nem modal) */
-.pmv { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding: 18px var(--pad) 0; }
+/* Nevjegyzek nezetkent: a cim a gorgeton KIVUL all (mint a Levelek nezetben) —
+   gorgeteskor a tartalom nem uszik a cim moge/fole; EGYETLEN gorgeto: .pmv-scroll */
+.pmv { position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column; padding: 18px var(--pad) 0; }
+.pmv > .cat-block-head { flex: none; }
+.pmv-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad); }
 .pmv .pm-body { padding-bottom: 14px; }
 .pmv .pm-body { padding: 0; }
 .pmv .pm-toolbar { top: 0; border-radius: 0 0 10px 10px; }

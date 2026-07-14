@@ -123,13 +123,15 @@ export default function OrarendView({ knownNames, q, displayName, resolveCourse,
     name && !known.has(normName(name)) ? <span className="or-warn" title="Ez a név nem szerepel a ☎ Névjegyzékben — érdemes felvenni az elérhetőségét">⚠️</span> : null;
 
   return (
-    <section className="wrap orv">
+    <section className="wrap orv orv--fixhead">
       <PageHead title="Órarend" sub={`${data.cim} · ${list.length} óra, ${teacherCount} oktató`}>
         <div className="viewtoggle ag-mode or-mode">
           <button type="button" className={mode === 'list' ? 'is-on' : ''} onClick={() => setMode('list')}>≡ Lista</button>
           <button type="button" className={mode === 'cal' ? 'is-on' : ''} onClick={() => setMode('cal')}>▦ Naptár</button>
         </div>
       </PageHead>
+      {/* a cím a görgetőn KÍVÜL: görgetéskor semmi nem úszik a cím mögé/fölé */}
+      <div className="orv-scroll">
       <div className="or-key">
         {KEY_DATES.map((k) => (
           <span key={k.l} className="or-kd"><b>{k.l}</b> {k.d}</span>
@@ -239,6 +241,7 @@ export default function OrarendView({ knownNames, q, displayName, resolveCourse,
         </>
       )}
       <p className="tp-pv-hint">Forrás: {data.forras} · frissítve: {data.frissitve}. Csak a Média Design szak (magyar nyelvű BA + MA) órái — az animációs és angol nyelvű sorok az Excelből ki vannak szűrve a mintatanterv kurzuslistája alapján. Az oktatónevek a ☎ Névjegyzék szerinti írásmóddal (titulussal) jelennek meg; a ⚠️ jel oktatót jelöl, aki még nincs a Névjegyzékben. Az órákra kattintva a tárgy tantervi kártyája nyílik meg — ugyanaz, mint a Mátrixban és a Katalógusban. A heti táblában minden óra a kezdő idősávjában szerepel — a kártyán a pontos idő olvasható, a hosszabb (több sávot átfogó) óráké is.</p>
+      </div>
     </section>
   );
 }

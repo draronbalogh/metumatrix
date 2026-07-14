@@ -258,7 +258,8 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
     return (
       <section className="wrap pmv">
         <PageHead title="☎ Névjegyzék" sub="elérhetőségek: oktatók, hallgatók, intézményi / alumni / opponens / piaci kapcsolatok" />
-        {content}
+        {/* a cím a görgetőn KÍVÜL van: görgetéskor semmi nem úszik a cím mögé/fölé */}
+        <div className="pmv-scroll">{content}</div>
       </section>
     );
   }

@@ -30,6 +30,11 @@ const MapView = dynamic(() => import('./MapView'), {
   loading: () => <div style={{ height: 'calc(100vh - 132px)', display: 'grid', placeItems: 'center', color: 'var(--muted)', fontWeight: 700 }}>Térkép betöltése…</div>,
 });
 
+// nézet-sorrend a főmenü szerint — a mobil swipe-váltás és a vissza-gomb (history) is ezt használja
+const VIEW_ORDER = ['map', 'catalog', 'tasks', 'events', 'topics', 'people', 'orarend', 'it', 'docs'] as const;
+type ViewId = (typeof VIEW_ORDER)[number];
+const EDITONLY_VIEWS: readonly ViewId[] = ['topics', 'people', 'docs'];
+
 const LS_KEY = 'mediadesign-2026-27-v9';
 const AGENDA_LS_KEY = 'md-agenda-v1';
 const PEOPLE_LS_KEY = 'md-people-v1';
@@ -68,7 +73,7 @@ export default function CurriculumApp() {
   const agendaFileOk = useRef(false);
   const peopleFileOk = useRef(false);
 
-  const [view, setView] = useState<'map' | 'catalog' | 'tasks' | 'events' | 'topics' | 'orarend' | 'it' | 'docs' | 'people'>('map');
+  const [view, setView] = useState<ViewId>('map');
   const [agenda, setAgenda] = useState<Agenda>(DEFAULT_AGENDA);
   const [peopleDB, setPeopleDB] = useState<PeopleDB>(DEFAULT_PEOPLE);
   const [theme, setTheme] = useState<'light' | 'dark'>('light'); // alapértelmezés: világos téma
@@ -171,25 +176,104 @@ export default function CurriculumApp() {
   // nyitják ÚJ LAPON a Névjegyzéket; a szerkesztő-only nézetek csak sikeres auth után.
   useEffect(() => {
     try { localStorage.removeItem('mm-edit-key'); } catch { /* ignore */ }
-    const VIEWS = ['map', 'catalog', 'tasks', 'events', 'topics', 'orarend', 'it', 'docs', 'people'] as const;
-    const EDITONLY = ['topics', 'people', 'docs'];
-    let deepView: (typeof VIEWS)[number] | null = null;
+    let deepView: ViewId | null = null;
     try {
       const sp = new URLSearchParams(window.location.search);
       const v = sp.get('view');
-      if (v && (VIEWS as readonly string[]).includes(v)) deepView = v as (typeof VIEWS)[number];
+      if (v && (VIEW_ORDER as readonly string[]).includes(v)) deepView = v as ViewId;
       const dq = sp.get('q');
       if (dq) setQ(dq);
     } catch { /* ignore */ }
-    if (deepView && !EDITONLY.includes(deepView)) setView(deepView);
+    if (deepView && !EDITONLY_VIEWS.includes(deepView)) { histReplaceNext.current = true; setView(deepView); }
     fetch('/api/auth', { headers: editHeaders(), cache: 'no-store' })
       .then((r) => r.json())
       .then((j) => {
         setCanEdit(!!j.ok); canEditRef.current = !!j.ok;
-        if (j.ok && deepView && EDITONLY.includes(deepView)) setView(deepView);
+        if (j.ok && deepView && EDITONLY_VIEWS.includes(deepView)) { histReplaceNext.current = true; setView(deepView); }
       })
       .catch(() => { /* offline: marad az alapérték */ });
   }, []);
+  // MOBIL VISSZA-GOMB: minden nézetváltás history-bejegyzés (a vissza-gomb az appon
+  // BELÜL lépked vissza, nem lép ki azonnal); nyitott réteg (modál / részletező)
+  // esetén a vissza-gomb AZT zárja be, a nézet marad.
+  const viewRef = useRef<ViewId>(view);
+  viewRef.current = view;
+  const histFromPop = useRef(false);
+  const histReplaceNext = useRef(true); // az első (mount-kori) futás csak replace-el
+  const urlWithView = (v: ViewId) => {
+    const sp = new URLSearchParams(window.location.search);
+    sp.set('view', v);
+    return `${window.location.pathname}?${sp.toString()}`;
+  };
+  useEffect(() => {
+    if (histFromPop.current) { histFromPop.current = false; return; }
+    if (histReplaceNext.current) { histReplaceNext.current = false; window.history.replaceState({ v: view }, '', urlWithView(view)); return; }
+    window.history.pushState({ v: view }, '', urlWithView(view));
+  }, [view]);
+  const overlaysRef = useRef({ catMenu: false, editor: false, taskEdit: false, eventEdit: false, notify: false, introEdit: false, peopleEdit: false, loadOpen: false, details: false });
+  overlaysRef.current = { catMenu: !!catMenu, editor: !!editor, taskEdit: !!taskEdit, eventEdit: !!eventEdit, notify: !!notify, introEdit, peopleEdit, loadOpen, details: !!details };
+  useEffect(() => {
+    const onPop = (e: PopStateEvent) => {
+      const o = overlaysRef.current;
+      if (o.catMenu) setCatMenu(null);
+      else if (o.editor) setEditor(null);
+      else if (o.taskEdit) setTaskEdit(null);
+      else if (o.eventEdit) setEventEdit(null);
+      else if (o.notify) setNotify(null);
+      else if (o.introEdit) setIntroEdit(false);
+      else if (o.peopleEdit) setPeopleEdit(false);
+      else if (o.loadOpen) setLoadOpen(false);
+      else if (o.details) setDetails(null);
+      else {
+        const st = e.state as { v?: string } | null;
+        let v = st?.v ?? new URLSearchParams(window.location.search).get('view') ?? 'map';
+        if (!(VIEW_ORDER as readonly string[]).includes(v)) v = 'map';
+        if (EDITONLY_VIEWS.includes(v as ViewId) && !canEditRef.current) v = 'map';
+        histFromPop.current = true;
+        setView(v as ViewId);
+        return;
+      }
+      // réteg-zárás után a bejegyzést visszatoljuk, hogy a nézet ne változzon
+      window.history.pushState({ v: viewRef.current }, '', urlWithView(viewRef.current));
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+  // MOBIL SWIPE: vízszintes sodrás a tartalmon = váltás a szomszédos menüpontra.
+  // Kivétel: a Mátrix (ott a húzás pásztázás), a vízszintesen görgethető elemek
+  // (táblázat, chipsorok) és a beviteli mezők.
+  const touchRef = useRef<{ x: number; y: number; t: number; skip: boolean } | null>(null);
+  const onViewportTouchStart = (e: React.TouchEvent) => {
+    if (window.innerWidth > 720) { touchRef.current = null; return; }
+    const t = e.touches[0];
+    let skip = view === 'map';
+    let el = e.target as HTMLElement | null;
+    while (el && !skip) {
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable) skip = true;
+      else if (el.scrollWidth > el.clientWidth + 8) {
+        const ox = getComputedStyle(el).overflowX;
+        if (ox === 'auto' || ox === 'scroll') skip = true;
+      }
+      if (el.classList.contains('viewport')) break;
+      el = el.parentElement;
+    }
+    touchRef.current = { x: t.clientX, y: t.clientY, t: Date.now(), skip };
+  };
+  const onViewportTouchEnd = (e: React.TouchEvent) => {
+    const s = touchRef.current;
+    touchRef.current = null;
+    if (!s || s.skip) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - s.x;
+    const dy = t.clientY - s.y;
+    if (Date.now() - s.t > 600) return; // lassú húzás = görgetés, nem sodrás
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 2) return;
+    const order = VIEW_ORDER.filter((v) => canEdit || !EDITONLY_VIEWS.includes(v));
+    const i = order.indexOf(view);
+    if (i === -1) return;
+    const next = order[i + (dx < 0 ? 1 : -1)];
+    if (next) setView(next);
+  };
   useEffect(() => {
     document.documentElement.dataset.preset = preset;
     try { localStorage.setItem(PRESET_KEY, preset); } catch { /* ignore */ }
@@ -875,7 +959,7 @@ export default function CurriculumApp() {
             </div>
           </div>
         ) : (
-        <div className="viewport">
+        <div className="viewport" onTouchStart={onViewportTouchStart} onTouchEnd={onViewportTouchEnd}>
           {loadState === 'ls-fallback' && (
             <div className="load-banner">
               ⚠ {loadErr} A böngészőben mentett helyi vázlatot látod — a fájlba mentés ki van kapcsolva.

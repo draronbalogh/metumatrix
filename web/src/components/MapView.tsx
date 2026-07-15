@@ -210,6 +210,9 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
     let t: number | null = null;
     let lastW = window.innerWidth;
     const onResize = () => {
+      // rejtett (másik nézet mögötti) térképen az illesztés nulla méretre futna → NaN-os
+      // SVG-attribútumok; ilyenkor csak a szélességet jegyezzük meg, nem illesztünk
+      if (!active) { lastW = window.innerWidth; return; }
       if (Math.abs(window.innerWidth - lastW) < 120) return;
       lastW = window.innerWidth;
       if (t) window.clearTimeout(t);
@@ -217,7 +220,7 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
     };
     window.addEventListener('resize', onResize);
     return () => { window.removeEventListener('resize', onResize); if (t) window.clearTimeout(t); };
-  }, [smartFit]);
+  }, [smartFit, active]);
 
   const onConnect = useCallback((c: Connection) => {
     if (!c.source || !c.target) return;

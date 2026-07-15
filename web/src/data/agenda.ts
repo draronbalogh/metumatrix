@@ -112,6 +112,10 @@ export const emptyTask = (): AgendaTask => ({
 export const taskSteps = (t: AgendaTask): TaskStep[] =>
   t.steps ?? (t.ideas ?? []).filter(Boolean).map((text) => ({ text, done: false }));
 export const stepsDone = (t: AgendaTask): number => taskSteps(t).filter((s) => s.done).length;
+// rövid magyar dátum ISO-ból: "2026-08-12" → "aug. 12."
+const HU_MON = ['jan.', 'febr.', 'márc.', 'ápr.', 'máj.', 'jún.', 'júl.', 'aug.', 'szept.', 'okt.', 'nov.', 'dec.'];
+export const fmtDayHu = (d?: string | null): string =>
+  d && d.length >= 10 ? `${HU_MON[Number(d.slice(5, 7)) - 1] ?? ''} ${Number(d.slice(8, 10))}.` : '';
 export const emptyEvent = (): AgendaEvent => ({
   id: `e-${Date.now().toString(36)}`,
   title: '', when: '', sort: null, day: null, dayEnd: null, featured: false, note: null, place: null, owner: DEFAULT_OWNER, people: [],

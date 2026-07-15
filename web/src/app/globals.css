@@ -1454,6 +1454,65 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .load-pane--err p { max-width: 560px; font-weight: 600; line-height: 1.5; margin: 0; }
 .load-banner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 10px var(--pad) 0; padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--line)); border-radius: 10px; background: color-mix(in srgb, var(--danger) 8%, var(--card)); font-size: .82rem; font-weight: 700; }
 
+/* ============ TOMOR AGENDA-KARTYAK (Feladatok + Esemenyek) ============
+   2 sor: cim-sor (pipa + cim + prioritas) es meta-sor (datum, felelos,
+   alfeladat-szamlalo, level-szamlalo) — minden reszlet a reszletezoben */
+.agc { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px 11px; cursor: pointer; }
+.agc .agc-top { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+.agc .agc-title { flex: 1; min-width: 0; font-weight: 800; color: var(--ink); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.agc .ag-prio { flex: none; }
+.agc .ag-check { flex: none; margin-top: 1px; }
+.agc-meta { display: flex; flex-wrap: wrap; gap: 3px 12px; font-size: .74rem; font-weight: 600; color: var(--ink-2); padding-left: 26px; min-width: 0; }
+.agc-meta.noindent { padding-left: 0; }
+.agc-meta .m { white-space: nowrap; }
+.agc-meta .m.ok { color: var(--g0); }
+.agc-meta .m.warn { color: color-mix(in srgb, var(--yellow-deep) 75%, var(--ink)); }
+.agc-meta .m.doing { color: var(--g1); }
+.agc-meta .m.ev { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+/* prioritas-jelzes bal szinsavkent */
+.agc.prio-high { border-left: 4px solid var(--danger); }
+.agc.prio-normal { border-left: 4px solid color-mix(in srgb, var(--g1) 55%, var(--line)); }
+.agc.prio-low { border-left: 4px solid var(--line-2); }
+.agc.is-doing { background: color-mix(in srgb, var(--g1) 5%, var(--card)); }
+.agc.is-featured { border-color: color-mix(in srgb, var(--yellow-deep) 55%, var(--line)); border-left: 4px solid var(--yellow-deep); }
+
+/* ============ AGENDA-RESZLETEZO (drawer) ============
+   szakaszfejek a szerkeszto-fulek szinvilagaval: sarga=alfeladatok,
+   kek=emberek, zold=levelezes */
+.dr-sec { margin: 18px 0 8px; padding: 5px 10px; border-left: 4px solid var(--g1); background: color-mix(in srgb, var(--g1) 8%, transparent); border-radius: 6px; font-size: .72rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--ink); }
+.dr-sec.c-yellow { border-left-color: var(--yellow-deep); background: color-mix(in srgb, var(--yellow-deep) 10%, transparent); }
+.dr-sec.c-green { border-left-color: var(--g0); background: color-mix(in srgb, var(--g0) 8%, transparent); }
+.dr-empty { font-size: .8rem; color: var(--muted); font-style: italic; margin: 4px 0 10px; }
+.dr-link { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; text-align: left; }
+.dr-link:hover { color: var(--g1); }
+.dr-steps { list-style: none; margin: 4px 0 10px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.dr-steps li { display: flex; align-items: flex-start; gap: 8px; font-size: .88rem; line-height: 1.35; }
+.dr-steps li.is-done .tx { text-decoration: line-through; color: var(--muted); }
+.dr-steps .tx { flex: 1; min-width: 0; }
+.dr-steps .ag-smeta { flex: none; }
+.dr-task, .dr-letter { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--card); border-radius: 9px; padding: 7px 10px; margin-bottom: 6px; cursor: pointer; font-size: .85rem; color: var(--ink); }
+.dr-task:hover { border-color: var(--g1); }
+.dr-letter:hover { border-color: var(--g0); }
+.dr-task .dot { width: 9px; height: 9px; border-radius: 999px; background: var(--muted); flex: none; }
+.dr-task.st-done .dot { background: var(--g0); }
+.dr-task.st-doing .dot { background: var(--g1); }
+.dr-task .t, .dr-letter .t { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dr-task .m, .dr-letter .m { flex: none; font-size: .72rem; color: var(--ink-2); white-space: nowrap; }
+.dr-addtask { margin: 2px 0 12px; }
+.dr-person { margin-bottom: 12px; }
+.dr-person-h { display: flex; align-items: center; gap: 8px; }
+.dr-person-role { font-size: .66rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--brand-text); }
+.dr-person-steps { list-style: none; margin: 5px 0 0; padding: 0 0 0 8px; display: flex; flex-direction: column; gap: 4px; }
+.dr-person-steps li { display: flex; gap: 7px; align-items: baseline; font-size: .82rem; line-height: 1.35; }
+.dr-person-steps li.is-done .tx { text-decoration: line-through; color: var(--muted); }
+.dr-person-steps .dt { flex: none; color: var(--ink-2); }
+.dr-person-steps .tx { flex: 1; min-width: 0; }
+.dr-person-steps .du { flex: none; font-size: .72rem; color: var(--ink-2); }
+.dr-person-none { font-size: .74rem; color: var(--muted); font-style: italic; margin: 3px 0 0 8px; }
+.dr-lst { flex: none; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 999px; font-size: .7rem; font-weight: 800; }
+.dr-lst.draft { background: color-mix(in srgb, var(--yellow-deep) 20%, transparent); color: color-mix(in srgb, var(--yellow-deep) 80%, var(--ink)); }
+.dr-lst.sent { background: color-mix(in srgb, var(--g0) 18%, transparent); color: var(--g0); }
+
 /* Katalogus mobilon: kompakt felev-fejlecek — a program-fej (BA/MA) kicsi,
    a felev + az osszesito (targy/kredit/ora) EGY karcsu sorban, kis paddingokkal */
 @media (max-width: 720px) {

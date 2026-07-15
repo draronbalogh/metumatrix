@@ -1,48 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import { Agenda, AgendaEvent, STATUS_LABEL, eventHasPerson } from '@/data/agenda';
-import { PersonKind } from '@/data/people';
+import { Agenda, AgendaEvent, eventHasPerson, fmtDayHu } from '@/data/agenda';
 import EventsCalendar from './EventsCalendar';
-import { PersonChip } from './AgendaView';
+import { familyName } from './AgendaView';
 import PageHead from './PageHead';
 
 interface Props {
   agenda: Agenda;
   q: string;
   instr: string;                          // aktív név-szűrő — üres = mindenki
-  kindOf: Record<string, PersonKind>;     // név -> Tanár/Hallgató badge
   letterStats: Record<string, { n: number; drafts: number }>; // esemény-id → kapcsolt levelek száma / vázlatok
   onAdd: () => void;
-  onEdit: (id: string) => void;
-  onEditTask: (id: string) => void;       // eseményhez kötött feladat megnyitása
-  onAddTaskFor: (eventId: string) => void; // új feladat rögtön ehhez az eseményhez kötve
+  onOpen: (id: string) => void;           // az esemény RÉSZLETEZŐJE (drawer) — innen nyílik minden más
   onPerson: (name: string) => void;
-  onNotify: (id: string) => void;         // értesítés az esemény résztvevőinek
-  emailFor: (name: string) => string | null; // a Névjegyzékből — a Meet-meghívó vendégeihez
 }
 
-// Google Naptár-esemény előtöltve Meet videohívással (vcon=meet): cím, időpont,
-// helyszín, leírás és a résztvevők email-címei már ki vannak töltve, csak menteni kell.
-const meetUrl = (e: AgendaEvent, emails: string[]): string => {
-  const p = new URLSearchParams({ text: e.title, vcon: 'meet', hl: 'hu' });
-  if (e.day) {
-    // ha a "when" szövegben van óra:perc, azt vesszük kezdésnek, különben 9:00; hossz 1 óra
-    const m = e.when.match(/(\d{1,2})[:.](\d{2})/);
-    const h = m ? Math.min(23, parseInt(m[1], 10)) : 9;
-    const mi = m ? m[2] : '00';
-    const d = e.day.replace(/-/g, '');
-    const hh = String(h).padStart(2, '0');
-    const he = String(Math.min(23, h + 1)).padStart(2, '0');
-    p.set('dates', `${d}T${hh}${mi}00/${d}T${he}${mi}00`);
-  }
-  if (e.place) p.set('location', e.place);
-  if (e.note) p.set('details', e.note);
-  if (emails.length > 0) p.set('add', emails.join(','));
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&${p.toString()}`;
-};
-
-export default function EventsView({ agenda, q, instr, kindOf, letterStats, onAdd, onEdit, onEditTask, onAddTaskFor, onPerson, onNotify, emailFor }: Props) {
+export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpen, onPerson }: Props) {
   const [mode, setMode] = useState<'list' | 'cal'>('cal'); // alapból a naptár nyílik
 
   const matches = (e: AgendaEvent) => {
@@ -92,60 +66,25 @@ export default function EventsView({ agenda, q, instr, kindOf, letterStats, onAd
 
 
       {mode === 'cal' ? (
-        <EventsCalendar events={shown} onEdit={onEdit} />
+        <EventsCalendar events={shown} onEdit={onOpen} />
       ) : (
-        <div className="ev-list">
+        <div className="cc-grid">
           {shown.map((e) => {
             const linked = tasksFor(e.id);
             const doneN = linked.filter((t) => t.status === 'done').length;
+            const ls = letterStats[e.id];
             return (
-              <article key={e.id} className={`cc-card ev-card${e.featured ? ' is-featured' : ''}`} onClick={() => onEdit(e.id)}>
-                <div className="ev-when">{e.when}{e.day && <span className="ev-day">{Number(e.day.slice(8, 10))}.</span>}</div>
-                <div className="ev-body">
-                  <div className="cc-name">
-                    {e.featured && <span className="ev-star" title="Kiemelt esemény">★ </span>}
-                    {e.title}
-                    {linked.length > 0 && (
-                      <span className={`ev-progress${doneN === linked.length ? ' all-done' : ''}`} title="Kapcsolt feladatok készültsége">
-                        {doneN}/{linked.length} kész
-                      </span>
-                    )}
-                    {letterStats[e.id] && (
-                      <button className={`ag-mailsum${letterStats[e.id].drafts ? ' has-draft' : ''}`}
-                        title={`${letterStats[e.id].n} kapcsolt levél${letterStats[e.id].drafts ? `, ebből ${letterStats[e.id].drafts} vázlat` : ''} — megnyitás a levélíróban`}
-                        onClick={(ev) => { ev.stopPropagation(); onNotify(e.id); }}>✉ {letterStats[e.id].n}</button>
-                    )}
-                  </div>
-                  {e.note && <div className="cc-desc">{e.note}</div>}
-                  {(e.place || e.owner || e.people.length > 0) && (
-                    <div className="cc-meta">
-                      {e.place && <span className="cc-tag">📍 {e.place}</span>}
-                      {e.owner && (
-                        <PersonChip name={e.owner} star on={instr === e.owner} kind={kindOf[e.owner]} onClick={() => onPerson(e.owner as string)} />
-                      )}
-                      {e.people.map((p) => (
-                        <PersonChip key={p} name={p} on={instr === p} kind={kindOf[p]} onClick={() => onPerson(p)} />
-                      ))}
-                    </div>
-                  )}
-                  <div className="ev-tasks">
-                    {linked.map((t) => (
-                      <button key={t.id} className={`ev-task st-${t.status}`} title={`${STATUS_LABEL[t.status]} — megnyitás`}
-                        onClick={(ev) => { ev.stopPropagation(); onEditTask(t.id); }}>
-                        <span className="dot" />{t.title}
-                      </button>
-                    ))}
-                    <button className="ev-task add" title="Új feladat ehhez az eseményhez"
-                      onClick={(ev) => { ev.stopPropagation(); onAddTaskFor(e.id); }}>+ feladat</button>
-                    <button className="ev-task notify" title="Értesítés küldése a résztvevőknek"
-                      onClick={(ev) => { ev.stopPropagation(); onNotify(e.id); }}>✉ értesítés</button>
-                    <button className="ev-task meet" title="Google Meet találkozó szervezése: naptár-esemény előtöltve videohívással, résztvevőkkel"
-                      onClick={(ev) => {
-                        ev.stopPropagation();
-                        const emails = [e.owner, ...e.people].filter((n): n is string => !!n).map(emailFor).filter((x): x is string => !!x);
-                        window.open(meetUrl(e, [...new Set(emails)]), '_blank', 'noopener');
-                      }}>📹 Meet</button>
-                  </div>
+              // TÖMÖR kártya: cím-sor + meta-sor — minden részlet a részletezőben (koppintásra)
+              <article key={e.id} className={`cc-card agc${e.featured ? ' is-featured' : ''}`} onClick={() => onOpen(e.id)}>
+                <div className="agc-top">
+                  <span className="agc-title">{e.featured && <span className="ev-star" title="Kiemelt esemény">★ </span>}{e.title}</span>
+                </div>
+                <div className="agc-meta noindent">
+                  <span className="m">🕑 {e.day ? `${fmtDayHu(e.day)}${e.dayEnd ? ` – ${fmtDayHu(e.dayEnd)}` : ''}` : e.when}</span>
+                  {e.place && <span className="m">📍 {e.place}</span>}
+                  {e.owner && <span className="m">👤 {familyName(e.owner)}{e.people.length > 0 ? ` +${e.people.length}` : ''}</span>}
+                  {linked.length > 0 && <span className={`m${doneN === linked.length ? ' ok' : ''}`}>▤ {doneN}/{linked.length} feladat</span>}
+                  {ls && <span className={`m${ls.drafts ? ' warn' : ''}`}>✉ {ls.n}</span>}
                 </div>
               </article>
             );

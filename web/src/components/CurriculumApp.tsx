@@ -9,6 +9,7 @@ import CatalogView from './CatalogView';
 import EditModal from './EditModal';
 import AgendaView from './AgendaView';
 import EventsView from './EventsView';
+import AgendaDrawer, { AgendaDetailsRef } from './AgendaDrawer';
 import ITView from './ITView';
 import DocsView from './DocsView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
@@ -96,6 +97,7 @@ export default function CurriculumApp() {
   const [catMenu, setCatMenu] = useState<{ ci: number; xi: number; x: number; y: number } | null>(null);
   const [taskEdit, setTaskEdit] = useState<{ t: AgendaTask; isNew: boolean } | null>(null);
   const [eventEdit, setEventEdit] = useState<{ e: AgendaEvent; isNew: boolean } | null>(null);
+  const [agendaDetails, setAgendaDetails] = useState<AgendaDetailsRef | null>(null); // feladat/esemény részletező
   const [introEdit, setIntroEdit] = useState(false);
   const [peopleEdit, setPeopleEdit] = useState(false);
   const [notify, setNotify] = useState<NotifyTarget | null>(null);
@@ -242,8 +244,8 @@ export default function CurriculumApp() {
     if (histReplaceNext.current) { histReplaceNext.current = false; window.history.replaceState({ v: view }, '', urlWithView(view)); return; }
     window.history.pushState({ v: view }, '', urlWithView(view));
   }, [view]);
-  const overlaysRef = useRef({ catMenu: false, editor: false, taskEdit: false, eventEdit: false, notify: false, introEdit: false, peopleEdit: false, loadOpen: false, details: false });
-  overlaysRef.current = { catMenu: !!catMenu, editor: !!editor, taskEdit: !!taskEdit, eventEdit: !!eventEdit, notify: !!notify, introEdit, peopleEdit, loadOpen, details: !!details };
+  const overlaysRef = useRef({ catMenu: false, editor: false, taskEdit: false, eventEdit: false, notify: false, introEdit: false, peopleEdit: false, loadOpen: false, agDetails: false, details: false });
+  overlaysRef.current = { catMenu: !!catMenu, editor: !!editor, taskEdit: !!taskEdit, eventEdit: !!eventEdit, notify: !!notify, introEdit, peopleEdit, loadOpen, agDetails: !!agendaDetails, details: !!details };
   useEffect(() => {
     const onPop = (e: PopStateEvent) => {
       const o = overlaysRef.current;
@@ -255,6 +257,7 @@ export default function CurriculumApp() {
       else if (o.introEdit) setIntroEdit(false);
       else if (o.peopleEdit) setPeopleEdit(false);
       else if (o.loadOpen) setLoadOpen(false);
+      else if (o.agDetails) setAgendaDetails(null);
       else if (o.details) setDetails(null);
       else {
         const st = e.state as { v?: string } | null;
@@ -1026,27 +1029,20 @@ export default function CurriculumApp() {
             <CatalogView data={data} filter={filter} view={vp} onDetails={onDetails} onEdit={onEdit} onAdd={onAdd} onInstructor={onInstructor} onCategory={onCategory} onCatEdit={onCatEdit} displayName={canonName} />
           ) : view === 'tasks' ? (
             <AgendaView
-              agenda={agenda} q={q} instr={instr} taught={taught} kindOf={kindOf} letterStats={letterStats}
+              agenda={agenda} q={q} instr={instr} taught={taught} letterStats={letterStats}
               onAdd={() => { if (!canEdit) return; setTaskEdit({ t: emptyTask(), isNew: true }); }}
-              onEdit={(id) => { if (!canEdit) return; const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
+              onOpen={(id) => setAgendaDetails({ kind: 'task', id })}
               onEditIntro={() => { if (!canEdit) return; setIntroEdit(true); }}
               onPerson={onInstructor}
-              onNotify={notifyTask}
               onToggleDone={toggleDone}
-              onToggleDoing={toggleDoing}
               onCyclePriority={cyclePriority}
-              onToggleStep={toggleStep}
             />
           ) : view === 'events' ? (
             <EventsView
-              agenda={agenda} q={q} instr={instr} kindOf={kindOf} letterStats={letterStats}
+              agenda={agenda} q={q} instr={instr} letterStats={letterStats}
               onAdd={() => { if (!canEdit) return; setEventEdit({ e: emptyEvent(), isNew: true }); }}
-              onEdit={(id) => { if (!canEdit) return; const e = agendaRef.current.events.find((x) => x.id === id); if (e) setEventEdit({ e, isNew: false }); }}
-              onEditTask={(id) => { if (!canEdit) return; const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
-              onAddTaskFor={addTaskForEvent}
+              onOpen={(id) => setAgendaDetails({ kind: 'event', id })}
               onPerson={onInstructor}
-              onNotify={notifyEvent}
-              emailFor={(n) => emailOf(peopleDB, n)}
             />
           ) : view === 'people' ? (
             // csak betöltött adattal mountolunk: a PeopleModal szerkesztőként mount-kor
@@ -1175,6 +1171,33 @@ export default function CurriculumApp() {
           </>
         );
       })()}
+
+      {/* feladat/esemény részletező — a tömör kártyákról ide nyílik minden részlet */}
+      {agendaDetails && (
+        <AgendaDrawer
+          det={agendaDetails}
+          agenda={agenda}
+          letters={(agenda.letters || []).filter((l) => l.targetId === agendaDetails.id)}
+          kindOf={kindOf}
+          canEdit={canEdit}
+          emailFor={(n) => emailOf(peopleDB, n)}
+          onClose={() => setAgendaDetails(null)}
+          onEdit={() => {
+            const d = agendaDetails;
+            setAgendaDetails(null);
+            if (!canEditRef.current || !d) return;
+            if (d.kind === 'task') { const t = agendaRef.current.tasks.find((x) => x.id === d.id); if (t) setTaskEdit({ t, isNew: false }); }
+            else { const e = agendaRef.current.events.find((x) => x.id === d.id); if (e) setEventEdit({ e, isNew: false }); }
+          }}
+          onOpenTask={(id) => setAgendaDetails({ kind: 'task', id })}
+          onOpenEvent={(id) => setAgendaDetails({ kind: 'event', id })}
+          onToggleStep={toggleStep}
+          onPerson={(n) => { setAgendaDetails(null); onInstructor(n); }}
+          onNotify={() => { if (agendaDetails.kind === 'task') notifyTask(agendaDetails.id); else notifyEvent(agendaDetails.id); }}
+          onOpenLetter={openSavedLetter}
+          onAddTaskFor={(eid) => { setAgendaDetails(null); addTaskForEvent(eid); }}
+        />
+      )}
 
       {editor && (() => {
         const isNew = editor.xi < 0;

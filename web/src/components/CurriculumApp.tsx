@@ -54,6 +54,26 @@ type SaveState =
 
 interface Ref2 { ci: number; xi: number; }
 
+// Teljes képernyő webkit-tartalékokkal (Safari/iPad); iPhone Safarin az API nem létezik
+type FsElement = HTMLElement & { webkitRequestFullscreen?: () => void };
+type FsDocument = Document & { webkitExitFullscreen?: () => void; webkitFullscreenElement?: Element | null };
+const fsElement = (): Element | null =>
+  document.fullscreenElement ?? (document as FsDocument).webkitFullscreenElement ?? null;
+const fsSupportedNow = (): boolean => {
+  const el = document.documentElement as FsElement;
+  return typeof el.requestFullscreen === 'function' || typeof el.webkitRequestFullscreen === 'function';
+};
+const enterFs = () => {
+  const el = document.documentElement as FsElement;
+  if (typeof el.requestFullscreen === 'function') el.requestFullscreen().catch(() => { /* ignore */ });
+  else el.webkitRequestFullscreen?.();
+};
+const exitFs = () => {
+  const d = document as FsDocument;
+  if (typeof document.exitFullscreen === 'function') document.exitFullscreen().catch(() => { /* ignore */ });
+  else d.webkitExitFullscreen?.();
+};
+
 export default function CurriculumApp() {
   const [data, setData] = useState<Curriculum>(DEFAULT_DATA);
   const [hydrated, setHydrated] = useState(false);
@@ -169,23 +189,27 @@ export default function CurriculumApp() {
   const [isFs, setIsFs] = useState(false);
   const [fsSupported, setFsSupported] = useState(false);
   useEffect(() => {
-    setFsSupported(typeof document.documentElement.requestFullscreen === 'function');
-    const onFs = () => setIsFs(!!document.fullscreenElement);
+    setFsSupported(fsSupportedNow());
+    const onFs = () => setIsFs(!!fsElement());
     document.addEventListener('fullscreenchange', onFs);
-    return () => document.removeEventListener('fullscreenchange', onFs);
+    document.addEventListener('webkitfullscreenchange', onFs);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFs);
+      document.removeEventListener('webkitfullscreenchange', onFs);
+    };
   }, []);
   const toggleFs = useCallback(() => {
-    if (document.fullscreenElement) void document.exitFullscreen();
-    else document.documentElement.requestFullscreen().catch(() => { /* pl. iOS: nem támogatott */ });
+    if (fsElement()) exitFs();
+    else enterFs();
   }, []);
   useEffect(() => {
     if (window.innerWidth > 720) return;
-    if (typeof document.documentElement.requestFullscreen !== 'function') return;
+    if (!fsSupportedNow()) return;
     let done = false;
     const onFirst = () => {
       if (done) return;
       done = true; // laponként csak EGYSZER — ha a felhasználó kilép, nem erőltetjük újra
-      document.documentElement.requestFullscreen().catch(() => { /* ignore */ });
+      enterFs();
       window.removeEventListener('touchend', onFirst);
       window.removeEventListener('click', onFirst);
     };
@@ -881,7 +905,6 @@ export default function CurriculumApp() {
             <div>
               <div className="kicker">METU · Animáció és Média Design Tanszék <span className="kicker-name">Dr. Balogh Áron</span></div>
               <h1 className="title">Média Design {prog === 'ALL' ? 'BA + MA' : prog} · {ver === 'régi (korábbi)' ? 'régi mintatanterv' : ver}</h1>
-              <div className="subtitle">Tanulmányi mátrix — ahogy a félévek és a tárgyak egymásra épülnek · kösd össze, szerkeszd, mentsd</div>
             </div>
           </div>
         </div>

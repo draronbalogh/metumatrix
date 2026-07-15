@@ -35,7 +35,7 @@
   --shadow-1: 0 1px 2px rgba(16, 17, 20, .05);
   --shadow-2: 0 1px 2px rgba(16, 17, 20, .04), 0 14px 32px -16px rgba(16, 17, 20, .18);
   --head-ls: -.015em;
-  --pad: clamp(16px, 2.4vw, 34px);
+  --pad: clamp(12px, 1.6vw, 20px); /* szukebb keret — a logo/menu ne uljon melyen bent */
 }
 
 /* ---- presets (font + feel) ---- */
@@ -69,19 +69,18 @@ body {
 .brandmark .logo { width: 30px; height: 30px; border: 1.5px solid var(--brand); color: var(--brand-text); border-radius: 8px; display: grid; place-items: center; font-family: var(--ff-display); font-weight: 700; font-size: 15px; flex: none; }
 .kicker { font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--brand-text); }
 /* a név hangsúlyos jelvényben a fejléc első sorában */
-.kicker-name { display: inline-block; margin-left: 7px; padding: 2.5px 10px; border-radius: 999px; background: var(--brand); color: #fff; font-weight: 800; letter-spacing: .1em; }
+.kicker-name { display: inline-block; margin-left: 7px; padding: 2.5px 10px; border-radius: 999px; background: var(--hot); color: #fff; font-weight: 800; letter-spacing: .1em; }
 .title { margin: 1px 0 0; font-family: var(--ff-display); font-weight: 700; font-size: clamp(1.05rem, .8rem + 1vw, 1.4rem); line-height: 1.08; letter-spacing: var(--head-ls); color: var(--ink); }
 .subtitle { margin-top: 1px; font-size: .74rem; color: var(--ink-2); }
 
 /* ---- toolbar ---- */
 .toolbar { flex: none; background: var(--card); border-bottom: 1px solid var(--line); }
-.toolbar__inner { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; padding: 6px 0; }
-/* menü/fül-váltók: visszafogott, szögletes fülek — az aktívat a piros alávonás jelöli,
-   a fül alja EGYENES (a lekerekített alj + vonal kombináció gyerekesen hatott) */
-.viewtoggle { display: inline-flex; background: var(--paper-2); border: 1px solid var(--line); border-radius: 6px; padding: 2px; gap: 1px; }
-.viewtoggle button { border: 0; background: transparent; font-family: var(--ff); font-size: .82rem; font-weight: 600; padding: 6px 15px; border-radius: 0; cursor: pointer; color: var(--ink-2); }
-.viewtoggle button:first-child { border-radius: 4px 0 0 4px; }
-.viewtoggle button:last-child { border-radius: 0 4px 4px 0; }
+/* az oldalso padding a .wrap-pel azonos (var(--pad)) — a menu a logoval EGY vonalban kezdodik */
+.toolbar__inner { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; padding: 6px var(--pad); }
+/* menü/fül-váltók: visszafogott, szögletes fülek — az aktívat a piros alávonás jelöli.
+   NINCS belső padding/gap: a kijelölés a menü TELJES magasságát kitölti */
+.viewtoggle { display: inline-flex; background: var(--paper-2); border: 1px solid var(--line); border-radius: 6px; padding: 0; gap: 0; overflow: hidden; }
+.viewtoggle button { border: 0; background: transparent; font-family: var(--ff); font-size: .82rem; font-weight: 600; padding: 8px 15px; border-radius: 0; cursor: pointer; color: var(--ink-2); }
 .viewtoggle button.is-on { background: var(--card); color: var(--hot); font-weight: 800; box-shadow: inset 0 -2px 0 var(--hot); }
 .search { flex: 1 1 200px; max-width: 300px; padding: 8px 12px 8px 32px; font-family: var(--ff); font-size: .9rem; color: var(--ink); background: var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%239a9ca2' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.6' y2='16.6'/%3E%3C/svg%3E") no-repeat 11px center; border: 1px solid var(--line); border-radius: 10px; }
 .search:focus { outline: 2px solid color-mix(in srgb, var(--brand) 35%, transparent); outline-offset: 1px; border-color: var(--brand); }

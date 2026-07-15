@@ -160,7 +160,8 @@ body {
 .cn-card { position: relative; width: 248px; background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card); padding: 11px 13px 12px 15px; box-shadow: var(--shadow-1); cursor: pointer; transition: box-shadow .14s, border-color .14s; }
 .cn-card:hover { box-shadow: var(--shadow-2); border-color: var(--line-2); }
 .cn-card.dim { opacity: .18; filter: saturate(.5); }
-.react-flow__node.selected .cn-card, .cn-card.hit { box-shadow: 0 0 0 3px var(--brand), 0 10px 24px -8px rgba(215, 20, 75, .35); border-color: transparent; }
+/* kijeloles a matrixon: PIROS (a szurke alap itt nem ad eleg kontrasztot) */
+.react-flow__node.selected .cn-card, .cn-card.hit { box-shadow: 0 0 0 3px var(--hot), 0 10px 24px -8px rgba(215, 20, 75, .35); border-color: transparent; }
 .cn-card.hit { z-index: 1; }
 .cn-accent { position: absolute; left: 0; top: 7px; bottom: 7px; width: 3px; background: var(--brand); border-radius: 3px; }
 /* ---- besorolás-színek: közös=zöld(g0) · multimédia=kék(g1) · játék=lila(g2) · elmélet=sárga(g3) ---- */
@@ -227,8 +228,8 @@ body {
 .react-flow__handle.hdl.out { background: var(--brand); }
 .react-flow__handle.hdl.in { background: var(--card); box-shadow: inset 0 0 0 2.5px var(--brand); }
 /* megjelenés (szín/gyűrű) — pozíciótól független */
-.cn-card:hover .react-flow__handle.hdl { opacity: 1; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 14%, transparent); }
-.cn-card:hover .react-flow__handle.hdl.in { box-shadow: inset 0 0 0 2.5px var(--brand), 0 0 0 3px color-mix(in srgb, var(--brand) 14%, transparent); }
+.cn-card:hover .react-flow__handle.hdl { opacity: 1; box-shadow: 0 0 0 3px color-mix(in srgb, var(--hot) 14%, transparent); }
+.cn-card:hover .react-flow__handle.hdl.in { box-shadow: inset 0 0 0 2.5px var(--hot), 0 0 0 3px color-mix(in srgb, var(--hot) 14%, transparent); }
 .react-flow__handle.hdl:hover { opacity: 1 !important; cursor: crosshair; box-shadow: 0 0 0 5px color-mix(in srgb, var(--brand) 24%, transparent); }
 .react-flow__handle.hdl.in:hover { box-shadow: inset 0 0 0 2.5px var(--brand), 0 0 0 5px color-mix(in srgb, var(--brand) 24%, transparent); }
 /* növekedés a SAJÁT középpont körül — a React Flow középre-igazító translate-jét megtartva (különben elugrik) */
@@ -236,7 +237,7 @@ body {
 .cn-card:hover .react-flow__handle-left.hdl, .cn-card:hover .react-flow__handle-right.hdl { transform: translate(0, -50%) scale(1.6); }
 .react-flow__handle-top.hdl:hover, .react-flow__handle-bottom.hdl:hover { transform: translate(-50%, 0) scale(2.3) !important; }
 .react-flow__handle-left.hdl:hover, .react-flow__handle-right.hdl:hover { transform: translate(0, -50%) scale(2.3) !important; }
-.react-flow__edge.selected .react-flow__edge-path { stroke: var(--brand) !important; stroke-width: 3 !important; }
+.react-flow__edge.selected .react-flow__edge-path { stroke: var(--hot) !important; stroke-width: 3 !important; }
 .react-flow__edge.edge-dim { opacity: .1; }
 .react-flow__attribution { display: none; }
 .react-flow__controls { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow-1); }
@@ -530,7 +531,7 @@ html[data-theme='dark'] .ag-prio.normal { color: #fff; }
 html[data-theme='dark'] .ag-grp.prio-normal { color: #fff; }
 html[data-theme='dark'] .f-sec.c-yellow { color: #fff; }
 html[data-theme='dark'] .cn-card:hover, html[data-theme='dark'] .cc-card:hover { box-shadow: 0 0 0 1px var(--line-2), 0 0 26px rgba(255, 45, 111, .18); }
-html[data-theme='dark'] .react-flow__node.selected .cn-card, html[data-theme='dark'] .cn-card.hit { box-shadow: 0 0 0 2px var(--brand), 0 0 24px rgba(255, 45, 111, .3); }
+html[data-theme='dark'] .react-flow__node.selected .cn-card, html[data-theme='dark'] .cn-card.hit { box-shadow: 0 0 0 2px var(--hot), 0 0 24px rgba(255, 45, 111, .3); }
 html[data-theme='dark'] .prog-rail { box-shadow: 0 0 26px rgba(255, 45, 111, .22); }
 html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 

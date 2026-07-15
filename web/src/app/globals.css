@@ -1053,7 +1053,8 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .tpv { position: absolute; inset: 0; overflow: hidden; padding: 18px var(--pad) 14px; display: flex; flex-direction: column; }
 /* (a régi tp-headrow/tp-title fejléc-minta megszűnt — mindenhol a PageHead / .cat-block-head él) */
 .tpv > .cat-block-head { flex: none; }
-.tp3 { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(250px, 320px) minmax(240px, 340px) minmax(360px, 1fr); gap: 12px; align-items: stretch; }
+/* ÍRÁS-KÖZPONTÚ: keskeny lista + NAGY szerkesztő (nincs előnézet-oszlop) */
+.tp3 { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(250px, 320px) minmax(0, 1fr); gap: 12px; align-items: stretch; }
 .tp-listcol { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .tp-filters { display: flex; gap: 6px; margin-bottom: 8px; }
 .tp-filters .nm-search { flex: 1; margin-bottom: 0; min-width: 0; }
@@ -1071,10 +1072,9 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .tp-item .s { display: block; font-size: .8rem; font-weight: 700; color: var(--ink); }
 .tp-item .d { display: block; margin-top: 2px; font-size: .68rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tp-empty { padding: 14px; color: var(--muted); font-size: .82rem; }
-.tp-preview { min-height: 0; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 14px 16px; }
+/* (az előnézet-oszlop megszűnt — a lista-kattintás rögtön a szerkesztőbe tölt) */
 .tp-pv-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
 .tp-pv-cta { flex: none; white-space: nowrap; }
-.tp-back { display: none; margin-bottom: 10px; }
 .tp-pv-meta { font-size: .64rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--brand-text); }
 .tp-pv-title { margin: 3px 0 0; font-family: var(--ff-display); font-size: 1rem; }
 .tp-pv-subj { font-size: .78rem; color: var(--ink-2); padding-bottom: 8px; border-bottom: 1px dashed var(--line); }
@@ -1089,24 +1089,14 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .nm-inline .mt-sum { padding: 8px 4px 0; }
 .nm-inline .mt-tabs { padding: 6px 2px 0; }
 .nm-inline .nm-topicpanel { display: none; } /* a sablontár itt a bal oszlop, nem duplikáljuk */
-@media (max-width: 1180px) {
-  /* szűkebb kijelzőn az előnézet-oszlop elmarad, a lista egyből a szerkesztőbe tölt */
-  .tp3 { grid-template-columns: minmax(250px, 340px) minmax(0, 1fr); }
-  .tp3 .tp-preview { display: none; }
-}
 @media (max-width: 720px) {
   /* mobilon egy oszlop van és CSAK AZ OLDAL gorget — a belso gorgetok kikapcsolva;
      a felso padding a tobbi nezettel azonos (18px), hogy a cim ne uljon feljebb */
   .tpv { overflow-y: auto; overflow-x: hidden; display: block; padding: 18px var(--pad) 40px; }
   .tp-scroll { overflow: visible; border: 0; border-radius: 0; background: transparent; }
   .tp3 { grid-template-columns: 1fr; }
-  /* drill-in: a listáról az előnézet külön lapként nyílik, ← vissza gombbal;
-     a szerkesztő itt modálként nyílik a Betöltés gombról */
-  .tp3 .tp-preview { display: none; }
-  .tp3.is-detail .tp-preview { display: block; overflow: visible; }
-  .tp3.is-detail .tp-listcol { display: none; }
+  /* mobilon csak a lista látszik — a sablon/levél koppintásra MODÁLKÉNT nyíló szerkesztőbe töltődik */
   .tp3 .tp-composer { display: none; }
-  .tp-back { display: inline-block; }
 }
 
 /* Nevjegyzek: 6 oszlopos sorok (nev, email, telefon, titulus, terulet, statusz) */

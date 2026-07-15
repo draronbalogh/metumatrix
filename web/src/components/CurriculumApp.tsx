@@ -169,6 +169,36 @@ export default function CurriculumApp() {
     document.documentElement.dataset.theme = theme;
     try { localStorage.setItem(THEME_KEY, theme); } catch { /* ignore */ }
   }, [theme]);
+  // TELJES KÉPERNYŐ: gomb a téma-váltó mellett + mobilon az első érintésre automatikusan
+  // belép (betöltéskor a böngésző tiltja a kérés nélküli fullscreent — csak felhasználói
+  // gesztusból hívható). iPhone Safari nem támogatja a Fullscreen API-t → a gomb rejtve.
+  const [isFs, setIsFs] = useState(false);
+  const [fsSupported, setFsSupported] = useState(false);
+  useEffect(() => {
+    setFsSupported(typeof document.documentElement.requestFullscreen === 'function');
+    const onFs = () => setIsFs(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onFs);
+    return () => document.removeEventListener('fullscreenchange', onFs);
+  }, []);
+  const toggleFs = useCallback(() => {
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else document.documentElement.requestFullscreen().catch(() => { /* pl. iOS: nem támogatott */ });
+  }, []);
+  useEffect(() => {
+    if (window.innerWidth > 720) return;
+    if (typeof document.documentElement.requestFullscreen !== 'function') return;
+    let done = false;
+    const onFirst = () => {
+      if (done) return;
+      done = true; // laponként csak EGYSZER — ha a felhasználó kilép, nem erőltetjük újra
+      document.documentElement.requestFullscreen().catch(() => { /* ignore */ });
+      window.removeEventListener('touchend', onFirst);
+      window.removeEventListener('click', onFirst);
+    };
+    window.addEventListener('touchend', onFirst, { passive: true });
+    window.addEventListener('click', onFirst);
+    return () => { window.removeEventListener('touchend', onFirst); window.removeEventListener('click', onFirst); };
+  }, []);
   // Hozzáférés: EGYETLEN publikus link (Funnel), query-paraméter nélkül. A szerver
   // a Tailscale-identitás fejlécből dönt: a saját tailnet-eszközökről érkező kérés
   // szerkesztő mód, a kívülről (Funnelen át) érkező megtekintő mód.
@@ -185,6 +215,8 @@ export default function CurriculumApp() {
       if (dq) setQ(dq);
     } catch { /* ignore */ }
     if (deepView && !EDITONLY_VIEWS.includes(deepView)) { histReplaceNext.current = true; setView(deepView); }
+    // mobilon (mélylink nélkül) a Feladatok nézet a kezdőlap — nem a térkép
+    else if (!deepView && window.innerWidth <= 720) { histReplaceNext.current = true; setView('tasks'); }
     fetch('/api/auth', { headers: editHeaders(), cache: 'no-store' })
       .then((r) => r.json())
       .then((j) => {
@@ -857,6 +889,16 @@ export default function CurriculumApp() {
       {/* a fejlécen KÍVÜL él: sötét módban a masthead/toolbar blur-je saját stacking
           contextet nyit, és azon belülről a fix gomb a menüsáv mögé kerülne */}
       <button className="themebtn themebtn--head" title="Világos / sötét mód" onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}>{theme === 'dark' ? '☀' : '☾'}</button>
+      {fsSupported && (
+        <button className="themebtn themebtn--head fsbtn--head" title={isFs ? 'Kilépés a teljes képernyőből' : 'Teljes képernyő'} onClick={toggleFs}>
+          {/* inline SVG: minden platformon renderel (a ⛶ glyph sok eszközön tofu) */}
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            {isFs
+              ? <path d="M6 2v4H2M10 2v4h4M6 14v-4H2M10 14v-4h4" />
+              : <path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4" />}
+          </svg>
+        </button>
+      )}
 
       <div className="toolbar">
         <div className="wrap toolbar__inner">

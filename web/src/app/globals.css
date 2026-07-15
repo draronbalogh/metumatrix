@@ -97,6 +97,8 @@ body {
 /* témaváltó a jobb felső sarokban: fixen a menü és minden sáv FÖLÖTT (csak a modálok takarják) */
 .masthead .wrap { position: relative; }
 .themebtn--head { position: fixed; top: 12px; right: 14px; z-index: 70; box-shadow: 0 2px 10px rgba(16, 17, 20, .18); }
+/* teljes kepernyo gomb — kozvetlenul a tema-valto mellett */
+.fsbtn--head { right: 58px; }
 
 /* ============================================================
    MAP / NODE VIEW

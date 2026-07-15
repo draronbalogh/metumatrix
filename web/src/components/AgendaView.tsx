@@ -171,7 +171,10 @@ export default function AgendaView({ agenda, q, instr, taught, letterStats, onAd
                 <div className="agc-top">
                   <button className="ag-check" title="Kész — pipa" onClick={(e) => { e.stopPropagation(); onToggleDone(t.id); }} />
                   <span className="agc-title">{isNewTask(t) && <span className="ag-new">ÚJ</span>}{t.title}</span>
-                  <button className={`ag-prio ${t.priority}`} title={`Prioritás: ${PRIORITY_LABEL[t.priority]} — kattints a váltáshoz`} onClick={(e) => { e.stopPropagation(); onCyclePriority(t.id); }}>⚑ {PRIORITY_LABEL[t.priority]}</button>
+                  {/* prioritás-címke CSAK a magasnál — a többi szintet a bal színsáv jelzi, a címke mindenhol csak zaj volt */}
+                  {t.priority === 'high' && (
+                    <button className="ag-prio high" title={`Prioritás: ${PRIORITY_LABEL[t.priority]} — kattints a váltáshoz`} onClick={(e) => { e.stopPropagation(); onCyclePriority(t.id); }}>⚑ {PRIORITY_LABEL[t.priority]}</button>
+                  )}
                 </div>
                 <div className="agc-meta">
                   {(t.dueDate || t.due) && <span className="m">📅 {t.dueDate ? fmtDayHu(t.dueDate) : t.due}</span>}

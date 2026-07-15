@@ -31,7 +31,7 @@ const MapView = dynamic(() => import('./MapView'), {
 });
 
 // nézet-sorrend a főmenü szerint — a mobil swipe-váltás és a vissza-gomb (history) is ezt használja
-const VIEW_ORDER = ['map', 'catalog', 'tasks', 'events', 'topics', 'people', 'it', 'orarend', 'docs'] as const;
+const VIEW_ORDER = ['map', 'catalog', 'tasks', 'events', 'topics', 'people', 'it', 'docs', 'orarend'] as const;
 type ViewId = (typeof VIEW_ORDER)[number];
 const EDITONLY_VIEWS: readonly ViewId[] = ['topics', 'people', 'docs'];
 
@@ -921,9 +921,9 @@ export default function CurriculumApp() {
             <button className={`editonly${view === 'people' ? ' is-on' : ''}`} title="Elérhetőségek: oktatók, hallgatók, intézményi / alumni / opponens / piaci kapcsolatok"
               onClick={() => { if (!canEdit) return; setView('people'); }}>☎️ Névjegyzék</button>
             <button className={view === 'it' ? 'is-on' : ''} title="IT és szoftverek: az Infopark termeiben telepített szoftverek" onClick={() => setView('it')}>🖥️ IT</button>
-            <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>🕒 Órarend</button>
             <button className={`editonly${view === 'docs' ? ' is-on' : ''}`} title="Belső útmutatók: Zoom, oktatói segédletek, tréning — csak szerkesztő módban"
               onClick={() => { if (!canEdit) return; setView('docs'); }}>📚 Segédletek</button>
+            <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>🕒 Órarend</button>
           </div>
           <span className="search-wrap">
             <input className="search search--corner" placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : view === 'people' ? 'Keresés a névjegyzékben…' : view === 'orarend' ? 'Keresés az órarendben…' : view === 'it' ? 'Keresés szoftverre, teremre…' : view === 'docs' ? 'Keresés a segédletekben…' : view === 'topics' ? 'Keresés a sablonokban és levelekben…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />

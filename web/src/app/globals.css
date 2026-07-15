@@ -347,9 +347,11 @@ body {
 .dr-pdf:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
 .dr-edit { width: 100%; justify-content: center; margin: 0; text-align: center; }
 
-.ovl { position: fixed; inset: 0; background: rgba(21, 23, 26, .46); backdrop-filter: blur(3px); display: flex; z-index: 80; align-items: center; justify-content: center; padding: 22px; }
-.modal { background: var(--card); border: 1px solid var(--line); border-radius: 16px; width: min(760px, 100%); max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 30px 80px rgba(16, 17, 20, .30); animation: modalIn .22s cubic-bezier(.2, .8, .25, 1) both; }
-@keyframes modalIn { from { transform: translateY(14px) scale(.985); opacity: 0; } to { transform: none; opacity: 1; } }
+/* MINDEN szerkesztő JOBB OLDALI, teljes magasságú panelként nyílik — ugyanaz a
+   design, mint a részletező drawer (felhasználói kérés: egységes, széles oldalpanel) */
+.ovl { position: fixed; inset: 0; background: rgba(21, 23, 26, .46); backdrop-filter: blur(3px); display: flex; z-index: 80; align-items: stretch; justify-content: flex-end; padding: 0; }
+.modal { background: var(--card); border: 0; border-left: 1px solid var(--line); border-radius: 0; width: min(760px, 94vw); height: 100dvh; max-height: 100dvh; overflow: hidden; display: flex; flex-direction: column; box-shadow: -16px 0 50px rgba(16, 17, 20, .22); animation: modalIn .24s cubic-bezier(.2, .8, .25, 1) both; }
+@keyframes modalIn { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
 .modal h3 { flex: none; margin: 0; padding: 19px 24px 15px; font-family: var(--ff-display); font-size: 1.2rem; font-weight: 700; letter-spacing: var(--head-ls); border-bottom: 1px solid var(--line); position: relative; }
 .modal h3::after { content: ''; position: absolute; left: 24px; bottom: -1.5px; width: 46px; height: 3px; border-radius: 2px; background: var(--brand); }
 /* a szerkesztett tárgy neve piros (brand) hátterű jelvényben a modál-cím elején */
@@ -392,7 +394,7 @@ body {
 /* ---- szerkesztő-modál: állandó összegző sor + színes fülek (Feladat/Esemény) ---- */
 /* fix magasság: fülváltáskor a modál NEM ugrál, a gombok mindig ugyanott vannak,
    a tartalom belül görget; az utolsó mező alatt bő térköz, hogy semmi ne lógjon ki */
-.modal--tabs { height: min(92vh, 800px); }
+.modal--tabs { height: 100dvh; }
 .modal--tabs .f { padding-bottom: 34px; align-content: start; }
 .mt-sum { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 10px 24px 2px; }
 .mt-chip { font-family: var(--ff); font-size: .72rem; font-weight: 650; color: var(--ink-2); background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; cursor: pointer; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -782,7 +784,7 @@ html[data-theme='dark'] .pb.p { color: var(--yellow-deep); }
 .pp-scroll { max-height: 220px; overflow-y: auto; }
 .pp-nohit { font-size: .78rem; color: var(--muted); padding: 2px 4px; }
 
-.modal--wide { width: min(1080px, 100%); }
+.modal--wide { width: min(980px, 94vw); }
 .pm-body { padding: 14px 20px 6px; }
 .pm-note { font-size: .78rem; color: var(--ink-2); line-height: 1.5; padding: 9px 12px; background: var(--paper-2); border-radius: 8px; margin-bottom: 13px; }
 .pm-sec { display: flex; align-items: center; gap: 7px; font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 14px 0 7px; }

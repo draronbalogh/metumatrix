@@ -1450,6 +1450,16 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .autosave-chip .chip-retry { border: 1px solid currentColor; border-radius: 999px; background: transparent; color: inherit; font-size: .68rem; font-weight: 800; padding: 1px 8px; cursor: pointer; }
 .autosave-chip .chip-retry:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
 
+/* KITOLTO-PANEL a levelszerkeszto jobb oldalan: a levelben maradt [szogletes]
+   mezok kis inputokkal toltehok — Enter/pipa a targy ES torzs MINDEN
+   azonos mezojebe beirja az erteket */
+.nm-fill { border: 1px solid var(--line); border-radius: 10px; background: var(--card); padding: 10px 12px 12px; }
+.nm-fillrow { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.nm-fillrow .t { flex: none; width: 88px; font-size: .68rem; font-weight: 700; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nm-fillrow input { flex: 1; min-width: 0; padding: 6px 8px; font-size: .8rem; }
+.nm-fillgo { flex: none; padding: 5px 9px; }
+.nm-fillgo:not(:disabled) { border-color: var(--g0); color: var(--g0); font-weight: 800; }
+
 /* MENTES-DOKK: jobb also sarok — desktopon a harom gomb mindig latszik,
    mobilon hamburger-FAB, amibol felfele nyilnak a gombok */
 .savedock { position: fixed; right: 14px; bottom: 14px; z-index: 60; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }

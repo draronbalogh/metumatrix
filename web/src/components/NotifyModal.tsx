@@ -145,8 +145,19 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     lastTopicRef.current = t;
     setActiveTopic(t);
     typedRef.current = false;
-    setSubject(autoFill(t.subject(ctx)));
-    let txt = autoFill(t.body(ctx));
+    // a sablonok többsége SZÓ SZERINTI [dátum]/[helyszín]/[határidő] mezőt tartalmaz
+    // (nem ctx-hivatkozást) — ezeket itt töltjük ki a kapcsolt tétel adataival,
+    // különben a kapcsolás láthatóan "nem csinál semmit"
+    const fillCtx = (s: string) => {
+      let out = s;
+      if (ctx.when) out = out.split('[dátum]').join(ctx.when).split('[időpont]').join(ctx.when).split('[dátum, időpont]').join(ctx.when);
+      else if (ctx.due) out = out.split('[dátum]').join(ctx.due);
+      if (ctx.place) out = out.split('[helyszín]').join(ctx.place);
+      if (ctx.due) out = out.split('[határidő]').join(ctx.due);
+      return out;
+    };
+    setSubject(fillCtx(autoFill(t.subject(ctx))));
+    let txt = fillCtx(autoFill(t.body(ctx)));
     const lines = txt.split('\n');
     const gi = lines.findIndex((l) => l.trim() !== '');
     if (gi >= 0) {
@@ -171,18 +182,62 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   };
 
   // ha a kapcsolt tétel változik (másikat választasz, vagy a naptárban átírják a
-  // dátumát/helyszínét), a betöltött sablont újratöltjük a friss adatokkal —
-  // kézzel szerkesztett szöveget csak rákérdezés után írunk felül
+  // dátumát/helyszínét), a levél adatai frissülnek:
+  // - érintetlen sablonnál a sablont újratöltjük a friss adatokkal;
+  // - kézzel írt/módosított szövegnél SOHA nem írjuk felül a levelet, hanem csak a
+  //   [szögletes] mezőket töltjük ki a kapcsolt tétel adataival (dátum, helyszín, határidő)
   const ctxDataKey = `${ctxSel}|${effEvent?.title ?? ''}|${effEvent?.when ?? ''}|${effEvent?.day ?? ''}|${effEvent?.place ?? ''}|${effTask?.title ?? ''}|${effTask?.due ?? ''}|${effTask?.dueDate ?? ''}`;
   const ctxKeyRef = useRef(ctxDataKey);
   useEffect(() => {
     if (ctxKeyRef.current === ctxDataKey) return;
     ctxKeyRef.current = ctxDataKey;
-    if (!lastTopicRef.current) return;
-    if (typedRef.current && !confirm('A kézi módosításaid elvesznek. Újratöltsem a sablont a kapcsolt tétel friss adataival?')) return;
-    applyTopic(lastTopicRef.current);
+    const linked = effEvent ?? effTask;
+    if (!linked) return;
+    if (lastTopicRef.current && !typedRef.current) { applyTopic(lastTopicRef.current); return; }
+    const ev = effEvent ?? ((effTask?.eventId ? (ctxEvents ?? []).find((e) => e.id === effTask.eventId) : null) ?? null);
+    const when = ev ? (ev.when || fmtDay(ev.day)) : '';
+    const placeVal = ev?.place ?? '';
+    const dueVal = effTask ? (effTask.due || fmtDay(effTask.dueDate)) : '';
+    const fill = (s: string) => {
+      let out = s;
+      if (when) out = out.split('[dátum]').join(when).split('[időpont]').join(when).split('[dátum, időpont]').join(when);
+      if (placeVal) out = out.split('[helyszín]').join(placeVal);
+      if (dueVal) out = out.split('[határidő]').join(dueVal);
+      if (effEvent) out = out.split('[esemény]').join(effEvent.title);
+      return out;
+    };
+    const nb = fill(body);
+    const ns = fill(subject);
+    if (nb !== body || ns !== subject) {
+      setBody(nb); setSubject(ns); setBodyDirty(true);
+      setResult(`✓ Kapcsolt tétel: ${linked.title} — a [dátum] / [helyszín] / [határidő] mezők kitöltve a naptári adatokkal.`);
+    } else {
+      setResult(`✓ Kapcsolt tétel: ${linked.title}. (Nem volt kitölthető [szögletes] mező a szövegben.)`);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctxDataKey]);
+
+  // KITÖLTŐ-PANEL: a levélben maradt [szögletes] mezők listája — a jobb oldali kis
+  // inputokba írt érték a tárgy ÉS a törzs MINDEN azonos mezőjébe beíródik
+  const fillTokens = useMemo(() => {
+    const re = /\[([^[\]\n]{1,40})\]/g;
+    const found: string[] = [];
+    for (const src of [subject, body]) {
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(src))) { if (!found.includes(m[0])) found.push(m[0]); }
+    }
+    return found;
+  }, [subject, body]);
+  const [fillVals, setFillVals] = useState<Record<string, string>>({});
+  const applyFill = (tok: string) => {
+    const v = (fillVals[tok] ?? '').trim();
+    if (!v) return;
+    setSubject((s) => s.split(tok).join(v));
+    setBody((b) => b.split(tok).join(v));
+    setBodyDirty(true);
+    typedRef.current = true;
+    setFillVals((f) => { const n = { ...f }; delete n[tok]; return n; });
+  };
 
   // teljes szövegű keresőindex a jobb oldali sablonpanelhez (cím + csoport + tárgy + törzs)
   const topicIndex = useMemo(() => {
@@ -463,12 +518,8 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const kindLabel = LETTER_KINDS.find((k) => k.id === kind)?.label ?? '';
   const content = (
     <>
-        <div className="mt-sum">
-          <button type="button" className="mt-chip" title="Címzettek — 1. fül" onClick={() => setTab('to')}>👥 {selected.length + adhoc.length} címzett · {emails.length} email</button>
-          {missing.length > 0 && <button type="button" className="mt-chip mt-warn" title={`Nincs email-címük: ${missing.join(', ')}`} onClick={() => setTab('to')}>⚠ {missing.length} cím hiányzik</button>}
-          <button type="button" className="mt-chip" title="Tartalom: sablon, helyszín, meeting — 2. fül" onClick={() => setTab('about')}>📄 {activeTopic ? activeTopic.label : `${kindLabel} (hangnem-motor)`}</button>
-          <button type="button" className="mt-chip" title="A levél tárgya — 3. fül" onClick={() => setTab('text')}>✎ {subject.trim() || 'nincs tárgy'}</button>
-        </div>
+        {/* az összegző chipsor megszűnt (felhasználói kérés: csak helyet foglalt);
+            a hiányzó email-címekre a Címzettek fül maga figyelmeztet */}
         <ModalTabs tabs={NM_TABS} active={tab} onPick={setTab} />
         <div className="pm-body nm-body">
           {tab === 'to' && (<>
@@ -698,6 +749,22 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           </div>
           <div className="nm-msgrow">
             <div className="nm-side">
+              {/* kitöltő-panel: a levélben maradt [szögletes] mezők kis inputokkal tölthetők */}
+              {fillTokens.length > 0 && (
+                <div className="field full nm-fill">
+                  <label>Kitöltendő mezők ({fillTokens.length}) — Enter vagy ✓: mindenhova beíródik</label>
+                  {fillTokens.map((tok) => (
+                    <div key={tok} className="nm-fillrow">
+                      <span className="t" title={tok}>{tok.slice(1, -1)}</span>
+                      <input value={fillVals[tok] ?? ''} placeholder="érték…"
+                        onChange={(e) => setFillVals((f) => ({ ...f, [tok]: e.target.value }))}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyFill(tok); } }} />
+                      <button type="button" className="btn nm-fillgo" disabled={!(fillVals[tok] ?? '').trim()}
+                        title="Beírás a levél minden azonos mezőjébe" onClick={() => applyFill(tok)}>✓</button>
+                    </div>
+                  ))}
+                </div>
+              )}
               {allSteps.length > 0 && (
                 <div className="field full nm-steps">
                   <label>Miről szóljon a levél? ({selSteps.length ? `${selSteps.length} lépés kiválasztva` : 'nincs lépés a levélben'})</label>

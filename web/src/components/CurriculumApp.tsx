@@ -307,10 +307,11 @@ export default function CurriculumApp() {
     const next = order[i + (dx < 0 ? 1 : -1)];
     if (next) {
       setView(next);
-      // minimális vizuális visszajelzés: az új nézet a sodrás irányából úszik be
+      // lapozás-szerű visszajelzés: az új nézet a képernyő-szélesség ~60%-áról csúszik be
+      const w = Math.round((vpRef.current?.clientWidth ?? 390) * 0.6);
       vpRef.current?.animate(
-        [{ transform: `translateX(${dx < 0 ? 26 : -26}px)`, opacity: 0.55 }, { transform: 'translateX(0)', opacity: 1 }],
-        { duration: 220, easing: 'ease-out' },
+        [{ transform: `translateX(${dx < 0 ? w : -w}px)`, opacity: 0.3 }, { transform: 'translateX(0)', opacity: 1 }],
+        { duration: 320, easing: 'cubic-bezier(.22,.9,.3,1)' },
       );
     }
   };

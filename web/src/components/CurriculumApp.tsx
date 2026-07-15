@@ -40,8 +40,8 @@ const LS_KEY = 'mediadesign-2026-27-v9';
 const AGENDA_LS_KEY = 'md-agenda-v1';
 const PEOPLE_LS_KEY = 'md-people-v1';
 const THEME_KEY = 'md-theme2'; // új kulcs: az ideiglenes sötét-alap időszak mentett 'dark' értékei ne ragadjanak be
-const PRESET_KEY = 'md-preset';
-type Preset = 'neue' | 'tordeles' | 'muszerfal' | 'muterem';
+// (a stílus-preset választó megszűnt — az app fixen a „műszerfal" kinézetet használja,
+// a data-preset alapértéke a layout.tsx-ben áll)
 // betöltési állapotgép: amíg nem 'ok', a fájl-automentés tilos (nehogy régi/beépített
 // adat írja felül a szerveren lévő legutolsó mentést), és a DEFAULT sosem renderelődik
 type LoadState = 'loading' | 'ok' | 'ls-fallback' | 'error';
@@ -51,12 +51,6 @@ type SaveState =
   | { kind: 'saved'; at: number }
   | { kind: 'denied' }
   | { kind: 'error'; msg: string };
-const PRESETS: { id: Preset; label: string }[] = [
-  { id: 'muszerfal', label: 'Műszerfal — modern app' },
-  { id: 'neue', label: 'Neue Papír — svájci' },
-  { id: 'tordeles', label: 'Tördelés — editorial' },
-  { id: 'muterem', label: 'Műterem — meleg' },
-];
 
 interface Ref2 { ci: number; xi: number; }
 
@@ -82,7 +76,7 @@ export default function CurriculumApp() {
   const canEditRef = useRef(true);
   const [loadOpen, setLoadOpen] = useState(false); // pillanatkép-betöltő ablak
   const [snaps, setSnaps] = useState<{ name: string; mtime: number; size: number }[] | null>(null);
-  const [preset, setPreset] = useState<Preset>('muszerfal');
+  const [dockOpen, setDockOpen] = useState(false); // mentés-dokk (mobilon hamburgerből nyílik)
   const [ver, setVer] = useState<string>('2026/2027');
   const [prog, setProg] = useState<Prog>('BA'); // nyitáskor a sima BA nézet aktív
   const [q, setQ] = useState('');
@@ -158,8 +152,6 @@ export default function CurriculumApp() {
       }
       try {
         const t = localStorage.getItem(THEME_KEY); if (t === 'dark' || t === 'light') setTheme(t);
-        const p = localStorage.getItem(PRESET_KEY) as Preset | null;
-        if (p && PRESETS.some((x) => x.id === p)) setPreset(p);
         // elrendezés-zárolás: mindig zárva indul (betöltéskor/frissítéskor) a véletlen
         // mozgatás ellen — a mentett értéket szándékosan NEM olvassuk vissza.
       } catch { /* ignore */ }
@@ -318,10 +310,6 @@ export default function CurriculumApp() {
       );
     }
   };
-  useEffect(() => {
-    document.documentElement.dataset.preset = preset;
-    try { localStorage.setItem(PRESET_KEY, preset); } catch { /* ignore */ }
-  }, [preset]);
   // ha nem a mátrixon vagyunk, az elrendezés-zárolás azonnal bekapcsol (véletlen mozgatás ellen)
   useEffect(() => {
     if (view !== 'map') setLocked(true);
@@ -986,13 +974,7 @@ export default function CurriculumApp() {
           </>
           )}
           <span className="spacer" />
-          <select className="presetsel" value={preset} onChange={(e) => setPreset(e.target.value as Preset)} title="Betűtípus / stílus">
-            {PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-          </select>
-          <button className="btn editonly" onClick={exportJSON} title="MINDEN adat mentése egy helyre: tanterv + feladatok + események + levelek + névjegyzék — időbélyeges pillanatkép a szerver grid/backups mappájában">⤓ Mentés</button>
-          <button className="btn editonly" onClick={downloadBackup} title="Hordozható másolat letöltése fájlba (pl. másik gépre)">⇩ Fájlba</button>
-          {saveMsg && <span className={`save-msg${saveMsg.startsWith('✓') ? ' ok' : ''}`}>{saveMsg}</span>}
-          <button className="btn editonly" onClick={openLoad} title="Mentett pillanatkép visszatöltése (alapból a legutolsó), vagy fájl a gépről">⤒ Betöltés</button>
+          {/* a mentés/betöltés/fájlba a jobb alsó sarok dokkjába költözött */}
           <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importJSON(f); e.target.value = ''; }} />
           {isCurr && (
           <button className="btn btn--danger" onClick={resetData} title="CSAK a tantervet állítja alaphelyzetbe — előtte készíts mentést!">↺ Alaphelyzet</button>
@@ -1089,6 +1071,19 @@ export default function CurriculumApp() {
             />
           </div>
         </div>
+        )}
+
+        {/* MENTÉS-DOKK a jobb alsó sarokban: desktopon a három gomb, mobilon hamburger-FAB */}
+        {canEdit && loadState !== 'loading' && (
+          <div className={`savedock${dockOpen ? ' is-open' : ''}`}>
+            {saveMsg && <div className={`savedock-msg${saveMsg.startsWith('✓') ? ' ok' : ''}`}>{saveMsg}</div>}
+            <div className="savedock-btns">
+              <button className="btn" onClick={() => { setDockOpen(false); void exportJSON(); }} title="MINDEN adat mentése egy helyre: tanterv + feladatok + események + levelek + névjegyzék — időbélyeges pillanatkép a szerver grid/backups mappájában">⤓ Mentés</button>
+              <button className="btn" onClick={() => { setDockOpen(false); openLoad(); }} title="Mentett pillanatkép visszatöltése (alapból a legutolsó), vagy fájl a gépről">⤒ Betöltés</button>
+              <button className="btn" onClick={() => { setDockOpen(false); downloadBackup(); }} title="Hordozható másolat letöltése fájlba (pl. másik gépre)">⇩ Fájlba</button>
+            </div>
+            <button className="savedock-fab" title="Mentés és betöltés" onClick={() => setDockOpen((o) => !o)}>{dockOpen ? '✕' : '⤓'}</button>
+          </div>
         )}
       </div>
 

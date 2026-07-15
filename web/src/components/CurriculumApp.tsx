@@ -786,7 +786,7 @@ export default function CurriculumApp() {
             <button className={`editonly${view === 'people' ? ' is-on' : ''}`} title="Elérhetőségek: oktatók, hallgatók, intézményi / alumni / opponens / piaci kapcsolatok"
               onClick={() => { if (!canEdit) return; setView('people'); }}>☎️ Névjegyzék</button>
             <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>🕒 Órarend</button>
-            <button className={view === 'it' ? 'is-on' : ''} onClick={() => setView('it')}>🖥️ IT és szoftverek</button>
+            <button className={view === 'it' ? 'is-on' : ''} title="IT és szoftverek: az Infopark termeiben telepített szoftverek" onClick={() => setView('it')}>🖥️ IT</button>
             <button className={`editonly${view === 'docs' ? ' is-on' : ''}`} title="Belső útmutatók: Zoom, oktatói segédletek, tréning — csak szerkesztő módban"
               onClick={() => { if (!canEdit) return; setView('docs'); }}>📚 Segédletek</button>
           </div>

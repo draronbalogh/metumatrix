@@ -275,6 +275,7 @@ export default function CurriculumApp() {
   // Kivétel: a Mátrix (ott a húzás pásztázás), a vízszintesen görgethető elemek
   // (táblázat, chipsorok) és a beviteli mezők.
   const touchRef = useRef<{ x: number; y: number; t: number; skip: boolean } | null>(null);
+  const vpRef = useRef<HTMLDivElement>(null);
   const onViewportTouchStart = (e: React.TouchEvent) => {
     if (window.innerWidth > 720) { touchRef.current = null; return; }
     const t = e.touches[0];
@@ -304,7 +305,14 @@ export default function CurriculumApp() {
     const i = order.indexOf(view);
     if (i === -1) return;
     const next = order[i + (dx < 0 ? 1 : -1)];
-    if (next) setView(next);
+    if (next) {
+      setView(next);
+      // minimális vizuális visszajelzés: az új nézet a sodrás irányából úszik be
+      vpRef.current?.animate(
+        [{ transform: `translateX(${dx < 0 ? 26 : -26}px)`, opacity: 0.55 }, { transform: 'translateX(0)', opacity: 1 }],
+        { duration: 220, easing: 'ease-out' },
+      );
+    }
   };
   useEffect(() => {
     document.documentElement.dataset.preset = preset;
@@ -1001,7 +1009,7 @@ export default function CurriculumApp() {
             </div>
           </div>
         ) : (
-        <div className="viewport" onTouchStart={onViewportTouchStart} onTouchEnd={onViewportTouchEnd}>
+        <div className="viewport" ref={vpRef} onTouchStart={onViewportTouchStart} onTouchEnd={onViewportTouchEnd}>
           {loadState === 'ls-fallback' && (
             <div className="load-banner">
               ⚠ {loadErr} A böngészőben mentett helyi vázlatot látod — a fájlba mentés ki van kapcsolva.

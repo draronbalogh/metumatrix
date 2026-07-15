@@ -50,7 +50,7 @@ export default function CatalogView({ data, filter, view, onDetails, onEdit, onA
 
   return (
     <main className="catalog">
-      <PageHead title="🗂️ Katalógus" sub={`Média Design ${view.prog === 'ALL' ? 'BA + MA' : view.prog} · ${view.ver}`} />
+      <PageHead title="Katalógus" sub={`Média Design ${view.prog === 'ALL' ? 'BA + MA' : view.prog} · ${view.ver}`} />
       {allVisible.length > 0 && (
         <div className="viewtoggle cat-semfilter">
           <button className={!semActive ? 'is-on' : ''} onClick={() => setSem(0)}>Mind</button>

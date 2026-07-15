@@ -76,9 +76,13 @@ body {
 /* ---- toolbar ---- */
 .toolbar { flex: none; background: var(--card); border-bottom: 1px solid var(--line); }
 .toolbar__inner { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; padding: 6px 0; }
-.viewtoggle { display: inline-flex; background: var(--paper-2); border: 1px solid var(--line); border-radius: 11px; padding: 3px; gap: 2px; }
-.viewtoggle button { border: 0; background: transparent; font-family: var(--ff); font-size: .82rem; font-weight: 600; padding: 6px 15px; border-radius: 8px; cursor: pointer; color: var(--ink-2); }
-.viewtoggle button.is-on { background: var(--card); color: var(--hot); font-weight: 800; box-shadow: var(--shadow-1), inset 0 -2px 0 var(--hot); }
+/* menü/fül-váltók: visszafogott, szögletes fülek — az aktívat a piros alávonás jelöli,
+   a fül alja EGYENES (a lekerekített alj + vonal kombináció gyerekesen hatott) */
+.viewtoggle { display: inline-flex; background: var(--paper-2); border: 1px solid var(--line); border-radius: 6px; padding: 2px; gap: 1px; }
+.viewtoggle button { border: 0; background: transparent; font-family: var(--ff); font-size: .82rem; font-weight: 600; padding: 6px 15px; border-radius: 0; cursor: pointer; color: var(--ink-2); }
+.viewtoggle button:first-child { border-radius: 4px 0 0 4px; }
+.viewtoggle button:last-child { border-radius: 0 4px 4px 0; }
+.viewtoggle button.is-on { background: var(--card); color: var(--hot); font-weight: 800; box-shadow: inset 0 -2px 0 var(--hot); }
 .search { flex: 1 1 200px; max-width: 300px; padding: 8px 12px 8px 32px; font-family: var(--ff); font-size: .9rem; color: var(--ink); background: var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%239a9ca2' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.6' y2='16.6'/%3E%3C/svg%3E") no-repeat 11px center; border: 1px solid var(--line); border-radius: 10px; }
 .search:focus { outline: 2px solid color-mix(in srgb, var(--brand) 35%, transparent); outline-offset: 1px; border-color: var(--brand); }
 .filters { display: flex; flex-wrap: wrap; gap: 6px; }

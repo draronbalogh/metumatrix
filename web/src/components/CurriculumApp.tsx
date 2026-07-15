@@ -903,18 +903,18 @@ export default function CurriculumApp() {
       <div className="toolbar">
         <div className="wrap toolbar__inner">
           <div className="viewtoggle viewtoggle--nav" ref={navRef}>
-            {/* egységes, színes emoji-ikonok — a korábbi monokróm jelek (◆▦☑▤✉☎) vegyes képet adtak */}
-            <button className={view === 'map' ? 'is-on' : ''} onClick={() => setView('map')}>🗺️ Mátrix</button>
-            <button className={view === 'catalog' ? 'is-on' : ''} onClick={() => setView('catalog')}>🗂️ Katalógus</button>
-            <button className={view === 'tasks' ? 'is-on' : ''} onClick={() => setView('tasks')}>☑️ Feladatok</button>
-            <button className={view === 'events' ? 'is-on' : ''} onClick={() => setView('events')}>📅 Események</button>
-            <button className={`editonly${view === 'topics' ? ' is-on' : ''}`} onClick={() => { if (!canEdit) return; setView('topics'); }}>✉️ Levelek</button>
+            {/* tiszta, ikon nélküli menü — az emoji-ikonok a felhasználó szerint gyerekesek voltak */}
+            <button className={view === 'map' ? 'is-on' : ''} onClick={() => setView('map')}>Mátrix</button>
+            <button className={view === 'catalog' ? 'is-on' : ''} onClick={() => setView('catalog')}>Katalógus</button>
+            <button className={view === 'tasks' ? 'is-on' : ''} onClick={() => setView('tasks')}>Feladatok</button>
+            <button className={view === 'events' ? 'is-on' : ''} onClick={() => setView('events')}>Események</button>
+            <button className={`editonly${view === 'topics' ? ' is-on' : ''}`} onClick={() => { if (!canEdit) return; setView('topics'); }}>Levelek</button>
             <button className={`editonly${view === 'people' ? ' is-on' : ''}`} title="Elérhetőségek: oktatók, hallgatók, intézményi / alumni / opponens / piaci kapcsolatok"
-              onClick={() => { if (!canEdit) return; setView('people'); }}>☎️ Névjegyzék</button>
-            <button className={view === 'it' ? 'is-on' : ''} title="IT és szoftverek: az Infopark termeiben telepített szoftverek" onClick={() => setView('it')}>🖥️ IT</button>
+              onClick={() => { if (!canEdit) return; setView('people'); }}>Névjegyzék</button>
+            <button className={view === 'it' ? 'is-on' : ''} title="IT és szoftverek: az Infopark termeiben telepített szoftverek" onClick={() => setView('it')}>IT</button>
             <button className={`editonly${view === 'docs' ? ' is-on' : ''}`} title="Belső útmutatók: Zoom, oktatói segédletek, tréning — csak szerkesztő módban"
-              onClick={() => { if (!canEdit) return; setView('docs'); }}>📚 Segédletek</button>
-            <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>🕒 Órarend</button>
+              onClick={() => { if (!canEdit) return; setView('docs'); }}>Segédletek</button>
+            <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>Órarend</button>
           </div>
           <span className="search-wrap">
             <input className="search search--corner" placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : view === 'people' ? 'Keresés a névjegyzékben…' : view === 'orarend' ? 'Keresés az órarendben…' : view === 'it' ? 'Keresés szoftverre, teremre…' : view === 'docs' ? 'Keresés a segédletekben…' : view === 'topics' ? 'Keresés a sablonokban és levelekben…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />

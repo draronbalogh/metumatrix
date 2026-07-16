@@ -10,6 +10,23 @@ import { ModalTabs, TabDef } from './AgendaModals';
 import { editHeaders } from '@/lib/editkey';
 import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate, autoFill, fmtDay, paraphrase, normText, LINK_STOP } from '@/lib/topics';
 
+// A kitöltő-panel [mező]-i a nevük alapján TÍPUSOS beviteli mezőt kapnak: dátumhoz
+// dátumválasztó, időponthoz óra:perc, hónaphoz hónapválasztó — nem szabad szöveg.
+type FillKind = 'date' | 'time' | 'datetime' | 'month' | 'url' | 'text';
+const fillKind = (tok: string): FillKind => {
+  const t = normText(tok.slice(1, -1));
+  if (t.includes('datum') && t.includes('idopont')) return 'datetime';
+  if (t.includes('datum') || t.includes('hatarido')) return 'date';
+  if (t.includes('idopont')) return 'time';
+  if (t.includes('honap')) return 'month';
+  if (t === 'link' || t.includes('url')) return 'url';
+  return 'text';
+};
+const F_MON = ['jan.', 'febr.', 'márc.', 'ápr.', 'máj.', 'jún.', 'júl.', 'aug.', 'szept.', 'okt.', 'nov.', 'dec.'];
+const F_MONTH = ['január', 'február', 'március', 'április', 'május', 'június', 'július', 'augusztus', 'szeptember', 'október', 'november', 'december'];
+// levélbarát alak — a címzett kedvéért mindig évvel: "2026. szept. 2."
+const fillDay = (d: string): string => `${d.slice(0, 4)}. ${F_MON[Number(d.slice(5, 7)) - 1] ?? ''} ${Number(d.slice(8, 10))}.`;
+
 export interface NotifyTarget {
   targetType: 'event' | 'task' | null;
   targetId: string | null;
@@ -229,11 +246,31 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     return found;
   }, [subject, body]);
   const [fillVals, setFillVals] = useState<Record<string, string>>({});
-  const applyFill = (tok: string) => {
+  // beírható-e már: dátum/hónap/idő mezőnél teljes érték kell, szövegnél elég bármi
+  const fillReady = (tok: string): boolean => {
     const v = (fillVals[tok] ?? '').trim();
-    if (!v) return;
-    setSubject((s) => s.split(tok).join(v));
-    setBody((b) => b.split(tok).join(v));
+    const k = fillKind(tok);
+    if (k === 'date' || k === 'datetime') return v.length >= 10;
+    if (k === 'month') return v.length === 7;
+    if (k === 'time') return v.length === 5;
+    return v !== '';
+  };
+  const applyFill = (tok: string) => {
+    if (!fillReady(tok)) return;
+    const raw = (fillVals[tok] ?? '').trim();
+    const k = fillKind(tok);
+    let v = raw;
+    if (k === 'date') v = fillDay(raw);
+    else if (k === 'datetime') v = `${fillDay(raw.slice(0, 10))}${raw.length >= 16 ? ` ${raw.slice(11, 16)}` : ''}`;
+    else if (k === 'month') {
+      const m = F_MONTH[Number(raw.slice(5, 7)) - 1] ?? raw;
+      const c0 = tok.slice(1, 2);
+      v = c0 === c0.toUpperCase() && c0 !== c0.toLowerCase() ? m.charAt(0).toUpperCase() + m.slice(1) : m;
+    }
+    // helyesírás: kötőjeles toldalék előtt a záró pont elmarad ("szept. 10-ig", nem "10.-ig")
+    const rep = (s: string): string => s.split(`${tok}-`).join(`${v.replace(/\.$/, '')}-`).split(tok).join(v);
+    setSubject(rep);
+    setBody(rep);
     setBodyDirty(true);
     typedRef.current = true;
     setFillVals((f) => { const n = { ...f }; delete n[tok]; return n; });
@@ -753,16 +790,31 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               {fillTokens.length > 0 && (
                 <div className="field full nm-fill">
                   <label>Kitöltendő mezők ({fillTokens.length}) — Enter vagy ✓: mindenhova beíródik</label>
-                  {fillTokens.map((tok) => (
-                    <div key={tok} className="nm-fillrow">
-                      <span className="t" title={tok}>{tok.slice(1, -1)}</span>
-                      <input value={fillVals[tok] ?? ''} placeholder="érték…"
-                        onChange={(e) => setFillVals((f) => ({ ...f, [tok]: e.target.value }))}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyFill(tok); } }} />
-                      <button type="button" className="btn nm-fillgo" disabled={!(fillVals[tok] ?? '').trim()}
-                        title="Beírás a levél minden azonos mezőjébe" onClick={() => applyFill(tok)}>✓</button>
-                    </div>
-                  ))}
+                  {fillTokens.map((tok) => {
+                    const k = fillKind(tok);
+                    const v = fillVals[tok] ?? '';
+                    const set = (val: string) => setFillVals((f) => ({ ...f, [tok]: val }));
+                    const onKey = (e: React.KeyboardEvent) => { if (e.key === 'Enter') { e.preventDefault(); applyFill(tok); } };
+                    return (
+                      <div key={tok} className="nm-fillrow">
+                        <span className="t" title={tok}>{tok.slice(1, -1)}</span>
+                        {k === 'datetime' ? (<>
+                          <input type="date" value={v.slice(0, 10)} onKeyDown={onKey}
+                            onChange={(e) => set(e.target.value ? `${e.target.value}${v.length >= 16 ? ` ${v.slice(11, 16)}` : ''}` : '')} />
+                          <input type="time" className="nm-filltime" title="Óra:perc — ha kell" value={v.length >= 16 ? v.slice(11, 16) : ''}
+                            disabled={v.length < 10} onKeyDown={onKey}
+                            onChange={(e) => set(e.target.value ? `${v.slice(0, 10)} ${e.target.value}` : v.slice(0, 10))} />
+                        </>) : k === 'text' || k === 'url' ? (
+                          <input type={k === 'url' ? 'url' : 'text'} value={v} placeholder={k === 'url' ? 'https://…' : 'érték…'}
+                            onChange={(e) => set(e.target.value)} onKeyDown={onKey} />
+                        ) : (
+                          <input type={k} value={v} onChange={(e) => set(e.target.value)} onKeyDown={onKey} />
+                        )}
+                        <button type="button" className="btn nm-fillgo" disabled={!fillReady(tok)}
+                          title="Beírás a levél minden azonos mezőjébe" onClick={() => applyFill(tok)}>✓</button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               {allSteps.length > 0 && (

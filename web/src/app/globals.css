@@ -1484,10 +1484,20 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 /* POSTA nézet — válaszra váró bejövő levelek listája, lenyitható választervekkel.
    Egy sor = egy levél: dátum + feladó + tárgy, alatta EGY mondat arról, mire válaszolunk. */
 .po-list { display: flex; flex-direction: column; gap: 8px; }
-.po-row { border: 1px solid var(--line); border-left: 3px solid var(--hot); border-radius: 10px; background: var(--card); overflow: hidden; }
-.po-row.is-open { border-left-color: var(--hot); box-shadow: 0 6px 18px rgba(16, 17, 20, .06); }
+/* a sor bal színcsíkja a SÁVOT kódolja: piros csak a Visszatért (figyelem!),
+   meleg sárga a Határidős, szürke a többi, zöld ahol már mi léptünk */
+.po-row { border: 1px solid var(--line); border-left: 3px solid color-mix(in srgb, var(--ink) 22%, transparent); border-radius: 10px; background: var(--card); overflow: hidden; transition: border-color .15s, box-shadow .15s; }
+.po-row:hover { border-color: color-mix(in srgb, var(--ink) 26%, var(--line)); }
+.po-row.is-open { box-shadow: 0 6px 18px rgba(16, 17, 20, .08); }
+.po-lane--returned .po-row { border-left-color: var(--hot); }
+.po-lane--deadline .po-row { border-left-color: var(--yellow-deep); }
+.po-lane--waiting .po-row { border-left-color: var(--g0); }
+.po-lane-h .dot { width: 8px; height: 8px; border-radius: 50%; align-self: center; background: color-mix(in srgb, var(--ink) 25%, transparent); }
+.po-lane--returned .po-lane-h .dot { background: var(--hot); }
+.po-lane--deadline .po-lane-h .dot { background: var(--yellow-deep); }
+.po-lane--waiting .po-lane-h .dot { background: var(--g0); }
 .po-main { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 13px 4px; background: none; border: 0; cursor: pointer; font: inherit; text-align: left; color: var(--ink); }
-.po-main .d { flex: none; font-size: .74rem; font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.po-main .d { flex: none; font-size: .7rem; font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; background: color-mix(in srgb, var(--brand) 9%, transparent); border-radius: 6px; padding: 2px 6px; }
 .po-main .n { flex: none; font-weight: 800; }
 .po-main .s { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
 .po-main .cc { flex: none; font-size: .72rem; color: var(--brand-text); }
@@ -1498,7 +1508,11 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .po-note { font-size: .76rem; color: color-mix(in srgb, var(--yellow-deep) 75%, var(--ink)); background: color-mix(in srgb, var(--yellow-deep) 9%, transparent); border-radius: 8px; padding: 6px 10px; }
 .po-draft { border: 1px solid var(--line); border-radius: 9px; background: var(--card); overflow: hidden; }
 .po-draft-h { display: flex; align-items: center; gap: 8px; padding: 7px 11px; border-bottom: 1px solid var(--line); }
-.po-draft-h .l { font-size: .74rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--brand-text); }
+.po-draft-h .l { font-size: .74rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--brand-text); padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--brand) 10%, transparent); }
+/* a három terv szándék szerint színkódolt címkét kap: igen / módosítás / kérdés */
+.po-draft--0 .po-draft-h .l { color: var(--g0); background: color-mix(in srgb, var(--g0) 12%, transparent); }
+.po-draft--1 .po-draft-h .l { color: color-mix(in srgb, var(--yellow-deep) 85%, var(--ink)); background: color-mix(in srgb, var(--yellow-deep) 14%, transparent); }
+.po-draft--2 .po-draft-h .l { color: #2f6fe0; background: color-mix(in srgb, #2f6fe0 12%, transparent); }
 .po-draft-h .sp { flex: 1; }
 .po-draft-h .btn { padding: 4px 10px; font-size: .76rem; }
 .po-draft-b { padding: 9px 12px 11px; font-size: .85rem; line-height: 1.5; white-space: pre-wrap; }
@@ -1527,9 +1541,10 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .po-mini .btn { padding: 3px 9px; font-size: .74rem; }
 .po-date { border: 1px solid var(--line); border-radius: 7px; padding: 2px 6px; font: inherit; font-size: .74rem; color: var(--ink); background: var(--card); }
 /* brífing-sáv: sávonkénti darabszámok + Döntés-sor / Sorban módváltók */
-.po-brief { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 2px 0 14px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--brand) 5%, var(--card)); font-size: .82rem; color: var(--ink-2); }
+.po-brief { position: sticky; top: 0; z-index: 6; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 2px 0 14px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--brand) 5%, var(--bg)); font-size: .82rem; color: var(--ink-2); box-shadow: 0 4px 14px rgba(16, 17, 20, .05); }
 .po-brief .sp { flex: 1; }
-.po-brief .hot { color: var(--hot); }
+.po-brief .pill { font-size: .74rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: color-mix(in srgb, var(--brand) 10%, transparent); color: var(--ink-2); white-space: nowrap; }
+.po-brief .pill--hot { background: var(--hot-100); color: var(--hot); }
 .po-brief .btn { padding: 4px 10px; font-size: .76rem; }
 .po-decide-h { font-size: .78rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 4px; }
 /* címzett-sor a tervek felett: kinek megy a válasz — másolás előtt ellenőrizhető */
@@ -1551,9 +1566,17 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 /* visszavonási sáv a lap alján — a verdikt 6 mp-ig visszavonható */
 .po-undotoast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 999px; background: var(--ink); color: var(--bg); font-size: .82rem; box-shadow: 0 8px 24px rgba(16, 17, 20, .25); z-index: 60; }
 .po-undotoast .btn { padding: 3px 10px; font-size: .76rem; background: var(--bg); color: var(--ink); border-color: transparent; }
+/* a verdikt-sor vizuálisan elkülönül a tervektől — ez a döntés helye */
+.po-actrow { border-top: 1px dashed var(--line); padding-top: 9px; margin-top: 2px; }
 @media (max-width: 720px) {
   .po-lane-h .hint { display: none; }
   .po-mini { flex-wrap: wrap; }
+  .po-brief { position: static; box-shadow: none; }
+  .po-actrow .btn, .po-screen .btn { min-height: 34px; }
+  .po-main { flex-wrap: wrap; row-gap: 4px; }
+  .po-main .s { flex-basis: 100%; order: 5; white-space: normal; overflow: visible; font-size: .82rem; }
+  .po-gist { flex-wrap: wrap; }
+  .po-card { max-width: 100%; margin-left: 0; flex-basis: 100%; text-align: left; }
 }
 @media (max-width: 720px) {
   .po-main { flex-wrap: wrap; }

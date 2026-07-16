@@ -185,7 +185,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
             {stale && <div className="po-note">⚠ A tervek egy korábbi levélhez készültek, azóta új bejövő érkezett. A következő szinkron frissíti őket — a szál tartalmát ellenőrizd küldés előtt.</div>}
             {!r.botMade && lane !== 'waiting' && <div className="po-note">Gyors tervek a kártya adataiból — a személyre szabott terveket a következő szinkron írja meg a levél teljes szövege alapján.</div>}
             {lane !== 'waiting' && r.drafts.map((d, i) => (
-              <div key={i} className="po-draft">
+              <div key={i} className={`po-draft po-draft--${i}`}>
                 <div className="po-draft-h">
                   <span className="l">{d.label}</span>
                   <span className="sp" />
@@ -230,8 +230,8 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
 
   const lane = (title: string, hint: string, items: Row[], kind: 'returned' | 'deadline' | 'awaiting' | 'waiting') =>
     items.length > 0 && (
-      <section className="po-lane" key={kind}>
-        <h3 className="po-lane-h">{title} <span className="c">({items.length})</span><span className="hint">{hint}</span></h3>
+      <section className={`po-lane po-lane--${kind}`} key={kind}>
+        <h3 className="po-lane-h"><span className="dot" />{title} <span className="c">{items.length}</span><span className="hint">{hint}</span></h3>
         {items.map((r) => renderRow(r, kind))}
       </section>
     );
@@ -244,13 +244,11 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
       <PageHead title="Posta" sub="Válaszra váró bejövő levelek · a választerveket az éjszakai/napközbeni szinkron írja elő" />
       {/* brífing-sáv: sávonkénti darabszámok + a két munka-mód */}
       <div className="po-brief">
-        <span className="po-brief-t">
-          {pendingAll.length} válaszra vár
-          {lanes.returned.length > 0 && <> · {lanes.returned.length} visszatért</>}
-          {urgent > 0 && <> · <strong className="hot">{urgent} sürgős (48 órán belül)</strong></>}
-          {lanes.waiting.length > 0 && <> · {lanes.waiting.length} rájuk várok</>}
-          {lanes.snoozed.length > 0 && <> · {lanes.snoozed.length} halasztva</>}
-        </span>
+        <span className="pill">{pendingAll.length} válaszra vár</span>
+        {lanes.returned.length > 0 && <span className="pill pill--hot" title="Felébredt halasztás vagy új levél lezárt szálban">{lanes.returned.length} visszatért</span>}
+        {urgent > 0 && <span className="pill pill--hot" title="Határidő 48 órán belül">{urgent} sürgős</span>}
+        {lanes.waiting.length > 0 && <span className="pill" title="Válaszoltam, az ő válaszukra várok">{lanes.waiting.length} rájuk várok</span>}
+        {lanes.snoozed.length > 0 && <span className="pill" title="Halasztva — a felbukkanási napon visszatér">{lanes.snoozed.length} halasztva</span>}
         <span className="sp" />
         {pendingAll.length > 0 && !decide && <button type="button" className="btn" title="Tételenként egy döntés: válasz / halasztás / lezárás — semmi nem marad függőben" onClick={() => { setDecide(true); setDecideSkip(new Set()); setAllOpen(false); }}>▶ Döntés-sor</button>}
         {pendingAll.length > 0 && !decide && <button type="button" className="btn" title="Minden válaszra váró tétel terveivel együtt, egy listában végigdolgozható" onClick={() => setAllOpen((v) => !v)}>{allOpen ? '▴ Összecsukás' : '▤ Sorban mind'}</button>}

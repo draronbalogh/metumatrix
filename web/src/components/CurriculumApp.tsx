@@ -13,8 +13,9 @@ import AgendaDrawer, { AgendaDetailsRef } from './AgendaDrawer';
 import ITView from './ITView';
 import DocsView from './DocsView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
-import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, Letter, emptyEvent, emptyTask, nextPriority, normalizeAgenda, taskSteps } from '@/data/agenda';
-import { DEFAULT_PEOPLE, PeopleDB, PersonKind, buildCanonicalNames, buildRoster, normalizePeople, emailOf } from '@/data/people';
+import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, Letter, ReplyDraft, emptyEvent, emptyTask, nextPriority, normalizeAgenda, taskSteps } from '@/data/agenda';
+import { DEFAULT_PEOPLE, PeopleDB, PersonKind, buildCanonicalNames, buildFooter, buildRoster, normalizePeople, emailOf } from '@/data/people';
+import PostaView from './PostaView';
 import { normName, normTitle } from '@/lib/normalize';
 import PeopleModal from './PeopleModal';
 import NotifyModal, { NotifyTarget } from './NotifyModal';
@@ -32,9 +33,9 @@ const MapView = dynamic(() => import('./MapView'), {
 });
 
 // nézet-sorrend a főmenü szerint — a mobil swipe-váltás és a vissza-gomb (history) is ezt használja
-const VIEW_ORDER = ['map', 'catalog', 'tasks', 'events', 'topics', 'people', 'it', 'docs', 'orarend'] as const;
+const VIEW_ORDER = ['map', 'catalog', 'tasks', 'events', 'posta', 'topics', 'people', 'it', 'docs', 'orarend'] as const;
 type ViewId = (typeof VIEW_ORDER)[number];
-const EDITONLY_VIEWS: readonly ViewId[] = ['topics', 'people', 'docs'];
+const EDITONLY_VIEWS: readonly ViewId[] = ['posta', 'topics', 'people', 'docs'];
 
 const LS_KEY = 'mediadesign-2026-27-v9';
 const AGENDA_LS_KEY = 'md-agenda-v1';
@@ -483,6 +484,11 @@ export default function CurriculumApp() {
     if (sel.startsWith('t:')) commitAgenda({ ...cur, tasks: cur.tasks.map((t) => (t.id === sel.slice(2) && t.source ? { ...t, source: { ...t.source, replied: stamp } } : t)) });
     else if (sel.startsWith('e:')) commitAgenda({ ...cur, events: cur.events.map((e) => (e.id === sel.slice(2) && e.source ? { ...e, source: { ...e.source, replied: stamp } } : e)) });
   }, [commitAgenda]);
+  // a Posta menü számlálója: hány bejövő levél vár még válaszra
+  const postaCount = useMemo(() =>
+    agenda.tasks.filter((t) => t.source?.email && !t.source.replied).length
+    + agenda.events.filter((e) => e.source?.email && !e.source.replied).length,
+  [agenda]);
   // feladat ↔ esemény kapcsolás a részletezőből (javaslat-gomb / választó)
   const linkTaskEvent = useCallback((taskId: string, eventId: string | null) => {
     if (!canEditRef.current) return;
@@ -563,6 +569,24 @@ export default function CurriculumApp() {
     const steps = agendaRef.current.tasks.filter((t) => t.eventId === e.id).flatMap((t) => taskSteps(t).map((s) => s.text)).filter(Boolean);
     setNotify({ targetType: 'event', targetId: e.id, event: e, task: null, names: [e.owner, ...e.people].filter((n): n is string => !!n), steps, source: e.source ?? null, topicId: topicId ?? null });
   }, []);
+  // válasz a Postából: a kiválasztott bot-tervezet a levélíróba töltve, a feladó
+  // (és levélszálnál a szál minden résztvevője) címzettként, a tétel kapcsolva
+  const notifyReply = useCallback((sel: string, draft: ReplyDraft, drafts: ReplyDraft[]) => {
+    if (!canEditRef.current) return;
+    const cur = agendaRef.current;
+    const isTask = sel.startsWith('t:');
+    const t = isTask ? cur.tasks.find((x) => x.id === sel.slice(2)) ?? null : null;
+    const e = !isTask ? cur.events.find((x) => x.id === sel.slice(2)) ?? null : null;
+    const src = (t?.source ?? e?.source) ?? null;
+    if (!src) return;
+    setNotify({
+      targetType: isTask ? 'task' : 'event', targetId: sel.slice(2), task: t, event: e,
+      names: [], steps: t ? taskSteps(t).map((s) => s.text).filter(Boolean) : [],
+      source: src,
+      preload: { subject: draft.subject, body: `${draft.body}\n\n${buildFooter(peopleDB, true)}`, names: [src.email, ...(src.cc ?? [])] },
+      replyDrafts: drafts, replySel: sel,
+    });
+  }, [peopleDB]);
   // levélírás a Levelek nézetből: kártya nélkül, a kiválasztott sablon előtöltve
   const composeFromTopic = useCallback((t: TopicTemplate) => {
     setNotify({ targetType: null, targetId: null, task: null, event: null, names: [], steps: [], source: null, topicId: t.id });
@@ -976,6 +1000,8 @@ export default function CurriculumApp() {
             <button className={view === 'catalog' ? 'is-on' : ''} onClick={() => setView('catalog')}>Katalógus</button>
             <button className={view === 'tasks' ? 'is-on' : ''} onClick={() => setView('tasks')}>Feladatok</button>
             <button className={view === 'events' ? 'is-on' : ''} onClick={() => setView('events')}>Események</button>
+            <button className={`editonly${view === 'posta' ? ' is-on' : ''}`} title="Bejövő levelek: válaszra váró feladók, előre megírt választervekkel"
+              onClick={() => { if (!canEdit) return; setView('posta'); }}>Posta{postaCount > 0 ? ` · ${postaCount}` : ''}</button>
             <button className={`editonly${view === 'topics' ? ' is-on' : ''}`} onClick={() => { if (!canEdit) return; setView('topics'); }}>Levelek</button>
             <button className={`editonly${view === 'people' ? ' is-on' : ''}`} title="Elérhetőségek: oktatók, hallgatók, intézményi / alumni / opponens / piaci kapcsolatok"
               onClick={() => { if (!canEdit) return; setView('people'); }}>Névjegyzék</button>
@@ -1093,6 +1119,14 @@ export default function CurriculumApp() {
               onAdd={() => { if (!canEdit) return; setEventEdit({ e: emptyEvent(), isNew: true }); }}
               onOpen={(id) => setAgendaDetails({ kind: 'event', id })}
               onPerson={onInstructor}
+            />
+          ) : view === 'posta' ? (
+            <PostaView
+              agenda={agenda}
+              footer={buildFooter(peopleDB, true)}
+              onReply={notifyReply}
+              onMarkReplied={markReplied}
+              onOpenCard={(sel) => setAgendaDetails({ kind: sel.startsWith('t:') ? 'task' : 'event', id: sel.slice(2) })}
             />
           ) : view === 'people' ? (
             // csak betöltött adattal mountolunk: a PeopleModal szerkesztőként mount-kor

@@ -9,8 +9,7 @@ import PlaceQuickPick from './PlaceQuickPick';
 import { ModalTabs, TabDef } from './AgendaModals';
 import { editHeaders } from '@/lib/editkey';
 import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate, autoFill, fmtDay, paraphrase, normText, LINK_STOP } from '@/lib/topics';
-import { ReplyVariant, StyleBank, parseStyleBank, replyVariants } from '@/lib/replies';
-import type { AgendaSource, AgendaTask as ATask, AgendaEvent as AEvent } from '@/data/agenda';
+import type { ReplyDraft } from '@/data/agenda';
 
 // A kitöltő-panel [mező]-i a nevük alapján TÍPUSOS beviteli mezőt kapnak: dátumhoz
 // dátumválasztó, időponthoz óra:perc, hónaphoz hónapválasztó — nem szabad szöveg.
@@ -115,6 +114,8 @@ export interface NotifyTarget {
   source?: { name: string; email: string; subject?: string | null } | null; // a kiváltó email feladója
   topicId?: string | null; // a Levelek nézetből indított levél előtöltött témasablonja
   preload?: { subject: string; body: string; names: string[]; letterId?: string } | null; // mentett levél megnyitása kész tartalommal
+  replyDrafts?: ReplyDraft[] | null; // a Postából indított válasz: a bot 3 terve (váltó-chipek a Szöveg fülön)
+  replySel?: string | null;          // a Posta-tétel ('t:id'/'e:id') — küldés után megválaszoltnak jelöljük
 }
 
 interface Props {
@@ -332,57 +333,16 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const outSubject = useMemo(() => renderOutput(subject, fillVals, killed), [subject, fillVals, killed]);
   const outBody = useMemo(() => renderOutput(body, fillVals, killed), [body, fillVals, killed]);
 
-  // VÁLASZOLANDÓ LEVELEK: az automata (Outlook-szinkron) által rögzített bejövő
-  // levelek, amikre még nem ment válasz. A stílus-fordulatok a grid/valasz-stilus.md
-  // tanuló fájlból jönnek; a három javaslat a kapcsolt tétel adataival töltődik.
-  const [styleBank, setStyleBank] = useState<StyleBank | null>(null);
-  useEffect(() => {
-    fetch('/api/style').then((r) => r.json())
-      .then((j) => setStyleBank(parseStyleBank(j?.text ?? null)))
-      .catch(() => setStyleBank(parseStyleBank(null)));
-  }, []);
-  interface PendingReply { sel: string; title: string; psrc: AgendaSource; task: ATask | null; event: AEvent | null }
-  const pendingReplies = useMemo<PendingReply[]>(() => {
-    const out: PendingReply[] = [];
-    (ctxTasks ?? []).forEach((t) => { if (t.source?.email && !t.source.replied) out.push({ sel: `t:${t.id}`, title: t.title, psrc: t.source, task: t, event: null }); });
-    (ctxEvents ?? []).forEach((e) => { if (e.source?.email && !e.source.replied) out.push({ sel: `e:${e.id}`, title: e.title, psrc: e.source, task: null, event: e }); });
-    return out.sort((a, b) => (b.psrc.date || '').localeCompare(a.psrc.date || ''));
-  }, [ctxTasks, ctxEvents]);
-  const [replyChips, setReplyChips] = useState<ReplyVariant[] | null>(null);
-  const [replySel, setReplySel] = useState<string | null>(null);
-  const replyCtxRef = useRef<PendingReply | null>(null);
-  const replySeedRef = useRef(0);
-  const applyReplyVariant = (v: ReplyVariant) => {
+  // A Postából indított válasz: a bot előre megírt 3 terve váltó-chipekként a
+  // Szöveg fülön; küldés után a Posta-tétel automatikusan megválaszoltnak jelölődik.
+  const replyChips = target.replyDrafts ?? null;
+  const [replySel, setReplySel] = useState<string | null>(target.replySel ?? null);
+  const applyReplyVariant = (v: ReplyDraft) => {
     setSubject(v.subject);
     setBody(`${v.body}\n\n${buildFooter(db, sigOn)}`);
     setBodyDirty(true);
     typedRef.current = true;
     setFillVals({}); setKilled([]);
-  };
-  const openReply = (p: PendingReply) => {
-    const bank = styleBank ?? parseStyleBank(null);
-    replyCtxRef.current = p;
-    replySeedRef.current = Math.floor(Math.random() * 97);
-    const vars = replyVariants(p.psrc, p.task, p.event, bank, replySeedRef.current);
-    setCtxSel(p.sel);
-    setSrc({ name: p.psrc.name, email: p.psrc.email, subject: p.psrc.subject ?? null });
-    setKind('valasz');
-    setAdhoc((a) => (a.includes(p.psrc.email) ? a : [...a, p.psrc.email]));
-    setReplySel(p.sel);
-    setReplyChips(vars);
-    setActiveTopic(null);
-    lastTopicRef.current = null;
-    applyReplyVariant(vars[0]);
-    setTab('text');
-    setResult(`✓ Válasz előkészítve: ${p.psrc.name} („${p.psrc.subject ?? p.title}"). Három javaslat közül választhatsz fent.`);
-  };
-  const rerollReplies = () => {
-    const p = replyCtxRef.current;
-    if (!p) return;
-    replySeedRef.current += 1;
-    const vars = replyVariants(p.psrc, p.task, p.event, styleBank ?? parseStyleBank(null), replySeedRef.current);
-    setReplyChips(vars);
-    setResult('✓ Új megfogalmazások — válassz a javaslatok közül.');
   };
 
   // teljes szövegű keresőindex a jobb oldali sablonpanelhez (cím + csoport + tárgy + törzs)
@@ -803,24 +763,6 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           </div>
           </>)}
           {tab === 'about' && (<>
-          {pendingReplies.length > 0 && (<>
-            <div className="f-sec">Válaszolandó levelek ({pendingReplies.length})</div>
-            <div className="field full nm-replies">
-              <label>Az automata által rögzített bejövő levelek, amikre még nem ment válasz — ✉: válasz három javaslattal · ✓: megválaszoltnak jelölés</label>
-              {pendingReplies.map((p) => (
-                <div key={p.sel} className="nm-reply">
-                  <span className="d">{p.psrc.date ? p.psrc.date.slice(5).replace('-', '. ') + '.' : '?'}</span>
-                  <span className="n">{p.psrc.name}</span>
-                  <span className="s" title={p.psrc.subject ?? ''}>„{p.psrc.subject ?? p.title}"</span>
-                  <span className="c" title="A kapcsolt kártya">▤ {p.title}</span>
-                  <span className="a">
-                    <button type="button" className="btn nm-reply-go" onClick={() => openReply(p)}>✉ Válasz</button>
-                    {onMarkReplied && <button type="button" className="btn nm-reply-ok" title="Megválaszoltnak jelölés (pl. ha Outlookból már elment)" onClick={() => onMarkReplied(p.sel)}>✓</button>}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </>)}
           <div className="f-sec c-green">2 · Miről szóljon?</div>
           {!target.event && !target.task && ((ctxEvents?.length ?? 0) + (ctxTasks?.length ?? 0)) > 0 && (
             <div className="field full">
@@ -911,14 +853,13 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           </>)}
           {tab === 'text' && (<>
           <div className="f-sec">3 · A levél szövege és küldése</div>
-          {replyChips && (
+          {replyChips && replyChips.length > 0 && (
             <div className="field full">
-              <label>Válaszjavaslatok — kattintásra betöltődik, utána szabadon átírható</label>
+              <label>A bot választervei — kattintásra betöltődik, utána szabadon átírható</label>
               <div className="chipradio">
                 {replyChips.map((v) => (
-                  <button key={v.id} type="button" className="crx c-blue" onClick={() => applyReplyVariant(v)}>{v.label}</button>
+                  <button key={v.label} type="button" className="crx c-blue" onClick={() => applyReplyVariant(v)}>{v.label}</button>
                 ))}
-                <button type="button" className="crx" title="Mindhárom javaslat új megfogalmazást kap" onClick={rerollReplies}>↻ Újra</button>
               </div>
             </div>
           )}

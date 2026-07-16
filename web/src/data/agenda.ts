@@ -29,13 +29,19 @@ export const TASK_CATEGORIES = [
   'Infrastruktúra', 'HR & demonstrátor', 'Web & archívum', 'Egyéb',
 ] as const;
 
+// A bot által előre megírt választervezet (aláírás NÉLKÜL — azt az app teszi hozzá)
+export interface ReplyDraft { label: string; subject: string; body: string }
+
 // A tételt kiváltó bejövő email feladója — neki külön válasz-levél írható.
 export interface AgendaSource {
   name: string;
   email: string;
   subject?: string | null; // az eredeti levél tárgya (a Re: válaszhoz)
-  date?: string | null;    // a levél érkezési napja (ÉÉÉÉ-HH-NN) — a Válaszolandó lista rendezéséhez
+  date?: string | null;    // a levél érkezési napja (ÉÉÉÉ-HH-NN) — a Posta lista rendezéséhez
   replied?: string | null; // mikor lett megválaszoltnak jelölve (ISO) — üresen még válaszra vár
+  gist?: string | null;    // EGY tényszerű mondat: mit kér / mire vár választ a feladó
+  cc?: string[] | null;    // levélszálnál a válasz további címzettjei (email-címek)
+  replies?: ReplyDraft[] | null; // a bot 3 előre megírt választerve (a levél + agenda + stílusfájl alapján)
 }
 
 // Alfeladat: kipipálható lépés, opcionális saját felelőssel és határidővel

@@ -1579,6 +1579,9 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .dr-sec.c-yellow { border-left-color: var(--yellow-deep); background: color-mix(in srgb, var(--yellow-deep) 10%, transparent); }
 .dr-sec.c-green { border-left-color: var(--g0); background: color-mix(in srgb, var(--g0) 8%, transparent); }
 .dr-empty { font-size: .8rem; color: var(--muted); font-style: italic; margin: 4px 0 10px; }
+/* a beérkezett levél válasz-állapota a részletezőben */
+.dr-repl { display: inline-block; margin-left: 8px; font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--hot-100); color: var(--hot); white-space: nowrap; }
+.dr-repl.ok { background: color-mix(in srgb, var(--g0) 14%, transparent); color: var(--g0); }
 /* tengely-szinkron figyelmeztetés a részletezőben (határidő vs. esemény napja) */
 .dr-warn { margin: 6px 0 0; font-size: .78rem; color: color-mix(in srgb, var(--yellow-deep) 80%, var(--ink)); background: color-mix(in srgb, var(--yellow-deep) 10%, transparent); border-radius: 8px; padding: 6px 10px; }
 .dr-warn .dr-link { color: inherit; font-weight: 700; }

@@ -169,7 +169,15 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                 ) : <p className="none">nincs</p>}
               </div>
               {task.summary && <div className="dr-field"><h4>Rövid összefoglaló</h4><p>{task.summary}</p></div>}
-              {task.source && <div className="dr-field"><h4>Beérkezett levélből</h4><p>{task.source.name} &lt;{task.source.email}&gt;{task.source.subject ? ` · „${task.source.subject}"` : ''}</p></div>}
+              {task.source && (
+                <div className="dr-field">
+                  <h4>Beérkezett levélből</h4>
+                  <p>
+                    {task.source.name} &lt;{task.source.email}&gt;{task.source.subject ? ` · „${task.source.subject}"` : ''}
+                    <span className={`dr-repl${task.source.replied ? ' ok' : ''}`}>{task.source.replied ? `✓ megválaszolva ${task.source.replied.slice(5, 10).replace('-', '. ')}.` : '✉ válaszra vár — a Postában'}</span>
+                  </p>
+                </div>
+              )}
             </>
           )}
           {event && (

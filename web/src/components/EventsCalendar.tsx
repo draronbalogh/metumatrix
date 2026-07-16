@@ -2,9 +2,16 @@
 
 import { AgendaEvent } from '@/data/agenda';
 
+// feladat-határidő a naptárban: a levél–feladat–naptár tengely miatt a naptár a
+// teljes képet mutatja — nap-pontos határidő ⚑-ként a napon + sor a hónap listájában,
+// hónap-pontos határidő a hónap listájában "~" jelöléssel
+export interface CalDeadline { id: string; title: string; day: string; done: boolean }
+
 interface Props {
   events: AgendaEvent[];
+  deadlines: CalDeadline[];
   onEdit: (id: string) => void;
+  onTask: (id: string) => void;
 }
 
 const MONTH_NAME = ['január', 'február', 'március', 'április', 'május', 'június', 'július', 'augusztus', 'szeptember', 'október', 'november', 'december'];
@@ -29,7 +36,7 @@ interface MonthRow { e: AgendaEvent; color: string; label: string; long: boolean
 // ennél hosszabb tartomány = háttér-időszak: NEM fest napokat, csak a listában jelenik meg
 const LONG_DAYS = 21;
 
-export default function EventsCalendar({ events, onEdit }: Props) {
+export default function EventsCalendar({ events, deadlines, onEdit, onTask }: Props) {
   // stabil színkiosztás: a dátumozott események kezdőnap szerint sorban kapják a paletta színeit
   const dated = events.filter((e) => e.day).slice().sort((a, b) => (a.day as string).localeCompare(b.day as string) || a.id.localeCompare(b.id));
   const colorOf: Record<string, string> = {};
@@ -76,6 +83,22 @@ export default function EventsCalendar({ events, onEdit }: Props) {
     else undated.push(e);
   });
 
+  // feladat-határidők hónaponként: nap-pontosak a napra is kerülnek (⚑), a
+  // hónap-pontosak csak a hónap listájába ("~")
+  const dlByMonth: Record<string, { id: string; title: string; dayN: number; done: boolean }[]> = {};
+  const dlFuzzy: Record<string, CalDeadline[]> = {};
+  const dlMarks: Record<string, Record<number, { id: string; tip: string }[]>> = {};
+  deadlines.forEach((d) => {
+    if (d.day.length >= 10) {
+      const k = d.day.slice(0, 7);
+      const n = Number(d.day.slice(8, 10));
+      (dlByMonth[k] ||= []).push({ id: d.id, title: d.title, dayN: n, done: d.done });
+      ((dlMarks[k] ||= {})[n] ||= []).push({ id: d.id, tip: `⚑ határidő: ${d.title}` });
+    } else if (d.day.length === 7) {
+      (dlFuzzy[d.day] ||= []).push(d);
+    }
+  });
+
   const today = new Date();
   const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
@@ -86,11 +109,14 @@ export default function EventsCalendar({ events, onEdit }: Props) {
           const k = mkey(y, m);
           const rows = monthRows[k] || [];
           const fuzzy = fuzzyByMonth[k] || [];
+          const dls = (dlByMonth[k] || []).slice().sort((a, b) => a.dayN - b.dayN);
+          const dlsFuzzy = dlFuzzy[k] || [];
           const daysIn = new Date(y, m + 1, 0).getDate();
           const firstDow = (new Date(y, m, 1).getDay() + 6) % 7;
           const hits = dayHits[k] || {};
+          const marks = dlMarks[k] || {};
           return (
-            <section className={`cal-month${rows.length + fuzzy.length ? ' has-ev' : ''}`} key={k}>
+            <section className={`cal-month${rows.length + fuzzy.length + dls.length + dlsFuzzy.length ? ' has-ev' : ''}`} key={k}>
               <div className="cal-mh">{y}. {MONTH_NAME[m]}</div>
               <div className="cal-days">
                 {WDAY.map((w, i) => <span key={`w${i}`} className="wd">{w}</span>)}
@@ -118,12 +144,18 @@ export default function EventsCalendar({ events, onEdit }: Props) {
                             onClick={(ev) => { ev.stopPropagation(); onEdit(x.id); }} />
                         ))}
                         {h.length > 4 && <em>+</em>}
+                        {(marks[d] || []).slice(0, 1).map((x) => (
+                          <button key={`dl${x.id}`} type="button" className="cal-flag"
+                            data-tip={(marks[d] || []).map((m2) => m2.tip).join(' · ')}
+                            aria-label={x.tip}
+                            onClick={(ev) => { ev.stopPropagation(); onTask(x.id); }}>⚑</button>
+                        ))}
                       </span>
                     </span>
                   );
                 })}
               </div>
-              {(rows.length > 0 || fuzzy.length > 0) && (
+              {(rows.length > 0 || fuzzy.length > 0 || dls.length > 0 || dlsFuzzy.length > 0) && (
                 <div className="cal-evs">
                   {rows.map((r) => (
                     <button key={r.e.id} className={`cal-ev${r.long ? ' is-long' : ''}${r.e.featured ? ' is-feat' : ''}`} onClick={() => onEdit(r.e.id)} title={(r.long ? 'Hosszabb időszak (a napokon nem jelölve) · ' : '') + r.e.when + (r.e.place ? ` · ${r.e.place}` : '')}>
@@ -137,6 +169,21 @@ export default function EventsCalendar({ events, onEdit }: Props) {
                       <span className="cal-dot hollow" />
                       <span className="d">~</span>
                       <span className="t">{e.title}</span>
+                    </button>
+                  ))}
+                  {/* feladat-határidők: kattintásra a FELADAT részletezője nyílik */}
+                  {dls.map((d) => (
+                    <button key={`dl-${d.id}`} className={`cal-ev dl${d.done ? ' is-done' : ''}`} onClick={() => onTask(d.id)} title="Feladat-határidő — kattintásra a feladat nyílik">
+                      <span className="cal-dot flag">⚑</span>
+                      <span className="d">{d.dayN}.</span>
+                      <span className="t">{d.title}</span>
+                    </button>
+                  ))}
+                  {dlsFuzzy.map((d) => (
+                    <button key={`dlf-${d.id}`} className={`cal-ev dl fuzzy${d.done ? ' is-done' : ''}`} onClick={() => onTask(d.id)} title="Hónap-pontosságú feladat-határidő">
+                      <span className="cal-dot flag">⚑</span>
+                      <span className="d">~</span>
+                      <span className="t">{d.title}</span>
                     </button>
                   ))}
                 </div>

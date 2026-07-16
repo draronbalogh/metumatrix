@@ -440,8 +440,11 @@ export default function CurriculumApp() {
   }, [hydrated]);
   const saveTask = useCallback((t: AgendaTask) => {
     const cur = agendaRef.current;
-    const exists = cur.tasks.some((x) => x.id === t.id);
-    commitAgenda({ ...cur, tasks: exists ? cur.tasks.map((x) => (x.id === t.id ? t : x)) : [t, ...cur.tasks] });
+    // tengely-szinkron: eseményhez kapcsolt, határidő nélküli feladat átveszi az esemény napját
+    const ev = t.eventId ? cur.events.find((e) => e.id === t.eventId) : null;
+    const t2 = ev && !t.dueDate ? { ...t, dueDate: ev.day ?? ev.sort ?? null } : t;
+    const exists = cur.tasks.some((x) => x.id === t2.id);
+    commitAgenda({ ...cur, tasks: exists ? cur.tasks.map((x) => (x.id === t2.id ? t2 : x)) : [t2, ...cur.tasks] });
     setTaskEdit(null);
   }, [commitAgenda]);
   const deleteTask = useCallback((id: string) => {
@@ -493,12 +496,28 @@ export default function CurriculumApp() {
   const linkTaskEvent = useCallback((taskId: string, eventId: string | null) => {
     if (!canEditRef.current) return;
     const cur = agendaRef.current;
-    commitAgenda({ ...cur, tasks: cur.tasks.map((t) => (t.id === taskId ? { ...t, eventId } : t)) });
+    // tengely-szinkron: kapcsoláskor a határidő nélküli feladat átveszi az esemény napját/hónapját
+    const ev = eventId ? cur.events.find((e) => e.id === eventId) : null;
+    commitAgenda({ ...cur, tasks: cur.tasks.map((t) => (t.id === taskId ? { ...t, eventId, dueDate: t.dueDate ?? (ev ? ev.day ?? ev.sort ?? null : null) } : t)) });
+  }, [commitAgenda]);
+  // tengely-szinkron: a részletezőből egy kattintással átvehető az esemény napja határidőnek
+  const setTaskDue = useCallback((taskId: string, d: string) => {
+    if (!canEditRef.current) return;
+    const cur = agendaRef.current;
+    commitAgenda({ ...cur, tasks: cur.tasks.map((t) => (t.id === taskId ? { ...t, dueDate: d, due: null } : t)) });
   }, [commitAgenda]);
   const saveEvent = useCallback((e: AgendaEvent) => {
     const cur = agendaRef.current;
-    const exists = cur.events.some((x) => x.id === e.id);
-    commitAgenda({ ...cur, events: exists ? cur.events.map((x) => (x.id === e.id ? e : x)) : [...cur.events, e] });
+    const prev = cur.events.find((x) => x.id === e.id);
+    const exists = !!prev;
+    // tengely-szinkron: ha az esemény NAPJA változik, a hozzá igazított feladat-határidők
+    // (amik eddig pont az esemény napján álltak) automatikusan követik az új napot
+    const oldKey = prev?.day ?? prev?.sort ?? null;
+    const newKey = e.day ?? e.sort ?? null;
+    const tasks = oldKey && newKey && oldKey !== newKey
+      ? cur.tasks.map((t) => (t.eventId === e.id && t.dueDate === oldKey ? { ...t, dueDate: newKey } : t))
+      : cur.tasks;
+    commitAgenda({ ...cur, tasks, events: exists ? cur.events.map((x) => (x.id === e.id ? e : x)) : [...cur.events, e] });
     setEventEdit(null);
   }, [commitAgenda]);
   const deleteEvent = useCallback((id: string) => {
@@ -1118,6 +1137,7 @@ export default function CurriculumApp() {
               agenda={agenda} q={q} instr={instr} letterStats={letterStats}
               onAdd={() => { if (!canEdit) return; setEventEdit({ e: emptyEvent(), isNew: true }); }}
               onOpen={(id) => setAgendaDetails({ kind: 'event', id })}
+              onOpenTask={(id) => setAgendaDetails({ kind: 'task', id })}
               onPerson={onInstructor}
             />
           ) : view === 'posta' ? (
@@ -1291,6 +1311,7 @@ export default function CurriculumApp() {
           onOpenEvent={(id) => setAgendaDetails({ kind: 'event', id })}
           onToggleStep={toggleStep}
           onLinkEvent={linkTaskEvent}
+          onSetDue={setTaskDue}
           onPerson={(n) => { setAgendaDetails(null); onInstructor(n); }}
           onNotify={() => { if (agendaDetails.kind === 'task') notifyTask(agendaDetails.id); else notifyEvent(agendaDetails.id); }}
           onOpenLetter={openSavedLetter}

@@ -25,6 +25,7 @@ interface Props {
   onOpenEvent: (id: string) => void;       // feladat-részletezőből eseményre ugrás
   onToggleStep: (taskId: string, ix: number) => void;
   onLinkEvent: (taskId: string, eventId: string | null) => void; // feladat ↔ esemény kapcsolás innen is
+  onSetDue: (taskId: string, d: string) => void; // az esemény napjának átvétele határidőnek (tengely-szinkron)
   onPerson: (name: string) => void;        // név-szűrő (bezárja a részletezőt a hívó)
   onNotify: () => void;                    // ✉ új levél ehhez a tételhez
   onOpenLetter: (l: Letter) => void;
@@ -62,7 +63,7 @@ function Sec({ cls, children }: { cls?: string; children: ReactNode }) {
 // egy kiosztott lépés a személy-kártyán — a taskId+ix révén innen is pipálható
 interface PStep { taskId: string; taskTitle: string | null; ix: number; text: string; done: boolean; due: string | null }
 
-export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor }: Props) {
+export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor }: Props) {
   const task = det.kind === 'task' ? agenda.tasks.find((t) => t.id === det.id) ?? null : null;
   const event = det.kind === 'event' ? agenda.events.find((e) => e.id === det.id) ?? null : null;
   if (!task && !event) return null;
@@ -92,9 +93,13 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
   const allSteps = task ? taskSteps(task) : linked.flatMap(taskSteps);
   const allDone = allSteps.filter((s) => s.done).length;
 
-  const evTitle = task?.eventId ? agenda.events.find((e) => e.id === task.eventId)?.title ?? null : null;
+  const evLinked = task?.eventId ? agenda.events.find((e) => e.id === task.eventId) ?? null : null;
+  const evTitle = evLinked?.title ?? null;
   // automatikus esemény-javaslat a címek egyezése alapján, amíg nincs kapcsolat
   const evSugg = task && !task.eventId ? suggestEventFor(`${task.title} ${task.summary}`, agenda.events) : null;
+  // tengely-szinkron jelzések: az esemény napja és a feladat határideje ne szakadjon el
+  const evDay = evLinked ? evLinked.day ?? evLinked.sort ?? null : null;
+  const dueAfterEvent = !!(task?.dueDate && evLinked?.day && task.dueDate.slice(0, 10) > evLinked.day);
 
   // a személy-kártyák és a kiosztatlan blokk közös lépés-listája — itt is pipálható
   const stepList = (st: PStep[]) => (
@@ -133,6 +138,15 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                 <p className={task.dueDate || task.due ? '' : 'none'}>
                   {task.dueDate ? `📅 ${fmtDueHu(task.dueDate)}` : task.due || 'nincs megadva'}
                 </p>
+                {canEdit && !task.dueDate && evDay && (
+                  <button className="chip due-sugg" title="A kapcsolt esemény napjának átvétele határidőnek"
+                    onClick={() => onSetDue(task.id, evDay)}>⚑ Átveszem az esemény idejét: {fmtDueHu(evDay)}</button>
+                )}
+                {dueAfterEvent && (
+                  <p className="dr-warn">⚠ A határidő a kapcsolt esemény napja ({fmtDueHu(evLinked?.day)}) utánra esik.
+                    {canEdit && evDay && <button className="dr-link" onClick={() => onSetDue(task.id, evDay)}> Igazítás az eseményhez</button>}
+                  </p>
+                )}
               </div>
               <div className="dr-field">
                 <h4>Kapcsolt esemény</h4>

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Agenda, AgendaEvent, eventHasPerson, fmtDayHu } from '@/data/agenda';
-import EventsCalendar from './EventsCalendar';
+import { Agenda, AgendaEvent, eventHasPerson, fmtDayHu, taskHasPerson } from '@/data/agenda';
+import EventsCalendar, { CalDeadline } from './EventsCalendar';
 import { familyName } from './AgendaView';
 import PageHead from './PageHead';
 
@@ -13,10 +13,11 @@ interface Props {
   letterStats: Record<string, { n: number; drafts: number }>; // esemény-id → kapcsolt levelek száma / vázlatok
   onAdd: () => void;
   onOpen: (id: string) => void;           // az esemény RÉSZLETEZŐJE (drawer) — innen nyílik minden más
+  onOpenTask: (id: string) => void;       // a naptárban jelölt feladat-határidő → a feladat részletezője
   onPerson: (name: string) => void;
 }
 
-export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpen, onPerson }: Props) {
+export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpen, onOpenTask, onPerson }: Props) {
   const [mode, setMode] = useState<'list' | 'cal'>('cal'); // alapból a naptár nyílik
 
   const matches = (e: AgendaEvent) => {
@@ -36,6 +37,12 @@ export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpe
     return a.title.localeCompare(b.title, 'hu');
   });
   const tasksFor = (eid: string) => agenda.tasks.filter((t) => t.eventId === eid);
+  // a levél–feladat–naptár tengely: a NYITOTT feladatok határidői is a naptárra kerülnek
+  const deadlines: CalDeadline[] = agenda.tasks
+    .filter((t) => t.dueDate && t.status !== 'done'
+      && (!instr || taskHasPerson(t, instr))
+      && (!q || t.title.toLowerCase().includes(q.toLowerCase())))
+    .map((t) => ({ id: t.id, title: t.title, day: t.dueDate as string, done: false }));
 
   return (
     <main className="catalog agenda">
@@ -66,7 +73,7 @@ export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpe
 
 
       {mode === 'cal' ? (
-        <EventsCalendar events={shown} onEdit={onOpen} />
+        <EventsCalendar events={shown} deadlines={deadlines} onEdit={onOpen} onTask={onOpenTask} />
       ) : (
         <div className="cc-grid">
           {shown.map((e) => {

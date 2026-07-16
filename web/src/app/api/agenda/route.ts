@@ -29,11 +29,24 @@ const guardSource = (inc: AgendaSource | null | undefined, disk: AgendaSource | 
   const s = i.status;
   const okTransition = s === 'pending'
     || (s === 'replied' && (d.status === 'pending' || d.status == null));
-  if (okTransition && s !== d.status) return inc;
   const out: Record<string, unknown> = { ...i };
-  for (const f of USER_SOURCE_FIELDS) {
-    if (d[f] !== undefined) out[f] = d[f];
-    else delete out[f];
+  if (!(okTransition && s !== d.status)) {
+    for (const f of USER_SOURCE_FIELDS) {
+      if (d[f] !== undefined) out[f] = d[f];
+      else delete out[f];
+    }
+  }
+  // a szál-idővonal append-only: a lemezen lévő bejegyzések (pl. az app által írt
+  // kimenők) nem veszhetnek el akkor sem, ha a bot nélkülük küldi vissza a source-t
+  const dt = Array.isArray(d.thread) ? (d.thread as Record<string, unknown>[]) : [];
+  const it = Array.isArray(out.thread) ? (out.thread as Record<string, unknown>[]) : [];
+  if (dt.length || it.length) {
+    const key = (m: Record<string, unknown>) => `${m.at}|${m.from}|${m.dir}`;
+    const seen = new Set(it.map(key));
+    const merged = [...it];
+    dt.forEach((m) => { if (!seen.has(key(m))) merged.push(m); });
+    merged.sort((a, b) => String(a.at).localeCompare(String(b.at)));
+    out.thread = merged;
   }
   return out as unknown as AgendaSource;
 };

@@ -741,10 +741,10 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .cal-bar { position: relative; display: block; width: 100%; height: 4.5px; border: 0; border-radius: 2px; padding: 0; cursor: pointer; }
 .cal-bar.ft { height: 6px; border-radius: 3px; }
 .cal-bar:hover, .cal-bar:focus-visible { filter: brightness(1.22) saturate(1.15); box-shadow: 0 0 0 1.5px var(--card), 0 0 0 3px color-mix(in srgb, var(--ink) 35%, transparent); z-index: 5; }
-.cal-bar::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%); z-index: 30; display: none; width: max-content; max-width: 230px; white-space: normal; text-align: left; font-family: var(--ff); font-size: .68rem; font-weight: 600; line-height: 1.35; color: #fff; background: color-mix(in srgb, var(--ink) 94%, transparent); border-radius: 8px; padding: 6px 9px; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); }
+.cal-bar::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%); z-index: 30; display: none; width: max-content; max-width: min(230px, calc(100vw - 20px)); white-space: normal; text-align: left; font-family: var(--ff); font-size: .68rem; font-weight: 600; line-height: 1.35; color: #fff; background: color-mix(in srgb, var(--ink) 94%, transparent); border-radius: 8px; padding: 6px 9px; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); }
 .cal-bar:hover::after, .cal-bar:focus-visible::after { display: block; }
-.cal-bar.tip-left::after { left: 0; transform: none; }
-.cal-bar.tip-right::after { left: auto; right: 0; transform: none; }
+.cal-bar.tip-left::after, .cal-flag.tip-left::after { left: 0; transform: none; }
+.cal-bar.tip-right::after, .cal-flag.tip-right::after { left: auto; right: 0; transform: none; }
 .viewer .cal-bar, .viewer .cal-ev { cursor: default; }
 .cal-evs { display: flex; flex-direction: column; gap: 4px; margin-top: 11px; padding-top: 9px; border-top: 1px dashed var(--line); }
 .cal-ev { display: flex; align-items: baseline; gap: 8px; text-align: left; font-family: var(--ff); font-size: .78rem; font-weight: 600; color: var(--ink); background: transparent; border: 0; padding: 3px; border-radius: 5px; cursor: pointer; }
@@ -754,7 +754,7 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 /* FELADAT-HATÁRIDŐK a naptárban (tengely-szinkron): ⚑ a napon, sor a hónap-listában */
 .cal-flag { position: relative; display: block; width: 100%; border: 0; background: none; padding: 0; cursor: pointer; font-size: .6rem; line-height: 1; color: var(--hot); text-align: center; }
 .cal-flag:hover, .cal-flag:focus-visible { transform: scale(1.35); z-index: 5; }
-.cal-flag::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%); z-index: 30; display: none; width: max-content; max-width: 230px; white-space: normal; text-align: left; font-family: var(--ff); font-size: .68rem; font-weight: 600; line-height: 1.35; color: #fff; background: color-mix(in srgb, var(--ink) 94%, transparent); border-radius: 8px; padding: 6px 9px; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); }
+.cal-flag::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%); z-index: 30; display: none; width: max-content; max-width: min(230px, calc(100vw - 20px)); white-space: normal; text-align: left; font-family: var(--ff); font-size: .68rem; font-weight: 600; line-height: 1.35; color: #fff; background: color-mix(in srgb, var(--ink) 94%, transparent); border-radius: 8px; padding: 6px 9px; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); }
 .cal-flag:hover::after, .cal-flag:focus-visible::after { display: block; }
 .cal-dot.flag { width: auto; background: none; color: var(--hot); font-size: .66rem; line-height: 1; }
 .cal-ev.dl .t { color: var(--ink-2); }
@@ -1526,6 +1526,28 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .po-mini .s { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
 .po-mini .btn { padding: 3px 9px; font-size: .74rem; }
 .po-date { border: 1px solid var(--line); border-radius: 7px; padding: 2px 6px; font: inherit; font-size: .74rem; color: var(--ink); background: var(--card); }
+/* brífing-sáv: sávonkénti darabszámok + Döntés-sor / Sorban módváltók */
+.po-brief { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 2px 0 14px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--brand) 5%, var(--card)); font-size: .82rem; color: var(--ink-2); }
+.po-brief .sp { flex: 1; }
+.po-brief .hot { color: var(--hot); }
+.po-brief .btn { padding: 4px 10px; font-size: .76rem; }
+.po-decide-h { font-size: .78rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 4px; }
+/* címzett-sor a tervek felett: kinek megy a válasz — másolás előtt ellenőrizhető */
+.po-tocc { font-size: .76rem; color: var(--ink-2); padding: 5px 10px; border: 1px dashed var(--line); border-radius: 8px; background: var(--card); }
+/* feladó-szabály sor (Screener): egy feladóról egyszer döntünk */
+.po-screen { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+.po-screen .btn { padding: 3px 9px; font-size: .74rem; }
+/* szál-idővonal a lenyitott sorban és a részletezőben */
+.po-thread { border: 1px solid var(--line); border-radius: 8px; background: var(--card); padding: 4px 8px; }
+.po-thread-h { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 4px 2px; font: inherit; font-size: .74rem; font-weight: 700; color: var(--ink-2); cursor: pointer; }
+.po-tmsg, .dr-tmsg { display: flex; gap: 7px; align-items: baseline; font-size: .78rem; line-height: 1.4; padding: 3px 2px; color: var(--ink-2); }
+.po-tmsg .d, .dr-tmsg .d { flex: none; font-size: .7rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted); }
+.po-tmsg .w, .dr-tmsg .w { flex: none; font-weight: 800; }
+.po-tmsg.out, .dr-tmsg.out { color: var(--ink); }
+.po-tmsg.out .w, .dr-tmsg.out .w { color: var(--g0); }
+.po-tmsg .f, .dr-tmsg .f { font-weight: 700; }
+.po-tmsg .g { flex: 1; min-width: 0; }
+.dr-thread { margin-top: 8px; border-left: 2px solid var(--line); padding-left: 10px; }
 /* visszavonási sáv a lap alján — a verdikt 6 mp-ig visszavonható */
 .po-undotoast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 999px; background: var(--ink); color: var(--bg); font-size: .82rem; box-shadow: 0 8px 24px rgba(16, 17, 20, .25); z-index: 60; }
 .po-undotoast .btn { padding: 3px 10px; font-size: .76rem; background: var(--bg); color: var(--ink); border-color: transparent; }

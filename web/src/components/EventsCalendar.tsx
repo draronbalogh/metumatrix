@@ -17,12 +17,13 @@ interface Props {
 const MONTH_NAME = ['január', 'február', 'március', 'április', 'május', 'június', 'július', 'augusztus', 'szeptember', 'október', 'november', 'december'];
 const WDAY = ['H', 'K', 'Sz', 'Cs', 'P', 'Sz', 'V'];
 
-// A tanév hónapjai: 2026. augusztus – 2027. július
+// A naptár-rács a MAI hónaptól (de legkésőbb a tanévkezdő 2026. augusztustól)
+// 2027. júliusig fut — az aktuális hónap így sosem eshet ki a rácsból.
+const NOW = new Date();
+const CAL_START = Math.min(NOW.getFullYear() * 12 + NOW.getMonth(), 2026 * 12 + 7);
+const CAL_END = 2027 * 12 + 6; // 2027. július
 const MONTHS: { y: number; m: number }[] = [];
-for (let i = 0; i < 12; i++) {
-  const m = 7 + i;
-  MONTHS.push({ y: 2026 + Math.floor(m / 12), m: m % 12 });
-}
+for (let i = CAL_START; i <= CAL_END; i++) MONTHS.push({ y: Math.floor(i / 12), m: i % 12 });
 
 // esemény-színpaletta — egymás mellett futó időszakok jól elkülönülnek
 const EV_COLORS = ['#d7144b', '#2f6fe0', '#17935f', '#7b3fe4', '#e08b00', '#0e9aa7', '#c2185b', '#5d7a12', '#b3541e', '#4b5bd7', '#8e24aa', '#00796b'];
@@ -148,6 +149,12 @@ export default function EventsCalendar({ events, deadlines, onEdit, onTask }: Pr
                           <button key={`dl${x.id}`} type="button" className="cal-flag"
                             data-tip={(marks[d] || []).map((m2) => m2.tip).join(' · ')}
                             aria-label={x.tip}
+                            onMouseEnter={(ev) => {
+                              // szélső napokon a tooltip befelé igazítva nyílik, ne lógjon ki
+                              const b = ev.currentTarget.getBoundingClientRect();
+                              ev.currentTarget.classList.toggle('tip-left', b.left < 130);
+                              ev.currentTarget.classList.toggle('tip-right', window.innerWidth - b.right < 130);
+                            }}
                             onClick={(ev) => { ev.stopPropagation(); onTask(x.id); }}>⚑</button>
                         ))}
                       </span>

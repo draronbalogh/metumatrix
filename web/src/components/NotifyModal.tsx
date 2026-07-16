@@ -337,9 +337,13 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   // Szöveg fülön; küldés után a Posta-tétel automatikusan megválaszoltnak jelölődik.
   const replyChips = target.replyDrafts ?? null;
   const [replySel, setReplySel] = useState<string | null>(target.replySel ?? null);
+  // a betöltött terv megjegyzése a tanulási naplóhoz (küldéskor: átírta-e a felhasználó)
+  const appliedDraftRef = useRef<{ label: string; body: string } | null>(null);
   const applyReplyVariant = (v: ReplyDraft) => {
     setSubject(v.subject);
-    setBody(`${v.body}\n\n${buildFooter(db, sigOn)}`);
+    const b = `${v.body}\n\n${buildFooter(db, sigOn)}`;
+    setBody(b);
+    appliedDraftRef.current = { label: v.label, body: b };
     setBodyDirty(true);
     typedRef.current = true;
     setFillVals({}); setKilled([]);
@@ -609,7 +613,15 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
         }
         setResult(`✓ Elküldve ${j.sent} címzettnek — a levél kiküldöttként mentve.`);
         // ha ez egy Válaszolandó tételre írt válasz volt, a tétel megválaszoltnak jelölődik
-        if (replySel && onMarkReplied) { onMarkReplied(replySel); setReplySel(null); }
+        if (replySel && onMarkReplied) {
+          // tanulási napló: melyik terv ment el, és át lett-e írva
+          const ad = appliedDraftRef.current;
+          fetch('/api/replylog', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+            body: JSON.stringify({ at: new Date().toISOString(), sel: replySel, label: ad?.label ?? '(kézi levél)', action: 'send', edited: ad ? outBody !== ad.body : true, chars: outBody.length }),
+          }).catch(() => { /* a napló nem kritikus */ });
+          onMarkReplied(replySel); setReplySel(null);
+        }
       } else setResult(`Hiba: ${j.error || 'küldés sikertelen'}`);
     } catch (e) { setResult(`Hiba: ${String(e)}`); }
     setSending(false);

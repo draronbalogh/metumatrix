@@ -44,6 +44,14 @@ export interface PeopleGroup {
   members: string[];
 }
 
+// Feladó-szabály (Posta-szűrő, a Hey „Screener" mintájára): egy feladóról EGYSZER
+// döntünk — 'reply': válaszigényes (teljes válasz-csomag) · 'fyi': csak tájékoztat
+// (nem kerül a Postába) · 'ignore': mellőzendő (a bot át is ugorja a leveleit).
+export type SenderRule = 'reply' | 'fyi' | 'ignore';
+export const SENDER_RULE_LABEL: Record<SenderRule, string> = {
+  reply: 'válaszigényes', fyi: 'csak tájékoztat', ignore: 'mellőzendő',
+};
+
 export interface PeopleDB {
   teachers: Person[]; // csak elérhetőség-kiegészítés a tantervi nevekhez
   students: Person[]; // hallgatók / demonstrátorok — itt az egyetlen listájuk
@@ -54,6 +62,7 @@ export interface PeopleDB {
   groups: PeopleGroup[]; // egyedi email-csoportok
   signature: string; // hivatalos aláírás-blokk — a levélben KI-BE kapcsolható
   signatureLinks: string; // szakos linkek — MINDIG a levél legaljára kerül, elválasztó vonallal
+  senderRules: Record<string, SenderRule>; // feladó-szabályok email (kisbetűs) szerint — a bot is olvassa
 }
 
 // Hivatalos aláírás (a levélben ki-be kapcsolható); a Névjegyzékben bármikor átírható.
@@ -93,7 +102,7 @@ export interface RosterEntry {
   kind: PersonKind;
 }
 
-export const DEFAULT_PEOPLE: PeopleDB = { teachers: [], students: [], institution: [], alumni: [], opponents: [], market: [], groups: [], signature: DEFAULT_SIGNATURE, signatureLinks: DEFAULT_SIGNATURE_LINKS };
+export const DEFAULT_PEOPLE: PeopleDB = { teachers: [], students: [], institution: [], alumni: [], opponents: [], market: [], groups: [], signature: DEFAULT_SIGNATURE, signatureLinks: DEFAULT_SIGNATURE_LINKS, senderRules: {} };
 
 // Telefonszám-normalizálás: minden magyar szám +36-tal kezdődjön (06/0036/36 helyett).
 export const normalizePhone = (phone: string | null): string | null => {
@@ -125,6 +134,9 @@ export const normalizePeople = (p: Partial<PeopleDB>): PeopleDB => {
     groups: (p.groups ?? []).filter((g) => g && g.name).map((g) => ({ name: g.name, members: g.members ?? [] })),
     signature: sig || DEFAULT_SIGNATURE,
     signatureLinks: (p.signatureLinks ?? '').trim() || inheritedLinks || DEFAULT_SIGNATURE_LINKS,
+    senderRules: Object.fromEntries(
+      Object.entries(p.senderRules ?? {}).filter(([, v]) => v === 'reply' || v === 'fyi' || v === 'ignore'),
+    ) as Record<string, SenderRule>,
   };
 };
 

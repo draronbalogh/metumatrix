@@ -44,6 +44,15 @@ export const SOURCE_STATUS_LABEL: Record<SourceStatus, string> = {
   replied: 'megválaszolva', noreply: 'lezárva',
 };
 
+// A szál-idővonal egy bejegyzése: ki írt, mikor, melyik irányba, egy mondatban mit.
+// A bejövőket a bot fűzi hozzá (append-only), a kimenőket az app a válasz elküldésekor.
+export interface ThreadMsg {
+  at: string;            // ISO vagy ÉÉÉÉ-HH-NN
+  from: string;          // a küldő neve
+  dir: 'in' | 'out';     // bejövő / a mi kimenő üzenetünk
+  gist: string;          // egy mondat a lényegről
+}
+
 // A tételt kiváltó bejövő email feladója — neki külön válasz-levél írható.
 export interface AgendaSource {
   name: string;
@@ -61,9 +70,23 @@ export interface AgendaSource {
   followUpAt?: string | null;   // rájuk-várok: eddig várunk a válaszukra, utána visszatér
   waitingSince?: string | null; // a legrégebbi megválaszolatlan bejövő napja — a bot származtatja újra
   repliesFor?: string | null;   // melyik bejövőhöz készültek a tervek (ISO) — elavulás-jelzéshez
+  lastInboundAt?: string | null; // a legutolsó bejövő levél ISO időbélyege — elavulás: lastInboundAt > repliesFor
   returned?: string | null;     // ébresztés/újranyitás időpontja (ISO) — a Visszatért sáv jelzője
+  draftMode?: 'reply' | 'ping' | null; // 'ping': a tervek követő-emlékeztetők (T7 ébresztés után), nem válaszok
+  thread?: ThreadMsg[] | null;  // a szál idővonala (bot: bejövők, app: kimenők)
   shadow?: boolean;             // árnyék-forrás kapcsolt feladat–esemény ikernél: a Posta-sor és az állapot a feladaton él
 }
+
+// Kimenő bejegyzés hozzáfűzése a szál-idővonalhoz (válasz elküldésekor / kézi jelöléskor)
+export const withOutEntry = (s: AgendaSource, gist: string): ThreadMsg[] =>
+  [...(s.thread ?? []), { at: new Date().toISOString(), from: DEFAULT_OWNER, dir: 'out' as const, gist }];
+
+// A tervek elavultak-e: érkezett-e újabb bejövő, mint amihez a tervek készültek
+export const draftsStale = (s: AgendaSource): boolean => {
+  if (!s.replies?.length || !s.repliesFor) return false;
+  if (s.lastInboundAt) return s.lastInboundAt > s.repliesFor;
+  return !!s.date && s.date > s.repliesFor.slice(0, 10);
+};
 
 // Alfeladat: kipipálható lépés, opcionális saját felelőssel és határidővel
 export interface TaskStep {

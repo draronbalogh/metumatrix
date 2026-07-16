@@ -13,8 +13,8 @@ import AgendaDrawer, { AgendaDetailsRef } from './AgendaDrawer';
 import ITView from './ITView';
 import DocsView from './DocsView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
-import { Agenda, AgendaEvent, AgendaSource, AgendaTask, DEFAULT_AGENDA, Letter, ReplyDraft, emptyEvent, emptyTask, isAwaiting, mergeAgendaDocs, nextPriority, normalizeAgenda, taskSteps } from '@/data/agenda';
-import { DEFAULT_PEOPLE, PeopleDB, PersonKind, buildCanonicalNames, buildFooter, buildRoster, normalizePeople, emailOf } from '@/data/people';
+import { Agenda, AgendaEvent, AgendaSource, AgendaTask, DEFAULT_AGENDA, Letter, ReplyDraft, emptyEvent, emptyTask, isAwaiting, mergeAgendaDocs, nextPriority, normalizeAgenda, taskSteps, withOutEntry } from '@/data/agenda';
+import { DEFAULT_PEOPLE, PeopleDB, PersonKind, SenderRule, buildCanonicalNames, buildFooter, buildRoster, normalizePeople, emailOf } from '@/data/people';
 import PostaView from './PostaView';
 import { normName, normTitle } from '@/lib/normalize';
 import PeopleModal from './PeopleModal';
@@ -527,10 +527,18 @@ export default function CurriculumApp() {
     if (sel.startsWith('t:')) commitAgenda({ ...cur, tasks: cur.tasks.map((t) => (t.id === sel.slice(2) && t.source ? { ...t, source: { ...t.source, ...patch } } : t)) });
     else if (sel.startsWith('e:')) commitAgenda({ ...cur, events: cur.events.map((e) => (e.id === sel.slice(2) && e.source ? { ...e, source: { ...e.source, ...patch } } : e)) });
   }, [commitAgenda]);
-  // Megválaszoltnak jelölés (a levélíró sikeres küldése is ezt hívja)
+  // Megválaszoltnak jelölés (a levélíró sikeres küldése is ezt hívja) — a szál
+  // idővonalára kimenő bejegyzés kerül, így a kártyán látszik, hogy mi is léptünk
   const markReplied = useCallback((sel: string) => {
     if (!canEditRef.current) return;
-    stampSource(sel, { status: 'replied', repliedAt: new Date().toISOString(), returned: null });
+    const cur = agendaRef.current;
+    const src = sel.startsWith('t:')
+      ? cur.tasks.find((t) => t.id === sel.slice(2))?.source
+      : cur.events.find((e) => e.id === sel.slice(2))?.source;
+    stampSource(sel, {
+      status: 'replied', repliedAt: new Date().toISOString(), returned: null,
+      ...(src ? { thread: withOutEntry(src, 'válasz elküldve a levélíróból') } : {}),
+    });
   }, [stampSource]);
   // Posta-verdikt visszavonási lehetőséggel: a kattintás ELŐTTI teljes felhasználói
   // mező-készletet őrizzük meg — csak a statust visszabillentő undo elveszítené a
@@ -627,6 +635,17 @@ export default function CurriculumApp() {
     setPeopleDB(db);
     try { localStorage.setItem(PEOPLE_LS_KEY, JSON.stringify(db)); } catch { /* ignore */ }
     setPeopleEdit(false);
+  }, []);
+  // feladó-szabály a Postából (Screener-minta): egy feladóról EGYSZER döntünk,
+  // a szabályt a bot is olvassa (fyi/ignore feladó nem terheli többé a Postát)
+  const setSenderRule = useCallback((email: string, rule: SenderRule) => {
+    if (!canEditRef.current) return;
+    const key = email.trim().toLowerCase();
+    if (!key) return;
+    const db = { ...peopleRef.current, senderRules: { ...peopleRef.current.senderRules, [key]: rule } };
+    peopleRef.current = db;
+    setPeopleDB(db);
+    try { localStorage.setItem(PEOPLE_LS_KEY, JSON.stringify(db)); } catch { /* ignore */ }
   }, []);
   // Új feladat egy eseményből: MINDENT örököl — ne kelljen kétszer beírni ugyanazt
   const addTaskForEvent = useCallback((eid: string) => {
@@ -1216,6 +1235,8 @@ export default function CurriculumApp() {
             <PostaView
               agenda={agenda}
               footer={buildFooter(peopleDB, true)}
+              senderRules={peopleDB.senderRules}
+              onSenderRule={setSenderRule}
               onReply={notifyReply}
               onState={setSourceState}
               undo={postaUndo ? { label: postaUndo.label } : null}

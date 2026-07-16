@@ -116,6 +116,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
       groups: groups.filter((g) => g.name.trim()).map((g) => ({ name: g.name.trim(), members: g.members })),
       signature,
       signatureLinks,
+      senderRules: db.senderRules, // a Posta feladó-szabályai — a szerkesztő nem kezeli, de nem is veszítheti el
     });
   };
 

@@ -182,6 +182,17 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                       : '✉ válaszra vár — a Postában'
                     }</span>
                   </p>
+                  {(task.source.thread?.length ?? 0) > 0 && (
+                    <div className="dr-thread">
+                      {task.source.thread?.map((m, i) => (
+                        <div key={i} className={`dr-tmsg ${m.dir}`}>
+                          <span className="d">{m.at.slice(5, 10).replace('-', '. ')}.</span>
+                          <span className="w" title={m.dir === 'in' ? 'bejövő' : 'a mi válaszunk'}>{m.dir === 'in' ? '⇣' : '⇡'}</span>
+                          <span className="f">{m.from}:</span> {m.gist}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </>

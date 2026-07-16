@@ -32,16 +32,37 @@ export const TASK_CATEGORIES = [
 // A bot által előre megírt választervezet (aláírás NÉLKÜL — azt az app teszi hozzá)
 export interface ReplyDraft { label: string; subject: string; body: string }
 
+// A Posta állapotgépe — minden bejövő levél pontosan EGY állapotban van:
+// pending → rám várnak · snoozed → halasztva (csak felbukkanási dátum, határidőt sosem
+// módosít) · waiting → rájuk várok (válaszoltam, követési dátummal) · replied →
+// megválaszolva · noreply → lezárva, nem igényelt választ. Lezárt/várakozó állapotból
+// új bejövő levél automatikusan visszanyit pending-be (auto-reopen, a bot végzi).
+export type SourceStatus = 'pending' | 'snoozed' | 'waiting' | 'replied' | 'noreply';
+export const SOURCE_STATUSES: SourceStatus[] = ['pending', 'snoozed', 'waiting', 'replied', 'noreply'];
+export const SOURCE_STATUS_LABEL: Record<SourceStatus, string> = {
+  pending: 'válaszra vár', snoozed: 'halasztva', waiting: 'rájuk várok',
+  replied: 'megválaszolva', noreply: 'lezárva',
+};
+
 // A tételt kiváltó bejövő email feladója — neki külön válasz-levél írható.
 export interface AgendaSource {
   name: string;
   email: string;
   subject?: string | null; // az eredeti levél tárgya (a Re: válaszhoz)
-  date?: string | null;    // a levél érkezési napja (ÉÉÉÉ-HH-NN) — a Posta lista rendezéséhez
-  replied?: string | null; // mikor lett megválaszoltnak jelölve (ISO) — üresen még válaszra vár
+  date?: string | null;    // a legutóbbi levél érkezési napja (ÉÉÉÉ-HH-NN)
+  /** @deprecated → repliedAt; a migráció olvassa be, mentéskor már nem íródik */
+  replied?: string | null;
   gist?: string | null;    // EGY tényszerű mondat: mit kér / mire vár választ a feladó
   cc?: string[] | null;    // levélszálnál a válasz további címzettjei (email-címek)
   replies?: ReplyDraft[] | null; // a bot 3 előre megírt választerve (a levél + agenda + stílusfájl alapján)
+  status?: SourceStatus;        // állapotgép — hiányzó érték betöltéskor migrálódik
+  repliedAt?: string | null;    // mikor ment el a válasz (ISO)
+  snoozeUntil?: string | null;  // halasztás felbukkanási napja (ÉÉÉÉ-HH-NN)
+  followUpAt?: string | null;   // rájuk-várok: eddig várunk a válaszukra, utána visszatér
+  waitingSince?: string | null; // a legrégebbi megválaszolatlan bejövő napja — a bot származtatja újra
+  repliesFor?: string | null;   // melyik bejövőhöz készültek a tervek (ISO) — elavulás-jelzéshez
+  returned?: string | null;     // ébresztés/újranyitás időpontja (ISO) — a Visszatért sáv jelzője
+  shadow?: boolean;             // árnyék-forrás kapcsolt feladat–esemény ikernél: a Posta-sor és az állapot a feladaton él
 }
 
 // Alfeladat: kipipálható lépés, opcionális saját felelőssel és határidővel
@@ -168,15 +189,95 @@ export const emptyEvent = (): AgendaEvent => ({
   title: '', when: '', sort: null, day: null, dayEnd: null, featured: false, note: null, place: null, owner: DEFAULT_OWNER, people: [],
 });
 
+// ---- Dátum-helperek a Posta állapotgépéhez (Date-string-parse NÉLKÜL — Safari!) ----
+const pad2 = (n: number): string => String(n).padStart(2, '0');
+export const localTodayYmd = (): string => {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+};
+export const addDaysYmd = (base: string, days: number): string => {
+  const d = new Date(Number(base.slice(0, 4)), Number(base.slice(5, 7)) - 1, Number(base.slice(8, 10)) + days);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+};
+export const tomorrowYmd = (): string => addDaysYmd(localTodayYmd(), 1);
+// mindig a KÖVETKEZŐ hétfő, szigorúan a mai nap után (hétfőn = +7 nap)
+export const nextMondayYmd = (): string => {
+  const dow = new Date().getDay();
+  return addDaysYmd(localTodayYmd(), ((8 - dow) % 7) || 7);
+};
+// n munkanap hozzáadása (szombat/vasárnap átugrása) — a követési dátumhoz
+export const addWorkdaysYmd = (days: number): string => {
+  let d = localTodayYmd();
+  let left = days;
+  while (left > 0) {
+    d = addDaysYmd(d, 1);
+    const dow = new Date(Number(d.slice(0, 4)), Number(d.slice(5, 7)) - 1, Number(d.slice(8, 10))).getDay();
+    if (dow !== 0 && dow !== 6) left -= 1;
+  }
+  return d;
+};
+// Határidő időbélyege rendezéshez: 'ÉÉÉÉ-HH' → a hónap utolsó napja 23:59,
+// 'ÉÉÉÉ-HH-NN[ ÓÓ:PP]' → pontos. Hónap-pontosságú érték a 48 órás sávba nem mehet.
+export const dueTs = (d?: string | null): number | null => {
+  if (!d || d.length < 7) return null;
+  const y = Number(d.slice(0, 4));
+  const mo = Number(d.slice(5, 7));
+  if (!y || !mo) return null;
+  if (d.length < 10) return new Date(y, mo, 0, 23, 59).getTime();
+  const day = Number(d.slice(8, 10));
+  const hh = d.length >= 16 ? Number(d.slice(11, 13)) : 23;
+  const mm = d.length >= 16 ? Number(d.slice(14, 16)) : 59;
+  return new Date(y, mo - 1, day, hh, mm).getTime();
+};
+export const duePrecise = (d?: string | null): boolean => !!d && d.length >= 10;
+
+// A Posta-lista és a menü-számláló EGYETLEN predikátuma: kire várunk még válaszért.
+export const isAwaiting = (s?: AgendaSource | null): boolean =>
+  !!s && !!s.email && !s.shadow && (s.status ?? 'pending') === 'pending';
+
 // Korábban mentett (régebbi sémájú) adat kiegészítése az új mezőkkel.
 // A steps itt materializálódik az ideas-ból, és az ideas a steps tükre marad —
 // az első mentés így az egész fájlt átviszi az új sémára, adatvesztés nélkül.
 // a source csak érvényes feladó-objektumként fogadható el; a tévesen ide írt
 // forrásmegjelölés-szöveg (pl. "Tanév rendje xlsx") a note/summary végére kerül
 const cleanSource = (raw: unknown): { src: AgendaSource | null; provenance: string | null } => {
-  if (raw && typeof raw === 'object' && typeof (raw as AgendaSource).email === 'string') return { src: raw as AgendaSource, provenance: null };
+  if (raw && typeof raw === 'object') {
+    const o = raw as AgendaSource;
+    if (typeof o.email === 'string') return { src: o, provenance: null };
+    // hibás bot-írás (pl. email:null): üres emailre javítjuk, NEM dobjuk — az
+    // állapot-mezők nem veszhetnek el; email nélkül a Posta úgysem listázza
+    if (typeof o.name === 'string' && o.name.trim()) return { src: { ...o, email: '' }, provenance: null };
+  }
   if (typeof raw === 'string' && raw.trim()) return { src: null, provenance: raw.trim() };
   return { src: null, provenance: null };
+};
+
+// A source állapot-mezőinek migrációja + a kliens-oldali ébresztések:
+// hiányzó status a szülő-tétel alapján kap értéket (kész feladat / elmúlt esemény →
+// 'noreply', élő tétel → 'pending'); lejárt halasztás vagy követési dátum → vissza
+// 'pending'-be, returned-jelöléssel (<= összehasonlítás: az elmulasztott nap is tüzel).
+const VALID_STATUS = new Set<string>(SOURCE_STATUSES);
+const migrateSource = (raw: AgendaSource, closedHint: boolean): AgendaSource => {
+  const repliedAt = raw.repliedAt ?? raw.replied ?? null;
+  let status: SourceStatus = VALID_STATUS.has(raw.status as string)
+    ? (raw.status as SourceStatus)
+    : repliedAt ? 'replied' : closedHint ? 'noreply' : 'pending';
+  let snoozeUntil = raw.snoozeUntil ?? null;
+  let followUpAt = raw.followUpAt ?? null;
+  let returned = raw.returned ?? null;
+  const today = localTodayYmd();
+  if (status === 'snoozed' && (!snoozeUntil || snoozeUntil.slice(0, 10) <= today)) {
+    status = 'pending'; snoozeUntil = null; returned = returned ?? new Date().toISOString();
+  }
+  if (status === 'waiting' && followUpAt && followUpAt.slice(0, 10) <= today) {
+    status = 'pending'; followUpAt = null; returned = returned ?? new Date().toISOString();
+  }
+  const out: AgendaSource = {
+    ...raw, status, repliedAt, snoozeUntil, followUpAt, returned,
+    waitingSince: raw.waitingSince ?? raw.date ?? null,
+  };
+  delete out.replied;
+  return out;
 };
 const withProvenance = (text: string | null | undefined, p: string | null): string | null => {
   const t = text ?? null;
@@ -185,22 +286,67 @@ const withProvenance = (text: string | null | undefined, p: string | null): stri
   return `${t ? `${t}\n` : ''}Forrás: ${p}`;
 };
 
-export const normalizeAgenda = (a: Partial<Agenda>): Agenda => ({
-  intro: a.intro ?? DEFAULT_AGENDA.intro,
-  tasks: (a.tasks ?? []).map((t) => {
+export const normalizeAgenda = (a: Partial<Agenda>): Agenda => {
+  const today = localTodayYmd();
+  const emailKey = (s?: AgendaSource | null): string => (s?.email ?? '').trim().toLowerCase();
+  const tasks = (a.tasks ?? []).map((t) => {
     const steps = taskSteps(t);
     // szöveges határidő → strukturált, ha kiolvasható belőle hónap (egyszeri migráció)
     const migrated = !t.dueDate && t.due ? parseLooseDue(t.due) : null;
     const { src, provenance } = cleanSource(t.source as unknown);
-    return { ...t, steps, ideas: steps.map((s) => s.text), people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? migrated, due: migrated ? null : t.due ?? null, priority: t.priority ?? 'normal', category: t.category ?? null, createdAt: t.createdAt ?? null, source: src, summary: withProvenance(t.summary, provenance) ?? '' };
-  }),
-  events: (a.events ?? []).map((e) => {
+    const source = src ? migrateSource(src, t.status === 'done') : null;
+    return { ...t, steps, ideas: steps.map((s) => s.text), people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? migrated, due: migrated ? null : t.due ?? null, priority: t.priority ?? 'normal', category: t.category ?? null, createdAt: t.createdAt ?? null, source, summary: withProvenance(t.summary, provenance) ?? '' };
+  });
+  const events = (a.events ?? []).map((e) => {
     const { src, provenance } = cleanSource(e.source as unknown);
-    return { ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null, featured: e.featured ?? false, source: src, note: withProvenance(e.note, provenance) };
-  }),
-  letters: a.letters ?? [],
-  topicLinks: a.topicLinks ?? {},
-});
+    const last = e.dayEnd ?? e.day ?? null;
+    const past = last ? last < today : !!(e.sort && e.sort < today.slice(0, 7));
+    let source = src ? migrateSource(src, past) : null;
+    // kapcsolt feladat–esemény iker ugyanazzal a feladóval: az állapot EGYETLEN
+    // írója a feladat — az esemény forrása árnyékká válik (provenance marad,
+    // állapot- és draft-mezők nélkül), így a Posta nem mutat két sort egy levélre
+    if (source && emailKey(source)) {
+      const twin = tasks.find((t) => t.eventId === e.id && emailKey(t.source) === emailKey(source));
+      if (twin) source = { name: source.name, email: source.email, subject: source.subject ?? null, date: source.date ?? null, gist: source.gist ?? null, shadow: true };
+    }
+    return { ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null, featured: e.featured ?? false, source, note: withProvenance(e.note, provenance) };
+  });
+  return { intro: a.intro ?? DEFAULT_AGENDA.intro, tasks, events, letters: a.letters ?? [], topicLinks: a.topicLinks ?? {} };
+};
+
+// Három-utas összefésülés 409-es ütközés után: tételszinten a HELYBEN módosított
+// elem nyer, minden más a szerver állapotát követi; a helyi és a távoli új tételek
+// megmaradnak; a helyi törlés csak akkor él, ha a tétel a szerveren nem változott.
+export const mergeAgendaDocs = (base: Agenda | null, local: Agenda, remote: Agenda): Agenda => {
+  const b = base ?? remote;
+  const mergeList = <T extends { id: string }>(bl: T[], ll: T[], rl: T[]): T[] => {
+    const bm = new Map(bl.map((x) => [x.id, JSON.stringify(x)]));
+    const lm = new Map(ll.map((x) => [x.id, x]));
+    const seen = new Set<string>();
+    const out: T[] = [];
+    rl.forEach((r) => {
+      seen.add(r.id);
+      const li = lm.get(r.id);
+      const bs = bm.get(r.id);
+      if (li === undefined) {
+        if (bs !== undefined && bs === JSON.stringify(r)) return; // helyi törlés, távol változatlan
+        out.push(r);
+        return;
+      }
+      const localChanged = bs === undefined || bs !== JSON.stringify(li);
+      out.push(localChanged ? li : r);
+    });
+    ll.forEach((l) => { if (!seen.has(l.id) && !bm.has(l.id)) out.push(l); });
+    return out;
+  };
+  return {
+    intro: local.intro !== b.intro ? local.intro : remote.intro,
+    tasks: mergeList(b.tasks, local.tasks, remote.tasks),
+    events: mergeList(b.events, local.events, remote.events),
+    letters: mergeList(b.letters ?? [], local.letters ?? [], remote.letters ?? []),
+    topicLinks: JSON.stringify(local.topicLinks) !== JSON.stringify(b.topicLinks) ? local.topicLinks : remote.topicLinks,
+  };
+};
 
 // Egy névhez tartozó feladatok/események (felelősként vagy résztvevőként).
 export const taskHasPerson = (t: AgendaTask, name: string): boolean =>

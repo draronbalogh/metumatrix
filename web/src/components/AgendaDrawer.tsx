@@ -174,7 +174,13 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                   <h4>Beérkezett levélből</h4>
                   <p>
                     {task.source.name} &lt;{task.source.email}&gt;{task.source.subject ? ` · „${task.source.subject}"` : ''}
-                    <span className={`dr-repl${task.source.replied ? ' ok' : ''}`}>{task.source.replied ? `✓ megválaszolva ${task.source.replied.slice(5, 10).replace('-', '. ')}.` : '✉ válaszra vár — a Postában'}</span>
+                    <span className={`dr-repl${task.source.status === 'replied' || task.source.status === 'noreply' ? ' ok' : ''}`}>{
+                      task.source.status === 'replied' ? `✓ megválaszolva${task.source.repliedAt ? ` ${task.source.repliedAt.slice(5, 10).replace('-', '. ')}.` : ''}`
+                      : task.source.status === 'noreply' ? '✓ lezárva'
+                      : task.source.status === 'snoozed' ? `💤 halasztva${task.source.snoozeUntil ? ` ${task.source.snoozeUntil.slice(5, 10).replace('-', '. ')}-ig` : ''}`
+                      : task.source.status === 'waiting' ? '⏳ rájuk várok'
+                      : '✉ válaszra vár — a Postában'
+                    }</span>
                   </p>
                 </div>
               )}

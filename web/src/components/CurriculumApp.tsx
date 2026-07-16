@@ -13,7 +13,7 @@ import AgendaDrawer, { AgendaDetailsRef } from './AgendaDrawer';
 import ITView from './ITView';
 import DocsView from './DocsView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
-import { Agenda, AgendaEvent, AgendaTask, DEFAULT_AGENDA, Letter, ReplyDraft, emptyEvent, emptyTask, nextPriority, normalizeAgenda, taskSteps } from '@/data/agenda';
+import { Agenda, AgendaEvent, AgendaSource, AgendaTask, DEFAULT_AGENDA, Letter, ReplyDraft, emptyEvent, emptyTask, isAwaiting, mergeAgendaDocs, nextPriority, normalizeAgenda, taskSteps } from '@/data/agenda';
 import { DEFAULT_PEOPLE, PeopleDB, PersonKind, buildCanonicalNames, buildFooter, buildRoster, normalizePeople, emailOf } from '@/data/people';
 import PostaView from './PostaView';
 import { normName, normTitle } from '@/lib/normalize';
@@ -155,8 +155,14 @@ export default function CurriculumApp() {
       try {
         const r = await fetch('/api/agenda', { cache: 'no-store', signal: ac.signal });
         const j = await r.json();
-        if (j?.ok && j.data?.tasks) { skipAgendaSave.current = true; setAgenda(normalizeAgenda(j.data as Partial<Agenda>)); agendaFileOk.current = true; }
-        else throw new Error('server-file');
+        if (j?.ok && j.data?.tasks) {
+          const next = normalizeAgenda(j.data as Partial<Agenda>);
+          agendaRev.current = typeof (j.data as { rev?: number }).rev === 'number' ? (j.data as { rev: number }).rev : 0;
+          agendaBase.current = next;
+          skipAgendaSave.current = true;
+          setAgenda(next);
+          agendaFileOk.current = true;
+        } else throw new Error('server-file');
       } catch {
         if (ac.signal.aborted) return;
         try { const s = localStorage.getItem(AGENDA_LS_KEY); if (s) { skipAgendaSave.current = true; setAgenda(normalizeAgenda(JSON.parse(s) as Partial<Agenda>)); } } catch { /* ignore */ }
@@ -388,17 +394,11 @@ export default function CurriculumApp() {
   agendaRef.current = agenda;
   const agendaTimer = useRef<number | null>(null);
   const skipAgendaSave = useRef(true);
-  useEffect(() => {
-    if (!hydrated) return;
-    if (!agendaFileOk.current) return; // a fájl nem töltődött be — nem írjuk felül régi/beépített adattal
-    if (skipAgendaSave.current) { skipAgendaSave.current = false; return; }
-    if (agendaTimer.current) window.clearTimeout(agendaTimer.current);
-    agendaTimer.current = window.setTimeout(() => {
-      agendaTimer.current = null;
-      fetch('/api/agenda', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify(agendaRef.current) }).catch(() => { /* ignore */ });
-    }, 1000);
-    return () => { if (agendaTimer.current) window.clearTimeout(agendaTimer.current); };
-  }, [agenda, hydrated]);
+  // rev-alapú ütközésvédelem: a szerver-fájl verziószáma + az utolsó szinkronizált
+  // állapot (a három-utas fésülés bázisa) + 409-újrapróba számláló
+  const agendaRev = useRef(0);
+  const agendaBase = useRef<Agenda | null>(null);
+  const agendaConflictRetry = useRef(0);
   const agendaTouchedAt = useRef(0); // az utolsó HELYI szerkesztés ideje — a szerver-frissítés tiszteletben tartja
   const commitAgenda = useCallback((next: Agenda) => {
     // a ref-et AZONNAL frissítjük, hogy a mentés utáni közvetlen olvasás (pl. a
@@ -408,6 +408,44 @@ export default function CurriculumApp() {
     setAgenda(next);
     try { localStorage.setItem(AGENDA_LS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
   }, []);
+  // mentés a szerverre: a látott rev-vel — 409-nél friss olvasás + három-utas
+  // fésülés (a helyben módosított tételek nyernek), majd új mentés-kör
+  const postAgenda = useCallback(async () => {
+    const doc = agendaRef.current;
+    try {
+      const r = await fetch('/api/agenda', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify({ ...doc, rev: agendaRev.current }) });
+      if (r.status === 409) {
+        if (agendaConflictRetry.current >= 2) { agendaConflictRetry.current = 0; return; }
+        agendaConflictRetry.current += 1;
+        const fr = await fetch('/api/agenda', { cache: 'no-store' });
+        const fj = await fr.json();
+        if (!fj?.ok || !fj.data?.tasks) return;
+        const remote = normalizeAgenda(fj.data as Partial<Agenda>);
+        const merged = mergeAgendaDocs(agendaBase.current, agendaRef.current, remote);
+        agendaRev.current = typeof (fj.data as { rev?: number }).rev === 'number' ? (fj.data as { rev: number }).rev : 0;
+        agendaBase.current = remote;
+        commitAgenda(merged);
+        return;
+      }
+      const j = await r.json().catch(() => null);
+      if (j?.ok) {
+        agendaConflictRetry.current = 0;
+        if (typeof j.rev === 'number') agendaRev.current = j.rev;
+        agendaBase.current = doc;
+      }
+    } catch { /* offline — a következő szerkesztés újrapróbálja */ }
+  }, [commitAgenda]);
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!agendaFileOk.current) return; // a fájl nem töltődött be — nem írjuk felül régi/beépített adattal
+    if (skipAgendaSave.current) { skipAgendaSave.current = false; return; }
+    if (agendaTimer.current) window.clearTimeout(agendaTimer.current);
+    agendaTimer.current = window.setTimeout(() => {
+      agendaTimer.current = null;
+      void postAgenda();
+    }, 1000);
+    return () => { if (agendaTimer.current) window.clearTimeout(agendaTimer.current); };
+  }, [agenda, hydrated, postAgenda]);
   // KÜLSŐ ÍRÁSOK BEHÚZÁSA: az ütemezett Outlook-szinkron (és bármely másik eszköz)
   // közvetlenül frissíti az agenda-fájlt. A nyitva hagyott kliens régi memória-állapota
   // az első kattintáskor FELÜLÍRNÁ ezt (2026-07-16-án meg is történt) — ezért percenként
@@ -424,7 +462,11 @@ export default function CurriculumApp() {
         const j = await r.json();
         if (stop || !j?.ok || !j.data?.tasks) return;
         if (agendaTimer.current || Date.now() - agendaTouchedAt.current < 15000) return; // közben szerkesztett
+        const rev = typeof (j.data as { rev?: number }).rev === 'number' ? (j.data as { rev: number }).rev : 0;
+        if (rev < agendaRev.current) return; // elkésett válasz — frissebb verziót ismerünk
         const next = normalizeAgenda(j.data as Partial<Agenda>);
+        agendaRev.current = rev;
+        agendaBase.current = next;
         if (JSON.stringify(next) === JSON.stringify(agendaRef.current)) return;
         skipAgendaSave.current = true;
         agendaRef.current = next;
@@ -479,18 +521,48 @@ export default function CurriculumApp() {
       }),
     });
   }, [commitAgenda]);
-  // Válaszolandó tétel megválaszoltnak jelölése ('t:id' / 'e:id') — a source.replied kap időbélyeget
+  // A source állapot-mezőinek átírása ('t:id' / 'e:id' kiválasztóval)
+  const stampSource = useCallback((sel: string, patch: Partial<AgendaSource>) => {
+    const cur = agendaRef.current;
+    if (sel.startsWith('t:')) commitAgenda({ ...cur, tasks: cur.tasks.map((t) => (t.id === sel.slice(2) && t.source ? { ...t, source: { ...t.source, ...patch } } : t)) });
+    else if (sel.startsWith('e:')) commitAgenda({ ...cur, events: cur.events.map((e) => (e.id === sel.slice(2) && e.source ? { ...e, source: { ...e.source, ...patch } } : e)) });
+  }, [commitAgenda]);
+  // Megválaszoltnak jelölés (a levélíró sikeres küldése is ezt hívja)
   const markReplied = useCallback((sel: string) => {
     if (!canEditRef.current) return;
+    stampSource(sel, { status: 'replied', repliedAt: new Date().toISOString(), returned: null });
+  }, [stampSource]);
+  // Posta-verdikt visszavonási lehetőséggel: a kattintás ELŐTTI teljes felhasználói
+  // mező-készletet őrizzük meg — csak a statust visszabillentő undo elveszítené a
+  // halasztás/követés/visszatért jelzőket
+  const [postaUndo, setPostaUndo] = useState<{ sel: string; label: string; prev: Partial<AgendaSource> } | null>(null);
+  const postaUndoTimer = useRef<number | null>(null);
+  const setSourceState = useCallback((sel: string, patch: Partial<AgendaSource>, label: string) => {
+    if (!canEditRef.current) return;
     const cur = agendaRef.current;
-    const stamp = new Date().toISOString();
-    if (sel.startsWith('t:')) commitAgenda({ ...cur, tasks: cur.tasks.map((t) => (t.id === sel.slice(2) && t.source ? { ...t, source: { ...t.source, replied: stamp } } : t)) });
-    else if (sel.startsWith('e:')) commitAgenda({ ...cur, events: cur.events.map((e) => (e.id === sel.slice(2) && e.source ? { ...e, source: { ...e.source, replied: stamp } } : e)) });
-  }, [commitAgenda]);
+    const src = sel.startsWith('t:')
+      ? cur.tasks.find((t) => t.id === sel.slice(2))?.source
+      : cur.events.find((e) => e.id === sel.slice(2))?.source;
+    if (!src) return;
+    const prev: Partial<AgendaSource> = {
+      status: src.status, repliedAt: src.repliedAt ?? null, snoozeUntil: src.snoozeUntil ?? null,
+      followUpAt: src.followUpAt ?? null, returned: src.returned ?? null,
+    };
+    stampSource(sel, patch);
+    setPostaUndo({ sel, label, prev });
+    if (postaUndoTimer.current) window.clearTimeout(postaUndoTimer.current);
+    postaUndoTimer.current = window.setTimeout(() => setPostaUndo(null), 6000);
+  }, [stampSource]);
+  const undoSourceState = useCallback(() => {
+    setPostaUndo((u) => {
+      if (u) stampSource(u.sel, u.prev);
+      return null;
+    });
+  }, [stampSource]);
   // a Posta menü számlálója: hány bejövő levél vár még válaszra
   const postaCount = useMemo(() =>
-    agenda.tasks.filter((t) => t.source?.email && !t.source.replied).length
-    + agenda.events.filter((e) => e.source?.email && !e.source.replied).length,
+    agenda.tasks.filter((t) => isAwaiting(t.source)).length
+    + agenda.events.filter((e) => isAwaiting(e.source)).length,
   [agenda]);
   // feladat ↔ esemény kapcsolás a részletezőből (javaslat-gomb / választó)
   const linkTaskEvent = useCallback((taskId: string, eventId: string | null) => {
@@ -1145,7 +1217,9 @@ export default function CurriculumApp() {
               agenda={agenda}
               footer={buildFooter(peopleDB, true)}
               onReply={notifyReply}
-              onMarkReplied={markReplied}
+              onState={setSourceState}
+              undo={postaUndo ? { label: postaUndo.label } : null}
+              onUndo={undoSourceState}
               onOpenCard={(sel) => setAgendaDetails({ kind: sel.startsWith('t:') ? 'task' : 'event', id: sel.slice(2) })}
             />
           ) : view === 'people' ? (

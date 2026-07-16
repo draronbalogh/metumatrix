@@ -398,13 +398,45 @@ export default function CurriculumApp() {
     }, 1000);
     return () => { if (agendaTimer.current) window.clearTimeout(agendaTimer.current); };
   }, [agenda, hydrated]);
+  const agendaTouchedAt = useRef(0); // az utolsó HELYI szerkesztés ideje — a szerver-frissítés tiszteletben tartja
   const commitAgenda = useCallback((next: Agenda) => {
     // a ref-et AZONNAL frissítjük, hogy a mentés utáni közvetlen olvasás (pl. a
     // szerkesztő ✉ „Mentés és levélírás" gombja) már a friss állapotot lássa
     agendaRef.current = next;
+    agendaTouchedAt.current = Date.now();
     setAgenda(next);
     try { localStorage.setItem(AGENDA_LS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
   }, []);
+  // KÜLSŐ ÍRÁSOK BEHÚZÁSA: az ütemezett Outlook-szinkron (és bármely másik eszköz)
+  // közvetlenül frissíti az agenda-fájlt. A nyitva hagyott kliens régi memória-állapota
+  // az első kattintáskor FELÜLÍRNÁ ezt (2026-07-16-án meg is történt) — ezért percenként
+  // és fókuszba kerüléskor behúzzuk a szerver-állapotot, de CSAK ha nincs függő mentés
+  // és az utolsó helyi szerkesztés óta eltelt legalább 15 mp.
+  useEffect(() => {
+    if (!hydrated) return;
+    let stop = false;
+    const refresh = async () => {
+      if (!agendaFileOk.current || agendaTimer.current) return;
+      if (Date.now() - agendaTouchedAt.current < 15000) return;
+      try {
+        const r = await fetch('/api/agenda', { cache: 'no-store' });
+        const j = await r.json();
+        if (stop || !j?.ok || !j.data?.tasks) return;
+        if (agendaTimer.current || Date.now() - agendaTouchedAt.current < 15000) return; // közben szerkesztett
+        const next = normalizeAgenda(j.data as Partial<Agenda>);
+        if (JSON.stringify(next) === JSON.stringify(agendaRef.current)) return;
+        skipAgendaSave.current = true;
+        agendaRef.current = next;
+        setAgenda(next);
+        try { localStorage.setItem(AGENDA_LS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      } catch { /* offline vagy nem fut a szerver — marad a helyi állapot */ }
+    };
+    const iv = window.setInterval(refresh, 60000);
+    const onVis = () => { if (document.visibilityState === 'visible') refresh(); };
+    document.addEventListener('visibilitychange', onVis);
+    window.addEventListener('focus', onVis);
+    return () => { stop = true; window.clearInterval(iv); document.removeEventListener('visibilitychange', onVis); window.removeEventListener('focus', onVis); };
+  }, [hydrated]);
   const saveTask = useCallback((t: AgendaTask) => {
     const cur = agendaRef.current;
     const exists = cur.tasks.some((x) => x.id === t.id);

@@ -255,7 +255,8 @@ body {
 /* ============================================================
    CATALOG VIEW
    ============================================================ */
-.catalog { position: absolute; inset: 0; overflow: auto; padding: 18px var(--pad) 80px; }
+/* csak függőlegesen görgethet — vízszintes túllógás levágva, különben a mobil swipe is megáll rajta */
+.catalog { position: absolute; inset: 0; overflow: hidden auto; padding: 18px var(--pad) 80px; }
 /* Egységes nézet-fejléc (PageHead): minden főnézet azonos címsorral, azonos pozícióban indul */
 .cat-block-head { display: flex; align-items: baseline; gap: 11px; margin: 0 0 14px; }
 .cat-block-head .pl { margin: 0; font-family: var(--ff-display); font-size: 1.7rem; font-weight: 700; color: var(--brand-text); letter-spacing: -.02em; }
@@ -1496,7 +1497,8 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .agc .ag-prio { flex: none; }
 .agc .ag-check { flex: none; }
 .agc-meta { flex: none; display: flex; flex-wrap: nowrap; gap: 12px; font-size: .74rem; font-weight: 600; color: var(--ink-2); }
-.agc-meta .m { white-space: nowrap; }
+/* egyetlen chip se lehessen szélesebb a soránál (hosszú régi szöveges határidők!) */
+.agc-meta .m { white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .agc-meta .m.ok { color: var(--g0); }
 .agc-meta .m.warn { color: color-mix(in srgb, var(--yellow-deep) 75%, var(--ink)); }
 .agc-meta .m.doing { color: var(--g1); }

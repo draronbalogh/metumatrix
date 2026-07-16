@@ -475,6 +475,14 @@ export default function CurriculumApp() {
       }),
     });
   }, [commitAgenda]);
+  // Válaszolandó tétel megválaszoltnak jelölése ('t:id' / 'e:id') — a source.replied kap időbélyeget
+  const markReplied = useCallback((sel: string) => {
+    if (!canEditRef.current) return;
+    const cur = agendaRef.current;
+    const stamp = new Date().toISOString();
+    if (sel.startsWith('t:')) commitAgenda({ ...cur, tasks: cur.tasks.map((t) => (t.id === sel.slice(2) && t.source ? { ...t, source: { ...t.source, replied: stamp } } : t)) });
+    else if (sel.startsWith('e:')) commitAgenda({ ...cur, events: cur.events.map((e) => (e.id === sel.slice(2) && e.source ? { ...e, source: { ...e.source, replied: stamp } } : e)) });
+  }, [commitAgenda]);
   // feladat ↔ esemény kapcsolás a részletezőből (javaslat-gomb / választó)
   const linkTaskEvent = useCallback((taskId: string, eventId: string | null) => {
     if (!canEditRef.current) return;
@@ -1119,6 +1127,7 @@ export default function CurriculumApp() {
                   ctxTasks={agenda.tasks}
                   topicLinks={agenda.topicLinks}
                   onLinkTopic={linkTopic}
+                  onMarkReplied={markReplied}
                   teacherNames={teacherNames}
                   db={peopleDB}
                   letters={(agenda.letters || []).filter((l) => l.targetId === null)}
@@ -1319,6 +1328,7 @@ export default function CurriculumApp() {
           ctxTasks={agenda.tasks}
           topicLinks={agenda.topicLinks}
           onLinkTopic={linkTopic}
+          onMarkReplied={markReplied}
           teacherNames={teacherNames}
           db={peopleDB}
           letters={(agenda.letters || []).filter((l) => l.targetId === notify.targetId)}

@@ -34,6 +34,8 @@ export interface AgendaSource {
   name: string;
   email: string;
   subject?: string | null; // az eredeti levél tárgya (a Re: válaszhoz)
+  date?: string | null;    // a levél érkezési napja (ÉÉÉÉ-HH-NN) — a Válaszolandó lista rendezéséhez
+  replied?: string | null; // mikor lett megválaszoltnak jelölve (ISO) — üresen még válaszra vár
 }
 
 // Alfeladat: kipipálható lépés, opcionális saját felelőssel és határidővel

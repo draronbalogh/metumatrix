@@ -171,15 +171,33 @@ export const emptyEvent = (): AgendaEvent => ({
 // Korábban mentett (régebbi sémájú) adat kiegészítése az új mezőkkel.
 // A steps itt materializálódik az ideas-ból, és az ideas a steps tükre marad —
 // az első mentés így az egész fájlt átviszi az új sémára, adatvesztés nélkül.
+// a source csak érvényes feladó-objektumként fogadható el; a tévesen ide írt
+// forrásmegjelölés-szöveg (pl. "Tanév rendje xlsx") a note/summary végére kerül
+const cleanSource = (raw: unknown): { src: AgendaSource | null; provenance: string | null } => {
+  if (raw && typeof raw === 'object' && typeof (raw as AgendaSource).email === 'string') return { src: raw as AgendaSource, provenance: null };
+  if (typeof raw === 'string' && raw.trim()) return { src: null, provenance: raw.trim() };
+  return { src: null, provenance: null };
+};
+const withProvenance = (text: string | null | undefined, p: string | null): string | null => {
+  const t = text ?? null;
+  if (!p) return t;
+  if (t && t.includes(p)) return t;
+  return `${t ? `${t}\n` : ''}Forrás: ${p}`;
+};
+
 export const normalizeAgenda = (a: Partial<Agenda>): Agenda => ({
   intro: a.intro ?? DEFAULT_AGENDA.intro,
   tasks: (a.tasks ?? []).map((t) => {
     const steps = taskSteps(t);
     // szöveges határidő → strukturált, ha kiolvasható belőle hónap (egyszeri migráció)
     const migrated = !t.dueDate && t.due ? parseLooseDue(t.due) : null;
-    return { ...t, steps, ideas: steps.map((s) => s.text), people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? migrated, due: migrated ? null : t.due ?? null, priority: t.priority ?? 'normal', category: t.category ?? null, createdAt: t.createdAt ?? null, source: t.source ?? null };
+    const { src, provenance } = cleanSource(t.source as unknown);
+    return { ...t, steps, ideas: steps.map((s) => s.text), people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? migrated, due: migrated ? null : t.due ?? null, priority: t.priority ?? 'normal', category: t.category ?? null, createdAt: t.createdAt ?? null, source: src, summary: withProvenance(t.summary, provenance) ?? '' };
   }),
-  events: (a.events ?? []).map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null, featured: e.featured ?? false, source: e.source ?? null })),
+  events: (a.events ?? []).map((e) => {
+    const { src, provenance } = cleanSource(e.source as unknown);
+    return { ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null, featured: e.featured ?? false, source: src, note: withProvenance(e.note, provenance) };
+  }),
   letters: a.letters ?? [],
   topicLinks: a.topicLinks ?? {},
 });

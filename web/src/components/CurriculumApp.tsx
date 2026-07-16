@@ -443,6 +443,12 @@ export default function CurriculumApp() {
       }),
     });
   }, [commitAgenda]);
+  // feladat ↔ esemény kapcsolás a részletezőből (javaslat-gomb / választó)
+  const linkTaskEvent = useCallback((taskId: string, eventId: string | null) => {
+    if (!canEditRef.current) return;
+    const cur = agendaRef.current;
+    commitAgenda({ ...cur, tasks: cur.tasks.map((t) => (t.id === taskId ? { ...t, eventId } : t)) });
+  }, [commitAgenda]);
   const saveEvent = useCallback((e: AgendaEvent) => {
     const cur = agendaRef.current;
     const exists = cur.events.some((x) => x.id === e.id);
@@ -495,8 +501,7 @@ export default function CurriculumApp() {
         eventId: eid,
         owner: e?.owner ?? emptyTask().owner,
         people: e ? [...e.people] : [],
-        dueDate: e?.day ?? null,
-        due: e?.when ?? null,
+        dueDate: e?.day ?? e?.sort ?? null, // az esemény napja, vagy legalább a hónapja
         title: e ? `${e.title} — előkészítés` : '',
       },
       isNew: true,
@@ -1210,6 +1215,7 @@ export default function CurriculumApp() {
           onOpenTask={(id) => setAgendaDetails({ kind: 'task', id })}
           onOpenEvent={(id) => setAgendaDetails({ kind: 'event', id })}
           onToggleStep={toggleStep}
+          onLinkEvent={linkTaskEvent}
           onPerson={(n) => { setAgendaDetails(null); onInstructor(n); }}
           onNotify={() => { if (agendaDetails.kind === 'task') notifyTask(agendaDetails.id); else notifyEvent(agendaDetails.id); }}
           onOpenLetter={openSavedLetter}

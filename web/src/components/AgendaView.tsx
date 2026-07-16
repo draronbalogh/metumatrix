@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import {
   Agenda, AgendaTask, STATUS_LABEL, PRIORITY_LABEL, PRIORITY_ORDER, TASK_CATEGORIES,
-  TaskPriority, taskHasPerson, eventHasPerson, taskSteps, stepsDone, fmtDayHu,
+  TaskPriority, taskHasPerson, eventHasPerson, taskSteps, stepsDone, fmtDueHu,
 } from '@/data/agenda';
 import { PersonKind } from '@/data/people';
 import PageHead from './PageHead';
@@ -177,7 +177,7 @@ export default function AgendaView({ agenda, q, instr, taught, letterStats, onAd
                   )}
                 </div>
                 <div className="agc-meta">
-                  {(t.dueDate || t.due) && <span className="m">📅 {t.dueDate ? fmtDayHu(t.dueDate) : t.due}</span>}
+                  {(t.dueDate || t.due) && <span className="m">📅 {t.dueDate ? fmtDueHu(t.dueDate) : t.due}</span>}
                   {t.owner && <span className="m">👤 {familyName(t.owner)}{t.people.length > 0 ? ` +${t.people.length}` : ''}</span>}
                   {steps.length > 0 && <span className={`m${doneN === steps.length ? ' ok' : ''}`}>☑ {doneN}/{steps.length}</span>}
                   {ls && <span className={`m${ls.drafts ? ' warn' : ''}`}>✉ {ls.n}</span>}

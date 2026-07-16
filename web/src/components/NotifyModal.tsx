@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AgendaEvent, AgendaTask, Letter } from '@/data/agenda';
+import { AgendaEvent, AgendaTask, Letter, fmtDueHu } from '@/data/agenda';
 import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster, formerTeacherNames, teacherStatusNames, studentOrganizerNames, studentStatusNames, studentCohorts, cohortNames, SIGNATURE_SEPARATOR } from '@/data/people';
 import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, LetterKind, MeetingMode, MeetingPlan } from '@/lib/letters';
 import GrowArea from './GrowArea';
@@ -140,7 +140,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       title: (target.task ? tk?.title : ev?.title || tk?.title) || '',
       when: ev ? (ev.when || fmtDay(ev.day)) : undefined,
       place: target.event ? (place || target.event.place) : ev?.place,
-      due: tk ? (tk.due || fmtDay(tk.dueDate)) : undefined,
+      due: tk ? (fmtDueHu(tk.dueDate) || tk.due) : undefined,
     };
     lastTopicRef.current = t;
     setActiveTopic(t);
@@ -197,7 +197,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     const ev = effEvent ?? ((effTask?.eventId ? (ctxEvents ?? []).find((e) => e.id === effTask.eventId) : null) ?? null);
     const when = ev ? (ev.when || fmtDay(ev.day)) : '';
     const placeVal = ev?.place ?? '';
-    const dueVal = effTask ? (effTask.due || fmtDay(effTask.dueDate)) : '';
+    const dueVal = effTask ? (fmtDueHu(effTask.dueDate) || effTask.due || '') : '';
     const fill = (s: string) => {
       let out = s;
       if (when) out = out.split('[dátum]').join(when).split('[időpont]').join(when).split('[dátum, időpont]').join(when);
@@ -669,7 +669,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                 {(ctxTasks?.length ?? 0) > 0 && (
                   <optgroup label="Feladatok">
                     {(ctxTasks ?? []).map((t) => (
-                      <option key={t.id} value={`t:${t.id}`}>{t.title}{t.due || t.dueDate ? ` · ${t.due || t.dueDate}` : ''}</option>
+                      <option key={t.id} value={`t:${t.id}`}>{t.title}{t.due || t.dueDate ? ` · ${fmtDueHu(t.dueDate) || t.due}` : ''}</option>
                     ))}
                   </optgroup>
                 )}

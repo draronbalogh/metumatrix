@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { Agenda, normalizeAgenda } from '@/data/agenda';
+import { Agenda, fmtDueHu, normalizeAgenda } from '@/data/agenda';
 import { PeopleDB, normalizePeople } from '@/data/people';
 import { resolveNames } from '@/lib/recipients';
 import { sendBcc, isConfigured } from '@/lib/mailer';
@@ -70,11 +70,15 @@ export async function POST(req: Request) {
   });
   agenda.tasks.forEach((t) => {
     if (!t.dueDate || t.status === 'done') return;
-    const dleft = daysUntil(t.dueDate, today);
+    // a dueDate lehet hónap-pontosságú ('ÉÉÉÉ-HH') vagy órás ('ÉÉÉÉ-HH-NN ÓÓ:PP') is —
+    // emlékeztetőt csak nap-pontosságú határidőre számolunk
+    const ymd = t.dueDate.length >= 10 ? t.dueDate.slice(0, 10) : null;
+    if (!ymd) return;
+    const dleft = daysUntil(ymd, today);
     if (!offs.includes(dleft)) return;
-    const key = `t:${t.id}@${t.dueDate}:${dleft}`;
+    const key = `t:${t.id}@${ymd}:${dleft}`;
     if (state[key]) return;
-    due.push({ key, kind: 'task', title: t.title, when: t.due || t.dueDate, place: null, days: dleft, names: [t.owner, ...t.people].filter((n): n is string => !!n) });
+    due.push({ key, kind: 'task', title: t.title, when: fmtDueHu(t.dueDate) || t.due || ymd, place: null, days: dleft, names: [t.owner, ...t.people].filter((n): n is string => !!n) });
   });
 
   const results: { key: string; sent: number; skipped?: string }[] = [];

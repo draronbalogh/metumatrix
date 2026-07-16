@@ -116,6 +116,45 @@ export const stepsDone = (t: AgendaTask): number => taskSteps(t).filter((s) => s
 const HU_MON = ['jan.', 'febr.', 'márc.', 'ápr.', 'máj.', 'jún.', 'júl.', 'aug.', 'szept.', 'okt.', 'nov.', 'dec.'];
 export const fmtDayHu = (d?: string | null): string =>
   d && d.length >= 10 ? `${HU_MON[Number(d.slice(5, 7)) - 1] ?? ''} ${Number(d.slice(8, 10))}.` : '';
+
+// Strukturált határidő megjelenítése — a dueDate három pontosságot hordozhat:
+// 'ÉÉÉÉ-HH' → „szept." (más évnél „2027. szept."), 'ÉÉÉÉ-HH-NN' → „szept. 2.",
+// 'ÉÉÉÉ-HH-NN ÓÓ:PP' → „szept. 2. 14:30". Szabadszavas határidő nincs többé.
+export const fmtDueHu = (d?: string | null): string => {
+  if (!d || d.length < 7) return '';
+  const y = Number(d.slice(0, 4));
+  const yPfx = y === new Date().getFullYear() ? '' : `${y}. `;
+  if (d.length === 7) return `${yPfx}${HU_MON[Number(d.slice(5, 7)) - 1] ?? ''}`;
+  const time = d.length >= 16 ? d.slice(11, 16) : '';
+  return `${yPfx}${fmtDayHu(d)}${time ? ` ${time}` : ''}`;
+};
+
+const HU_MONTH_FULL = ['január', 'február', 'március', 'április', 'május', 'június', 'július', 'augusztus', 'szeptember', 'október', 'november', 'december'];
+// Esemény kijelzett időpontja a strukturált mezőkből (szabad szöveg helyett):
+// nap → „2026. szept. 2." (+ „ – 10." ha időszak, + „14:30" ha van óra), hónap → „2026. szeptember".
+export const fmtEventWhen = (day: string | null, dayEnd: string | null, sortMonth: string | null, time?: string | null): string => {
+  if (day && day.length >= 10) {
+    let s = `${day.slice(0, 4)}. ${fmtDayHu(day)}`;
+    if (dayEnd && dayEnd > day) s += ` – ${dayEnd.slice(0, 7) === day.slice(0, 7) ? `${Number(dayEnd.slice(8, 10))}.` : fmtDayHu(dayEnd)}`;
+    if (time) s += ` ${time}`;
+    return s;
+  }
+  if (sortMonth && sortMonth.length === 7) return `${sortMonth.slice(0, 4)}. ${HU_MONTH_FULL[Number(sortMonth.slice(5, 7)) - 1] ?? ''}`;
+  return 'időpont egyeztetés alatt';
+};
+
+// A régi szabadszavas határidők egyszeri migrációja: ha hónapnév szerepel a
+// szövegben („szeptemberre kész"), abból ÉÉÉÉ-HH lesz — a legközelebbi ilyen hónap.
+const HU_MONTH_STEMS = ['jan', 'febr', 'márc', 'ápr', 'máj', 'jún', 'júl', 'aug', 'szept', 'okt', 'nov', 'dec'];
+export const parseLooseDue = (text?: string | null): string | null => {
+  if (!text) return null;
+  const lo = text.toLowerCase();
+  const ix = HU_MONTH_STEMS.findIndex((m) => lo.includes(m));
+  if (ix < 0) return null;
+  const now = new Date();
+  const year = ix >= now.getMonth() ? now.getFullYear() : now.getFullYear() + 1;
+  return `${year}-${String(ix + 1).padStart(2, '0')}`;
+};
 export const emptyEvent = (): AgendaEvent => ({
   id: `e-${Date.now().toString(36)}`,
   title: '', when: '', sort: null, day: null, dayEnd: null, featured: false, note: null, place: null, owner: DEFAULT_OWNER, people: [],
@@ -128,7 +167,9 @@ export const normalizeAgenda = (a: Partial<Agenda>): Agenda => ({
   intro: a.intro ?? DEFAULT_AGENDA.intro,
   tasks: (a.tasks ?? []).map((t) => {
     const steps = taskSteps(t);
-    return { ...t, steps, ideas: steps.map((s) => s.text), people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? null, priority: t.priority ?? 'normal', category: t.category ?? null, createdAt: t.createdAt ?? null, source: t.source ?? null };
+    // szöveges határidő → strukturált, ha kiolvasható belőle hónap (egyszeri migráció)
+    const migrated = !t.dueDate && t.due ? parseLooseDue(t.due) : null;
+    return { ...t, steps, ideas: steps.map((s) => s.text), people: t.people ?? [], eventId: t.eventId ?? null, dueDate: t.dueDate ?? migrated, due: migrated ? null : t.due ?? null, priority: t.priority ?? 'normal', category: t.category ?? null, createdAt: t.createdAt ?? null, source: t.source ?? null };
   }),
   events: (a.events ?? []).map((e) => ({ ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null, featured: e.featured ?? false, source: e.source ?? null })),
   letters: a.letters ?? [],

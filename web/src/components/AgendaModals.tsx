@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { AgendaEvent, AgendaTask, Letter, STATUS_LABEL, TaskStatus, TaskStep, PRIORITY_LABEL, TaskPriority, TASK_CATEGORIES, taskSteps, stepsDone } from '@/data/agenda';
+import { AgendaEvent, AgendaTask, Letter, STATUS_LABEL, TaskStatus, TaskStep, PRIORITY_LABEL, TaskPriority, TASK_CATEGORIES, taskSteps, stepsDone, fmtDueHu, fmtEventWhen } from '@/data/agenda';
 import { RosterEntry, PersonKind, KIND_LABEL } from '@/data/people';
 import { suggestTemplatesFor } from '@/lib/topics';
+import { suggestEventFor } from '@/lib/linkSuggest';
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
 
@@ -42,6 +43,36 @@ function ChipRadio<T extends string>({ value, options, onChange }: { value: T; o
       {options.map((o) => (
         <button type="button" key={o.v} className={`crx${o.cls ? ` ${o.cls}` : ''}${value === o.v ? ' is-on' : ''}`} onClick={() => onChange(o.v)}>{o.label}</button>
       ))}
+    </div>
+  );
+}
+
+// Strukturált határidő-választó: hónap VAGY konkrét nap, opcionális óra:perccel —
+// szabad szöveg nincs. Érték: '' | 'ÉÉÉÉ-HH' | 'ÉÉÉÉ-HH-NN' | 'ÉÉÉÉ-HH-NN ÓÓ:PP'.
+function DueInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [mode, setMode] = useState<'none' | 'month' | 'day'>(value.length >= 10 ? 'day' : value.length === 7 ? 'month' : 'none');
+  const day = value.length >= 10 ? value.slice(0, 10) : '';
+  const time = value.length >= 16 ? value.slice(11, 16) : '';
+  const month = value.length === 7 ? value : value.length >= 10 ? value.slice(0, 7) : '';
+  return (
+    <div className="due-in">
+      <div className="chipradio">
+        <button type="button" className={`crx c-grey${mode === 'none' ? ' is-on' : ''}`} onClick={() => { setMode('none'); onChange(''); }}>Nincs</button>
+        <button type="button" className={`crx${mode === 'month' ? ' is-on' : ''}`} title="Csak a hónap ismert" onClick={() => { setMode('month'); if (month) onChange(month); }}>Hónap</button>
+        <button type="button" className={`crx${mode === 'day' ? ' is-on' : ''}`} title="Konkrét nap, akár óra:perccel" onClick={() => setMode('day')}>Pontos nap</button>
+      </div>
+      {mode === 'month' && (
+        <div className="due-row">
+          <input type="month" value={month} onChange={(e) => onChange(e.target.value)} />
+        </div>
+      )}
+      {mode === 'day' && (
+        <div className="due-row">
+          <input type="date" value={day} onChange={(e) => onChange(e.target.value ? (time ? `${e.target.value} ${time}` : e.target.value) : '')} />
+          <input type="time" value={time} disabled={!day} title="Óra:perc — csak ha kell" onChange={(e) => onChange(e.target.value ? `${day} ${e.target.value}` : day)} />
+        </div>
+      )}
+      {value !== '' && <div className="due-preview">Kijelzés: <strong>{fmtDueHu(value)}</strong></div>}
     </div>
   );
 }
@@ -339,7 +370,8 @@ export function TaskModal({ task, isNew, events, roster, letters, onSave, onDele
       priority: d.priority as TaskPriority,
       category: d.category || null,
       owner: d.owner.trim() || null,
-      due: d.due.trim() || null,
+      // a strukturált határidő az egyetlen forrás — a régi szöveges csak addig él, amíg nincs
+      due: d.dueDate.trim() ? null : d.due.trim() || null,
       dueDate: d.dueDate.trim() || null,
       people,
       eventId: d.eventId || null,
@@ -350,13 +382,15 @@ export function TaskModal({ task, isNew, events, roster, letters, onSave, onDele
   };
   const saveAndNotify = () => { if (!d.title.trim() || !onNotify) return; save(); onNotify(); };
   const doneN = steps.filter((s) => s.done).length;
+  // automatikus esemény-javaslat a címek egyezése alapján, amíg nincs kapcsolat
+  const eventSugg = !d.eventId ? suggestEventFor(`${d.title} ${d.summary}`, events) : null;
 
   return (
     <div className="ovl" onMouseDown={(e) => { if (e.target === e.currentTarget) tryClose(); }}>
       <div className="modal modal--tabs">
         <h3>{d.title.trim() || (isNew ? 'Új feladat' : 'Feladat szerkesztése')}</h3>
         <div className="mt-sum">
-          <button type="button" className="mt-chip" title="Határidő — az Alap fülön" onClick={() => setTab('alap')}>🕑 {d.dueDate || d.due.trim() || 'nincs határidő'}</button>
+          <button type="button" className="mt-chip" title="Határidő — az Alap fülön" onClick={() => setTab('alap')}>🕑 {fmtDueHu(d.dueDate) || d.due.trim() || 'nincs határidő'}</button>
           <button type="button" className="mt-chip" title="Alfeladatok" onClick={() => setTab('steps')}>☑ {doneN}/{steps.length} alfeladat</button>
           <button type="button" className="mt-chip" title="Felelős és résztvevők" onClick={() => setTab('people')}>👥 {(d.owner ? 1 : 0) + people.length} fő</button>
           <button type="button" className="mt-chip" title="Kapcsolt levelek" onClick={() => setTab('mail')}>✉ {letters?.length ?? 0} levél</button>
@@ -385,13 +419,12 @@ export function TaskModal({ task, isNew, events, roster, letters, onSave, onDele
                 options={TASK_CATEGORIES.map((c) => ({ v: c, label: c, cls: 'c-blue' }))} />
             </div>
             <div className="f-sec c-yellow">Időzítés és kapcsolat</div>
-            <div className="field">
-              <label>Határidő szövegesen</label>
-              <input value={d.due} onChange={(e) => set('due', e.target.value)} placeholder="pl. szeptemberre" />
-            </div>
-            <div className="field">
-              <label>Pontos határidő</label>
-              <input type="date" value={d.dueDate} onChange={(e) => set('dueDate', e.target.value)} title="Ha megadod, a rendszer emlékeztethet előtte" />
+            <div className="field full">
+              <label>Határidő — hónap vagy pontos nap, óra:perc ha kell</label>
+              <DueInput value={d.dueDate} onChange={(v) => set('dueDate', v)} />
+              {d.due.trim() !== '' && !d.dueDate && (
+                <div className="due-legacy">Régi szöveges bejegyzés: „{d.due}" — válassz fent hónapot vagy napot, az váltja ki.</div>
+              )}
             </div>
             <div className="field full">
               <label>Kapcsolódó esemény</label>
@@ -399,11 +432,15 @@ export function TaskModal({ task, isNew, events, roster, letters, onSave, onDele
                 <option value="">— nincs —</option>
                 {events.map((ev) => <option key={ev.id} value={ev.id}>{ev.title}</option>)}
               </select>
+              {!d.eventId && eventSugg && (
+                <button type="button" className="chip due-sugg" title="A rendszer a címek egyezése alapján ezt az eseményt javasolja"
+                  onClick={() => set('eventId', eventSugg.id)}>⚡ Javaslat: ▤ {eventSugg.title} — összekapcsolás</button>
+              )}
             </div>
             <div className="f-sec c-green">Tartalom</div>
             <div className="field full">
               <label>Rövid összefoglaló — a kártyán ez látszik</label>
-              <GrowArea minRows={3} value={d.summary} onChange={(e) => set('summary', e.target.value)} placeholder="miről szól a feladat" />
+              <GrowArea minRows={7} value={d.summary} onChange={(e) => set('summary', e.target.value)} placeholder="miről szól a feladat" />
             </div>
           </>)}
           {tab === 'steps' && (<>
@@ -477,10 +514,15 @@ const EVENT_TABS: TabDef[] = [
 ];
 
 export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDelete, onNotify, onOpenTask, onAddTask, onOpenLetter, onLetterStatus, onNotifyTopic, onClose }: EventProps) {
+  // az időpont strukturált: hónap VAGY nap/időszak (+ opcionális óra:perc) — szabad szöveg nincs;
+  // a régi when-szövegből az óra:percet kiolvassuk, a kijelzett szöveget mentéskor generáljuk
+  const m0 = event.when.match(/(\d{1,2})[:.](\d{2})/);
   const [d, setD] = useState(() => ({
-    title: event.title, when: event.when, sort: event.sort ?? '', day: event.day ?? '', dayEnd: event.dayEnd ?? '',
+    title: event.title, day: event.day ?? '', dayEnd: event.dayEnd ?? '', month: event.sort ?? '',
+    time: event.day && m0 ? `${m0[1].padStart(2, '0')}:${m0[2]}` : '',
     note: event.note ?? '', place: event.place ?? '', owner: event.owner ?? '',
   }));
+  const [mode, setModeRaw] = useState<'none' | 'month' | 'day'>(event.day ? 'day' : event.sort ? 'month' : 'none');
   const [featured, setFeaturedRaw] = useState(event.featured);
   const [people, setPeopleRaw] = useState<string[]>(event.people);
   const [tab, setTab] = useState('alap');
@@ -488,18 +530,26 @@ export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDel
   const tryClose = () => { if (dirty.current && !confirm('Elmentetlen módosítások vannak. Bezárod mentés nélkül?')) return; onClose(); };
   useEsc(tryClose);
   const set = (k: keyof typeof d, v: string) => { dirty.current = true; setD((p) => ({ ...p, [k]: v })); };
+  const setMode = (m: 'none' | 'month' | 'day') => { dirty.current = true; setModeRaw(m); };
   const setPeople = (names: string[]) => { dirty.current = true; setPeopleRaw(names); };
   const togglePerson = (name: string) => { dirty.current = true; setPeopleRaw((p) => (p.includes(name) ? p.filter((n) => n !== name) : [...p, name])); };
+  const effDay = mode === 'day' ? d.day.trim() : '';
+  const effEnd = mode === 'day' && effDay && d.dayEnd.trim() > effDay ? d.dayEnd.trim() : null;
+  const effMonth = mode === 'month' ? d.month.trim() : '';
+  const effTime = effDay ? d.time.trim() : '';
+  const whenOut = mode !== 'none'
+    ? fmtEventWhen(effDay || null, effEnd, effMonth || null, effTime || null)
+    : (event.day || event.sort ? 'időpont egyeztetés alatt' : (event.when.trim() || 'időpont egyeztetés alatt'));
   const save = () => {
     if (!d.title.trim()) return;
     dirty.current = false;
     onSave({
       ...event,
       title: d.title.trim(),
-      when: d.when.trim() || 'időpont egyeztetés alatt',
-      sort: d.day.trim() ? d.day.trim().slice(0, 7) : (d.sort.trim() || null),
-      day: d.day.trim() || null,
-      dayEnd: d.dayEnd.trim() && d.day.trim() && d.dayEnd.trim() > d.day.trim() ? d.dayEnd.trim() : null,
+      when: whenOut,
+      sort: effDay ? effDay.slice(0, 7) : (effMonth || null),
+      day: effDay || null,
+      dayEnd: effEnd,
       featured,
       note: d.note.trim() || null,
       place: d.place.trim() || null,
@@ -515,7 +565,7 @@ export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDel
       <div className="modal modal--tabs">
         <h3>{d.title.trim() || (isNew ? 'Új esemény' : 'Esemény szerkesztése')}</h3>
         <div className="mt-sum">
-          <button type="button" className="mt-chip" title="Időpont — az Alap fülön" onClick={() => setTab('alap')}>🕑 {d.day || d.when.trim() || 'nincs időpont'}</button>
+          <button type="button" className="mt-chip" title="Időpont — az Alap fülön" onClick={() => setTab('alap')}>🕑 {whenOut}</button>
           {d.place.trim() !== '' && <button type="button" className="mt-chip" title="Helyszín — az Alap fülön" onClick={() => setTab('alap')}>📍 {d.place.trim()}</button>}
           <button type="button" className="mt-chip" title="Az esemény feladatai" onClick={() => setTab('tasks')}>▤ {linked.length} feladat</button>
           <button type="button" className="mt-chip" title="Felelős és résztvevők" onClick={() => setTab('people')}>👥 {(d.owner ? 1 : 0) + people.length} fő</button>
@@ -537,21 +587,36 @@ export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDel
             </div>
             <div className="f-sec c-yellow">Időpont és helyszín</div>
             <div className="field full">
-              <label>Mikor — szabad szöveg</label>
-              <input value={d.when} onChange={(e) => set('when', e.target.value)} placeholder="pl. szeptember vagy október eleje" />
+              <label>Időpont — hónap vagy konkrét nap/időszak</label>
+              <div className="chipradio">
+                <button type="button" className={`crx c-grey${mode === 'none' ? ' is-on' : ''}`} onClick={() => setMode('none')}>Nincs még</button>
+                <button type="button" className={`crx${mode === 'month' ? ' is-on' : ''}`} title="Csak a hónap ismert" onClick={() => setMode('month')}>Hónap</button>
+                <button type="button" className={`crx${mode === 'day' ? ' is-on' : ''}`} title="Konkrét nap vagy többnapos időszak — a naptárban is jelölődik" onClick={() => setMode('day')}>Nap / időszak</button>
+              </div>
             </div>
-            <div className="field">
-              <label>Kezdőnap — ha ismert</label>
-              <input type="date" value={d.day} onChange={(e) => set('day', e.target.value)} title="A naptárban ettől a naptól jelölődik" />
-            </div>
-            <div className="field">
-              <label>Utolsó nap — ha időszak</label>
-              <input type="date" value={d.dayEnd} onChange={(e) => set('dayEnd', e.target.value)} title="Többnapos esemény/időszak záró napja — a naptár a teljes tartományt jelöli" />
-            </div>
-            <div className="field">
-              <label>Rendezési hónap</label>
-              <input type="month" value={d.sort} onChange={(e) => set('sort', e.target.value)} title="Ez alapján rendeződik a lista; üresen a végére kerül" />
-            </div>
+            {mode === 'month' && (
+              <div className="field">
+                <label>Hónap</label>
+                <input type="month" value={d.month} onChange={(e) => set('month', e.target.value)} />
+              </div>
+            )}
+            {mode === 'day' && (<>
+              <div className="field">
+                <label>Kezdőnap</label>
+                <input type="date" value={d.day} onChange={(e) => set('day', e.target.value)} title="A naptárban ettől a naptól jelölődik" />
+              </div>
+              <div className="field">
+                <label>Utolsó nap — ha időszak</label>
+                <input type="date" value={d.dayEnd} onChange={(e) => set('dayEnd', e.target.value)} title="Többnapos esemény/időszak záró napja — a naptár a teljes tartományt jelöli" />
+              </div>
+              <div className="field">
+                <label>Óra:perc — ha van</label>
+                <input type="time" value={d.time} disabled={!d.day.trim()} onChange={(e) => set('time', e.target.value)} />
+              </div>
+            </>)}
+            {mode !== 'none' && (
+              <div className="field full"><div className="due-preview">Kijelzés: <strong>{whenOut}</strong></div></div>
+            )}
             <div className="field full">
               <label>Helyszín</label>
               <input value={d.place} onChange={(e) => set('place', e.target.value)} placeholder="pl. METU, Infopark D épület, 212 vagy külső cím" />
@@ -560,7 +625,7 @@ export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDel
             <div className="f-sec c-green">Leírás</div>
             <div className="field full">
               <label>Leírás</label>
-              <GrowArea minRows={4} value={d.note} onChange={(e) => set('note', e.target.value)} placeholder="mire kell készülni, mi kapcsolódik hozzá" />
+              <GrowArea minRows={7} value={d.note} onChange={(e) => set('note', e.target.value)} placeholder="mire kell készülni, mi kapcsolódik hozzá" />
             </div>
           </>)}
           {tab === 'tasks' && (<>
@@ -575,7 +640,7 @@ export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDel
                       onClick={() => { if (!d.title.trim() || !onOpenTask) return; save(); onOpenTask(t.id); }}>
                       <span className={`mt-tst st-${t.status}`}>{STATUS_LABEL[t.status]}</span>
                       <span className="t">{t.title}</span>
-                      <span className="m">☑ {stepsDone(t)}/{taskSteps(t).length}{t.owner ? ` · ${t.owner}` : ''}{(t.dueDate || t.due) ? ` · ⏱ ${t.dueDate || t.due}` : ''}</span>
+                      <span className="m">☑ {stepsDone(t)}/{taskSteps(t).length}{t.owner ? ` · ${t.owner}` : ''}{(t.dueDate || t.due) ? ` · ⏱ ${fmtDueHu(t.dueDate) || t.due}` : ''}</span>
                     </button>
                   ))}
                 </div>
@@ -633,7 +698,7 @@ export function IntroModal({ intro, onSave, onClose }: IntroProps) {
         <form className="f" onSubmit={(e) => { e.preventDefault(); onSave(v); }}>
           <div className="field full">
             <label>A Feladatok oldal tetején megjelenő szöveg</label>
-            <GrowArea minRows={6} value={v} onChange={(e) => setV(e.target.value)} />
+            <GrowArea minRows={9} value={v} onChange={(e) => setV(e.target.value)} />
           </div>
         </form>
         <div className="mfoot">

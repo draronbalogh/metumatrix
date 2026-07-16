@@ -313,8 +313,10 @@ body {
 /* ============================================================
    Details drawer + modal
    ============================================================ */
-.drawer-scrim { position: fixed; inset: 0; background: rgba(21, 23, 26, .3); z-index: 70; }
-.drawer { position: fixed; right: 0; top: 0; bottom: 0; width: min(760px, 94vw); background: var(--paper); border-left: 1px solid var(--line); box-shadow: -16px 0 50px rgba(16, 17, 20, .14); z-index: 75; display: flex; flex-direction: column; overflow: hidden; }
+/* a részletező is jobbról csúszik be, a háttér-sötétítés finoman úszik elő — a szerkesztő (.modal) ugyanígy */
+.drawer-scrim { position: fixed; inset: 0; background: rgba(21, 23, 26, .3); z-index: 70; animation: scrimIn .22s ease both; }
+@keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
+.drawer { position: fixed; right: 0; top: 0; bottom: 0; width: min(760px, 94vw); background: var(--paper); border-left: 1px solid var(--line); box-shadow: -16px 0 50px rgba(16, 17, 20, .14); z-index: 75; display: flex; flex-direction: column; overflow: hidden; animation: modalIn .26s cubic-bezier(.2, .8, .25, 1) both; }
 .dr-top { flex: none; position: relative; padding: 20px 22px 15px; background: var(--card); border-bottom: 1px solid var(--line); }
 .dr-scroll { flex: 1 1 auto; overflow-y: auto; padding: 16px 22px 12px; }
 .dr-foot { flex: none; display: flex; gap: 8px; padding: 12px 22px 16px; border-top: 1px solid var(--line); background: var(--card); }
@@ -349,7 +351,7 @@ body {
 
 /* MINDEN szerkesztő JOBB OLDALI, teljes magasságú panelként nyílik — ugyanaz a
    design, mint a részletező drawer (felhasználói kérés: egységes, széles oldalpanel) */
-.ovl { position: fixed; inset: 0; background: rgba(21, 23, 26, .46); backdrop-filter: blur(3px); display: flex; z-index: 80; align-items: stretch; justify-content: flex-end; padding: 0; }
+.ovl { position: fixed; inset: 0; background: rgba(21, 23, 26, .46); backdrop-filter: blur(3px); display: flex; z-index: 80; align-items: stretch; justify-content: flex-end; padding: 0; animation: scrimIn .22s ease both; }
 .modal { background: var(--card); border: 0; border-left: 1px solid var(--line); border-radius: 0; width: min(760px, 94vw); height: 100dvh; max-height: 100dvh; overflow: hidden; display: flex; flex-direction: column; box-shadow: -16px 0 50px rgba(16, 17, 20, .22); animation: modalIn .24s cubic-bezier(.2, .8, .25, 1) both; }
 @keyframes modalIn { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
 .modal h3 { flex: none; margin: 0; padding: 19px 24px 15px; font-family: var(--ff-display); font-size: 1.2rem; font-weight: 700; letter-spacing: var(--head-ls); border-bottom: 1px solid var(--line); position: relative; }
@@ -359,7 +361,8 @@ body {
 /* a törzs görget, a fejléc és a lábléc rögzített marad — a Mentés mindig elérhető görgetés nélkül */
 .modal > .f, .modal > .pm-body { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; min-height: 0; overscroll-behavior: contain; }
 /* automatikusan növő textarea: nincs belső görgetés, csak a modál törzse görget */
-.ta-grow { overflow: hidden; resize: none; }
+/* a tartalom-mezők mindenhol kapjanak rendes helyet — üresen is legalább ~7 sornyit */
+.ta-grow { overflow: hidden; resize: none; min-height: 160px; }
 .f { padding: 18px 24px 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px 16px; }
 /* KRITIKUS: a grid-cellák tudjanak összemenni — enélkül a hosszú select kitolja a modalt (vízszintes scroll) */
 .f > * { min-width: 0; }
@@ -376,7 +379,7 @@ body {
 .field label { font-size: .64rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); line-height: 1.4; }
 .field input, .field select, .field textarea { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; font-size: .9rem; font-family: var(--ff); color: var(--ink); background: var(--paper); resize: vertical; transition: border-color .12s, background .12s; }
 .field input:hover, .field select:hover, .field textarea:hover { border-color: var(--line-2); }
-.field textarea { min-height: 104px; line-height: 1.55; }
+.field textarea { min-height: 160px; line-height: 1.55; }
 .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid color-mix(in srgb, var(--brand) 35%, transparent); outline-offset: 1px; border-color: var(--brand); background: var(--card); }
 /* chip-választó (állapot / prioritás / kategória) — ujjbarát, színnel beszél */
 .chipradio { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -1542,16 +1545,38 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .dr-task .t, .dr-letter .t { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dr-task .m, .dr-letter .m { flex: none; font-size: .72rem; color: var(--ink-2); white-space: nowrap; }
 .dr-addtask { margin: 2px 0 12px; }
-.dr-person { margin-bottom: 12px; }
+/* KI MIT CSINÁL — személyenként elkülönülő kártya: név + szerep + saját teendők, itt pipálhatók.
+   A felelős kártyája piros csíkot kap (kiemelt), a kiosztatlan lépéseké sárgát (figyelmeztet). */
+.dr-person { margin: 0 0 10px; padding: 10px 12px 11px; border: 1px solid var(--line); border-left: 4px solid var(--brand); border-radius: 10px; background: color-mix(in srgb, var(--brand) 4%, var(--card)); }
+.dr-person--owner { border-left-color: var(--hot); background: color-mix(in srgb, var(--hot) 3%, var(--card)); }
+.dr-person--free { border-left-color: var(--yellow-deep); background: color-mix(in srgb, var(--yellow-deep) 5%, var(--card)); }
 .dr-person-h { display: flex; align-items: center; gap: 8px; }
-.dr-person-role { font-size: .66rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--brand-text); }
-.dr-person-steps { list-style: none; margin: 5px 0 0; padding: 0 0 0 8px; display: flex; flex-direction: column; gap: 4px; }
-.dr-person-steps li { display: flex; gap: 7px; align-items: baseline; font-size: .82rem; line-height: 1.35; }
+.dr-person-role { font-size: .64rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--hot); background: var(--hot-100); padding: 2px 8px; border-radius: 999px; }
+.dr-person-count { margin-left: auto; flex: none; font-size: .74rem; font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.dr-person-count.ok { color: var(--g0); }
+.dr-person-free-t { font-size: .8rem; font-weight: 800; color: color-mix(in srgb, var(--yellow-deep) 75%, var(--ink)); }
+.dr-person-steps { list-style: none; margin: 9px 0 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.dr-person-steps li { display: flex; gap: 8px; align-items: flex-start; font-size: .86rem; line-height: 1.4; }
 .dr-person-steps li.is-done .tx { text-decoration: line-through; color: var(--muted); }
-.dr-person-steps .dt { flex: none; color: var(--ink-2); }
 .dr-person-steps .tx { flex: 1; min-width: 0; }
-.dr-person-steps .du { flex: none; font-size: .72rem; color: var(--ink-2); }
-.dr-person-none { font-size: .74rem; color: var(--muted); font-style: italic; margin: 3px 0 0 8px; }
+.dr-person-steps .tx .tt { font-style: normal; font-weight: 700; color: var(--ink-2); }
+.dr-person-steps .du { flex: none; font-size: .72rem; color: var(--ink-2); white-space: nowrap; }
+.dr-person-steps .ag-scheck { width: 18px; height: 18px; margin-top: 1px; }
+.dr-person-none { font-size: .74rem; color: var(--muted); font-style: italic; margin: 5px 0 0; }
+/* kapcsolt esemény a részletezőben: bontás-gomb + hozzákapcsolás javaslattal/választóval */
+.dr-evrow { display: flex; align-items: center; gap: 8px; }
+.dr-unlink { flex: none; border: 1px solid var(--line); background: var(--card); color: var(--muted); border-radius: 6px; width: 22px; height: 22px; line-height: 1; cursor: pointer; font-size: .7rem; }
+.dr-unlink:hover { color: var(--hot); border-color: var(--hot); }
+.dr-evpick { display: flex; flex-direction: column; gap: 7px; align-items: flex-start; }
+.dr-evpick select { font: inherit; font-size: .82rem; padding: 6px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); max-width: 100%; }
+/* automatikus esemény-javaslat chip (szerkesztőben és részletezőben egyaránt) */
+.due-sugg { border-color: color-mix(in srgb, var(--hot) 40%, var(--line)) !important; color: var(--hot) !important; background: var(--hot-100) !important; font-weight: 700; }
+/* strukturált határidő-választó (DueInput) és az esemény-időpont sor */
+.due-in { display: flex; flex-direction: column; gap: 8px; }
+.due-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.due-row input { flex: none; }
+.due-preview { font-size: .8rem; color: var(--ink-2); background: color-mix(in srgb, var(--brand) 7%, transparent); border-radius: 8px; padding: 6px 10px; align-self: flex-start; }
+.due-legacy { margin-top: 6px; font-size: .76rem; color: color-mix(in srgb, var(--yellow-deep) 75%, var(--ink)); background: color-mix(in srgb, var(--yellow-deep) 9%, transparent); border-radius: 8px; padding: 6px 10px; }
 .dr-lst { flex: none; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 999px; font-size: .7rem; font-weight: 800; }
 .dr-lst.draft { background: color-mix(in srgb, var(--yellow-deep) 20%, transparent); color: color-mix(in srgb, var(--yellow-deep) 80%, var(--ink)); }
 .dr-lst.sent { background: color-mix(in srgb, var(--g0) 18%, transparent); color: var(--g0); }

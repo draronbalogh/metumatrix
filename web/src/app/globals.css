@@ -1464,8 +1464,15 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .nm-fillrow .t { flex: none; width: 88px; font-size: .68rem; font-weight: 700; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nm-fillrow input { flex: 1; min-width: 0; padding: 6px 8px; font-size: .8rem; }
 .nm-fillrow input.nm-filltime { flex: 0 0 86px; }
-.nm-fillgo { flex: none; padding: 5px 9px; }
-.nm-fillgo:not(:disabled) { border-color: var(--g0); color: var(--g0); font-weight: 800; }
+/* élő kitöltés: zöld keret = az érték már a levélben van; áthúzott = kihagyva */
+.nm-fillrow.is-ok input { border-color: var(--g0); }
+.nm-fillrow.is-ok .t { color: var(--g0); }
+.nm-fillrow.is-dead .t { text-decoration: line-through; color: var(--muted); }
+.nm-filldead { flex: 1; font-size: .74rem; color: var(--muted); font-style: italic; }
+.nm-fillgo { flex: none; padding: 5px 9px; color: var(--muted); }
+.nm-fillgo:hover { border-color: var(--hot); color: var(--hot); }
+.nm-fillgo.nm-fillback:hover { border-color: var(--g0); color: var(--g0); }
+.nm-outprev { margin-top: 5px; font-size: .76rem; color: var(--ink-2); background: color-mix(in srgb, var(--brand) 7%, transparent); border-radius: 8px; padding: 5px 9px; }
 
 /* MENTES-DOKK: jobb also sarok — desktopon a harom gomb mindig latszik,
    mobilon hamburger-FAB, amibol felfele nyilnak a gombok */

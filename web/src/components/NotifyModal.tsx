@@ -27,6 +27,82 @@ const F_MONTH = ['január', 'február', 'március', 'április', 'május', 'júni
 // levélbarát alak — a címzett kedvéért mindig évvel: "2026. szept. 2."
 const fillDay = (d: string): string => `${d.slice(0, 4)}. ${F_MON[Number(d.slice(5, 7)) - 1] ?? ''} ${Number(d.slice(8, 10))}.`;
 
+// ÉLŐ KITÖLTÉS: a vázlat (tárgy/törzs) mindvégig őrzi a [mezőket] — a kimenet
+// (előnézet, másolás, küldés, mentés) minden billentyűre újraszámolódik belőle.
+// Így az inputok sosem tűnnek el, és bármikor átírható az értékük.
+const fillReadyVal = (tok: string, v: string): boolean => {
+  const t = v.trim();
+  const k = fillKind(tok);
+  if (k === 'date' || k === 'datetime') return t.length >= 10;
+  if (k === 'month') return t.length === 7;
+  if (k === 'time') return t.length === 5;
+  return t !== '';
+};
+const fillOut = (tok: string, raw: string): string => {
+  const k = fillKind(tok);
+  if (k === 'date') return fillDay(raw);
+  if (k === 'datetime') return `${fillDay(raw.slice(0, 10))}${raw.length >= 16 ? ` ${raw.slice(11, 16)}` : ''}`;
+  if (k === 'month') {
+    const m = F_MONTH[Number(raw.slice(5, 7)) - 1] ?? raw;
+    const c0 = tok.slice(1, 2);
+    return c0 === c0.toUpperCase() && c0 !== c0.toLowerCase() ? m.charAt(0).toUpperCase() + m.slice(1) : m;
+  }
+  return raw;
+};
+// helyesírás: kötőjeles toldalék előtt a záró pont elmarad ("szept. 10-ig", nem "10.-ig")
+const substToken = (s: string, tok: string, v: string): string =>
+  s.split(`${tok}-`).join(`${v.replace(/\.$/, '')}-`).split(tok).join(v);
+
+const escRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const SUFF = '(?:-[a-záéíóöőúüű]+)?';
+// ✕-szel KIHAGYOTT mező: úgy kerül ki, hogy a szöveg értelmes maradjon —
+// a címke-tagmondat és a kiürülő mondat egészben megy, különben csak a szó a toldalékával
+const stripToken = (text: string, tok: string): string => {
+  const T = escRe(tok);
+  let out = text;
+  // 1) vesszős címke-tag: ", határidő: [dátum]" / ", a határidő pedig [dátum]" → az egész tag megy
+  out = out.replace(new RegExp(`,\\s*[^,.!?\\n:]{0,32}:\\s*${T}${SUFF}`, 'gi'), '');
+  out = out.replace(new RegExp(`,\\s*(?:az?\\s+)?(?:[a-záéíóöőúüű]+\\s+){0,2}(?:határidő(?:k|je)?|határideje|időpont(?:ja)?|dátum(?:a)?)\\s*(?:pedig\\s+)?${T}${SUFF}`, 'gi'), '');
+  // 2) zárójel, amiben csak ez áll: "([dátum])" → zárójelestől megy
+  out = out.replace(new RegExp(`\\(\\s*${T}${SUFF}\\s*\\)`, 'g'), '');
+  // 3) ha a mező nélkül a mondat kiürülne vagy csonka címke maradna, az egész mondat megy
+  //    (kivéve, ha a mondat MÁSIK [mezőt] is hordoz — azt nem dobhatjuk el)
+  out = out.split('\n').map((line) => {
+    if (!line.includes(tok)) return line;
+    const sents = line.match(/[^.!?]*[.!?]+\s*|[^.!?]+$/g) ?? [line];
+    return sents.filter((sent) => {
+      if (!sent.includes(tok)) return true;
+      if ((sent.match(/\[[^[\]\n]{1,40}\]/g) ?? []).filter((m) => m !== tok).length > 0) return true;
+      const rest = sent.split(tok).join(' ').replace(/\s-[a-záéíóöőúüű]+/g, ' ');
+      const words = rest.match(/[0-9a-záéíóöőúüűA-ZÁÉÍÓÖŐÚÜŰ]{2,}/g) ?? [];
+      const lastBefore = sent.slice(0, sent.indexOf(tok)).trim().split(/\s+/).pop() ?? '';
+      return words.length > 2 && !/határid|időpont|dátum|pedig$/i.test(lastBefore);
+    }).join('');
+  }).join('\n');
+  // 4) ami maradt: a szó megy, a rátapadó toldalékkal együtt
+  out = out.replace(new RegExp(`\\s*${T}${SUFF}`, 'g'), '');
+  return out;
+};
+// írásjel-takarítás a kivétel után ("vissza ." → "vissza.", üres számozott sor ki)
+const tidyText = (s: string): string => s
+  .replace(/[ \t]+([,.!?;:)])/g, '$1')
+  .replace(/\(\s*\)/g, '')
+  .replace(/:\s*([.!?])/g, '$1')
+  .replace(/:\s*,/g, ',')
+  .replace(/,\s*([.!?])/g, '$1')
+  .replace(/^\s*\d+\.\s*$\n?/gm, '')
+  .replace(/[ \t]{2,}/g, ' ')
+  .replace(/\n{3,}/g, '\n\n');
+const renderOutput = (s: string, vals: Record<string, string>, killed: string[]): string => {
+  let out = s;
+  for (const [tok, raw] of Object.entries(vals)) {
+    if (killed.includes(tok) || !fillReadyVal(tok, raw)) continue;
+    out = substToken(out, tok, fillOut(tok, raw.trim()));
+  }
+  for (const tok of killed) out = stripToken(out, tok);
+  return tidyText(out);
+};
+
 export interface NotifyTarget {
   targetType: 'event' | 'task' | null;
   targetId: string | null;
@@ -162,6 +238,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     lastTopicRef.current = t;
     setActiveTopic(t);
     typedRef.current = false;
+    setFillVals({}); setKilled([]); // új sablon: a kitöltő-panel tiszta lappal indul
     // a sablonok többsége SZÓ SZERINTI [dátum]/[helyszín]/[határidő] mezőt tartalmaz
     // (nem ctx-hivatkozást) — ezeket itt töltjük ki a kapcsolt tétel adataival,
     // különben a kapcsolás láthatóan "nem csinál semmit"
@@ -246,35 +323,11 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     return found;
   }, [subject, body]);
   const [fillVals, setFillVals] = useState<Record<string, string>>({});
-  // beírható-e már: dátum/hónap/idő mezőnél teljes érték kell, szövegnél elég bármi
-  const fillReady = (tok: string): boolean => {
-    const v = (fillVals[tok] ?? '').trim();
-    const k = fillKind(tok);
-    if (k === 'date' || k === 'datetime') return v.length >= 10;
-    if (k === 'month') return v.length === 7;
-    if (k === 'time') return v.length === 5;
-    return v !== '';
-  };
-  const applyFill = (tok: string) => {
-    if (!fillReady(tok)) return;
-    const raw = (fillVals[tok] ?? '').trim();
-    const k = fillKind(tok);
-    let v = raw;
-    if (k === 'date') v = fillDay(raw);
-    else if (k === 'datetime') v = `${fillDay(raw.slice(0, 10))}${raw.length >= 16 ? ` ${raw.slice(11, 16)}` : ''}`;
-    else if (k === 'month') {
-      const m = F_MONTH[Number(raw.slice(5, 7)) - 1] ?? raw;
-      const c0 = tok.slice(1, 2);
-      v = c0 === c0.toUpperCase() && c0 !== c0.toLowerCase() ? m.charAt(0).toUpperCase() + m.slice(1) : m;
-    }
-    // helyesírás: kötőjeles toldalék előtt a záró pont elmarad ("szept. 10-ig", nem "10.-ig")
-    const rep = (s: string): string => s.split(`${tok}-`).join(`${v.replace(/\.$/, '')}-`).split(tok).join(v);
-    setSubject(rep);
-    setBody(rep);
-    setBodyDirty(true);
-    typedRef.current = true;
-    setFillVals((f) => { const n = { ...f }; delete n[tok]; return n; });
-  };
+  const [killed, setKilled] = useState<string[]>([]); // ✕-szel kihagyott mezők
+  // A KIMENET (előnézet, másolás, küldés, mentés) élőben számolódik a vázlatból:
+  // a kitöltött mezők behelyettesítve, a kihagyottak kifogalmazva.
+  const outSubject = useMemo(() => renderOutput(subject, fillVals, killed), [subject, fillVals, killed]);
+  const outBody = useMemo(() => renderOutput(body, fillVals, killed), [body, fillVals, killed]);
 
   // teljes szövegű keresőindex a jobb oldali sablonpanelhez (cím + csoport + tárgy + törzs)
   const topicIndex = useMemo(() => {
@@ -494,12 +547,13 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   };
 
   const saveLetter = () => {
+    // a mentett levél a KÉSZ kimenet (kitöltött mezőkkel) — betöltve már konkrét szöveg
     onSaveLetter({
       id: `l-${Date.now().toString(36)}`,
       createdAt: new Date().toISOString(),
       targetType: target.targetType,
       targetId: target.targetId,
-      subject, body, names: [...selected, ...adhoc],
+      subject: outSubject, body: outBody, names: [...selected, ...adhoc],
       status: 'draft',
     });
     setResult('✓ Levél elmentve vázlatként, lent a listában');
@@ -507,6 +561,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
 
   const loadLetter = (l: Letter) => {
     setSubject(l.subject); setBody(l.body); setSelected(l.names.filter((n) => !n.includes('@'))); setAdhoc(l.names.filter((n) => n.includes('@')));
+    setFillVals({}); setKilled([]); // a mentett levél kész szöveg — a panel-értékek nem vonatkoznak rá
     setBodyDirty(true); // a betöltött (kész) levelet a sablon-chipek ne írhassák felül rákérdezés nélkül
     lastTopicRef.current = null; // kész levél: a kapcsolt tétel változása ne írja át
     setActiveTopic(null);
@@ -517,13 +572,13 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   };
 
   const send = async () => {
-    if (!emails.length || !subject.trim()) return;
+    if (!emails.length || !outSubject.trim()) return;
     setSending(true); setResult(null);
     try {
-      const html = `<div style="font-family:sans-serif;font-size:14px;line-height:1.5;white-space:pre-wrap">${body.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] as string))}</div>`;
+      const html = `<div style="font-family:sans-serif;font-size:14px;line-height:1.5;white-space:pre-wrap">${outBody.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] as string))}</div>`;
       const r = await fetch('/api/notify', {
         method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-        body: JSON.stringify({ subject: subject.trim(), text: body, html, bcc: emails }),
+        body: JSON.stringify({ subject: outSubject.trim(), text: outBody, html, bcc: emails }),
       });
       const j = await r.json();
       if (j.ok) {
@@ -533,7 +588,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           onLetterStatus(loadedLetterRef.current, 'sent');
         } else {
           const id = `l-${Date.now().toString(36)}`;
-          onSaveLetter({ id, createdAt: new Date().toISOString(), targetType: target.targetType, targetId: target.targetId, subject: subject.trim(), body, names: [...selected, ...adhoc], status: 'sent' });
+          onSaveLetter({ id, createdAt: new Date().toISOString(), targetType: target.targetType, targetId: target.targetId, subject: outSubject.trim(), body: outBody, names: [...selected, ...adhoc], status: 'sent' });
           loadedLetterRef.current = id;
         }
         setResult(`✓ Elküldve ${j.sent} címzettnek — a levél kiküldöttként mentve.`);
@@ -783,35 +838,40 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           <div className="field full">
             <label>Tárgy</label>
             <input value={subject} onChange={(e) => setSubject(e.target.value)} />
+            {outSubject !== subject && <div className="nm-outprev">Kimenet: <strong>{outSubject}</strong></div>}
           </div>
           <div className="nm-msgrow">
             <div className="nm-side">
               {/* kitöltő-panel: a levélben maradt [szögletes] mezők kis inputokkal tölthetők */}
               {fillTokens.length > 0 && (
                 <div className="field full nm-fill">
-                  <label>Kitöltendő mezők ({fillTokens.length}) — Enter vagy ✓: mindenhova beíródik</label>
+                  <label>Mezők — élőben íródnak a levélbe · ✕: nincs ilyen adat, a mondat kifogalmazódik</label>
                   {fillTokens.map((tok) => {
                     const k = fillKind(tok);
                     const v = fillVals[tok] ?? '';
+                    const dead = killed.includes(tok);
+                    const ok = !dead && fillReadyVal(tok, v);
                     const set = (val: string) => setFillVals((f) => ({ ...f, [tok]: val }));
-                    const onKey = (e: React.KeyboardEvent) => { if (e.key === 'Enter') { e.preventDefault(); applyFill(tok); } };
                     return (
-                      <div key={tok} className="nm-fillrow">
+                      <div key={tok} className={`nm-fillrow${dead ? ' is-dead' : ''}${ok ? ' is-ok' : ''}`}>
                         <span className="t" title={tok}>{tok.slice(1, -1)}</span>
-                        {k === 'datetime' ? (<>
-                          <input type="date" value={v.slice(0, 10)} onKeyDown={onKey}
+                        {dead ? (
+                          <span className="nm-filldead">kihagyva a levélből</span>
+                        ) : k === 'datetime' ? (<>
+                          <input type="date" value={v.slice(0, 10)}
                             onChange={(e) => set(e.target.value ? `${e.target.value}${v.length >= 16 ? ` ${v.slice(11, 16)}` : ''}` : '')} />
                           <input type="time" className="nm-filltime" title="Óra:perc — ha kell" value={v.length >= 16 ? v.slice(11, 16) : ''}
-                            disabled={v.length < 10} onKeyDown={onKey}
+                            disabled={v.length < 10}
                             onChange={(e) => set(e.target.value ? `${v.slice(0, 10)} ${e.target.value}` : v.slice(0, 10))} />
                         </>) : k === 'text' || k === 'url' ? (
                           <input type={k === 'url' ? 'url' : 'text'} value={v} placeholder={k === 'url' ? 'https://…' : 'érték…'}
-                            onChange={(e) => set(e.target.value)} onKeyDown={onKey} />
+                            onChange={(e) => set(e.target.value)} />
                         ) : (
-                          <input type={k} value={v} onChange={(e) => set(e.target.value)} onKeyDown={onKey} />
+                          <input type={k} value={v} onChange={(e) => set(e.target.value)} />
                         )}
-                        <button type="button" className="btn nm-fillgo" disabled={!fillReady(tok)}
-                          title="Beírás a levél minden azonos mezőjébe" onClick={() => applyFill(tok)}>✓</button>
+                        <button type="button" className={`btn nm-fillgo${dead ? ' nm-fillback' : ''}`}
+                          title={dead ? 'Visszaállítás — a mező visszakerül a levélbe' : 'Nincs ilyen adat — kivesszük a levélből, a mondat értelmes marad'}
+                          onClick={() => setKilled((ks) => (dead ? ks.filter((x) => x !== tok) : [...ks, tok]))}>{dead ? '↩' : '✕'}</button>
                       </div>
                     );
                   })}
@@ -881,7 +941,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                 <GrowArea minRows={8} autoFocus value={body} onChange={(e) => { setBody(e.target.value); setBodyDirty(true); typedRef.current = true; }} />
               ) : (
                 <button type="button" className="nm-preview" onClick={() => setBodyOpen(true)} title="Kattints a szerkesztéshez">
-                  <span className="nm-preview-text">{body}</span>
+                  <span className="nm-preview-text">{outBody}</span>
                   <span className="more">✎ koppints a szövegre a szerkesztéshez · a 3. gombbal másolható</span>
                 </button>
               )}
@@ -889,11 +949,11 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           </div>
           <div className="nm-copyrow big">
             <button className="btn nm-copy" disabled={!emails.length} onClick={() => copy(emails.join('; '), 'Címzettek')}><b>1</b> ⧉ Címzettek<span className="nm-cnt"> ({emails.length})</span></button>
-            <button className="btn nm-copy" disabled={!subject.trim()} onClick={() => copy(subject.trim(), 'Tárgy')}><b>2</b> ⧉ Tárgy</button>
-            <button className="btn nm-copy" disabled={!body.trim()} onClick={() => copy(body, 'Üzenet')}><b>3</b> ⧉ Üzenet</button>
+            <button className="btn nm-copy" disabled={!outSubject.trim()} onClick={() => copy(outSubject.trim(), 'Tárgy')}><b>2</b> ⧉ Tárgy</button>
+            <button className="btn nm-copy" disabled={!outBody.trim()} onClick={() => copy(outBody, 'Üzenet')}><b>3</b> ⧉ Üzenet</button>
             <a className="btn nm-copy nm-outlook" target="_blank" rel="noopener noreferrer"
               href={emails.length
-                ? `https://outlook.office.com/mail/deeplink/compose?bcc=${encodeURIComponent(emails.join(';'))}&subject=${encodeURIComponent(subject.trim())}`
+                ? `https://outlook.office.com/mail/deeplink/compose?bcc=${encodeURIComponent(emails.join(';'))}&subject=${encodeURIComponent(outSubject.trim())}`
                 : 'https://outlook.cloud.microsoft/mail/'}
               title={emails.length
                 ? 'Új Outlook-levél előtöltve: a címzettek (titkos másolatban) és a tárgy már benne vannak, csak a szöveget illeszd be a 3-as gombbal'

@@ -245,8 +245,8 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
           )}
         </div>
         <div className="dr-foot">
-          {canEdit && <button className="btn btn--ink" onClick={onEdit}>✎ Szerkesztés</button>}
           <button className="btn" onClick={onClose}>✕ Bezárás</button>
+          {canEdit && <button className="btn btn--ink" onClick={onEdit}>✎ Szerkesztés</button>}
         </div>
       </aside>
     </>

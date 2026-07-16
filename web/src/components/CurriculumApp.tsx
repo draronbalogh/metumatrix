@@ -1187,8 +1187,8 @@ export default function CurriculumApp() {
               {x.pdfUrl && <a className="btn dr-pdf" href={x.pdfUrl} target="_blank" rel="noopener noreferrer">📄 Hivatalos tantárgyi leírás (PDF) ↗</a>}
               </div>
               <div className="dr-foot">
-                <button className="btn btn--ink dr-edit" onClick={() => { setEditor({ ci: details.ci, xi: details.xi }); setDetails(null); }}>✎ Szerkesztés</button>
                 <button className="btn" onClick={() => setDetails(null)}>✕ Bezárás</button>
+                <button className="btn btn--ink dr-edit" onClick={() => { setEditor({ ci: details.ci, xi: details.xi }); setDetails(null); }}>✎ Szerkesztés</button>
               </div>
             </aside>
           </>

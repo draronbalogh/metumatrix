@@ -11,6 +11,7 @@ const SAFE_NAME = /^[A-Za-z0-9._-]+\.json$/;
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
+  if (!canWrite(req)) return writeDenied(); // a mentés-visszatöltés szerkesztői funkció
   try {
     const name = new URL(req.url).searchParams.get('name');
     if (name) {

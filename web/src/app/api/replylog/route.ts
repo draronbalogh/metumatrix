@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { canWrite, writeDenied } from '@/lib/editauth';
+import { canRead, canWrite, readDenied, writeDenied } from '@/lib/editauth';
 
 // Választás-napló a tanulási hurokhoz: melyik választervet másolta/küldte a
 // felhasználó, és átírta-e küldés előtt. A bot futásonként olvassa, és elég új
@@ -21,7 +21,8 @@ interface LogEntry {
   chars?: number;            // a végleges szöveg hossza
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  if (!canRead(req)) return readDenied();
   try { return NextResponse.json({ ok: true, data: JSON.parse(await fs.readFile(FILE, 'utf8')) }); }
   catch { return NextResponse.json({ ok: true, data: [] }); }
 }

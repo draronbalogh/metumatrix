@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import PageHead from './PageHead';
 import { norm, normName } from '@/lib/normalize';
+import { editHeaders } from '@/lib/editkey';
 
 // Média Design órarend: az Excelből MD-re szűrt digitális táblázat.
 // Két nézet: heti naptár-rács (alapértelmezett) és napok szerinti lista.
@@ -83,7 +84,7 @@ export default function OrarendView({ knownNames, q, displayName, resolveCourse,
   const [mode, setMode] = useState<'cal' | 'list'>('cal'); // alapból a heti naptár nyílik
 
   useEffect(() => {
-    fetch('/api/orarend').then((r) => r.json()).then((j) => (j.ok && j.data ? setData(j.data) : setFailed(true))).catch(() => setFailed(true));
+    fetch('/api/orarend', { headers: editHeaders() }).then((r) => r.json()).then((j) => (j.ok && j.data ? setData(j.data) : setFailed(true))).catch(() => setFailed(true));
   }, []);
 
   const known = useMemo(() => new Set(knownNames.map(normName)), [knownNames]);

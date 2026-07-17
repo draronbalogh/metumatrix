@@ -798,6 +798,9 @@ html[data-theme='dark'] .pb.p { color: var(--yellow-deep); }
 .pp-selchip .pp-x { margin-left: 6px; opacity: .7; font-size: .72rem; }
 .pp-selchip:hover .pp-x { opacity: 1; }
 .pp-cats { display: flex; flex-wrap: wrap; gap: 5px; }
+/* Kulcs nélküli publikus látogató: teljes, üres zár-oldal - semmilyen adat/menü/név */
+.lockpane { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg, #f5f5f4); font-size: 28px; opacity: .35; user-select: none; }
+
 .pp-browse { display: flex; flex-direction: column; gap: 6px; }
 .pp-subrow { margin-top: 2px; }
 .pp-addall { align-self: flex-start; border-style: dashed; font-weight: 700; }

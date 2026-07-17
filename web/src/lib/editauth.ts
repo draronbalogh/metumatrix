@@ -19,3 +19,20 @@ export function canWrite(req: Request): boolean {
 
 export const writeDenied = () =>
   NextResponse.json({ ok: false, error: 'Megtekintő mód: a szerkesztéshez a szerkesztői linket használd.' }, { status: 403 });
+
+// Olvasási kapu (adat-GET-ek) - a csupasz publikus link SEMMIT nem ad ki:
+// - tailnet-eszköz vagy szerkesztői kulcs: canWrite -> szabad
+// - megtekintői link: ?ts=<VIEW_KEY> (a kliens x-edit-key fejlécben küldi tovább)
+// - minden más (kulcs nélküli kérés) -> 403, az app üres zár-oldalt mutat.
+// FIGYELEM: helyi kivétel SZÁNDÉKOSAN nincs (az X-Forwarded-For alapú felismerés
+// hamisítható) - a bot és a karbantartó szkriptek a GET-jeikhez is x-edit-key
+// fejlécet küldenek, a kulcsot úgyis ismerik az íráshoz.
+export function canRead(req: Request): boolean {
+  if (canWrite(req)) return true;
+  const vk = process.env.VIEW_KEY;
+  const supplied = req.headers.get('x-edit-key') ?? new URL(req.url).searchParams.get('ts');
+  return !!vk && supplied === vk;
+}
+
+export const readDenied = () =>
+  NextResponse.json({ ok: false, locked: true, error: 'A megtekintéshez kulcsos link kell.' }, { status: 403 });

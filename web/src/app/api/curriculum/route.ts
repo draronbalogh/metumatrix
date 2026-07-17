@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { canWrite, writeDenied } from '@/lib/editauth';
+import { canRead, canWrite, readDenied, writeDenied } from '@/lib/editauth';
 
 // A tanterv egyetlen forrása. Ezt tölti be az app elsőként, és ide ment.
 // Windows dev-környezet; a böngésző maga nem tud ide írni, ezért kell ez a szerveroldali route.
@@ -10,7 +10,8 @@ const FILE = process.env.CURRICULUM_FILE
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: Request) {
+  if (!canRead(req)) return readDenied();
   try {
     const raw = await fs.readFile(FILE, 'utf8');
     const data = JSON.parse(raw);

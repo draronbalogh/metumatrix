@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { canWrite, writeDenied } from '@/lib/editauth';
+import { canRead, canWrite, readDenied, writeDenied } from '@/lib/editauth';
 
 // Személyi törzs (hallgatólista + elérhetőségek). A tanárNEVEK forrása a tanterv, nem ez a fájl.
 const FILE = process.env.PEOPLE_FILE
@@ -9,7 +9,8 @@ const FILE = process.env.PEOPLE_FILE
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: Request) {
+  if (!canRead(req)) return readDenied();
   try {
     const raw = await fs.readFile(FILE, 'utf8');
     const data = JSON.parse(raw);

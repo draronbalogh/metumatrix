@@ -48,7 +48,7 @@ const DAY = 86400000;
 export default function PostaView({ agenda, footer, senderRules, onSenderRule, onReply, onState, undo, onUndo, onOpenCard }: Props) {
   const [bank, setBank] = useState<StyleBank | null>(null);
   useEffect(() => {
-    fetch('/api/style').then((r) => r.json())
+    fetch('/api/style', { headers: editHeaders() }).then((r) => r.json())
       .then((j) => setBank(parseStyleBank(j?.text ?? null)))
       .catch(() => setBank(parseStyleBank(null)));
   }, []);

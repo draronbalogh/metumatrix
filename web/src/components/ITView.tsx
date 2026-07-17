@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import PageHead from './PageHead';
+import { editHeaders } from '@/lib/editkey';
 
 // IT és szoftverek: az Infopark termeiben telepített szoftverek (xlsx-ből generálva),
 // kétféle nézetben (termek szerint / szoftverek szerint), a globális keresővel szűrve.
@@ -25,7 +26,7 @@ export default function ITView({ q }: { q: string }) {
   const [ep, setEp] = useState('');
 
   useEffect(() => {
-    fetch('/api/it').then((r) => r.json()).then((j) => (j.ok && j.data ? setData(j.data) : setFailed(true))).catch(() => setFailed(true));
+    fetch('/api/it', { headers: editHeaders() }).then((r) => r.json()).then((j) => (j.ok && j.data ? setData(j.data) : setFailed(true))).catch(() => setFailed(true));
   }, []);
 
   const rooms = useMemo(() => {

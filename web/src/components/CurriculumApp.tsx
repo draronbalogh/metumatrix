@@ -47,7 +47,7 @@ const NOTIF_SEEN_LS = 'md-notif-seen-v1'; // már jelzett sürgős kártya-id-k 
 // a data-preset alapértéke a layout.tsx-ben áll)
 // betöltési állapotgép: amíg nem 'ok', a fájl-automentés tilos (nehogy régi/beépített
 // adat írja felül a szerveren lévő legutolsó mentést), és a DEFAULT sosem renderelődik
-type LoadState = 'loading' | 'ok' | 'ls-fallback' | 'error';
+type LoadState = 'loading' | 'ok' | 'ls-fallback' | 'error' | 'locked';
 type SaveState =
   | { kind: 'idle' }
   | { kind: 'saving' }
@@ -144,7 +144,10 @@ export default function CurriculumApp() {
     (async () => {
       // 1) a mintatanterv-fájl a forrás - ezt töltjük be elsőként (helyi API-n át)
       try {
-        const r = await fetch('/api/curriculum', { cache: 'no-store', signal: ac.signal });
+        const r = await fetch('/api/curriculum', { cache: 'no-store', signal: ac.signal, headers: editHeaders() });
+        // kulcs nélküli publikus kérés: a szerver zárolt választ ad - üres zár-oldal,
+        // localStorage-fallback NÉLKÜL (idegen gépen amúgy sincs, de adatot itt sem mutatunk)
+        if (r.status === 403) { setLoadState('locked'); document.title = 'Zárt oldal'; return; }
         const j = await r.json();
         if (j?.ok && j.data?.cohorts) {
           skipFileSave.current = true; // a most betöltött állapotot nem írjuk vissza (retrynél is!)
@@ -166,7 +169,7 @@ export default function CurriculumApp() {
       if (ac.signal.aborted) return;
       // feladatok + események ugyanígy: fájl → localStorage → beépített DEFAULT_AGENDA
       try {
-        const r = await fetch('/api/agenda', { cache: 'no-store', signal: ac.signal });
+        const r = await fetch('/api/agenda', { cache: 'no-store', signal: ac.signal, headers: editHeaders() });
         const j = await r.json();
         if (j?.ok && j.data?.tasks) {
           const next = normalizeAgenda(j.data as Partial<Agenda>);
@@ -182,7 +185,7 @@ export default function CurriculumApp() {
       }
       // személyi törzs (hallgatólista + elérhetőségek) - a tanárnevek forrása maga a tanterv
       try {
-        const r = await fetch('/api/people', { cache: 'no-store', signal: ac.signal });
+        const r = await fetch('/api/people', { cache: 'no-store', signal: ac.signal, headers: editHeaders() });
         const j = await r.json();
         if (j?.ok && j.data) { skipPeopleSave.current = true; setPeopleDB(normalizePeople(j.data as Partial<PeopleDB>)); peopleFileOk.current = true; }
         else throw new Error('server-file');
@@ -454,7 +457,7 @@ export default function CurriculumApp() {
       if (r.status === 409) {
         if (agendaConflictRetry.current >= 2) { agendaConflictRetry.current = 0; return; }
         agendaConflictRetry.current += 1;
-        const fr = await fetch('/api/agenda', { cache: 'no-store' });
+        const fr = await fetch('/api/agenda', { cache: 'no-store', headers: editHeaders() });
         const fj = await fr.json();
         if (!fj?.ok || !fj.data?.tasks) return;
         const remote = normalizeAgenda(fj.data as Partial<Agenda>);
@@ -495,7 +498,7 @@ export default function CurriculumApp() {
       if (!agendaFileOk.current || agendaTimer.current) return;
       if (Date.now() - agendaTouchedAt.current < 15000) return;
       try {
-        const r = await fetch('/api/agenda', { cache: 'no-store' });
+        const r = await fetch('/api/agenda', { cache: 'no-store', headers: editHeaders() });
         const j = await r.json();
         if (stop || !j?.ok || !j.data?.tasks) return;
         if (agendaTimer.current || Date.now() - agendaTouchedAt.current < 15000) return; // közben szerkesztett
@@ -992,11 +995,11 @@ export default function CurriculumApp() {
   // pillanatkép-lista + visszaállítás a szerveri backups mappából
   const openLoad = () => {
     setLoadOpen(true); setSnaps(null);
-    fetch('/api/snapshots', { cache: 'no-store' }).then((r) => r.json())
+    fetch('/api/snapshots', { cache: 'no-store', headers: editHeaders() }).then((r) => r.json())
       .then((j) => setSnaps(j?.ok ? j.list : [])).catch(() => setSnaps([]));
   };
   const restoreSnap = (name: string) => {
-    fetch(`/api/snapshots?name=${encodeURIComponent(name)}`, { cache: 'no-store' })
+    fetch(`/api/snapshots?name=${encodeURIComponent(name)}`, { cache: 'no-store', headers: editHeaders() })
       .then((r) => r.json())
       .then((j) => {
         if (!j?.ok || !j.data) { alert('A pillanatkép nem olvasható.'); return; }
@@ -1162,6 +1165,10 @@ export default function CurriculumApp() {
   const detailCourse = details ? data.cohorts[details.ci]?.courses[details.xi] : null;
   // tanterv-nézetben (mátrix/katalógus) látszanak a tantervi szűrők és a mentés/betöltés - a feladat/esemény nézetben nem
   const isCurr = view === 'map' || view === 'catalog';
+
+  // Kulcs nélküli publikus látogató: a szerver adatot sem ad ki (403 locked),
+  // itt pedig SEMMI nem renderelődik - se menü, se név, se adat.
+  if (loadState === 'locked') return <div className="lockpane">🔒</div>;
 
   return (
     <>

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { canWrite, writeDenied } from '@/lib/editauth';
+import { canRead, canWrite, readDenied, writeDenied } from '@/lib/editauth';
 import { Agenda, AgendaSource, normalizeAgenda } from '@/data/agenda';
 
 // A feladatok + események egyetlen forrása - a tanterv-fájl mintájára.
@@ -76,7 +76,8 @@ const guardBotWrite = (inc: Doc, disk: Doc | null): Doc => {
 
 // GET: a fájl minden olvasási határon normalizálva megy ki (migráció + ébresztések),
 // a rev-vel együtt - az írók ezt a rev-et küldik vissza a POST-ban.
-export async function GET() {
+export async function GET(req: Request) {
+  if (!canRead(req)) return readDenied();
   const disk = await readDisk();
   if (!disk) return NextResponse.json({ ok: false, data: null });
   const rev = typeof disk.rev === 'number' ? disk.rev : 0;

@@ -41,6 +41,29 @@ const LS_KEY = 'mediadesign-2026-27-v9';
 const AGENDA_LS_KEY = 'md-agenda-v1';
 const PEOPLE_LS_KEY = 'md-people-v1';
 const THEME_KEY = 'md-theme2'; // új kulcs: az ideiglenes sötét-alap időszak mentett 'dark' értékei ne ragadjanak be
+
+// ÉJSZAKAI MÓD: 20:00-07:00 között magától sötét a téma, napközben világos.
+// A kézi ☾/☀ kapcsoló felülbírálja, de csak az AKTUÁLIS nap-/éj-időszakra - a
+// következő váltásnál (este 8 / reggel 7) az automatika visszaveszi az irányítást.
+// A tárolt érték {t, p}: a választott téma + az időszak azonosítója; a régi, sima
+// 'light'/'dark' értékeket szándékosan figyelmen kívül hagyjuk (ne ragadjon be).
+const isNightHour = (d: Date): boolean => d.getHours() >= 20 || d.getHours() < 7;
+const themePeriodId = (d: Date): string => {
+  const base = new Date(d);
+  if (d.getHours() < 7) base.setDate(base.getDate() - 1); // hajnal = az előző esti éjszaka
+  const ymd = `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, '0')}-${String(base.getDate()).padStart(2, '0')}`;
+  return isNightHour(d) ? `${ymd}-n` : `${ymd}-d`;
+};
+const autoTheme = (d: Date): 'light' | 'dark' => (isNightHour(d) ? 'dark' : 'light');
+const storedThemeFor = (d: Date): 'light' | 'dark' | null => {
+  try {
+    const raw = localStorage.getItem(THEME_KEY);
+    if (!raw || raw[0] !== '{') return null; // régi formátum vagy üres: nincs érvényes felülbírálás
+    const o = JSON.parse(raw) as { t?: string; p?: string };
+    if ((o.t === 'light' || o.t === 'dark') && o.p === themePeriodId(d)) return o.t;
+  } catch { /* ignore */ }
+  return null;
+};
 const NOTIF_LS = 'md-notif-v1'; // értesítés sürgős kártyánál: be/ki
 const NOTIF_SEEN_LS = 'md-notif-seen-v1'; // már jelzett sürgős kártya-id-k (ne szóljunk kétszer)
 // (a stílus-preset választó megszűnt - az app fixen a „műszerfal" kinézetet használja,
@@ -194,7 +217,7 @@ export default function CurriculumApp() {
         try { const s = localStorage.getItem(PEOPLE_LS_KEY); if (s) { skipPeopleSave.current = true; setPeopleDB(normalizePeople(JSON.parse(s) as Partial<PeopleDB>)); } } catch { /* ignore */ }
       }
       try {
-        const t = localStorage.getItem(THEME_KEY); if (t === 'dark' || t === 'light') setTheme(t);
+        const now = new Date(); setTheme(storedThemeFor(now) ?? autoTheme(now));
         // elrendezés-zárolás: mindig zárva indul (betöltéskor/frissítéskor) a véletlen
         // mozgatás ellen - a mentett értéket szándékosan NEM olvassuk vissza.
         // értesítés: csak akkor él, ha a kapcsoló be van és a böngésző-engedély is megvan
@@ -206,8 +229,21 @@ export default function CurriculumApp() {
   }, [loadN]);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
-    try { localStorage.setItem(THEME_KEY, theme); } catch { /* ignore */ }
+    // tárolni CSAK a kézi váltáskor tárolunk (toggleTheme) - az automatikus váltás nem ír
   }, [theme]);
+  // az éjszakai automatika: percenként + fókuszra ellenőrizzük, átléptünk-e időszak-határt
+  // (este 8 / reggel 7); ha az aktuális időszakra nincs kézi felülbírálás, az óra dönt
+  useEffect(() => {
+    const tick = () => { const now = new Date(); setTheme(storedThemeFor(now) ?? autoTheme(now)); };
+    const iv = setInterval(tick, 60000);
+    window.addEventListener('focus', tick);
+    return () => { clearInterval(iv); window.removeEventListener('focus', tick); };
+  }, []);
+  const toggleTheme = () => setTheme((t) => {
+    const next = t === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem(THEME_KEY, JSON.stringify({ t: next, p: themePeriodId(new Date()) })); } catch { /* ignore */ }
+    return next;
+  });
   // TELJES KÉPERNYŐ: gomb a téma-váltó mellett + mobilon az első érintésre automatikusan
   // belép (betöltéskor a böngésző tiltja a kérés nélküli fullscreent - csak felhasználói
   // gesztusból hívható). iPhone Safari nem támogatja a Fullscreen API-t → a gomb rejtve.
@@ -1186,7 +1222,7 @@ export default function CurriculumApp() {
       </header>
       {/* a fejlécen KÍVÜL él: sötét módban a masthead/toolbar blur-je saját stacking
           contextet nyit, és azon belülről a fix gomb a menüsáv mögé kerülne */}
-      <button className="themebtn themebtn--head" title="Világos / sötét mód" onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}>{theme === 'dark' ? '☀' : '☾'}</button>
+      <button className="themebtn themebtn--head" title="Világos / sötét mód - este 8-tól reggel 7-ig magától sötét; a kézi váltás a következő váltásig érvényes" onClick={toggleTheme}>{theme === 'dark' ? '☀' : '☾'}</button>
       {canEdit && (
         <button className={`themebtn themebtn--head notifbtn--head${fsSupported ? ' notifbtn--shift' : ''}`}
           title={notifOn ? 'Értesítés sürgős kártyánál: bekapcsolva' : 'Értesítés sürgős kártyánál: kikapcsolva'}

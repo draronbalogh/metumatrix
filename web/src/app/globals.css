@@ -438,6 +438,8 @@ body {
 .se-meta { flex: none; font-size: .68rem; font-weight: 650; color: var(--ink-2); background: color-mix(in srgb, var(--g1) 12%, transparent); border: 1px solid color-mix(in srgb, var(--g1) 25%, transparent); border-radius: 999px; padding: 3px 8px; cursor: pointer; white-space: nowrap; }
 .se-det { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 7px; padding-top: 8px; border-top: 1px dashed var(--line); }
 .se-det .fld { flex: 1 1 200px; display: flex; flex-direction: column; gap: 4px; }
+.se-det .se-teamfld { flex: 1 1 100%; }
+.se-team { display: flex; flex-wrap: wrap; gap: 6px; }
 .se-add { display: flex; gap: 7px; margin-top: 2px; }
 .se-add input { flex: 1 1 auto; }
 .se-add .btn { flex: none; }

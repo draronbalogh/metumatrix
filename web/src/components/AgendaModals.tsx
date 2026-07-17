@@ -204,8 +204,10 @@ const familyName = (n: string): string =>
   n.trim().split(/\s+/).filter((p) => !/^dr\.?$/i.test(p) && !/^habil\.?$/i.test(p))[0] ?? n;
 export const fmtStepDue = (d?: string | null): string => (d && d.length >= 10 ? `${d.slice(5, 7)}.${d.slice(8, 10)}.` : '');
 
-// Alfeladat-szerkesztő: pipa + szöveg + átrendezés + opcionális felelős/határidő soronként
-function StepsEditor({ steps, roster, onChange }: { steps: TaskStep[]; roster: RosterEntry[]; onChange: (s: TaskStep[]) => void }) {
+// Alfeladat-szerkesztő: pipa + szöveg + átrendezés + opcionális felelős/határidő soronként.
+// A team a kártya emberei (felelős + résztvevők az Emberek fülről) - ők egy kattintással
+// kioszthatók egy lépésre, a teljes névsoros lenyíló csak a "bárki más" esetre kell.
+function StepsEditor({ steps, roster, team, onChange }: { steps: TaskStep[]; roster: RosterEntry[]; team?: string[]; onChange: (s: TaskStep[]) => void }) {
   const [draft, setDraft] = useState('');
   const [openIx, setOpenIx] = useState<number | null>(null); // melyik sor felelős/határidő panelje van nyitva
   const upd = (i: number, patch: Partial<TaskStep>) => onChange(steps.map((s, ix) => (ix === i ? { ...s, ...patch } : s)));
@@ -240,8 +242,25 @@ function StepsEditor({ steps, roster, onChange }: { steps: TaskStep[]; roster: R
           </div>
           {openIx === i && (
             <div className="se-det">
+              {(team ?? []).length > 0 && (
+                <div className="fld se-teamfld">
+                  <label>A feladat emberei - kattints, és ő viszi ezt a lépést</label>
+                  <div className="se-team">
+                    {(team ?? []).map((n) => {
+                      const k = roster.find((r) => r.name === n)?.kind;
+                      return (
+                        <button key={n} type="button" className={`chip${s.owner === n ? ' is-on' : ''}`}
+                          title={s.owner === n ? 'Levétel - a lépést a feladat felelőse viszi' : `A lépés felelőse: ${n}`}
+                          onClick={() => upd(i, { owner: s.owner === n ? null : n })}>
+                          {k && <span className={`pb ${k.toLowerCase()}`}>{k}</span>}{n}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <div className="fld">
-                <label>A lépés felelőse - üresen a feladat felelőse viszi</label>
+                <label>Bárki más a teljes névsorból - üresen a feladat felelőse viszi</label>
                 <OwnerSelect value={s.owner ?? ''} roster={roster} onChange={(v) => upd(i, { owner: v || null })} />
               </div>
               <div className="fld">
@@ -464,7 +483,7 @@ export function TaskModal({ task, isNew, events, roster, rosterGroups, letters, 
             <div className="f-sec c-yellow">Alfeladatok</div>
             <div className="field full">
               <label>Pipálhatók és átrendezhetők - a 👤 gombbal lépésenként felelős és határidő adható</label>
-              <StepsEditor steps={steps} roster={roster} onChange={setSteps} />
+              <StepsEditor steps={steps} roster={roster} team={[...new Set([d.owner, ...people].filter(Boolean))]} onChange={setSteps} />
             </div>
           </>)}
           {tab === 'people' && (<>

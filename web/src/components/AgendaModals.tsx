@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AgendaEvent, AgendaTask, Letter, STATUS_LABEL, TaskStatus, TaskStep, PRIORITY_LABEL, TaskPriority, TASK_CATEGORIES, taskSteps, stepsDone, fmtDueHu, fmtEventWhen } from '@/data/agenda';
-import { RosterEntry, PersonKind, KIND_LABEL } from '@/data/people';
+import { RosterEntry, RosterGroups, PersonKind, KIND_LABEL } from '@/data/people';
 import { suggestTemplatesFor } from '@/lib/topics';
 import { suggestEventFor } from '@/lib/linkSuggest';
 import GrowArea from './GrowArea';
@@ -83,12 +83,17 @@ function DueInput({ value, onChange }: { value: string; onChange: (v: string) =>
 //   3. böngészni kategória-fülből lehet - a teljes, több száz fős névfal
 //      SOHA nem jelenik meg egyszerre.
 const normName = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-function PeoplePicker({ selected, roster, onToggle, onSet }: { selected: string[]; roster: RosterEntry[]; onToggle: (name: string) => void; onSet?: (names: string[]) => void }) {
+function PeoplePicker({ selected, roster, groups, onToggle, onSet }: { selected: string[]; roster: RosterEntry[]; groups?: RosterGroups; onToggle: (name: string) => void; onSet?: (names: string[]) => void }) {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState<PersonKind | null>(null);
+  const [sub, setSub] = useState<string | null>(null); // kategórián belüli gyorsszűrő (pl. Óraadó)
   const legacy = selected.filter((n) => !roster.some((r) => r.name === n));
   const uniq = (arr: string[]) => [...new Set(arr)];
+  const subGroups = cat ? (groups?.[cat] ?? []).filter((g) => g.names.length > 0) : [];
+  const subNames = sub ? new Set(subGroups.find((g) => g.label === sub)?.names ?? []) : null;
   const kindNames = (k: PersonKind) => roster.filter((r) => r.kind === k).map((r) => r.name);
+  // a megnyitott kategória névsora a gyorsszűrővel szűkítve - ezt mutatjuk és ezt adja a "mind" gomb
+  const browse = cat ? roster.filter((r) => r.kind === cat && (!subNames || subNames.has(r.name))) : [];
   const kindOf = (n: string): PersonKind | null => roster.find((r) => r.name === n)?.kind ?? null;
   const hits = q.trim()
     ? roster.filter((r) => normName(r.name).includes(normName(q)) && !selected.includes(r.name)).slice(0, 40)
@@ -136,7 +141,7 @@ function PeoplePicker({ selected, roster, onToggle, onSet }: { selected: string[
               return (
                 <button key={k} type="button" className={`chip${cat === k ? ' is-on' : ''}`} disabled={!n}
                   title={n ? `${KIND_LABEL[k]} lista megnyitása (${n} név)` : `A(z) ${KIND_LABEL[k]} lista még üres. A ☎ Névjegyzékben tudod feltölteni.`}
-                  onClick={() => setCat((c) => (c === k ? null : k))}>
+                  onClick={() => { setCat((c) => (c === k ? null : k)); setSub(null); }}>
                   <span className={`pb ${k.toLowerCase()}`}>{k}</span>{KIND_LABEL[k]}{n ? ` (${n})` : ''}
                 </button>
               );
@@ -144,14 +149,25 @@ function PeoplePicker({ selected, roster, onToggle, onSet }: { selected: string[
           </div>
           {cat && (
             <div className="pp-browse">
+              {subGroups.length > 0 && (
+                <div className="chipradio pp-subrow">
+                  <button type="button" className={`crx c-grey${sub === null ? ' is-on' : ''}`}
+                    title="A teljes lista, szűrés nélkül" onClick={() => setSub(null)}>Mind ({kindNames(cat).length})</button>
+                  {subGroups.map((g) => (
+                    <button key={g.label} type="button" className={`crx${sub === g.label ? ' is-on' : ''}`}
+                      title={`Csak a(z) ${g.label} kör mutatása (${g.names.length} név)`}
+                      onClick={() => setSub((s) => (s === g.label ? null : g.label))}>{g.label} ({g.names.length})</button>
+                  ))}
+                </div>
+              )}
               {onSet && (
                 <button type="button" className="chip pp-addall"
-                  onClick={() => onSet(uniq([...selected, ...kindNames(cat)]))}>
-                  + a teljes {KIND_LABEL[cat]} lista hozzáadása ({kindNames(cat).length})
+                  onClick={() => onSet(uniq([...selected, ...browse.map((r) => r.name)]))}>
+                  + {sub ? `a(z) ${sub} kör` : `a teljes ${KIND_LABEL[cat]} lista`} hozzáadása ({browse.length})
                 </button>
               )}
               <div className="cat-picker pp-picker pp-scroll">
-                {roster.filter((r) => r.kind === cat).map((r) => (
+                {browse.map((r) => (
                   <button type="button" key={`${r.kind}-${r.name}`} className={`chip${selected.includes(r.name) ? ' is-on' : ''}`}
                     onClick={() => onToggle(r.name)}>
                     <span className={`pb ${r.kind.toLowerCase()}`}>{r.kind}</span>{r.name}
@@ -320,6 +336,7 @@ interface TaskProps {
   isNew: boolean;
   events: { id: string; title: string }[];
   roster: RosterEntry[];
+  rosterGroups?: RosterGroups; // kategórián belüli gyorsszűrők (aktív/főállású/óraadó...)
   letters?: Letter[];    // a feladathoz mentett levelek (összegző + Levelezés fül)
   onSave: (t: AgendaTask) => void;
   onDelete: () => void;
@@ -337,7 +354,7 @@ const TASK_TABS: TabDef[] = [
   { id: 'mail', label: 'Levelezés', cls: 'c-green' },
 ];
 
-export function TaskModal({ task, isNew, events, roster, letters, onSave, onDelete, onNotify, onOpenLetter, onLetterStatus, onNotifyTopic, onClose }: TaskProps) {
+export function TaskModal({ task, isNew, events, roster, rosterGroups, letters, onSave, onDelete, onNotify, onOpenLetter, onLetterStatus, onNotifyTopic, onClose }: TaskProps) {
   const [d, setD] = useState(() => ({
     title: task.title, summary: task.summary,
     status: task.status as string, priority: task.priority as string, category: task.category ?? '',
@@ -458,7 +475,7 @@ export function TaskModal({ task, isNew, events, roster, letters, onSave, onDele
             </div>
             <div className="field full">
               <label>Résztvevők - keress névre, vagy nyiss meg egy kategóriát</label>
-              <PeoplePicker selected={people} roster={roster} onToggle={togglePerson} onSet={setPeople} />
+              <PeoplePicker selected={people} roster={roster} groups={rosterGroups} onToggle={togglePerson} onSet={setPeople} />
             </div>
             <div className="field">
               <label>Feladó neve - ha emailből jött a feladat</label>
@@ -493,6 +510,7 @@ interface EventProps {
   event: AgendaEvent;
   isNew: boolean;
   roster: RosterEntry[];
+  rosterGroups?: RosterGroups; // kategórián belüli gyorsszűrők (aktív/főállású/óraadó...)
   tasks?: AgendaTask[];  // az eseményhez kötött feladatok (Feladatok fül)
   letters?: Letter[];    // az eseményhez mentett levelek (összegző + Levelezés fül)
   onSave: (e: AgendaEvent) => void;
@@ -513,7 +531,7 @@ const EVENT_TABS: TabDef[] = [
   { id: 'mail', label: 'Levelezés', cls: 'c-green' },
 ];
 
-export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDelete, onNotify, onOpenTask, onAddTask, onOpenLetter, onLetterStatus, onNotifyTopic, onClose }: EventProps) {
+export function EventModal({ event, isNew, roster, rosterGroups, tasks, letters, onSave, onDelete, onNotify, onOpenTask, onAddTask, onOpenLetter, onLetterStatus, onNotifyTopic, onClose }: EventProps) {
   // az időpont strukturált: hónap VAGY nap/időszak (+ opcionális óra:perc) - szabad szöveg nincs;
   // a régi when-szövegből az óra:percet kiolvassuk, a kijelzett szöveget mentéskor generáljuk
   const m0 = event.when.match(/(\d{1,2})[:.](\d{2})/);
@@ -659,7 +677,7 @@ export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDel
             </div>
             <div className="field full">
               <label>Résztvevők - keress névre, vagy nyiss meg egy kategóriát</label>
-              <PeoplePicker selected={people} roster={roster} onToggle={togglePerson} onSet={setPeople} />
+              <PeoplePicker selected={people} roster={roster} groups={rosterGroups} onToggle={togglePerson} onSet={setPeople} />
             </div>
           </>)}
           {tab === 'mail' && (

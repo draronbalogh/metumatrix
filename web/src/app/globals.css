@@ -797,6 +797,7 @@ html[data-theme='dark'] .pb.p { color: var(--yellow-deep); }
 .pp-selchip:hover .pp-x { opacity: 1; }
 .pp-cats { display: flex; flex-wrap: wrap; gap: 5px; }
 .pp-browse { display: flex; flex-direction: column; gap: 6px; }
+.pp-subrow { margin-top: 2px; }
 .pp-addall { align-self: flex-start; border-style: dashed; font-weight: 700; }
 .pp-scroll { max-height: 220px; overflow-y: auto; }
 .pp-nohit { font-size: .78rem; color: var(--muted); padding: 2px 4px; }

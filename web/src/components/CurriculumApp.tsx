@@ -14,7 +14,7 @@ import ITView from './ITView';
 import DocsView from './DocsView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
 import { Agenda, AgendaEvent, AgendaSource, AgendaTask, DEFAULT_AGENDA, Letter, ReplyDraft, emptyEvent, emptyTask, isAwaiting, mergeAgendaDocs, nextPriority, normalizeAgenda, taskSteps, withOutEntry } from '@/data/agenda';
-import { DEFAULT_PEOPLE, PeopleDB, PersonKind, SenderRule, buildCanonicalNames, buildFooter, buildRoster, normalizePeople, emailOf } from '@/data/people';
+import { DEFAULT_PEOPLE, PeopleDB, PersonKind, RosterGroups, SenderRule, activeStudentNames, buildCanonicalNames, buildFooter, buildRoster, normalizePeople, emailOf, studentStatusNames, teacherStatusNames } from '@/data/people';
 import PostaView from './PostaView';
 import { normName, normTitle } from '@/lib/normalize';
 import PeopleModal from './PeopleModal';
@@ -1098,6 +1098,23 @@ export default function CurriculumApp() {
   }, [data, ver]);
   // állandó választólista: tantervi tanárok + hallgatók (personDB) - T/H badge-dzsel
   const roster = useMemo(() => buildRoster(teacherNames, peopleDB), [teacherNames, peopleDB]);
+  // kategórián belüli gyorsszűrők a résztvevő-választóhoz (Tanár: aktív/főállású/óraadó,
+  // Hallgató: aktív/képviselő/demonstrátor/...) - a Névjegyzék státusz-címkéiből
+  const rosterGroups = useMemo<RosterGroups>(() => ({
+    T: [
+      { label: 'Aktív (most tanít)', names: teacherNames },
+      { label: 'Főállású', names: teacherStatusNames(peopleDB, 'főállású') },
+      { label: 'Óraadó', names: teacherStatusNames(peopleDB, 'óraadó') },
+      { label: 'Volt/külsős', names: teacherStatusNames(peopleDB, 'volt/külsős') },
+    ],
+    H: [
+      { label: 'Aktív', names: activeStudentNames(peopleDB) },
+      { label: 'Képviselő', names: studentStatusNames(peopleDB, 'képviselő') },
+      { label: 'Demonstrátor', names: studentStatusNames(peopleDB, 'demonstrátor') },
+      { label: 'Szervező', names: studentStatusNames(peopleDB, 'szervező') },
+      { label: 'Nagykövet', names: studentStatusNames(peopleDB, 'nagykövet') },
+    ],
+  }), [teacherNames, peopleDB]);
   // a név kanonikus (Névjegyzék-beli) írásmódja titulussal - csak megjelenítéshez
   const canonName = useMemo(() => {
     const m = buildCanonicalNames(peopleDB);
@@ -1523,6 +1540,7 @@ export default function CurriculumApp() {
           isNew={taskEdit.isNew}
           events={agenda.events.map((e) => ({ id: e.id, title: e.title }))}
           roster={roster}
+          rosterGroups={rosterGroups}
           letters={(agenda.letters || []).filter((l) => l.targetType === 'task' && l.targetId === taskEdit.t.id)}
           onSave={saveTask}
           onDelete={() => { if (confirm('Törlöd ezt a feladatot?')) deleteTask(taskEdit.t.id); }}
@@ -1539,6 +1557,7 @@ export default function CurriculumApp() {
           event={eventEdit.e}
           isNew={eventEdit.isNew}
           roster={roster}
+          rosterGroups={rosterGroups}
           tasks={agenda.tasks.filter((t) => t.eventId === eventEdit.e.id)}
           letters={(agenda.letters || []).filter((l) => l.targetType === 'event' && l.targetId === eventEdit.e.id)}
           onSave={saveEvent}

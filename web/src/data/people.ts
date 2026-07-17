@@ -34,6 +34,9 @@ export const cohortNames = (db: PeopleDB, cohort: string): string[] =>
 // Adott státuszú hallgatók (szervező / nagykövet / képviselő / demonstrátor).
 export const studentStatusNames = (db: PeopleDB, status: string): string[] =>
   db.students.filter((p) => p.status === status).map((p) => p.name);
+// Aktív hallgatók: akiknél a titulus nem jelez passzív vagy megszűnt jogviszonyt.
+export const activeStudentNames = (db: PeopleDB): string[] =>
+  db.students.filter((p) => !/passzív|nincs jogviszony|kilépett/i.test(p.title ?? '')).map((p) => p.name);
 // Hallgatói szervezői kör: szervezők + nagykövetek + képviselők (a demonstrátor külön szerep).
 export const studentOrganizerNames = (db: PeopleDB): string[] =>
   db.students.filter((p) => p.status && p.status !== 'demonstrátor').map((p) => p.name);
@@ -102,6 +105,13 @@ export interface RosterEntry {
   kind: PersonKind;
 }
 
+// Kategórián belüli gyorsszűrő a résztvevő-választóhoz (pl. Tanár: aktív / főállású / óraadó).
+export interface RosterGroup {
+  label: string;
+  names: string[];
+}
+export type RosterGroups = Partial<Record<PersonKind, RosterGroup[]>>;
+
 export const DEFAULT_PEOPLE: PeopleDB = { teachers: [], students: [], institution: [], alumni: [], opponents: [], market: [], groups: [], signature: DEFAULT_SIGNATURE, signatureLinks: DEFAULT_SIGNATURE_LINKS, senderRules: {} };
 
 // Telefonszám-normalizálás: minden magyar szám +36-tal kezdődjön (06/0036/36 helyett).
@@ -168,9 +178,9 @@ export const emailOf = (db: PeopleDB, name: string): string | null => {
 // A volt / külsős oktató-kontaktok is választhatók (T badge-dzsel), hogy nekik is lehessen írni.
 export const buildRoster = (teacherNames: string[], db: PeopleDB): RosterEntry[] => [
   ...teacherNames.map((name) => ({ name, kind: 'T' as const })),
-  ...formerTeacherNames(teacherNames, db)
-    .filter((name) => !teacherNames.includes(name) && !db.alumni.some((a) => a.name === name)) // se tantervi, se alumni duplikátum
-    .map((name) => ({ name, kind: 'T' as const })),
+  ...db.teachers
+    .filter((p) => !teacherNames.includes(p.name) && !db.alumni.some((a) => a.name === p.name)) // se tantervi, se alumni duplikátum
+    .map((p) => ({ name: p.name, kind: 'T' as const })),
   ...db.students.map((s) => ({ name: s.name, kind: 'H' as const })),
   ...db.institution.map((s) => ({ name: s.name, kind: 'I' as const })),
   ...db.alumni.map((s) => ({ name: s.name, kind: 'A' as const })),

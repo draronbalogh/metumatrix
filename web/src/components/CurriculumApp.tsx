@@ -41,6 +41,8 @@ const LS_KEY = 'mediadesign-2026-27-v9';
 const AGENDA_LS_KEY = 'md-agenda-v1';
 const PEOPLE_LS_KEY = 'md-people-v1';
 const THEME_KEY = 'md-theme2'; // új kulcs: az ideiglenes sötét-alap időszak mentett 'dark' értékei ne ragadjanak be
+const NOTIF_LS = 'md-notif-v1'; // értesítés sürgős kártyánál: be/ki
+const NOTIF_SEEN_LS = 'md-notif-seen-v1'; // már jelzett sürgős kártya-id-k (ne szóljunk kétszer)
 // (a stílus-preset választó megszűnt — az app fixen a „műszerfal" kinézetet használja,
 // a data-preset alapértéke a layout.tsx-ben áll)
 // betöltési állapotgép: amíg nem 'ok', a fájl-automentés tilos (nehogy régi/beépített
@@ -75,6 +77,16 @@ const exitFs = () => {
   else d.webkitExitFullscreen?.();
 };
 
+// Értesítés kirakása: Androidon csak a SW-s showNotification él, asztali gépen a
+// Notification konstruktor is — előbb a SW-t próbáljuk, aztán a sima utat.
+const showNotif = async (title: string, body: string) => {
+  try {
+    const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
+    if (reg) { await reg.showNotification(title, { body, tag: title }); return; }
+  } catch { /* SW nélkül is megpróbáljuk */ }
+  try { new Notification(title, { body }); } catch { /* nincs támogatás */ }
+};
+
 export default function CurriculumApp() {
   const [data, setData] = useState<Curriculum>(DEFAULT_DATA);
   const [hydrated, setHydrated] = useState(false);
@@ -93,6 +105,7 @@ export default function CurriculumApp() {
   const [agenda, setAgenda] = useState<Agenda>(DEFAULT_AGENDA);
   const [peopleDB, setPeopleDB] = useState<PeopleDB>(DEFAULT_PEOPLE);
   const [theme, setTheme] = useState<'light' | 'dark'>('light'); // alapértelmezés: világos téma
+  const [notifOn, setNotifOn] = useState(false); // értesítés sürgős kártyánál (engedély + kapcsoló együtt)
   const [canEdit, setCanEdit] = useState(true); // bemutató mód: érvényes kulcs nélkül csak olvasás
   const canEditRef = useRef(true);
   const [loadOpen, setLoadOpen] = useState(false); // pillanatkép-betöltő ablak
@@ -181,6 +194,8 @@ export default function CurriculumApp() {
         const t = localStorage.getItem(THEME_KEY); if (t === 'dark' || t === 'light') setTheme(t);
         // elrendezés-zárolás: mindig zárva indul (betöltéskor/frissítéskor) a véletlen
         // mozgatás ellen — a mentett értéket szándékosan NEM olvassuk vissza.
+        // értesítés: csak akkor él, ha a kapcsoló be van és a böngésző-engedély is megvan
+        setNotifOn(localStorage.getItem(NOTIF_LS) === '1' && typeof Notification !== 'undefined' && Notification.permission === 'granted');
       } catch { /* ignore */ }
       setHydrated(true);
     })();
@@ -480,6 +495,41 @@ export default function CurriculumApp() {
     window.addEventListener('focus', onVis);
     return () => { stop = true; window.clearInterval(iv); document.removeEventListener('visibilitychange', onVis); window.removeEventListener('focus', onVis); };
   }, [hydrated]);
+  // ÉRTESÍTÉS SÜRGŐS KÁRTYÁNÁL: a bot magas prioritásra állítja az aznapi/másnapi
+  // cselekvést kérő feladatokat — az app minden agenda-frissülésnél az ÚJ (még nem
+  // jelzett) high+nem-done kártyákról böngésző-értesítést mutat, ha a 🔔 be van kapcsolva.
+  useEffect(() => {
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { /* http vagy nem támogatott — az asztali Notification így is működik */ });
+  }, []);
+  const urgentIds = (a: Agenda) => a.tasks.filter((t) => t.priority === 'high' && t.status !== 'done').map((t) => t.id);
+  const toggleNotif = useCallback(async () => {
+    if (notifOn) { try { localStorage.setItem(NOTIF_LS, '0'); } catch { /* ignore */ } setNotifOn(false); return; }
+    if (typeof Notification === 'undefined') return;
+    let perm = Notification.permission;
+    if (perm === 'default') { try { perm = await Notification.requestPermission(); } catch { return; } }
+    if (perm !== 'granted') return;
+    // alapvonal: a bekapcsoláskor már látható sürgős kártyákról nem szólunk, csak az ezután érkezőkről
+    try { localStorage.setItem(NOTIF_SEEN_LS, JSON.stringify(urgentIds(agendaRef.current))); localStorage.setItem(NOTIF_LS, '1'); } catch { /* ignore */ }
+    setNotifOn(true);
+  }, [notifOn]);
+  useEffect(() => {
+    if (!hydrated || !notifOn) return;
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    const urgent = agenda.tasks.filter((t) => t.priority === 'high' && t.status !== 'done');
+    let seen: string[] | null = null;
+    try { const s = localStorage.getItem(NOTIF_SEEN_LS); seen = s ? (JSON.parse(s) as string[]) : null; } catch { seen = null; }
+    if (!Array.isArray(seen)) { // nincs alapvonal (pl. másik gépen kapcsolták be) — csendben felvesszük
+      try { localStorage.setItem(NOTIF_SEEN_LS, JSON.stringify(urgent.map((t) => t.id))); } catch { /* ignore */ }
+      return;
+    }
+    const fresh = urgent.filter((t) => !seen.includes(t.id));
+    if (!fresh.length) return;
+    try { localStorage.setItem(NOTIF_SEEN_LS, JSON.stringify([...seen, ...fresh.map((t) => t.id)].slice(-300))); } catch { /* ignore */ }
+    fresh.forEach((t) => {
+      const body = [t.dueDate ? `Határidő: ${t.dueDate}` : null, t.summary || null].filter(Boolean).join(' · ').slice(0, 160);
+      void showNotif(`Sürgős: ${t.title}`, body);
+    });
+  }, [agenda, hydrated, notifOn]);
   const saveTask = useCallback((t: AgendaTask) => {
     const cur = agendaRef.current;
     // tengely-szinkron: eseményhez kapcsolt, határidő nélküli feladat átveszi az esemény napját
@@ -1091,6 +1141,18 @@ export default function CurriculumApp() {
       {/* a fejlécen KÍVÜL él: sötét módban a masthead/toolbar blur-je saját stacking
           contextet nyit, és azon belülről a fix gomb a menüsáv mögé kerülne */}
       <button className="themebtn themebtn--head" title="Világos / sötét mód" onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}>{theme === 'dark' ? '☀' : '☾'}</button>
+      {canEdit && (
+        <button className={`themebtn themebtn--head notifbtn--head${fsSupported ? ' notifbtn--shift' : ''}`}
+          title={notifOn ? 'Értesítés sürgős kártyánál: bekapcsolva' : 'Értesítés sürgős kártyánál: kikapcsolva'}
+          onClick={() => void toggleNotif()}>
+          {/* inline SVG csengő — az emoji-ikon itt kilógna a glyph-gombok sorából */}
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M8 2a4 4 0 0 0-4 4c0 2.8-.9 3.9-1.4 4.5h10.8C13 9.9 12 8.8 12 6a4 4 0 0 0-4-4z" />
+            <path d="M6.6 13a1.5 1.5 0 0 0 2.8 0" />
+            {!notifOn && <path d="M2.5 1.8l11 12.4" />}
+          </svg>
+        </button>
+      )}
       {fsSupported && (
         <button className="themebtn themebtn--head fsbtn--head" title={isFs ? 'Kilépés a teljes képernyőből' : 'Teljes képernyő'} onClick={toggleFs}>
           {/* inline SVG: minden platformon renderel (a ⛶ glyph sok eszközön tofu) */}

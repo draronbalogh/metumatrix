@@ -107,6 +107,9 @@ body {
 .themebtn--head { position: fixed; top: 12px; right: 14px; z-index: 70; box-shadow: 0 2px 10px rgba(16, 17, 20, .18); }
 /* teljes kepernyo gomb — kozvetlenul a tema-valto mellett */
 .fsbtn--head { right: 58px; }
+/* értesítés-csengő — a sorban a következő hely; ha nincs fullscreen-gomb, közelebb csúszik */
+.notifbtn--head { right: 58px; }
+.notifbtn--head.notifbtn--shift { right: 102px; }
 
 /* ============================================================
    MAP / NODE VIEW

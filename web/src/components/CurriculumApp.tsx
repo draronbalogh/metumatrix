@@ -224,12 +224,19 @@ export default function CurriculumApp() {
     if (fsElement()) exitFs();
     else enterFs();
   }, []);
+  // gépelhető elem? — a fullscreen+billentyűzet ütközés miatt kell tudnunk (lásd lent)
+  const isTypable = (t: EventTarget | null): boolean => {
+    if (!(t instanceof HTMLElement)) return false;
+    if (t.tagName === 'TEXTAREA' || t.isContentEditable) return true;
+    return t.tagName === 'INPUT' && !/^(button|checkbox|radio|range|submit|reset|file|color)$/i.test((t as HTMLInputElement).type);
+  };
   useEffect(() => {
     if (window.innerWidth > 720) return;
     if (!fsSupportedNow()) return;
     let done = false;
-    const onFirst = () => {
+    const onFirst = (e: Event) => {
       if (done) return;
+      if (isTypable(e.target)) return; // szövegmezőbe koppintásra NEM lépünk be (fekete IME-mód)
       done = true; // laponként csak EGYSZER — ha a felhasználó kilép, nem erőltetjük újra
       enterFs();
       window.removeEventListener('touchend', onFirst);
@@ -238,6 +245,21 @@ export default function CurriculumApp() {
     window.addEventListener('touchend', onFirst, { passive: true });
     window.addEventListener('click', onFirst);
     return () => { window.removeEventListener('touchend', onFirst); window.removeEventListener('click', onFirst); };
+  }, []);
+  // ANDROID FULLSCREEN + BILLENTYŰZET ÜTKÖZÉS: teljes képernyőben a billentyűzet a
+  // saját, rendszer-témájú (akár fekete) „extract" szerkesztőjét rajzolja a lap fölé
+  // (autofill/bankkártya-csíkkal), a bevitt szöveg nem látszik. Érintőképernyőn ezért
+  // bármely szövegmező fókuszakor kilépünk a teljes képernyőből — gépelés után a
+  // következő koppintás nem kényszerít vissza (a fenti onFirst laponként egyszeri),
+  // a ⛶ gombbal bármikor vissza lehet lépni.
+  useEffect(() => {
+    const onFocusIn = (e: FocusEvent) => {
+      if (!fsElement()) return;
+      if (!window.matchMedia('(pointer: coarse)').matches) return; // asztali gépen nem zavar
+      if (isTypable(e.target)) exitFs();
+    };
+    document.addEventListener('focusin', onFocusIn);
+    return () => document.removeEventListener('focusin', onFocusIn);
   }, []);
   // Hozzáférés: EGYETLEN publikus link (Funnel), query-paraméter nélkül. A szerver
   // a Tailscale-identitás fejlécből dönt: a saját tailnet-eszközökről érkező kérés
@@ -1183,7 +1205,8 @@ export default function CurriculumApp() {
             <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>Órarend</button>
           </div>
           <span className="search-wrap">
-            <input className="search search--corner" placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : view === 'people' ? 'Keresés a névjegyzékben…' : view === 'orarend' ? 'Keresés az órarendben…' : view === 'it' ? 'Keresés szoftverre, teremre…' : view === 'docs' ? 'Keresés a segédletekben…' : view === 'topics' ? 'Keresés a sablonokban és levelekben…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />
+            <input className="search search--corner" type="search" name="app-kereses" autoComplete="off" enterKeyHint="search"
+              placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : view === 'people' ? 'Keresés a névjegyzékben…' : view === 'orarend' ? 'Keresés az órarendben…' : view === 'it' ? 'Keresés szoftverre, teremre…' : view === 'docs' ? 'Keresés a segédletekben…' : view === 'topics' ? 'Keresés a sablonokban és levelekben…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />
             {q && <button type="button" className="search-clear" title="Keresés törlése" onClick={() => setQ('')}>✕</button>}
           </span>
           <div className="toolbar-break" />

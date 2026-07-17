@@ -60,6 +60,14 @@ There is **no test suite and no ESLint config** (no `lint` script). Verify chang
 
 Versions (`VERSION_ORDER`): `'2026/2027'`, `'2025/2026'`, `'2024/2025'`, `'régi (korábbi)'`.
 
+## Access control (read gate, 2026-07-17)
+
+Two keys in `.env.local`: `EDIT_KEY` (editor) and `VIEW_KEY` (read-only guest). `lib/editauth.ts`:
+- `canWrite` (POSTs): Tailscale header (`tailscale-user-login`, set by the serve proxy for tailnet devices) OR `x-edit-key` == `EDIT_KEY` OR `OPEN_EDIT=1`.
+- `canRead` (ALL data GETs: curriculum/agenda/people/orarend/it/style/replylog): `canWrite` OR key == `VIEW_KEY` (from `x-edit-key` header or `?ts=` query). **There is deliberately NO localhost exception** (X-Forwarded-For is spoofable; Next sets it even for direct connections) - the Outlook bot and any maintenance script MUST send `x-edit-key` on GETs too, else 403 `{locked:true}`. `snapshots` GET and `docs` GET require editor. `auth`/`notify` GETs stay open (booleans only).
+- Client: a bare public (Funnel) visit gets 403 on the first curriculum GET → `CurriculumApp` renders only an empty `.lockpane` (🔒, neutral tab title), no menus/names/data. The `?ts=` param is forwarded on every fetch via `editHeaders()`.
+- Tailscale: the ts.net hostname is Funnel-exposed (public) but data is key-gated; the user's own tailnet devices need no param at all.
+
 ## Persistence & editing
 
 - **The JSON file is the source of truth**, not `localStorage`. `src/app/api/curriculum/route.ts` (GET/POST, `force-dynamic`) reads/writes `process.env.CURRICULUM_FILE || 'C:/node/metu_tanterv/grid/media-design-mintatanterv.json'` — a browser can't touch a fixed disk path, so this server route is the bridge. (Note the file lives in the *sibling* `metu_tanterv` repo, outside this app's git tree.)

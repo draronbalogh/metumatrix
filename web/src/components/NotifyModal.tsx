@@ -220,24 +220,51 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       if (ev) { setCtxSel(`e:${ev.id}`); evStored = true; }
       else if (tk) { setCtxSel(`t:${tk.id}`); evStored = true; }
     }
-    // 2) névegyezés: SOHA nem kapcsol magától — csak javaslatot tesz, amit egy
-    // gombnyomás rögzít (UID szerint); enélkül a sablon kapcsolat nélkül töltődik
+    // 2) névegyezés: kapcsolatot NEM rögzít magától, de a LEGJOBB találat ADATAIT
+    // (dátum/határidő/helyszín) azonnal előtölti — a felhasználó ellenőrzi, nem neki
+    // kell a naptárban keresgélnie. A rögzítés továbbra is külön gombbal történik.
     let suggestion: { sel: string; title: string } | null = null;
+    let gEv: AgendaEvent | null = null;
+    let gTk: AgendaTask | null = null;
     if (!ev && !tk) {
       const toks = [...t.id.split('-'), ...t.label.split(/[^\wáéíóöőúüűÁÉÍÓÖŐÚÜŰ]+/)].map(norm).filter((w) => w.length >= 6 && !LINK_STOP.has(w));
-      const evs = (ctxEvents ?? []).filter((e) => toks.some((w) => norm(e.title).includes(w)));
-      const tks = (ctxTasks ?? []).filter((x) => toks.some((w) => norm(x.title).includes(w)));
-      if (evs.length === 1) suggestion = { sel: `e:${evs[0].id}`, title: evs[0].title };
-      else if (evs.length === 0 && tks.length === 1) suggestion = { sel: `t:${tks[0].id}`, title: tks[0].title };
+      const hit = (title: string, extra: string): number =>
+        toks.some((w) => norm(title).includes(w)) ? 2 : toks.some((w) => extra && norm(extra).includes(w)) ? 1 : 0;
+      const d = new Date();
+      const todayYmd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const cands = [
+        ...(ctxEvents ?? []).map((e) => ({ sel: `e:${e.id}`, title: e.title, date: (e.day ?? e.sort ?? '').slice(0, 10), score: hit(e.title, e.note ?? '') })),
+        ...(ctxTasks ?? []).map((x) => ({ sel: `t:${x.id}`, title: x.title, date: (x.dueDate ?? '').slice(0, 10), score: hit(x.title, x.summary ?? '') })),
+      ].filter((c) => c.score > 0);
+      // cím-találat előbb; azonos pontnál a közelgő nyer (legkorábbi), aztán a
+      // legfrissebb múltbeli, a dátumtalan a sor végére
+      cands.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        const au = !!a.date && a.date >= todayYmd, bu = !!b.date && b.date >= todayYmd;
+        if (au !== bu) return au ? -1 : 1;
+        if (au && bu) return a.date < b.date ? -1 : 1;
+        if (!a.date || !b.date) return a.date ? -1 : b.date ? 1 : 0;
+        return a.date > b.date ? -1 : 1;
+      });
+      const best = cands[0];
+      if (best) {
+        suggestion = { sel: best.sel, title: best.title };
+        if (best.sel.startsWith('e:')) gEv = (ctxEvents ?? []).find((e) => e.id === best.sel.slice(2)) ?? null;
+        else gTk = (ctxTasks ?? []).find((x) => x.id === best.sel.slice(2)) ?? null;
+      }
     }
     setLinkSuggestion(suggestion);
     // feladathoz kötött levélnél a feladat SZÜLŐ-eseményéből jön az időpont és a helyszín
     if (!ev && tk?.eventId) ev = (ctxEvents ?? []).find((e) => e.id === tk.eventId) ?? null;
+    // adat-forrás: az explicit/rögzített kapcsolat az első, különben a legjobb találat
+    const dTk = tk ?? gTk;
+    let dEv = ev ?? gEv;
+    if (!dEv && dTk?.eventId) dEv = (ctxEvents ?? []).find((e) => e.id === dTk.eventId) ?? null;
     const ctx = {
       title: (target.task ? tk?.title : ev?.title || tk?.title) || '',
-      when: ev ? (ev.when || fmtDay(ev.day)) : undefined,
-      place: target.event ? (place || target.event.place) : ev?.place,
-      due: tk ? (fmtDueHu(tk.dueDate) || tk.due) : undefined,
+      when: dEv ? (dEv.when || fmtDay(dEv.day)) : undefined,
+      place: target.event ? (place || target.event.place) : dEv?.place,
+      due: dTk ? (fmtDueHu(dTk.dueDate) || dTk.due) : undefined,
     };
     lastTopicRef.current = t;
     setActiveTopic(t);
@@ -274,8 +301,9 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     setBody(`${txt}\n\n${buildFooter(db, sigOn)}`);
     setBodyDirty(true);
     const linked = ev ?? tk;
+    const guessed = !linked && (gEv || gTk) ? (gEv?.title ?? gTk?.title) : null;
     const tipp = !linked && !target.event && !target.task && ((ctxEvents?.length ?? 0) + (ctxTasks?.length ?? 0)) > 0
-      ? (suggestion ? ` Javaslat: kapcsolható a(z) „${suggestion.title}" tételhez — a választó alatt egy gombbal rögzítheted.` : ' Nincs naptári találat: fent, a Kapcsolt naptári tételnél húzhatod be a dátumokat.') : '';
+      ? (guessed ? ` Előtöltve a(z) „${guessed}" tétel adataiból — ellenőrizd! A kapcsolatot a választó alatti gombbal rögzítheted.` : ' Nincs naptári találat: fent, a Kapcsolt naptári tételnél húzhatod be a dátumokat.') : '';
     setResult(`✓ Sablon betöltve: ${t.label}.${linked && !target.event && !target.task ? ` Kapcsolt naptári tétel: ${linked.title}${evStored ? ' (rögzített kapcsolat)' : ''}.` : ''}${tipp} Csak a maradék [szögletes] mezőt töltsd ki.`);
   };
 

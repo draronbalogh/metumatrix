@@ -41,9 +41,11 @@ const QUICK_LINKS: QuickLinkGroup[] = [
   {
     cim: 'Rendszerek',
     links: [
-      { ic: '🎓', t: 'CooSpace', d: 'belépés Neptun-azonosítóval', href: 'https://coospace.metropolitan.hu/' },
+      // a leggyakoribbak legelöl: mail, Neptun, CooSpace, tematika
+      { ic: '📧', t: 'Outlook — levelezés', d: 'abalogh@metropolitan.hu', href: 'https://outlook.cloud.microsoft/mail/' },
       { ic: '🧾', t: 'Neptun — oktatói web', href: 'https://neptunweb1.metropolitan.hu/' },
-      { ic: '📄', t: 'Neptun — tematika-kitöltés', href: 'https://neptun.metropolitan.hu/tematika/' },
+      { ic: '🎓', t: 'CooSpace', d: 'belépés Neptun-azonosítóval', href: 'https://coospace.metropolitan.hu/' },
+      { ic: '📄', t: 'Tematikák kitöltése', d: 'Neptun tematika-felület', href: 'https://neptun.metropolitan.hu/tematika/' },
       { ic: '🛠', t: 'TopDesk — IT- és teremhiba', href: 'https://metu.topdesk.net/' },
       { ic: '📖', t: 'MTMT', d: 'tudományos művek tára', href: 'https://www.mtmt.hu/' },
     ],

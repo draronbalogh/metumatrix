@@ -64,8 +64,8 @@ Versions (`VERSION_ORDER`): `'2026/2027'`, `'2025/2026'`, `'2024/2025'`, `'régi
 
 Two keys in `.env.local`: `EDIT_KEY` (editor) and `VIEW_KEY` (read-only guest). `lib/editauth.ts`:
 - `canWrite` (POSTs): Tailscale header (`tailscale-user-login`, set by the serve proxy for tailnet devices) OR `x-edit-key` == `EDIT_KEY` OR `OPEN_EDIT=1`.
-- `canRead` (ALL data GETs: curriculum/agenda/people/orarend/it/style/replylog): `canWrite` OR key == `VIEW_KEY` (from `x-edit-key` header or `?ts=` query). **There is deliberately NO localhost exception** (X-Forwarded-For is spoofable; Next sets it even for direct connections) - the Outlook bot and any maintenance script MUST send `x-edit-key` on GETs too, else 403 `{locked:true}`. `snapshots` GET and `docs` GET require editor. `auth`/`notify` GETs stay open (booleans only).
-- Client: a bare public (Funnel) visit gets 403 on the first curriculum GET → `CurriculumApp` renders only an empty `.lockpane` (🔒, neutral tab title), no menus/names/data. The `?ts=` param is forwarded on every fetch via `editHeaders()`.
+- `canRead` (ALL data GETs: curriculum/agenda/people/orarend/it/style/replylog): `canWrite` OR key == `VIEW_KEY`/`EDIT_KEY` (from `x-edit-key` header or `?net=` query - the param was renamed from `?ts=` on 2026-07-17 after the old editor link may have been seen at a meeting; the old param/key is dead). **There is deliberately NO localhost exception** (X-Forwarded-For is spoofable; Next sets it even for direct connections) - the Outlook bot and any maintenance script MUST send `x-edit-key` on GETs too, else 403 `{locked:true}`. `snapshots` GET and `docs` GET require editor. `auth`/`notify` GETs stay open (booleans only).
+- Client: a bare public (Funnel) visit gets 403 on the first curriculum GET → `CurriculumApp` renders only an empty `.lockpane` (🔒, neutral tab title), no menus/names/data. The `?net=` param is forwarded on every fetch via `editHeaders()`.
 - Tailscale: the ts.net hostname is Funnel-exposed (public) but data is key-gated; the user's own tailnet devices need no param at all.
 
 ## Persistence & editing

@@ -105,18 +105,30 @@ export const greetingFor = (kinds?: PersonKind[]): string => pickAvoid(greetPool
 // ismert (generált) megszólítás-e a sor — a kézzel írt egyedi megszólítást nem bántjuk
 export const isKnownGreeting = (line: string): boolean => GREET_POOLS.some((p) => p.includes(line.trim()));
 
+// SZÁMSEMLEGES zárások: egyes és többes számú levélben is helyesek, ezért a
+// Megszólítás és zárás csere ezen a poolon BELÜL marad (sosem ront nyelvtant)
+const CLOSER_BOTH = [
+  'Köszönöm előre is.',
+  'Minden visszajelzésnek örülök.',
+  'Bízom benne, hogy össze tudjuk hozni.',
+  'Köszönöm a segítséget.',
+  'Köszönöm szépen a segítséget.',
+  'Köszönöm az erre szánt időt.',
+  'Köszönöm és további jó munkát!',
+  'Köszönöm és jó munkát kívánok!',
+];
+
 // záró fordulatok a törzsszöveg és az aláírás közé
 const CLOSER = [
   'Előre is köszönöm a segítségeteket.',
   'Köszönöm, hogy időt szántok rá.',
-  'Minden visszajelzésnek örülök.',
+  'Köszönöm az erre szánt időtöket.',
   'Kérdés esetén keressetek bátran.',
   'Köszönöm a közreműködést.',
   'Számítok Rátok.',
-  'Köszönöm előre is.',
   'Ha bármi kérdés van, írjatok nyugodtan.',
-  'Bízom benne, hogy össze tudjuk hozni.',
   'Köszönöm, hogy foglalkoztok vele.',
+  ...CLOSER_BOTH,
 ];
 
 // köszönő levél saját zárásai
@@ -125,29 +137,31 @@ const KOSZONO_CLOSER = [
   'Még egyszer hálásan köszönöm.',
   'Köszönöm Nektek.',
   'Nagyon köszönöm a munkátokat.',
+  'Köszönöm az erre szánt időtöket, sokat segített.',
   'Jó volt együtt dolgozni ezen.',
   'Remélem, legközelebb is számíthatok Rátok.',
   'Ez közös siker, köszönöm.',
+  'Köszönöm, és további jó munkát kívánok mindenkinek!',
 ];
 
 // EGYES SZÁMÚ változatok: ha pontosan EGY címzett van, a levél tegező egyes számban szól
 const CLOSER_SG = [
   'Előre is köszönöm a segítségedet.',
   'Köszönöm, hogy időt szánsz rá.',
-  'Minden visszajelzésnek örülök.',
+  'Köszönöm az erre szánt idődet.',
   'Kérdés esetén keress bátran.',
   'Köszönöm a közreműködésedet.',
   'Számítok Rád.',
-  'Köszönöm előre is.',
   'Ha bármi kérdés van, írj nyugodtan.',
-  'Bízom benne, hogy össze tudjuk hozni.',
   'Köszönöm, hogy foglalkozol vele.',
+  ...CLOSER_BOTH,
 ];
 const KOSZONO_CLOSER_SG = [
   'Még egyszer köszönöm.',
   'Még egyszer hálásan köszönöm.',
   'Köszönöm Neked.',
   'Nagyon köszönöm a munkádat.',
+  'Köszönöm az erre szánt idődet, sokat segített.',
   'Jó volt együtt dolgozni ezen.',
   'Remélem, legközelebb is számíthatok Rád.',
 ];
@@ -180,10 +194,12 @@ export function rerollLetter(body: string): string {
   }
   for (let i = gi + 1; i < lines.length; i++) {
     const cur = lines[i].trim();
-    if (CLOSER.includes(cur)) lines[i] = pick(CLOSER.filter((c) => c !== cur));
+    // a számsemleges sor CSAK számsemlegesre cserélhető (a levél számát nem ismerjük)
+    if (CLOSER_BOTH.includes(cur)) lines[i] = pick(CLOSER_BOTH.filter((c) => c !== cur));
     else if (KOSZONO_CLOSER.includes(cur)) lines[i] = pick(KOSZONO_CLOSER.filter((c) => c !== cur));
-    else if (CLOSER_SG.includes(cur)) lines[i] = pick(CLOSER_SG.filter((c) => c !== cur));
     else if (KOSZONO_CLOSER_SG.includes(cur)) lines[i] = pick(KOSZONO_CLOSER_SG.filter((c) => c !== cur));
+    else if (CLOSER_SG.includes(cur)) lines[i] = pick(CLOSER_SG.filter((c) => c !== cur));
+    else if (CLOSER.includes(cur)) lines[i] = pick(CLOSER.filter((c) => c !== cur));
   }
   return lines.join('\n');
 }
@@ -249,9 +265,13 @@ function meetingBlock(m: MeetingPlan): string {
 const STEP_HEAD = [
   'A legfontosabb pontok:',
   'Amire most fókuszálunk:',
+  'Most ezekre fogok fókuszálni:',
   'Az aktuális lépések:',
   'Röviden a teendők:',
   'Ezekről lesz szó:',
+  'Az alábbi tételeket összegezném:',
+  'Összegzésként:',
+  'Összegzés:',
 ];
 
 export interface RecipientInfo { count: number; name?: string | null; }

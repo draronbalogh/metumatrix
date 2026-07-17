@@ -18,7 +18,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: 'Dr. Balogh Áron – MD tantervi mátrix',
-  description: 'METU Média Design — a tantervi hierarchia (BA/MA, több évfolyam) interaktív, szerkeszthető node-térképen és kártya-katalógusban. Készítette: Dr. Balogh Áron.',
+  description: 'METU Média Design - a tantervi hierarchia (BA/MA, több évfolyam) interaktív, szerkeszthető node-térképen és kártya-katalógusban. Készítette: Dr. Balogh Áron.',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

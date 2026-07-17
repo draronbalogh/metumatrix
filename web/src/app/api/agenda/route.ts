@@ -4,7 +4,7 @@ import path from 'path';
 import { canWrite, writeDenied } from '@/lib/editauth';
 import { Agenda, AgendaSource, normalizeAgenda } from '@/data/agenda';
 
-// A feladatok + események egyetlen forrása — a tanterv-fájl mintájára.
+// A feladatok + események egyetlen forrása - a tanterv-fájl mintájára.
 // Hiányzó fájlnál az app a beépített DEFAULT_AGENDA-ra esik vissza, az első mentés hozza létre.
 const FILE = process.env.AGENDA_FILE
   || 'C:/node/metu_tanterv/grid/media-design-agenda.json';
@@ -18,7 +18,7 @@ const readDisk = async (): Promise<Doc | null> => {
 };
 
 // A source felhasználó-tulajdonú (állapotgép-) mezői: bot-írásnál a lemezen lévő
-// érték él tovább, kivéve a megengedett bot-átmeneteket — ébresztés/újranyitás
+// érték él tovább, kivéve a megengedett bot-átmeneteket - ébresztés/újranyitás
 // → 'pending', saját kimenő válasz észlelése → 'replied', de csak 'pending'-ből.
 const USER_SOURCE_FIELDS = ['status', 'replied', 'repliedAt', 'snoozeUntil', 'followUpAt', 'returned'] as const;
 const guardSource = (inc: AgendaSource | null | undefined, disk: AgendaSource | null | undefined): AgendaSource | null => {
@@ -75,7 +75,7 @@ const guardBotWrite = (inc: Doc, disk: Doc | null): Doc => {
 };
 
 // GET: a fájl minden olvasási határon normalizálva megy ki (migráció + ébresztések),
-// a rev-vel együtt — az írók ezt a rev-et küldik vissza a POST-ban.
+// a rev-vel együtt - az írók ezt a rev-et küldik vissza a POST-ban.
 export async function GET() {
   const disk = await readDisk();
   if (!disk) return NextResponse.json({ ok: false, data: null });
@@ -93,7 +93,7 @@ export async function POST(req: Request) {
     const disk = await readDisk();
     const diskRev = disk && typeof disk.rev === 'number' ? disk.rev : 0;
     // optimista ütközésvédelem: aki rev-et küld, csak az általa látott verzióra
-    // írhat — eltérésnél 409, az írónak frissen kell olvasnia és újra fésülnie.
+    // írhat - eltérésnél 409, az írónak frissen kell olvasnia és újra fésülnie.
     // rev nélküli POST (visszaállítás, régi szkript) továbbra is átmegy.
     const baseRev = typeof body.rev === 'number' ? body.rev : null;
     if (baseRev !== null && disk && baseRev !== diskRev) {

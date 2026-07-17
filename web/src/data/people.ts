@@ -1,4 +1,4 @@
-// Személyi törzs — FONTOS: a tanárnevek egyetlen forrása a TANTERV (a kurzusok oktató-mezői),
+// Személyi törzs - FONTOS: a tanárnevek egyetlen forrása a TANTERV (a kurzusok oktató-mezői),
 // itt tanároknak csak az elérhetőségeit tároljuk név szerint. A hallgatói (demonstrátor) lista
 // viszont itt él, ez az egyetlen forrása. Email + telefon: a későbbi email-értesítéshez.
 // A név ÍRÁSMÓDJÁNAK (titulusok, pl. "Dr.") forrása viszont a Névjegyzék: buildCanonicalNames.
@@ -9,13 +9,13 @@ export interface Person {
   name: string;
   email: string | null;
   phone: string | null;
-  title?: string | null; // titulus / beosztás — MINDEN listán egységesen
-  field?: string | null; // terület, ahol dolgozik / amiért kereshető — MINDEN listán egységesen
+  title?: string | null; // titulus / beosztás - MINDEN listán egységesen
+  field?: string | null; // terület, ahol dolgozik / amiért kereshető - MINDEN listán egységesen
   status?: string | null; // tanárnál: főállású / óraadó / volt-külsős · hallgatónál: szervező / nagykövet / képviselő / demonstrátor
-  cohort?: string | null; // hallgatónál/alumninál az évfolyam (pl. 'BA 2024', 'MA 2025') — szűrőkhöz
+  cohort?: string | null; // hallgatónál/alumninál az évfolyam (pl. 'BA 2024', 'MA 2025') - szűrőkhöz
 }
 
-// Választható státusz-címkék — ezekből lesznek a levél-címzett gyorskörök.
+// Választható státusz-címkék - ezekből lesznek a levél-címzett gyorskörök.
 export const TEACHER_STATUSES = ['főállású', 'óraadó', 'volt/külsős'] as const;
 export const STUDENT_STATUSES = ['szervező', 'nagykövet', 'képviselő', 'demonstrátor'] as const;
 
@@ -23,10 +23,10 @@ export const STUDENT_STATUSES = ['szervező', 'nagykövet', 'képviselő', 'demo
 // tartalékként a címkézetlen, a tantervben már nem szereplő kontaktok (ne tűnjön el senki).
 export const formerTeacherNames = (teacherNames: string[], db: PeopleDB): string[] =>
   db.teachers.filter((p) => p.status === 'volt/külsős' || (!p.status && !teacherNames.includes(p.name))).map((p) => p.name);
-// Oktatók adott státusszal — a Névjegyzék-adatbázis címkéje az EGYETLEN forrás.
+// Oktatók adott státusszal - a Névjegyzék-adatbázis címkéje az EGYETLEN forrás.
 export const teacherStatusNames = (db: PeopleDB, status: string): string[] =>
   db.teachers.filter((p) => p.status === status).map((p) => p.name);
-// A hallgatói évfolyamok (cohortok) az adatbázisból, rendezve — szűrőkhöz és körökhöz.
+// A hallgatói évfolyamok (cohortok) az adatbázisból, rendezve - szűrőkhöz és körökhöz.
 export const studentCohorts = (db: PeopleDB): string[] =>
   [...new Set(db.students.map((p) => p.cohort).filter((c): c is string => !!c))].sort();
 export const cohortNames = (db: PeopleDB, cohort: string): string[] =>
@@ -38,14 +38,14 @@ export const studentStatusNames = (db: PeopleDB, status: string): string[] =>
 export const studentOrganizerNames = (db: PeopleDB): string[] =>
   db.students.filter((p) => p.status && p.status !== 'demonstrátor').map((p) => p.name);
 
-// Egyedi email-csoport (pl. „Kiállítás-csapat") — a tagok az állandó listából (tanár/hallgató nevek).
+// Egyedi email-csoport (pl. „Kiállítás-csapat") - a tagok az állandó listából (tanár/hallgató nevek).
 export interface PeopleGroup {
   name: string;
   members: string[];
 }
 
 // Feladó-szabály (Posta-szűrő, a Hey „Screener" mintájára): egy feladóról EGYSZER
-// döntünk — 'reply': válaszigényes (teljes válasz-csomag) · 'fyi': csak tájékoztat
+// döntünk - 'reply': válaszigényes (teljes válasz-csomag) · 'fyi': csak tájékoztat
 // (nem kerül a Postába) · 'ignore': mellőzendő (a bot át is ugorja a leveleit).
 export type SenderRule = 'reply' | 'fyi' | 'ignore';
 export const SENDER_RULE_LABEL: Record<SenderRule, string> = {
@@ -54,15 +54,15 @@ export const SENDER_RULE_LABEL: Record<SenderRule, string> = {
 
 export interface PeopleDB {
   teachers: Person[]; // csak elérhetőség-kiegészítés a tantervi nevekhez
-  students: Person[]; // hallgatók / demonstrátorok — itt az egyetlen listájuk
+  students: Person[]; // hallgatók / demonstrátorok - itt az egyetlen listájuk
   institution: Person[]; // intézményi kapcsolatok: marketing, PR, továbbképzési központ, más tanszékek
   alumni: Person[]; // METU-t végzett volt hallgatók (titulus + terület)
-  opponents: Person[]; // opponensek és diploma-opponensek — külön címzett-kör
+  opponents: Person[]; // opponensek és diploma-opponensek - külön címzett-kör
   market: Person[]; // piaci / ipari kapcsolatok (titulus + terület)
   groups: PeopleGroup[]; // egyedi email-csoportok
-  signature: string; // hivatalos aláírás-blokk — a levélben KI-BE kapcsolható
-  signatureLinks: string; // szakos linkek — MINDIG a levél legaljára kerül, elválasztó vonallal
-  senderRules: Record<string, SenderRule>; // feladó-szabályok email (kisbetűs) szerint — a bot is olvassa
+  signature: string; // hivatalos aláírás-blokk - a levélben KI-BE kapcsolható
+  signatureLinks: string; // szakos linkek - MINDIG a levél legaljára kerül, elválasztó vonallal
+  senderRules: Record<string, SenderRule>; // feladó-szabályok email (kisbetűs) szerint - a bot is olvassa
 }
 
 // Hivatalos aláírás (a levélben ki-be kapcsolható); a Névjegyzékben bármikor átírható.
@@ -77,7 +77,7 @@ abalogh@metropolitan.hu
 Infopark D, 1117 Budapest, Neumann János utca 2.
 Budapesti Metropolitan Egyetem | metropolitan.hu`;
 
-// Szakos linkek — minden levél legaljára kerülnek, az elválasztó vonal után.
+// Szakos linkek - minden levél legaljára kerülnek, az elválasztó vonal után.
 export const DEFAULT_SIGNATURE_LINKS = `Web: https://www.metumediadesign.hu
 Facebook oktatói csoport: https://www.facebook.com/groups/metumediadesign
 Facebook: https://www.facebook.com/metumediadesign
@@ -113,7 +113,7 @@ export const normalizePhone = (phone: string | null): string | null => {
   if (t.startsWith('0036')) return '+36' + t.slice(4);
   if (t.startsWith('06')) return '+36' + t.slice(2);
   if (/^36\d{8,}$/.test(t)) return '+' + t;
-  return t; // külföldi vagy egyéb formátum — hagyjuk békén
+  return t; // külföldi vagy egyéb formátum - hagyjuk békén
 };
 
 const normPerson = (x: Person): Person => ({ name: x.name, email: x.email ?? null, phone: normalizePhone(x.phone ?? null), title: x.title ?? null, field: x.field ?? null, status: x.status ?? null, cohort: x.cohort ?? null });
@@ -140,7 +140,7 @@ export const normalizePeople = (p: Partial<PeopleDB>): PeopleDB => {
   };
 };
 
-// A név KANONIKUS (Névjegyzék-beli) írásmódja titulussal — pl. "Balogh Áron" (Excel-forma)
+// A név KANONIKUS (Névjegyzék-beli) írásmódja titulussal - pl. "Balogh Áron" (Excel-forma)
 // → "Dr. Balogh Áron". Az illesztés dr./habil- és ékezet-toleráns; a Névjegyzékben nem
 // szereplő név változatlanul jön vissza. Az ADAT nem változik, csak a megjelenítés.
 export const buildCanonicalNames = (db: PeopleDB): Map<string, string> => {

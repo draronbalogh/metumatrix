@@ -6,12 +6,12 @@ import GrowArea from './GrowArea';
 import PageHead from './PageHead';
 
 interface Props {
-  teacherNames: string[]; // a tantervből — itt nem szerkeszthető, csak elérhetőség adható hozzá
+  teacherNames: string[]; // a tantervből - itt nem szerkeszthető, csak elérhetőség adható hozzá
   db: PeopleDB;
   onSave: (db: PeopleDB) => void;
   onClose: () => void;
-  inline?: boolean; // nézetként (a főmenü alatt) fut, nem modálként — mobilon nem takarja el a menüt
-  externalQuery?: string; // a felső, globális keresőmező értéke — ilyenkor nincs saját kereső
+  inline?: boolean; // nézetként (a főmenü alatt) fut, nem modálként - mobilon nem takarja el a menüt
+  externalQuery?: string; // a felső, globális keresőmező értéke - ilyenkor nincs saját kereső
 }
 
 // Egységes rubrikák MINDEN listán: név, email, telefon, titulus, terület (+ státusz a tanár/hallgató listán)
@@ -34,7 +34,7 @@ const H_STAT: Partial<Record<Sec, string>> = { Hsz: 'szervező', Hn: 'nagykövet
 function ContactSection({ label, note, rows, setRows, q }: { label: string; note: string; rows: Row[]; setRows: (f: (r: Row[]) => Row[]) => void; q: string }) {
   const set = (i: number, k: keyof Row, v: string) => setRows((rs) => rs.map((r, ix) => (ix === i ? { ...r, [k]: v } : r)));
   const visible = rows.map((r, i) => ({ r, i })).filter(({ r }) => rowMatch(r, q));
-  // kereséskor a találat nélküli szekció teljesen eltűnik — így a találat azonnal a képernyőn van
+  // kereséskor a találat nélküli szekció teljesen eltűnik - így a találat azonnal a képernyőn van
   if (q.trim() && visible.length === 0) return null;
   return (
     <>
@@ -106,7 +106,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
 
   const save = () => {
     onSave({
-      // tanárból azt tároljuk, akihez bármilyen adat tartozik — a névsor forrása úgyis a tanterv
+      // tanárból azt tároljuk, akihez bármilyen adat tartozik - a névsor forrása úgyis a tanterv
       teachers: teachers.filter(hasData).map(toPerson),
       students: students.filter((r) => r.name.trim()).map(toPerson),
       institution: institution.filter((r) => r.name.trim()).map(toPerson),
@@ -116,7 +116,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
       groups: groups.filter((g) => g.name.trim()).map((g) => ({ name: g.name.trim(), members: g.members })),
       signature,
       signatureLinks,
-      senderRules: db.senderRules, // a Posta feladó-szabályai — a szerkesztő nem kezeli, de nem is veszítheti el
+      senderRules: db.senderRules, // a Posta feladó-szabályai - a szerkesztő nem kezeli, de nem is veszítheti el
     });
   };
 
@@ -149,7 +149,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
                   onClick={() => setPsec((cur) => (cur === v ? '' : v))}>{l}</button>
               ))}
             </div>
-            {/* az évfolyam-szűrő KÜLÖN, második sorban — nem torzítja a megszokott chipsort */}
+            {/* az évfolyam-szűrő KÜLÖN, második sorban - nem torzítja a megszokott chipsort */}
             {studentCohorts(db).length > 0 && H_SECS.includes(psec) && (
               <select className="tp-grpsel pm-cohsel" value={hcoh} onChange={(e) => setHcoh(e.target.value)} title="Hallgatói évfolyam-szűrő">
                 <option value="">Minden évfolyam</option>
@@ -160,17 +160,17 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
           {show('T') && (!searching || tVisible.length > 0) && (
             <>
               <div className="pm-sec"><span className="pb t">T</span> Aktuális oktatók · {teacherNames.length} <span className="pm-sec-extra">+ volt / külsős kontakt · {teachers.length - teacherNames.length}</span></div>
-              {!searching && <div className="pm-note">A tanárnévsor forrása a tanterv — itt az elérhetőség és a státusz (főállású / óraadó) adható meg; a státusz alapján a levélírásban külön körök választhatók.</div>}
+              {!searching && <div className="pm-note">A tanárnévsor forrása a tanterv - itt az elérhetőség és a státusz (főállású / óraadó) adható meg; a státusz alapján a levélírásban külön körök választhatók.</div>}
               <div className="pm-rows">
                 {tVisible.length > 0 && <div className="pm-row pm-row6 pm-head"><span>Név</span><span>Email</span><span>Telefon</span><span>Titulus</span><span>Terület</span><span>Státusz</span><span /></div>}
                 {tVisible.map(({ r, i }) => (
                   <div className="pm-row pm-row6" key={`t-${r.name}`}>
-                    <span className="pm-name">{r.name}{!teacherNames.includes(r.name) && <em className="pm-former" title="A tantervben már nem szerepel — volt vagy külsős oktató-kontakt"> volt/külsős</em>}</span>
+                    <span className="pm-name">{r.name}{!teacherNames.includes(r.name) && <em className="pm-former" title="A tantervben már nem szerepel - volt vagy külsős oktató-kontakt"> volt/külsős</em>}</span>
                     <input type="email" value={r.email} placeholder="email@metropolitan.hu" onChange={(e) => setT(i, 'email', e.target.value)} />
                     <input type="tel" value={r.phone} placeholder="+36…" onChange={(e) => setT(i, 'phone', e.target.value)} />
                     <input value={r.title} placeholder="titulus" onChange={(e) => setT(i, 'title', e.target.value)} />
                     <input value={r.field} placeholder="terület" onChange={(e) => setT(i, 'field', e.target.value)} />
-                    <select value={r.status} onChange={(e) => setT(i, 'status', e.target.value)} title="Főállású vagy óraadó — a levélírás külön köreihez">
+                    <select value={r.status} onChange={(e) => setT(i, 'status', e.target.value)} title="Főállású vagy óraadó - a levélírás külön köreihez">
                       <option value="">státusz…</option>
                       {TEACHER_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
@@ -183,7 +183,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
           {show('H') && (!searching || sVisible.length > 0) && (
             <>
               <div className="pm-sec"><span className="pb h">H</span> Aktuális hallgatók · {students.length}</div>
-              {!searching && <div className="pm-note">A státusz jelöli, ki vesz részt a szervezésben (szervező / nagykövet / képviselő / demonstrátor) — ők a levélírásban „Hallgatói szervezők" körként egyben címezhetők. A végzettek az Alumni listában vannak.</div>}
+              {!searching && <div className="pm-note">A státusz jelöli, ki vesz részt a szervezésben (szervező / nagykövet / képviselő / demonstrátor) - ők a levélírásban „Hallgatói szervezők" körként egyben címezhetők. A végzettek az Alumni listában vannak.</div>}
               <div className="pm-rows">
                 {sVisible.length > 0 && <div className="pm-row pm-row6 pm-head"><span>Név</span><span>Email</span><span>Telefon</span><span>Titulus</span><span>Terület</span><span>Státusz</span><span /></div>}
                 {sVisible.map(({ r, i }) => (
@@ -193,7 +193,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
                     <input type="tel" value={r.phone} placeholder="+36…" onChange={(e) => setS(i, 'phone', e.target.value)} />
                     <input value={r.title} placeholder="titulus / szerep" onChange={(e) => setS(i, 'title', e.target.value)} />
                     <input value={r.field} placeholder="évfolyam / terület" onChange={(e) => setS(i, 'field', e.target.value)} />
-                    <select value={r.status} onChange={(e) => setS(i, 'status', e.target.value)} title="Szervezői szerep — a Hallgatói szervezők levél-körhöz">
+                    <select value={r.status} onChange={(e) => setS(i, 'status', e.target.value)} title="Szervezői szerep - a Hallgatói szervezők levél-körhöz">
                       <option value="">státusz…</option>
                       {STUDENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
@@ -205,14 +205,14 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
               </div>
             </>
           )}
-          {show('I') && <ContactSection q={pq} label="🏛 Intézményi kapcsolatok" note="Marketing, PR, továbbképzési központ, más tanszékek elérhetőségei — címzettként mindenhol választhatók." rows={institution} setRows={setInstitution} />}
+          {show('I') && <ContactSection q={pq} label="🏛 Intézményi kapcsolatok" note="Marketing, PR, továbbképzési központ, más tanszékek elérhetőségei - címzettként mindenhol választhatók." rows={institution} setRows={setInstitution} />}
           {show('A') && <ContactSection q={pq} label="🎓 Alumni" note="METU-t végzett volt hallgatók: titulus és terület, ahol dolgoznak. A volt oktatók kontaktja a Tanárok lista végén marad (volt/külsős jelöléssel)." rows={alumni} setRows={setAlumni} />}
-          {show('O') && <ContactSection q={pq} label="⚖ Opponensek / diploma-opponensek" note="A záróvizsgák és diplomavédések bírálói — a levélírásban a Minden opponens körrel egyben címezhetők." rows={opponents} setRows={setOpponents} />}
+          {show('O') && <ContactSection q={pq} label="⚖ Opponensek / diploma-opponensek" note="A záróvizsgák és diplomavédések bírálói - a levélírásban a Minden opponens körrel egyben címezhetők." rows={opponents} setRows={setOpponents} />}
           {show('P') && <ContactSection q={pq} label="🤝 Piaci kapcsolatok" note="Ipari, céges és egyéb külső partnerek." rows={market} setRows={setMarket} />}
           {show('G') && (!searching || psec === 'G') && (
             <>
               <div className="pm-sec">✉ Egyedi csoportok · {groups.length}</div>
-              <div className="pm-note">Elnevezett email-csoportok (pl. „Kiállítás-csapat") — az Értesítés ablakban egy gombbal hozzáadhatók a címzettekhez.</div>
+              <div className="pm-note">Elnevezett email-csoportok (pl. „Kiállítás-csapat") - az Értesítés ablakban egy gombbal hozzáadhatók a címzettekhez.</div>
               <div className="pm-groups">
                 {groups.map((g, i) => (
                   <div className="pm-group" key={i}>
@@ -235,11 +235,11 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
           {searching && !anyHit && <p className="tp-empty">Nincs találat a keresésre.</p>}
           {psec === '' && !searching && (
             <>
-              <div className="pm-sec">✒ Hivatalos aláírás — a levélben ki-be kapcsolható</div>
+              <div className="pm-sec">✒ Hivatalos aláírás - a levélben ki-be kapcsolható</div>
               <div className="field full">
                 <GrowArea minRows={6} value={signature} onChange={(e) => setSignature(e.target.value)} />
               </div>
-              <div className="pm-sec">🔗 Szakos linkek — MINDIG a levél legalján, elválasztó vonal után</div>
+              <div className="pm-sec">🔗 Szakos linkek - MINDIG a levél legalján, elválasztó vonal után</div>
               <div className="field full">
                 <GrowArea minRows={5} value={signatureLinks} onChange={(e) => setSignatureLinks(e.target.value)} />
               </div>
@@ -247,7 +247,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
           )}
         </div>
         <div className="mfoot">
-          {inline && savedMsg && <span className="pm-saved">✓ Mentve — a levélírás körei azonnal frissültek</span>}
+          {inline && savedMsg && <span className="pm-saved">✓ Mentve - a levélírás körei azonnal frissültek</span>}
           <span className="sp" />
           {!inline && <button className="btn" onClick={onClose}>Mégsem</button>}
           <button className="btn btn--ink" onClick={() => { save(); if (inline) { setSavedMsg(true); setTimeout(() => setSavedMsg(false), 4000); } }}>💾 Mentés</button>
@@ -267,7 +267,7 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
   return (
     <div className="ovl" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal modal--wide">
-        <h3>☎ Névjegyzék — elérhetőségek</h3>
+        <h3>☎ Névjegyzék - elérhetőségek</h3>
         {content}
       </div>
     </div>

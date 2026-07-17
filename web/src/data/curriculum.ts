@@ -11,7 +11,7 @@ export interface Course {
   active: number | null;
   groups: string | null;
   instructors: string | null;
-  demonstrators?: string[]; // hallgatói demonstrátorok — a hallgatói adatbázisból (people.json) választva
+  demonstrators?: string[]; // hallgatói demonstrátorok - a hallgatói adatbázisból (people.json) választva
   institute: string;
   note: string | null;
   description: string | null;
@@ -27,13 +27,13 @@ export interface Course {
   group: number | null;
 }
 
-// Fix kategória-taxonómia — az adatban CSAK ezek szerepelhetnek (szűrő + kártya-chipek erre épülnek)
+// Fix kategória-taxonómia - az adatban CSAK ezek szerepelhetnek (szűrő + kártya-chipek erre épülnek)
 export const CATEGORIES = [
   '2d', '3d', 'animáció', 'film/videó', 'fotó', 'hang', 'grafika/tipográfia', 'ux/web/fejlesztés',
   'játék', 'installáció', 'ai', 'elmélet', 'diploma/portfólió', 'projekt',
 ] as const;
 
-// A korábbi külön ux/web/fejlesztés kategóriák összevonva — a mentett adatban (fájl, localStorage,
+// A korábbi külön ux/web/fejlesztés kategóriák összevonva - a mentett adatban (fájl, localStorage,
 // régi exportok) még a régi nevek szerepelhetnek, ezért minden olvasás ezen a leképezésen megy át.
 const CAT_MERGE: Record<string, string> = {
   'ux/interakció': 'ux/web/fejlesztés',
@@ -194,7 +194,7 @@ export const DEFAULT_DATA: Curriculum = {
             "elmélet"
           ],
           "group": null,
-          "short": "Kommunikáció alapfogalmai, elméletei és modelljei — társadalomtudományi alapozó előadás, kollokviummal."
+          "short": "Kommunikáció alapfogalmai, elméletei és modelljei - társadalomtudományi alapozó előadás, kollokviummal."
         },
         {
           "type": "Kötelező",
@@ -299,7 +299,7 @@ export const DEFAULT_DATA: Curriculum = {
             "projekt"
           ],
           "group": null,
-          "short": "Workshopok, mesterkurzusok, meghívott előadók, kiállításlátogatás és közös projektek — portfólióépítés."
+          "short": "Workshopok, mesterkurzusok, meghívott előadók, kiállításlátogatás és közös projektek - portfólióépítés."
         },
         {
           "type": "Kötelező",
@@ -1087,7 +1087,7 @@ export const DEFAULT_DATA: Curriculum = {
             "elmélet"
           ],
           "group": null,
-          "short": "A kép fogalma, működése és szerepe a vizuális kultúrában — képelméleti alapok a design gyakorlathoz."
+          "short": "A kép fogalma, működése és szerepe a vizuális kultúrában - képelméleti alapok a design gyakorlathoz."
         },
         {
           "type": "Kötelező és szabváll.",
@@ -1475,7 +1475,7 @@ export const DEFAULT_DATA: Curriculum = {
             "elmélet"
           ],
           "group": null,
-          "short": "Kreatív ipari alapok: vállalkozás, menedzsment, szerzői jog — a tervezői munka gazdasági és jogi keretei."
+          "short": "Kreatív ipari alapok: vállalkozás, menedzsment, szerzői jog - a tervezői munka gazdasági és jogi keretei."
         },
         {
           "type": "Kötelező",
@@ -3023,7 +3023,7 @@ export const DEFAULT_DATA: Curriculum = {
             "elmélet"
           ],
           "group": null,
-          "short": "Kommunikáció alapfogalmai, modelljei és folyamatai — közös elméleti alapozó előadás, kollokviummal."
+          "short": "Kommunikáció alapfogalmai, modelljei és folyamatai - közös elméleti alapozó előadás, kollokviummal."
         },
         {
           "type": "Kötelező",
@@ -3822,7 +3822,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Kollár Dávid",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus a modern digitális technológiák pszichológiai hatásainak komplex kognitív tudományos vizsgálatára összpontosít. A hallgatók átfogó képet kapnak arról, hogy a kurrens technológiák — okoseszközök, közösségi média, virtuális valóság, videójátékok, mesterséges intelligencia — miként formálják az emberi viselkedést, érzelmeket és kognitív folyamatokat. A tárgy emellett bemutatja azokat a fogalmakat és értelmezési kereteket, amelyek az egyének és közösségek digitális technológiákhoz fűződő viszonyát meghatározzák.",
+          "description": "A kurzus a modern digitális technológiák pszichológiai hatásainak komplex kognitív tudományos vizsgálatára összpontosít. A hallgatók átfogó képet kapnak arról, hogy a kurrens technológiák - okoseszközök, közösségi média, virtuális valóság, videójátékok, mesterséges intelligencia - miként formálják az emberi viselkedést, érzelmeket és kognitív folyamatokat. A tárgy emellett bemutatja azokat a fogalmakat és értelmezési kereteket, amelyek az egyének és közösségek digitális technológiákhoz fűződő viszonyát meghatározzák.",
           "felelos": "Forgács Kristóf",
           "prerequisite": "-",
           "requirement": "kollokvium",
@@ -3993,7 +3993,7 @@ export const DEFAULT_DATA: Curriculum = {
             "animáció"
           ],
           "group": null,
-          "short": "Nuke compositing: roto, tracking, keying — vagy játék-asset: Blender modell, Substance PBR, Unreal export."
+          "short": "Nuke compositing: roto, tracking, keying - vagy játék-asset: Blender modell, Substance PBR, Unreal export."
         },
         {
           "type": "Kötelező",
@@ -4538,7 +4538,7 @@ export const DEFAULT_DATA: Curriculum = {
             "projekt"
           ],
           "group": null,
-          "short": "Videojáték-tervezés csoportban: játékötlet fejlesztése — narratíva, tér- és karaktertervezés, mechanikák."
+          "short": "Videojáték-tervezés csoportban: játékötlet fejlesztése - narratíva, tér- és karaktertervezés, mechanikák."
         },
         {
           "type": "Kötelező",
@@ -5715,7 +5715,7 @@ export const DEFAULT_DATA: Curriculum = {
             "animáció"
           ],
           "group": null,
-          "short": "3D modellezés Blenderben: poligonszerkesztés, sculpting, retopológia, UV, render — féléves karaktermodell."
+          "short": "3D modellezés Blenderben: poligonszerkesztés, sculpting, retopológia, UV, render - féléves karaktermodell."
         },
         {
           "type": "Kötelező",
@@ -6261,7 +6261,7 @@ export const DEFAULT_DATA: Curriculum = {
             "portfólió",
             "ba"
           ],
-          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni workshopok, előadások és meghívott előadók által vezetett projektek formájában, a MyBrand szemlélet alappilléreire — szakterületek találkozására, a kreatív ipari szemlélet fejlesztésére és a portfólióépítésre — építve.",
+          "cel": "A tárgy a mintatantervben foglalt szakmai ismereteken túlmutató tudást hivatott átadni workshopok, előadások és meghívott előadók által vezetett projektek formájában, a MyBrand szemlélet alappilléreire - szakterületek találkozására, a kreatív ipari szemlélet fejlesztésére és a portfólióépítésre - építve.",
           "pdfUrl": "/tematikak/11834.pdf",
           "category": [
             "projekt"
@@ -6368,7 +6368,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Berkes Bálint, Cseszneg Gyöngyi",
           "institute": "AMD",
           "note": null,
-          "description": "Kétmodulos gyakorlati labor: az A modul az Adobe Animate-re épülő 2D animációval és karaktertervezéssel foglalkozik — adott koncepció vizuális megjelenítése, hangulatok megfogalmazása, egyéni karakter kidolgozása, szabadkézi és vektoros digitális rajzolás, valamint híres portrék animált mozgó montázsa Photoshop és After Effects segítségével. A B modul a 3D projection mapping világába vezet be a Resolume Arena szoftverrel: fényalapú installációk tervezése és kivitelezése, jelforrások, NDI, midi/dmx jelek és hangreaktív installáció készítése egyéni és csoportos feladatokban.",
+          "description": "Kétmodulos gyakorlati labor: az A modul az Adobe Animate-re épülő 2D animációval és karaktertervezéssel foglalkozik - adott koncepció vizuális megjelenítése, hangulatok megfogalmazása, egyéni karakter kidolgozása, szabadkézi és vektoros digitális rajzolás, valamint híres portrék animált mozgó montázsa Photoshop és After Effects segítségével. A B modul a 3D projection mapping világába vezet be a Resolume Arena szoftverrel: fényalapú installációk tervezése és kivitelezése, jelforrások, NDI, midi/dmx jelek és hangreaktív installáció készítése egyéni és csoportos feladatokban.",
           "felelos": "Szendeff-Sztojánovits Andrea",
           "prerequisite": "Média labor 2.",
           "requirement": "gyakorlati jegy",
@@ -6778,7 +6778,7 @@ export const DEFAULT_DATA: Curriculum = {
             "3d"
           ],
           "group": null,
-          "short": "Blender-alapú 3D: modellezés, textúrázás, renderelés — város, ékszer, ételvizualizáció, low poly AR/VR."
+          "short": "Blender-alapú 3D: modellezés, textúrázás, renderelés - város, ékszer, ételvizualizáció, low poly AR/VR."
         },
         {
           "type": "Kötelező",
@@ -6933,7 +6933,7 @@ export const DEFAULT_DATA: Curriculum = {
             "projekt"
           ],
           "group": null,
-          "short": "Meghívott előadók, mesterkurzusok, workshopok és kiállításlátogatás — portfólióépítés a kreatív iparhoz."
+          "short": "Meghívott előadók, mesterkurzusok, workshopok és kiállításlátogatás - portfólióépítés a kreatív iparhoz."
         },
         {
           "type": "Kötelező",
@@ -7554,7 +7554,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Bogdán Zoltán, Palotás Kincső",
           "institute": "AMD",
           "note": null,
-          "description": "A kurzus két modulban mélyíti a digitális animációs tudást: a 3D modulban a hallgatók a Maya haladó szimulációs eszközeivel (nCloth ruhaszimuláció, tűz- és Bifrost folyadékszimuláció) készítenek egy komplexebb 3D animációt, a shadeléstől a renderelésig. A 2D modulban a digitális animációs utómunka folyamatait gyakorolják — maszkolás, karakteranimálás, puppet tool, effektek, kompozitálás, expression-ök —, a féléves beadandó egy 1-3 perces infografikai animáció.",
+          "description": "A kurzus két modulban mélyíti a digitális animációs tudást: a 3D modulban a hallgatók a Maya haladó szimulációs eszközeivel (nCloth ruhaszimuláció, tűz- és Bifrost folyadékszimuláció) készítenek egy komplexebb 3D animációt, a shadeléstől a renderelésig. A 2D modulban a digitális animációs utómunka folyamatait gyakorolják - maszkolás, karakteranimálás, puppet tool, effektek, kompozitálás, expression-ök -, a féléves beadandó egy 1-3 perces infografikai animáció.",
           "felelos": "Csáki László",
           "prerequisite": "Digitális tervezés 2.",
           "requirement": "gyakorlati jegy",
@@ -7595,7 +7595,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": "Berkes Bálint, Pápai Bence",
           "institute": "AMD",
           "note": null,
-          "description": "Kétmodulos gyakorlati tárgy: az A modulban a hallgatók a fényt mint művészi eszközt tanulmányozzák — projection mapping, DMX-vezérelt lámpák, robotlámpák és valós idejű Unreal Engine-es megoldások segítségével saját fényművészeti installációt hoznak létre. A B modul a game design alapjaira fókuszál: játékmechanikák, GDD-írás, karakter- és level design, UX/UI, prototípuskészítés és iteráció, a félév végén saját játékfejlesztési asset dokumentált leadásával.",
+          "description": "Kétmodulos gyakorlati tárgy: az A modulban a hallgatók a fényt mint művészi eszközt tanulmányozzák - projection mapping, DMX-vezérelt lámpák, robotlámpák és valós idejű Unreal Engine-es megoldások segítségével saját fényművészeti installációt hoznak létre. A B modul a game design alapjaira fókuszál: játékmechanikák, GDD-írás, karakter- és level design, UX/UI, prototípuskészítés és iteráció, a félév végén saját játékfejlesztési asset dokumentált leadásával.",
           "felelos": "Szacsvai Pál",
           "prerequisite": "Médiatervezés 2.",
           "requirement": "gyakorlati jegy",
@@ -7806,7 +7806,7 @@ export const DEFAULT_DATA: Curriculum = {
             "elmélet"
           ],
           "group": null,
-          "short": "A kommunikáció alapfogalmai, modelljei és folyamatai — elméleti alap a további média design tárgyakhoz."
+          "short": "A kommunikáció alapfogalmai, modelljei és folyamatai - elméleti alap a további média design tárgyakhoz."
         },
         {
           "type": "Kötelező",
@@ -7957,7 +7957,7 @@ export const DEFAULT_DATA: Curriculum = {
             "projekt"
           ],
           "group": null,
-          "short": "Workshopok, mesterkurzusok, meghívott előadók, kiállításlátogatás — szakmán túli tudás, portfólióépítés."
+          "short": "Workshopok, mesterkurzusok, meghívott előadók, kiállításlátogatás - szakmán túli tudás, portfólióépítés."
         },
         {
           "type": "Kötelező",
@@ -8051,7 +8051,7 @@ export const DEFAULT_DATA: Curriculum = {
           "institute": "AMD",
           "note": null,
           "description": "A művészettörténet-sorozat második féléve, amely a művészet történetét társadalomtudományi kontextusban tárgyalja. A kurzus a korszakok, irányzatok és alkotók megismerésén túl a művek társadalmi, kulturális és gazdasági beágyazottságának megértését célozza. Az elméleti ismeretek a hallgatók tervezői és alkotói munkájának történeti megalapozását szolgálják.",
-          "felelos": "—Oktató: —Összegzés: —Cél: —Alkalmazott szoftver: —Kérdés-kérés: —Előfeltétel: —Előadás: 2 óraGyakorlat: 0 óraKövetelmény: kKredit: 4Intézet: ELM",
+          "felelos": "-Oktató: -Összegzés: -Cél: -Alkalmazott szoftver: -Kérdés-kérés: -Előfeltétel: -Előadás: 2 óraGyakorlat: 0 óraKövetelmény: kKredit: 4Intézet: ELM",
           "prerequisite": null,
           "requirement": "kollokvium",
           "software": [],
@@ -8182,7 +8182,7 @@ export const DEFAULT_DATA: Curriculum = {
             "film/videó"
           ],
           "group": null,
-          "short": "Expozíció, világítás, plánok; Lightroom-képfeldolgozás, vágás, színkezelés — fotósorozat és kisfilm."
+          "short": "Expozíció, világítás, plánok; Lightroom-képfeldolgozás, vágás, színkezelés - fotósorozat és kisfilm."
         },
         {
           "type": "Kötelező",
@@ -8259,7 +8259,7 @@ export const DEFAULT_DATA: Curriculum = {
             "web"
           ],
           "group": null,
-          "short": "Design Thinking: app-prototípus Figmában — perszónák, user flow, usability-tesztelés, esettanulmány."
+          "short": "Design Thinking: app-prototípus Figmában - perszónák, user flow, usability-tesztelés, esettanulmány."
         },
         {
           "type": "Kötelező",
@@ -8878,7 +8878,7 @@ export const DEFAULT_DATA: Curriculum = {
           "instructors": null,
           "institute": "AMD",
           "note": null,
-          "description": "Az új médiumok kritikai elméletébe bevezető előadás, amely az újmédia folyamatosan megújuló szakirodalmát követi, ismerteti és értelmezi. A foglalkozásokon a hallgatók aktív reflexióira építő eszmecsere folyik, amely a technológiai innováció újabb fordulatait — a gépi kreativitást, a mesterséges intelligenciát mint másik intelligenciát, az algoritmus szerepét a művészetben — elemzi kritikailag. A kurzus elméleti alapot nyújt a médiatervezési gyakorlathoz, a művészi munkához és a szakmai prezentációkhoz.",
+          "description": "Az új médiumok kritikai elméletébe bevezető előadás, amely az újmédia folyamatosan megújuló szakirodalmát követi, ismerteti és értelmezi. A foglalkozásokon a hallgatók aktív reflexióira építő eszmecsere folyik, amely a technológiai innováció újabb fordulatait - a gépi kreativitást, a mesterséges intelligenciát mint másik intelligenciát, az algoritmus szerepét a művészetben - elemzi kritikailag. A kurzus elméleti alapot nyújt a médiatervezési gyakorlathoz, a művészi munkához és a szakmai prezentációkhoz.",
           "felelos": "Mayer Éva",
           "prerequisite": "-",
           "requirement": "A hallgató érdemjegyét az órák látogatásán kívül a vitákban való részvétel és a félév végi írásbeli vizsga határozza meg.",

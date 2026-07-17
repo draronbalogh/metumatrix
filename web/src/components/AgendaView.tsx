@@ -11,11 +11,11 @@ import PageHead from './PageHead';
 interface Props {
   agenda: Agenda;
   q: string;
-  instr: string;                       // aktív név-szűrő (oktató vagy hallgató) — üres = mindenki
+  instr: string;                       // aktív név-szűrő (oktató vagy hallgató) - üres = mindenki
   taught: string[];                    // a szűrt személy tanított tárgyai (tantervből)
   letterStats: Record<string, { n: number; drafts: number }>; // tétel-id → kapcsolt levelek száma / vázlatok
   onAdd: () => void;
-  onOpen: (id: string) => void;        // a feladat RÉSZLETEZŐJE (drawer) — innen nyílik minden más
+  onOpen: (id: string) => void;        // a feladat RÉSZLETEZŐJE (drawer) - innen nyílik minden más
   onEditIntro: () => void;
   onPerson: (name: string) => void;    // név-szűrő ki/be
   onToggleDone: (id: string) => void;  // pipa: kész / nem kész
@@ -40,7 +40,7 @@ type GroupBy = 'newest' | 'oldest' | 'priority' | 'category' | 'status';
 const UNCAT = 'Besorolatlan';
 const prioRank = (p: TaskPriority) => PRIORITY_ORDER.indexOf(p);
 // keletkezési sorrend-kulcs: az ISO createdAt (ms), enélkül a folytatólagos id sorszáma
-// (t53 → 53) — így a dátum nélküli, régi kártyák a lista végére (legrégebbinek) sorolódnak
+// (t53 → 53) - így a dátum nélküli, régi kártyák a lista végére (legrégebbinek) sorolódnak
 const createdKey = (t: AgendaTask): number => {
   if (t.createdAt) { const ms = Date.parse(t.createdAt); if (!Number.isNaN(ms)) return ms; }
   const n = parseInt((t.id.match(/\d+/) || ['0'])[0], 10);
@@ -166,14 +166,14 @@ export default function AgendaView({ agenda, q, instr, taught, letterStats, onAd
               const doneN = stepsDone(t);
               const ls = letterStats[t.id];
               return (
-              // TÖMÖR kártya: cím-sor + meta-sor — minden részlet a részletezőben (koppintásra)
+              // TÖMÖR kártya: cím-sor + meta-sor - minden részlet a részletezőben (koppintásra)
               <article key={t.id} className={`cc-card agc prio-${t.priority}${t.status === 'doing' ? ' is-doing' : ''}`} onClick={() => onOpen(t.id)}>
                 <div className="agc-top">
-                  <button className="ag-check" title="Kész — pipa" onClick={(e) => { e.stopPropagation(); onToggleDone(t.id); }} />
+                  <button className="ag-check" title="Kész - pipa" onClick={(e) => { e.stopPropagation(); onToggleDone(t.id); }} />
                   <span className="agc-title">{isNewTask(t) && <span className="ag-new">ÚJ</span>}{t.title}</span>
-                  {/* prioritás-címke CSAK a magasnál — a többi szintet a bal színsáv jelzi, a címke mindenhol csak zaj volt */}
+                  {/* prioritás-címke CSAK a magasnál - a többi szintet a bal színsáv jelzi, a címke mindenhol csak zaj volt */}
                   {t.priority === 'high' && (
-                    <button className="ag-prio high" title={`Prioritás: ${PRIORITY_LABEL[t.priority]} — kattints a váltáshoz`} onClick={(e) => { e.stopPropagation(); onCyclePriority(t.id); }}>⚑ {PRIORITY_LABEL[t.priority]}</button>
+                    <button className="ag-prio high" title={`Prioritás: ${PRIORITY_LABEL[t.priority]} - kattints a váltáshoz`} onClick={(e) => { e.stopPropagation(); onCyclePriority(t.id); }}>⚑ {PRIORITY_LABEL[t.priority]}</button>
                   )}
                 </div>
                 <div className="agc-meta">

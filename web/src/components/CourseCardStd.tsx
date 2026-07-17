@@ -20,7 +20,7 @@ export default function CourseCardStd({ course: x, onDetails, onEdit, onCategory
       <div className="cc-accent" />
       <button className="cc-edit" title="Szerkesztés" onClick={(e) => { e.stopPropagation(); onEdit(); }}>✎</button>
       <div className="cc-name">{x.name}</div>
-      <div className={`cc-okt${okt ? '' : ' none'}`}>{okt || 'oktató: —'}</div>
+      <div className={`cc-okt${okt ? '' : ' none'}`}>{okt || 'oktató: -'}</div>
       <div className="cc-meta">
         <span className={`cc-tag${ea ? ' ea' : ''}`}>{ea ? 'előadás' : 'gyakorlat'}</span>
         {x.hours != null && <span className="cc-h">{x.hours} óra</span>}

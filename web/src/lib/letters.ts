@@ -102,7 +102,7 @@ function greetPool(kinds?: PersonKind[]): string[] {
 }
 // a címzett-körhöz illő megszólítás (ismétlés-kerüléssel)
 export const greetingFor = (kinds?: PersonKind[]): string => pickAvoid(greetPool(kinds), 'greet');
-// ismert (generált) megszólítás-e a sor — a kézzel írt egyedi megszólítást nem bántjuk
+// ismert (generált) megszólítás-e a sor - a kézzel írt egyedi megszólítást nem bántjuk
 export const isKnownGreeting = (line: string): boolean => GREET_POOLS.some((p) => p.includes(line.trim()));
 
 // SZÁMSEMLEGES zárások: egyes és többes számú levélben is helyesek, ezért a
@@ -500,7 +500,7 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
     ], 'valasz.cta');
     blocks.push([ack, bodyLine].join(' '));
     // a válaszba NEM emeljük be a kártya belső jegyzetét és adat-sorait (furcsán hatna
-    // a levél írójának szánt belső kontextus) — csak a kifejezetten kért elemeket:
+    // a levél írójának szánt belső kontextus) - csak a kifejezetten kért elemeket:
     const st = (steps ?? []).map((s) => noDash(s.trim())).filter(Boolean);
     if (st.length) blocks.push(`${pickAvoid(STEP_HEAD, 'stephead')}\n${st.map((s, i) => `${i + 1}. ${s}`).join('\n')}`);
     if (meeting) blocks.push(meetingBlock(meeting));

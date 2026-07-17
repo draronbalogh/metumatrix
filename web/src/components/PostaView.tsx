@@ -24,7 +24,7 @@ interface Row {
   dueKey: number | null;     // hatásos határidő (feladat dueDate / kapcsolt esemény napja)
   dueStr: string | null;     // ugyanez kijelezve
   duePrec: boolean;          // nap-pontos-e (csak az mehet a 48 órás sávba)
-  eventDay: string | null;   // kapcsolt esemény napja — az „esemény előtt" halasztáshoz
+  eventDay: string | null;   // kapcsolt esemény napja - az „esemény előtt" halasztáshoz
 }
 
 interface Props {
@@ -90,7 +90,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     return out;
   }, [agenda, bank]);
 
-  // sáv-besorolás: egy kártya pontosan egy sávban — Visszatért > Határidős > Válaszra vár
+  // sáv-besorolás: egy kártya pontosan egy sávban - Visszatért > Határidős > Válaszra vár
   const now = Date.now();
   const lanes = useMemo(() => {
     const st = (r: Row) => r.src.status ?? 'pending';
@@ -130,7 +130,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
       setCopied(key);
       logChoice(sel, d.label);
       window.setTimeout(() => setCopied((c) => (c === key ? null : c)), 1800);
-    } catch { /* http vagy régi böngésző — a levélíróból másolható */ }
+    } catch { /* http vagy régi böngésző - a levélíróból másolható */ }
   };
 
   const nowIso = () => new Date().toISOString();
@@ -156,13 +156,13 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
           {(r.src.cc?.length ?? 0) > 0 && <span className="cc" title={`A válasz a szál minden résztvevőjének megy: ${r.src.cc?.join(', ')}`}>👥 +{r.src.cc?.length}</span>}
           {r.dueStr && <span className={`po-badge${warn ? ' warn' : ''}`} title="A levélből készült feladat határideje">⚑ {r.dueStr}</span>}
           {age !== null && age >= 2 && <span className="po-badge" title={`A feladó ${age} napja vár válaszra`}>{age} napja</span>}
-          {stale && <span className="po-badge warn" title="A tervek egy korábbi levélhez készültek — új bejövő érkezett azóta">elavult</span>}
+          {stale && <span className="po-badge warn" title="A tervek egy korábbi levélhez készültek - új bejövő érkezett azóta">elavult</span>}
           {lane === 'waiting' && r.src.followUpAt && <span className="po-badge" title="Ha eddig nem válaszolnak, a levél visszatér a Postába">követés: {fmtDayHu(r.src.followUpAt)}</span>}
           <span className="x">{isOpen ? 'bezár ▴' : lane === 'waiting' ? 'részletek ▾' : `✉ válaszok ▾`}</span>
         </button>
         {/* MIRE válaszolunk: a bot egy mondatos összefoglalója a levélről */}
         <div className="po-gist">{r.src.gist || 'A levél összefoglalója a következő szinkronnál készül el.'}
-          {/* a levélből a szinkron feladat-/eseménykártyát készített — ez nyitja meg */}
+          {/* a levélből a szinkron feladat-/eseménykártyát készített - ez nyitja meg */}
           <button type="button" className="po-card"
             title={r.sel.startsWith('t:')
               ? 'A levélből készült FELADAT megnyitása: itt vannak a lépések, a határidő és a jegyzetek'
@@ -184,11 +184,11 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                 ))}
               </div>
             )}
-            {/* kinek megy a válasz — másolás előtt ellenőrizhető */}
+            {/* kinek megy a válasz - másolás előtt ellenőrizhető */}
             <div className="po-tocc">Címzett: <strong>{r.src.name}</strong> &lt;{r.src.email}&gt;{(r.src.cc?.length ?? 0) > 0 && <> · Másolat: {r.src.cc?.join(', ')}</>}</div>
-            {r.src.draftMode === 'ping' && <div className="po-note">Követő tervek: a követési határidőig nem érkezett válasz — az alábbiak udvarias emlékeztetők.</div>}
-            {stale && <div className="po-note">⚠ A tervek egy korábbi levélhez készültek, azóta új bejövő érkezett. A következő szinkron frissíti őket — a szál tartalmát ellenőrizd küldés előtt.</div>}
-            {!r.botMade && lane !== 'waiting' && <div className="po-note">Gyors tervek a levélből készült feladat adataiból — a személyre szabott terveket a következő szinkron írja meg a levél teljes szövege alapján.</div>}
+            {r.src.draftMode === 'ping' && <div className="po-note">Követő tervek: a követési határidőig nem érkezett válasz - az alábbiak udvarias emlékeztetők.</div>}
+            {stale && <div className="po-note">⚠ A tervek egy korábbi levélhez készültek, azóta új bejövő érkezett. A következő szinkron frissíti őket - a szál tartalmát ellenőrizd küldés előtt.</div>}
+            {!r.botMade && lane !== 'waiting' && <div className="po-note">Gyors tervek a levélből készült feladat adataiból - a személyre szabott terveket a következő szinkron írja meg a levél teljes szövege alapján.</div>}
             {lane !== 'waiting' && r.drafts.map((d, i) => (
               <div key={i} className={`po-draft po-draft--${i}`}>
                 <div className="po-draft-h">
@@ -202,10 +202,10 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
             ))}
             {noRule && (
               <div className="po-screen">
-                <span className="po-snlbl">Új feladó — szabály egyszer, mostantól érvényes:</span>
+                <span className="po-snlbl">Új feladó - szabály egyszer, mostantól érvényes:</span>
                 <button type="button" className="btn" title="A leveleire mindig teljes válasz-csomag készül" onClick={() => onSenderRule(r.src.email, 'reply')}>{SENDER_RULE_LABEL.reply}</button>
-                <button type="button" className="btn" title="A leveleiből lehet kártya, de nem kerülnek a Postába" onClick={() => { onSenderRule(r.src.email, 'fyi'); onState(r.sel, { status: 'noreply', returned: null }, 'Csak tájékoztat — lezárva'); }}>{SENDER_RULE_LABEL.fyi}</button>
-                <button type="button" className="btn" title="A bot a leveleit teljesen átugorja" onClick={() => { onSenderRule(r.src.email, 'ignore'); onState(r.sel, { status: 'noreply', returned: null }, 'Mellőzendő — lezárva'); }}>{SENDER_RULE_LABEL.ignore}</button>
+                <button type="button" className="btn" title="A leveleiből lehet kártya, de nem kerülnek a Postába" onClick={() => { onSenderRule(r.src.email, 'fyi'); onState(r.sel, { status: 'noreply', returned: null }, 'Csak tájékoztat - lezárva'); }}>{SENDER_RULE_LABEL.fyi}</button>
+                <button type="button" className="btn" title="A bot a leveleit teljesen átugorja" onClick={() => { onSenderRule(r.src.email, 'ignore'); onState(r.sel, { status: 'noreply', returned: null }, 'Mellőzendő - lezárva'); }}>{SENDER_RULE_LABEL.ignore}</button>
               </div>
             )}
             <div className="po-actrow">
@@ -213,7 +213,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                 <>
                   <button type="button" className="btn" title="Megválaszoltnak jelölés (pl. ha Outlookból már elment a válasz)" onClick={() => { setOpen(null); onState(r.sel, { status: 'replied', repliedAt: nowIso(), returned: null, thread: withOutEntry(r.src, 'megválaszolva (kézi jelölés)') }, 'Megválaszolva'); }}>✓ Megválaszolva</button>
                   <button type="button" className="btn" title="Megválaszolva + követés: ha 5 munkanapon belül nem jön válasz, a levél visszatér a Postába" onClick={() => { setOpen(null); onState(r.sel, { status: 'waiting', repliedAt: nowIso(), followUpAt: addWorkdaysYmd(5), returned: null, thread: withOutEntry(r.src, 'megválaszolva, követés bekapcsolva') }, 'Megválaszolva + követés'); }}>✓⏳ Válasz + követés</button>
-                  <button type="button" className="btn" title="Lezárás válasz nélkül — ha mégis jön új levél a szálban, magától újranyílik" onClick={() => { setOpen(null); onState(r.sel, { status: 'noreply', returned: null }, 'Lezárva (nem kell válasz)'); }}>✕ Nem kell válasz</button>
+                  <button type="button" className="btn" title="Lezárás válasz nélkül - ha mégis jön új levél a szálban, magától újranyílik" onClick={() => { setOpen(null); onState(r.sel, { status: 'noreply', returned: null }, 'Lezárva (nem kell válasz)'); }}>✕ Nem kell válasz</button>
                   <span className="sp" />
                   <span className="po-snlbl">💤 Halasztás:</span>
                   <button type="button" className="btn" onClick={() => { setOpen(null); onState(r.sel, { status: 'snoozed', snoozeUntil: tomorrowYmd(), returned: null }, 'Halasztva holnapig'); }}>holnap</button>
@@ -223,7 +223,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
               ) : (
                 <>
                   <button type="button" className="btn" title="Vissza a válaszra várók közé (pl. mégis nekem kell lépnem)" onClick={() => { setOpen(null); onState(r.sel, { status: 'pending', followUpAt: null }, 'Vissza a Postába'); }}>↩ Vissza a Postába</button>
-                  <button type="button" className="btn" title="Lezárás — nem várunk tovább a válaszukra" onClick={() => { setOpen(null); onState(r.sel, { status: 'noreply', followUpAt: null, returned: null }, 'Lezárva'); }}>✕ Lezárás</button>
+                  <button type="button" className="btn" title="Lezárás - nem várunk tovább a válaszukra" onClick={() => { setOpen(null); onState(r.sel, { status: 'noreply', followUpAt: null, returned: null }, 'Lezárva'); }}>✕ Lezárás</button>
                 </>
               )}
             </div>
@@ -253,9 +253,9 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
         {lanes.returned.length > 0 && <span className="pill pill--hot" title="Felébredt halasztás vagy új levél lezárt szálban">{lanes.returned.length} visszatért</span>}
         {urgent > 0 && <span className="pill pill--hot" title="Határidő 48 órán belül">{urgent} sürgős</span>}
         {lanes.waiting.length > 0 && <span className="pill" title="Válaszoltam, az ő válaszukra várok">{lanes.waiting.length} rájuk várok</span>}
-        {lanes.snoozed.length > 0 && <span className="pill" title="Halasztva — a felbukkanási napon visszatér">{lanes.snoozed.length} halasztva</span>}
+        {lanes.snoozed.length > 0 && <span className="pill" title="Halasztva - a felbukkanási napon visszatér">{lanes.snoozed.length} halasztva</span>}
         <span className="sp" />
-        {pendingAll.length > 0 && !decide && <button type="button" className="btn" title="Tételenként egy döntés: válasz / halasztás / lezárás — semmi nem marad függőben" onClick={() => { setDecide(true); setDecideSkip(new Set()); setAllOpen(false); }}>▶ Döntés-sor</button>}
+        {pendingAll.length > 0 && !decide && <button type="button" className="btn" title="Tételenként egy döntés: válasz / halasztás / lezárás - semmi nem marad függőben" onClick={() => { setDecide(true); setDecideSkip(new Set()); setAllOpen(false); }}>▶ Döntés-sor</button>}
         {pendingAll.length > 0 && !decide && <button type="button" className="btn" title="Minden válaszra váró tétel terveivel együtt, egy listában végigdolgozható" onClick={() => setAllOpen((v) => !v)}>{allOpen ? '▴ Összecsukás' : '▤ Sorban mind'}</button>}
         {decide && <button type="button" className="btn" onClick={() => setDecide(false)}>✕ Kilépés a döntés-sorból</button>}
       </div>
@@ -282,7 +282,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
             {lane('Visszatért', 'felébredt halasztás vagy új levél egy lezárt szálban', lanes.returned, 'returned')}
             {lane('Határidős', 'a levélből készült feladat határideje egy héten belül', lanes.deadline, 'deadline')}
             {lane('Válaszra vár', 'a legrégebb óta várakozó elöl', lanes.awaiting, 'awaiting')}
-            {lane('Rájuk várok', 'válaszoltam — ha nem jön válasz, a követési napon visszatér', lanes.waiting, 'waiting')}
+            {lane('Rájuk várok', 'válaszoltam - ha nem jön válasz, a követési napon visszatér', lanes.waiting, 'waiting')}
           </div>
         </>
       )}

@@ -12,7 +12,7 @@ import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate, autoFill, fmtDay, paraphr
 import type { ReplyDraft } from '@/data/agenda';
 
 // A kitöltő-panel [mező]-i a nevük alapján TÍPUSOS beviteli mezőt kapnak: dátumhoz
-// dátumválasztó, időponthoz óra:perc, hónaphoz hónapválasztó — nem szabad szöveg.
+// dátumválasztó, időponthoz óra:perc, hónaphoz hónapválasztó - nem szabad szöveg.
 type FillKind = 'date' | 'time' | 'datetime' | 'month' | 'url' | 'text';
 const fillKind = (tok: string): FillKind => {
   const t = normText(tok.slice(1, -1));
@@ -25,10 +25,10 @@ const fillKind = (tok: string): FillKind => {
 };
 const F_MON = ['jan.', 'febr.', 'márc.', 'ápr.', 'máj.', 'jún.', 'júl.', 'aug.', 'szept.', 'okt.', 'nov.', 'dec.'];
 const F_MONTH = ['január', 'február', 'március', 'április', 'május', 'június', 'július', 'augusztus', 'szeptember', 'október', 'november', 'december'];
-// levélbarát alak — a címzett kedvéért mindig évvel: "2026. szept. 2."
+// levélbarát alak - a címzett kedvéért mindig évvel: "2026. szept. 2."
 const fillDay = (d: string): string => `${d.slice(0, 4)}. ${F_MON[Number(d.slice(5, 7)) - 1] ?? ''} ${Number(d.slice(8, 10))}.`;
 
-// ÉLŐ KITÖLTÉS: a vázlat (tárgy/törzs) mindvégig őrzi a [mezőket] — a kimenet
+// ÉLŐ KITÖLTÉS: a vázlat (tárgy/törzs) mindvégig őrzi a [mezőket] - a kimenet
 // (előnézet, másolás, küldés, mentés) minden billentyűre újraszámolódik belőle.
 // Így az inputok sosem tűnnek el, és bármikor átírható az értékük.
 const fillReadyVal = (tok: string, v: string): boolean => {
@@ -56,7 +56,7 @@ const substToken = (s: string, tok: string, v: string): string =>
 
 const escRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const SUFF = '(?:-[a-záéíóöőúüű]+)?';
-// ✕-szel KIHAGYOTT mező: úgy kerül ki, hogy a szöveg értelmes maradjon —
+// ✕-szel KIHAGYOTT mező: úgy kerül ki, hogy a szöveg értelmes maradjon -
 // a címke-tagmondat és a kiürülő mondat egészben megy, különben csak a szó a toldalékával
 const stripToken = (text: string, tok: string): string => {
   const T = escRe(tok);
@@ -67,7 +67,7 @@ const stripToken = (text: string, tok: string): string => {
   // 2) zárójel, amiben csak ez áll: "([dátum])" → zárójelestől megy
   out = out.replace(new RegExp(`\\(\\s*${T}${SUFF}\\s*\\)`, 'g'), '');
   // 3) ha a mező nélkül a mondat kiürülne vagy csonka címke maradna, az egész mondat megy
-  //    (kivéve, ha a mondat MÁSIK [mezőt] is hordoz — azt nem dobhatjuk el)
+  //    (kivéve, ha a mondat MÁSIK [mezőt] is hordoz - azt nem dobhatjuk el)
   out = out.split('\n').map((line) => {
     if (!line.includes(tok)) return line;
     const sents = line.match(/[^.!?]*[.!?]+\s*|[^.!?]+$/g) ?? [line];
@@ -110,12 +110,12 @@ export interface NotifyTarget {
   event?: AgendaEvent | null;
   task?: AgendaTask | null;
   names: string[]; // előre kijelölt címzettek (a tétel felelőse + résztvevői)
-  steps?: string[]; // a kártya (ill. eseménynél a kötött feladatok) lépései — választhatóan a levélbe
+  steps?: string[]; // a kártya (ill. eseménynél a kötött feladatok) lépései - választhatóan a levélbe
   source?: { name: string; email: string; subject?: string | null } | null; // a kiváltó email feladója
   topicId?: string | null; // a Levelek nézetből indított levél előtöltött témasablonja
   preload?: { subject: string; body: string; names: string[]; letterId?: string } | null; // mentett levél megnyitása kész tartalommal
   replyDrafts?: ReplyDraft[] | null; // a Postából indított válasz: a bot 3 terve (váltó-chipek a Szöveg fülön)
-  replySel?: string | null;          // a Posta-tétel ('t:id'/'e:id') — küldés után megválaszoltnak jelöljük
+  replySel?: string | null;          // a Posta-tétel ('t:id'/'e:id') - küldés után megválaszoltnak jelöljük
 }
 
 interface Props {
@@ -155,11 +155,11 @@ const loadUi = (): { kind: LetterKind; sigOn: boolean } => {
 const saveUi = (kind: LetterKind, sigOn: boolean): void => {
   try { localStorage.setItem(UI_KEY, JSON.stringify({ kind, sigOn })); } catch { /* privát mód */ }
 };
-// ékezet-független névszűréshez — a sablon-egyeztetéssel közös helper (topics.ts)
+// ékezet-független névszűréshez - a sablon-egyeztetéssel közös helper (topics.ts)
 const norm = normText;
 
 // Levél-készítő: sablonból generált szöveg + 3 numerikus másolás-gomb (Outlookba illesztéshez).
-// A küldés (Brevo/SMTP) opcionális — csak akkor jelenik meg, ha a szerveren be van állítva.
+// A küldés (Brevo/SMTP) opcionális - csak akkor jelenik meg, ha a szerveren be van állítva.
 export default function NotifyModal({ target, teacherNames, db, letters, onSaveLetter, onDeleteLetter, onLetterStatus, onPlaceChange, onSourceChange, onClose, inline, topicReq, letterReq, ctxEvents, ctxTasks, topicLinks, onLinkTopic, onMarkReplied }: Props) {
   const ui0 = useMemo(loadUi, []);
   const [kind, setKind] = useState<LetterKind>(ui0.kind);
@@ -199,12 +199,12 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const effEvent = useMemo(() => (ctxSel.startsWith('e:') ? (ctxEvents ?? []).find((e) => e.id === ctxSel.slice(2)) ?? null : null), [ctxSel, ctxEvents]);
   const effTask = useMemo(() => (ctxSel.startsWith('t:') ? (ctxTasks ?? []).find((t) => t.id === ctxSel.slice(2)) ?? null : null), [ctxSel, ctxTasks]);
   const lastTopicRef = useRef<TopicTemplate | null>(null); // az utoljára betöltött sablon (újratöltéshez)
-  const loadedLetterRef = useRef<string | null>(null); // a betöltött mentett levél id-je — küldéskor ezt jelöljük kiküldöttre
-  const [linkSuggestion, setLinkSuggestion] = useState<{ sel: string; title: string } | null>(null); // névegyezéses JAVASLAT — csak gombbal rögzül
+  const loadedLetterRef = useRef<string | null>(null); // a betöltött mentett levél id-je - küldéskor ezt jelöljük kiküldöttre
+  const [linkSuggestion, setLinkSuggestion] = useState<{ sel: string; title: string } | null>(null); // névegyezéses JAVASLAT - csak gombbal rögzül
   const [activeTopic, setActiveTopic] = useState<TopicTemplate | null>(null); // ugyanez a felületnek
-  const typedRef = useRef(false); // írt-e bele kézzel — csak akkor kérdezünk rá a felülírásra
+  const typedRef = useRef(false); // írt-e bele kézzel - csak akkor kérdezünk rá a felülírásra
 
-  // témasablon alkalmazása: minden ismert adat automatikusan kitöltődik — a kártya
+  // témasablon alkalmazása: minden ismert adat automatikusan kitöltődik - a kártya
   // vagy a kapcsolt esemény/feladat adatai (cím, időpont, helyszín, határidő), a
   // tanév/félév/hónap a mai dátumból, a megszólítás pedig a kiválasztott
   // címzettekhez igazodik. A kész vázlatot más sablon csak rákérdezés után írja felül.
@@ -221,7 +221,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       else if (tk) { setCtxSel(`t:${tk.id}`); evStored = true; }
     }
     // 2) névegyezés: kapcsolatot NEM rögzít magától, de a LEGJOBB találat ADATAIT
-    // (dátum/határidő/helyszín) azonnal előtölti — a felhasználó ellenőrzi, nem neki
+    // (dátum/határidő/helyszín) azonnal előtölti - a felhasználó ellenőrzi, nem neki
     // kell a naptárban keresgélnie. A rögzítés továbbra is külön gombbal történik.
     let suggestion: { sel: string; title: string } | null = null;
     let gEv: AgendaEvent | null = null;
@@ -271,7 +271,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     typedRef.current = false;
     setFillVals({}); setKilled([]); // új sablon: a kitöltő-panel tiszta lappal indul
     // a sablonok többsége SZÓ SZERINTI [dátum]/[helyszín]/[határidő] mezőt tartalmaz
-    // (nem ctx-hivatkozást) — ezeket itt töltjük ki a kapcsolt tétel adataival,
+    // (nem ctx-hivatkozást) - ezeket itt töltjük ki a kapcsolt tétel adataival,
     // különben a kapcsolás láthatóan "nem csinál semmit"
     const fillCtx = (s: string) => {
       let out = s;
@@ -303,7 +303,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     const linked = ev ?? tk;
     const guessed = !linked && (gEv || gTk) ? (gEv?.title ?? gTk?.title) : null;
     const tipp = !linked && !target.event && !target.task && ((ctxEvents?.length ?? 0) + (ctxTasks?.length ?? 0)) > 0
-      ? (guessed ? ` Előtöltve a(z) „${guessed}" tétel adataiból — ellenőrizd! A kapcsolatot a választó alatti gombbal rögzítheted.` : ' Nincs naptári találat: fent, a Kapcsolt naptári tételnél húzhatod be a dátumokat.') : '';
+      ? (guessed ? ` Előtöltve a(z) „${guessed}" tétel adataiból - ellenőrizd! A kapcsolatot a választó alatti gombbal rögzítheted.` : ' Nincs naptári találat: fent, a Kapcsolt naptári tételnél húzhatod be a dátumokat.') : '';
     setResult(`✓ Sablon betöltve: ${t.label}.${linked && !target.event && !target.task ? ` Kapcsolt naptári tétel: ${linked.title}${evStored ? ' (rögzített kapcsolat)' : ''}.` : ''}${tipp} Csak a maradék [szögletes] mezőt töltsd ki.`);
   };
 
@@ -336,14 +336,14 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     const ns = fill(subject);
     if (nb !== body || ns !== subject) {
       setBody(nb); setSubject(ns); setBodyDirty(true);
-      setResult(`✓ Kapcsolt tétel: ${linked.title} — a [dátum] / [helyszín] / [határidő] mezők kitöltve a naptári adatokkal.`);
+      setResult(`✓ Kapcsolt tétel: ${linked.title} - a [dátum] / [helyszín] / [határidő] mezők kitöltve a naptári adatokkal.`);
     } else {
       setResult(`✓ Kapcsolt tétel: ${linked.title}. (Nem volt kitölthető [szögletes] mező a szövegben.)`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctxDataKey]);
 
-  // KITÖLTŐ-PANEL: a levélben maradt [szögletes] mezők listája — a jobb oldali kis
+  // KITÖLTŐ-PANEL: a levélben maradt [szögletes] mezők listája - a jobb oldali kis
   // inputokba írt érték a tárgy ÉS a törzs MINDEN azonos mezőjébe beíródik
   const fillTokens = useMemo(() => {
     const re = /\[([^[\]\n]{1,40})\]/g;
@@ -455,7 +455,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const addCustom = (members: string[]) => setSelected((s) => [...new Set([...s, ...members])]);
 
   // teljes névsor az egyéni hozzáadáshoz: az ÖSSZES állandó lista (tanár, hallgató,
-  // intézményi, alumni, piaci) — a badge-szűrővel kategóriára szűkíthető
+  // intézményi, alumni, piaci) - a badge-szűrővel kategóriára szűkíthető
   const roster = useMemo(() => buildRoster(teacherNames, db), [teacherNames, db]);
   const [kindFilter, setKindFilter] = useState<PersonKind | ''>('');
   // státusz-szintű szűrés a névsorban (főállású / óraadó / h-szervező stb.)
@@ -471,7 +471,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     ...Object.fromEntries(studentCohorts(db).map((c) => [`H:${c}`, new Set(cohortNames(db, c))])),
   }), [teacherNames, db]);
 
-  // a kiválasztott címzettek összetétele (T/H/I/A/P) — ehhez igazodik a megszólítás.
+  // a kiválasztott címzettek összetétele (T/H/I/A/P) - ehhez igazodik a megszólítás.
   // Egy név több listában is szerepelhet (pl. alumnus, aki óraadó is): ha a kiválasztottak
   // MIND lefedhetők egyetlen listával, az a lista dönt (alumni/piaci/intézményi elsőbbséggel).
   const kindSets = useMemo(() => ({
@@ -524,7 +524,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audienceKey]);
 
-  // a Levelek nézetből / sablon-előtöltéssel indított betöltések — a megszólítás-
+  // a Levelek nézetből / sablon-előtöltéssel indított betöltések - a megszólítás-
   // igazító effekt UTÁN futnak, hogy mount-kor az ő eredményük legyen a végső
   useEffect(() => {
     if (target.preload) {
@@ -564,7 +564,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     return { emails: em, missing: mi };
   }, [selected, adhoc, db]);
 
-  // Robusztus másolás: a Clipboard API csak HTTPS/localhost alatt él — sima HTTP-n
+  // Robusztus másolás: a Clipboard API csak HTTPS/localhost alatt él - sima HTTP-n
   // (pl. Tailscale IP-ről) a rejtett-textarea + execCommand tartalék útvonal másol.
   const copyText = async (text: string): Promise<boolean> => {
     try {
@@ -595,7 +595,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   };
 
   const saveLetter = () => {
-    // a mentett levél a KÉSZ kimenet (kitöltött mezőkkel) — betöltve már konkrét szöveg
+    // a mentett levél a KÉSZ kimenet (kitöltött mezőkkel) - betöltve már konkrét szöveg
     onSaveLetter({
       id: `l-${Date.now().toString(36)}`,
       createdAt: new Date().toISOString(),
@@ -609,7 +609,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
 
   const loadLetter = (l: Letter) => {
     setSubject(l.subject); setBody(l.body); setSelected(l.names.filter((n) => !n.includes('@'))); setAdhoc(l.names.filter((n) => n.includes('@')));
-    setFillVals({}); setKilled([]); // a mentett levél kész szöveg — a panel-értékek nem vonatkoznak rá
+    setFillVals({}); setKilled([]); // a mentett levél kész szöveg - a panel-értékek nem vonatkoznak rá
     setBodyDirty(true); // a betöltött (kész) levelet a sablon-chipek ne írhassák felül rákérdezés nélkül
     lastTopicRef.current = null; // kész levél: a kapcsolt tétel változása ne írja át
     setActiveTopic(null);
@@ -639,7 +639,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           onSaveLetter({ id, createdAt: new Date().toISOString(), targetType: target.targetType, targetId: target.targetId, subject: outSubject.trim(), body: outBody, names: [...selected, ...adhoc], status: 'sent' });
           loadedLetterRef.current = id;
         }
-        setResult(`✓ Elküldve ${j.sent} címzettnek — a levél kiküldöttként mentve.`);
+        setResult(`✓ Elküldve ${j.sent} címzettnek - a levél kiküldöttként mentve.`);
         // ha ez egy Válaszolandó tételre írt válasz volt, a tétel megválaszoltnak jelölődik
         if (replySel && onMarkReplied) {
           // tanulási napló: melyik terv ment el, és át lett-e írva
@@ -726,7 +726,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                   const names = [...new Set(p.names)];
                   return (
                     <button key={p.label} type="button" className="crx c-blue" disabled={!names.length}
-                      title={names.length ? `${p.hint}. ${names.length} név — a lista cseréje.` : `${p.hint}. Még üres: a ☎ Névjegyzékben tölthető fel / címkézhető.`}
+                      title={names.length ? `${p.hint}. ${names.length} név - a lista cseréje.` : `${p.hint}. Még üres: a ☎ Névjegyzékben tölthető fel / címkézhető.`}
                       onClick={() => { setSelected(names); setAdhoc([]); }}>
                       {p.label}{names.length ? ` (${names.length})` : ''}
                     </button>
@@ -766,7 +766,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             <div className="pp-selrow">
               <span className="pp-selcount">{selected.length + adhoc.length || 'Nincs'} címzett</span>
               {adhoc.map((e) => (
-                <button key={e} type="button" className="chip is-on pp-selchip" title="Egyedi email-címzett — kattints a levételhez" onClick={() => setAdhoc((a) => a.filter((x) => x !== e))}>@ {e}<span className="pp-x">✕</span></button>
+                <button key={e} type="button" className="chip is-on pp-selchip" title="Egyedi email-címzett - kattints a levételhez" onClick={() => setAdhoc((a) => a.filter((x) => x !== e))}>@ {e}<span className="pp-x">✕</span></button>
               ))}
               {selected.map((n) => {
                 const k = roster.find((r) => r.name === n)?.kind ?? null;
@@ -797,7 +797,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                   })}
               </div>
             ) : (
-              <div className="pp-nohit">A teljes névfal nem jelenik meg magától — keress névre, vagy nyisd meg fent az egyik listát (Tanár, Hallgató, státusz…).</div>
+              <div className="pp-nohit">A teljes névfal nem jelenik meg magától - keress névre, vagy nyisd meg fent az egyik listát (Tanár, Hallgató, státusz…).</div>
             )}
             {missing.length > 0 && <div className="nm-missing">⚠ Nincs email-címük (kimaradnak): {missing.join(', ')}. A ☎ Névjegyzékben pótolható.</div>}
           </div>
@@ -828,7 +828,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                 <div className="nm-groups">
                   <button type="button" className="chip" title="A javasolt naptári tétel rögzítése ehhez a sablonhoz (azonosító szerint, véglegesen)"
                     onClick={() => { setCtxSel(linkSuggestion.sel); if (activeTopic) onLinkTopic?.(activeTopic.id, linkSuggestion.sel); setLinkSuggestion(null); }}>
-                    ⚲ Javaslat: {linkSuggestion.title} — kapcsolás
+                    ⚲ Javaslat: {linkSuggestion.title} - kapcsolás
                   </button>
                 </div>
               )}
@@ -871,7 +871,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           <div className="field full">
             <label>Meeting-javaslat a levélben
               <a className="nm-bodytoggle nm-meetlink" href="https://meet.google.com/new" target="_blank" rel="noopener noreferrer"
-                title="Új Google Meet indítása új lapon — a létrejött linket másold be ide">▶ Google Meet ↗</a>
+                title="Új Google Meet indítása új lapon - a létrejött linket másold be ide">▶ Google Meet ↗</a>
             </label>
             <div className="chipradio">
               {([['nincs', 'Nincs'], ['online', 'Online'], ['szemelyes', 'Személyes'], ['hibrid', 'Hibrid']] as const).map(([id, label]) => (
@@ -895,7 +895,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           <div className="f-sec">3 · A levél szövege és küldése</div>
           {replyChips && replyChips.length > 0 && (
             <div className="field full">
-              <label>A bot választervei — kattintásra betöltődik, utána szabadon átírható</label>
+              <label>A bot választervei - kattintásra betöltődik, utána szabadon átírható</label>
               <div className="chipradio">
                 {replyChips.map((v) => (
                   <button key={v.label} type="button" className="crx c-blue" onClick={() => applyReplyVariant(v)}>{v.label}</button>
@@ -913,7 +913,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               {/* kitöltő-panel: a levélben maradt [szögletes] mezők kis inputokkal tölthetők */}
               {fillTokens.length > 0 && (
                 <div className="field full nm-fill">
-                  <label>Mezők — élőben íródnak a levélbe · ✕: nincs ilyen adat, a mondat kifogalmazódik</label>
+                  <label>Mezők - élőben íródnak a levélbe · ✕: nincs ilyen adat, a mondat kifogalmazódik</label>
                   {fillTokens.map((tok) => {
                     const k = fillKind(tok);
                     const v = fillVals[tok] ?? '';
@@ -928,7 +928,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                         ) : k === 'datetime' ? (<>
                           <input type="date" value={v.slice(0, 10)}
                             onChange={(e) => set(e.target.value ? `${e.target.value}${v.length >= 16 ? ` ${v.slice(11, 16)}` : ''}` : '')} />
-                          <input type="time" className="nm-filltime" title="Óra:perc — ha kell" value={v.length >= 16 ? v.slice(11, 16) : ''}
+                          <input type="time" className="nm-filltime" title="Óra:perc - ha kell" value={v.length >= 16 ? v.slice(11, 16) : ''}
                             disabled={v.length < 10}
                             onChange={(e) => set(e.target.value ? `${v.slice(0, 10)} ${e.target.value}` : v.slice(0, 10))} />
                         </>) : k === 'text' || k === 'url' ? (
@@ -938,7 +938,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                           <input type={k} value={v} onChange={(e) => set(e.target.value)} />
                         )}
                         <button type="button" className={`btn nm-fillgo${dead ? ' nm-fillback' : ''}`}
-                          title={dead ? 'Visszaállítás — a mező visszakerül a levélbe' : 'Nincs ilyen adat — kivesszük a levélből, a mondat értelmes marad'}
+                          title={dead ? 'Visszaállítás - a mező visszakerül a levélbe' : 'Nincs ilyen adat - kivesszük a levélből, a mondat értelmes marad'}
                           onClick={() => setKilled((ks) => (dead ? ks.filter((x) => x !== tok) : [...ks, tok]))}>{dead ? '↩' : '✕'}</button>
                       </div>
                     );
@@ -960,7 +960,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                 </div>
               )}
               <aside className="field full nm-topicpanel">
-                <label>Témasablonok ({TOPIC_TEMPLATES.length}) — koppints, és betöltődik</label>
+                <label>Témasablonok ({TOPIC_TEMPLATES.length}) - koppints, és betöltődik</label>
                 <input value={tq} onChange={(e) => setTq(e.target.value)} placeholder="Keresés a sablonok között…" />
                 <div className="nm-topiclist">
                   {TOPIC_GROUPS.map((g) => {
@@ -983,7 +983,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               <label>Üzenet</label>
               <div className="nm-tools">
                 <button type="button" className="nm-reroll-big"
-                  title={activeTopic ? `A betöltött témasablon (${activeTopic.label}) újratöltése friss adatokkal — a kézi módosításokra rákérdez` : 'Teljes újrafogalmazás: tárgy + minden mondat újragenerálódik, az adatok (időpont, helyszín) maradnak'}
+                  title={activeTopic ? `A betöltött témasablon (${activeTopic.label}) újratöltése friss adatokkal - a kézi módosításokra rákérdez` : 'Teljes újrafogalmazás: tárgy + minden mondat újragenerálódik, az adatok (időpont, helyszín) maradnak'}
                   onClick={() => {
                     if (activeTopic) {
                       if (typedRef.current && !confirm('A kézi módosításaid elvesznek. Újratöltsem a témasablont?')) return;
@@ -1033,7 +1033,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           {tab === 'saved' && (
             <div className="field full">
               <label>Mentett levelek ehhez a tételhez ({letters.length})</label>
-              {letters.length === 0 && <div className="pp-nohit">Még nincs mentett levél — a kész vázlatot a 💾 gombbal mentheted el.</div>}
+              {letters.length === 0 && <div className="pp-nohit">Még nincs mentett levél - a kész vázlatot a 💾 gombbal mentheted el.</div>}
               <div className="nm-letters">
                 {letters.map((l) => {
                   const st = l.status ?? 'draft';
@@ -1045,7 +1045,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                       </button>
                       {onLetterStatus && (
                         <button type="button" className={`mt-lst ${st}`}
-                          title={st === 'sent' ? 'Kiküldve — kattints, ha mégis vázlat' : 'Vázlat — kattints, ha már kiküldted (pl. Outlookból)'}
+                          title={st === 'sent' ? 'Kiküldve - kattints, ha mégis vázlat' : 'Vázlat - kattints, ha már kiküldted (pl. Outlookból)'}
                           onClick={() => onLetterStatus(l.id, st === 'sent' ? 'draft' : 'sent')}>
                           {st === 'sent' ? '✓ Kiküldve' : '✎ Vázlat'}
                         </button>

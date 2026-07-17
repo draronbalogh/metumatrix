@@ -1032,7 +1032,7 @@ export const TOPIC_GROUPS: string[] = [...new Set(TOPIC_TEMPLATES.map((t) => t.g
 export const normText = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 // Általános folyamat-szavak, amelyekre NEM szabad kapcsolatot/ajánlást építeni
-// (egyeztetés, emlékeztető...) — csak megkülönböztető nevek számítanak (Erasmus, Educatio...).
+// (egyeztetés, emlékeztető...) - csak megkülönböztető nevek számítanak (Erasmus, Educatio...).
 export const LINK_STOP = new Set(['egyeztetes', 'egyeztetese', 'emlekezteto', 'meghivo', 'felkeres', 'felkerese', 'korlevel', 'hatarido', 'hataridok', 'tajekoztato', 'osszefoglalo', 'szervezes', 'szervezese', 'beosztas', 'bekeres', 'bekerese', 'megbeszeles', 'visszajelzes', 'visszaigazolas', 'jovahagyas', 'elokeszites', 'elokeszitese', 'elojelzes', 'kezeles', 'kezelese', 'valasz', 'kerdes', 'altalanos', 'hallgato', 'hallgatoi', 'hallgatok', 'hallgatoknak', 'oktato', 'oktatoi', 'oktatok', 'oktatoknak', 'kollega', 'kollegak', 'idopont', 'idozites', 'tudnivalok', 'reszletek', 'egyeni', 'ertekezlet', 'ertekeles', 'ertekelesi', 'leadas', 'leadasi', 'frissites', 'frissitese', 'kikuldese', 'veglegesites', 'megosztasa', 'tovabbitasa', 'osszehivasa', 'surgetese', 'nyugtazasa', 'lemondasa', 'elfogadasa', 'esemeny', 'esemenyek', 'esemenyre', 'esemenyekre', 'kozelgo', 'rendezveny', 'rendezvenyek', 'reszvetel', 'reszvetele', 'reszvetelt', 'feladat', 'feladatok', 'teljes', 'folyamat']);
 
 // A kártya címéhez illő témasablonok (a szerkesztők Levelezés fülének ajánlásaihoz):

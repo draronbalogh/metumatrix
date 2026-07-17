@@ -6,7 +6,7 @@ import { PersonKind } from '@/data/people';
 import { suggestEventFor } from '@/lib/linkSuggest';
 import { PersonChip } from './AgendaView';
 
-// Feladat / esemény RÉSZLETEZŐ — az „egy kártya mindenhol" elv az agendára:
+// Feladat / esemény RÉSZLETEZŐ - az „egy kártya mindenhol" elv az agendára:
 // a listában csak tömör, 2 soros kártyák vannak, minden részlet ITT nyílik meg.
 // A lépések NEM külön listában élnek, hanem a „Ki mit csinál" személy-kártyákon:
 // mindenki neve alatt a saját teendői, ott is pipálhatók.
@@ -30,7 +30,7 @@ interface Props {
   onNotify: () => void;                    // ✉ új levél ehhez a tételhez
   onOpenLetter: (l: Letter) => void;
   onAddTaskFor: (eventId: string) => void;
-  emailFor: (name: string) => string | null; // a Névjegyzékből — a Meet-meghívó vendégeihez
+  emailFor: (name: string) => string | null; // a Névjegyzékből - a Meet-meghívó vendégeihez
 }
 
 const fmtLetter = (iso: string) => iso.slice(0, 16).replace('T', ' ');
@@ -55,12 +55,12 @@ const meetUrl = (e: AgendaEvent, emails: string[]): string => {
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&${p.toString()}`;
 };
 
-// szakaszfej — a szerkesztő-fülek színvilágával (sárga=alfeladatok, kék=emberek, zöld=levelek)
+// szakaszfej - a szerkesztő-fülek színvilágával (sárga=alfeladatok, kék=emberek, zöld=levelek)
 function Sec({ cls, children }: { cls?: string; children: ReactNode }) {
   return <div className={`dr-sec${cls ? ` ${cls}` : ''}`}>{children}</div>;
 }
 
-// egy kiosztott lépés a személy-kártyán — a taskId+ix révén innen is pipálható
+// egy kiosztott lépés a személy-kártyán - a taskId+ix révén innen is pipálható
 interface PStep { taskId: string; taskTitle: string | null; ix: number; text: string; done: boolean; due: string | null }
 
 export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor }: Props) {
@@ -73,7 +73,7 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
   const people = task?.people ?? event?.people ?? [];
   const persons = [...(owner ? [owner] : []), ...people.filter((p) => p !== owner)];
 
-  // személy-kártyák: mindenki neve alatt rögtön az Ő lépései — feladatnál a saját steps-ből,
+  // személy-kártyák: mindenki neve alatt rögtön az Ő lépései - feladatnál a saját steps-ből,
   // eseménynél a kapcsolt feladatokból; a gazdátlan lépéseket a felelős viszi
   const collectSteps = (match: (assignee: string | null) => boolean): PStep[] => {
     const out: PStep[] = [];
@@ -101,13 +101,13 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
   const evDay = evLinked ? evLinked.day ?? evLinked.sort ?? null : null;
   const dueAfterEvent = !!(task?.dueDate && evLinked?.day && task.dueDate.slice(0, 10) > evLinked.day);
 
-  // a személy-kártyák és a kiosztatlan blokk közös lépés-listája — itt is pipálható
+  // a személy-kártyák és a kiosztatlan blokk közös lépés-listája - itt is pipálható
   const stepList = (st: PStep[]) => (
     <ul className="dr-person-steps">
       {st.map((s) => (
         <li key={`${s.taskId}-${s.ix}`} className={s.done ? 'is-done' : ''}>
           <button className={`ag-scheck${s.done ? ' is-on' : ''}`} disabled={!canEdit}
-            title={s.done ? 'Visszaállítás nyitottra' : 'Kész — pipa'}
+            title={s.done ? 'Visszaállítás nyitottra' : 'Kész - pipa'}
             onClick={() => onToggleStep(s.taskId, s.ix)}>{s.done ? '✓' : ''}</button>
           <span className="tx">{s.taskTitle ? <em className="tt">{s.taskTitle}: </em> : null}{s.text}</span>
           {s.due && <span className="du">📅 {fmtDayHu(s.due)}</span>}
@@ -159,10 +159,10 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                   <div className="dr-evpick">
                     {evSugg && (
                       <button className="chip due-sugg" title="A rendszer a címek egyezése alapján ezt az eseményt javasolja"
-                        onClick={() => onLinkEvent(task.id, evSugg.id)}>⚡ Javaslat: ▤ {evSugg.title} — összekapcsolás</button>
+                        onClick={() => onLinkEvent(task.id, evSugg.id)}>⚡ Javaslat: ▤ {evSugg.title} - összekapcsolás</button>
                     )}
                     <select value="" onChange={(e) => { if (e.target.value) onLinkEvent(task.id, e.target.value); }}>
-                      <option value="">— esemény hozzákapcsolása —</option>
+                      <option value="">- esemény hozzákapcsolása -</option>
                       {agenda.events.map((e) => <option key={e.id} value={e.id}>{e.title}</option>)}
                     </select>
                   </div>
@@ -179,7 +179,7 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                       : task.source.status === 'noreply' ? '✓ lezárva'
                       : task.source.status === 'snoozed' ? `💤 halasztva${task.source.snoozeUntil ? ` ${task.source.snoozeUntil.slice(5, 10).replace('-', '. ')}-ig` : ''}`
                       : task.source.status === 'waiting' ? '⏳ rájuk várok'
-                      : '✉ válaszra vár — a Postában'
+                      : '✉ válaszra vár - a Postában'
                     }</span>
                   </p>
                   {(task.source.thread?.length ?? 0) > 0 && (
@@ -217,7 +217,7 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
             </>
           )}
 
-          {/* AZ ESEMÉNY FELADATAI — kattintásra a feladat részletezője nyílik */}
+          {/* AZ ESEMÉNY FELADATAI - kattintásra a feladat részletezője nyílik */}
           {event && (
             <>
               <Sec cls="c-yellow">Az esemény feladatai · {linked.filter((t) => t.status === 'done').length}/{linked.length}</Sec>
@@ -236,7 +236,7 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
             </>
           )}
 
-          {/* KI MIT CSINÁL: személyenként elkülönülő kártya — a név alatt az Ő teendői, itt pipálhatók */}
+          {/* KI MIT CSINÁL: személyenként elkülönülő kártya - a név alatt az Ő teendői, itt pipálhatók */}
           <Sec cls="c-blue">Ki mit csinál{allSteps.length > 0 ? ` · ${allDone}/${allSteps.length} lépés kész` : ''}</Sec>
           {persons.length === 0 && unassigned.length === 0 && <p className="dr-empty">Még nincs felelős, résztvevő vagy lépés.</p>}
           {persons.map((name) => {
@@ -264,7 +264,7 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
             </div>
           )}
 
-          {/* LEVELEZÉS — csak szerkesztő módban (a Levelek nézet is az) */}
+          {/* LEVELEZÉS - csak szerkesztő módban (a Levelek nézet is az) */}
           {canEdit && (
             <>
               <Sec cls="c-green">Levelezés · {letters.length}</Sec>

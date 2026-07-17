@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 
 // MD-szűrt órarend (a vegyes/Órarend xlsx-ből generálva a scratch-parserrel).
-// Csak olvassuk — a forrás az Excel, újrageneráláskor a JSON frissül.
+// Csak olvassuk - a forrás az Excel, újrageneráláskor a JSON frissül.
 const FILE = process.env.ORAREND_FILE
   || 'C:/node/metu_tanterv/grid/orarend.json';
 

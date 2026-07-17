@@ -16,7 +16,7 @@ const nodeTypes = { program: ProgramNode, semester: SemesterNode, course: Course
 // Csoport-zónák („swimlane”): soronként a csoport kártyáinak befoglalója, a szomszédos sorok
 // darabjai függőlegesen összeérnek, így csoportonként EGY összefüggő színes terület rajzolódik ki
 // (Közös / Multimédia / Játéktervezés / külső elméleti). Akkor jelenik meg, ha a nézetben
-// legalább KÉT különböző csoport van (MA-n pl. közös + ELM) — egyetlen csoportnál csak zaj lenne.
+// legalább KÉT különböző csoport van (MA-n pl. közös + ELM) - egyetlen csoportnál csak zaj lenne.
 const CARD_W = 248, FR_PADX = 14, FR_PADT = 20, FR_CARDH = 288, FR_PADB = 8;
 const ZONE_LABEL: Record<number, string> = { 0: 'Közös tárgyak', 1: GROUP_LABEL[1], 2: GROUP_LABEL[2], 3: GROUP_LABEL[3] };
 function buildZones(nodes: Node[]): Node[] {
@@ -54,7 +54,7 @@ function buildZones(nodes: Node[]): Node[] {
         data: { g, w: p.maxX - p.minX + CARD_W + FR_PADX * 2, h, zt: first, zb: lastP },
         draggable: false, selectable: false, focusable: false, zIndex: -1,
       });
-      // a felirat külön, magas z-indexű node — a piros élek fölött marad
+      // a felirat külön, magas z-indexű node - a piros élek fölött marad
       if (first && ZONE_LABEL[g]) {
         out.push({
           id: `zonelbl-${g}-${ri}`, type: 'zonelabel',
@@ -90,7 +90,7 @@ function lookProps(look?: EdgeLook): Partial<Edge> {
   }
 }
 const EDGE_LOOKS: { id: EdgeLook; label: string; dash?: string; anim?: boolean }[] = [
-  { id: 'anim', label: 'Animált — folyamatosságot, egymásra épülést mutat', dash: '7 5', anim: true },
+  { id: 'anim', label: 'Animált - folyamatosságot, egymásra épülést mutat', dash: '7 5', anim: true },
   { id: 'solid', label: 'Folyamatos vonal' },
   { id: 'dash', label: 'Szaggatott vonal' , dash: '9 6' },
   { id: 'dot', label: 'Pontozott vonal', dash: '0.5 8' },
@@ -121,7 +121,7 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
 
   const initNodes = useMemo<Node[]>(
     () => {
-      // a mentett pozíciók kanonikus tere az egy-programos nézet — BA+MA nézetben a blokk-eltolással toljuk le
+      // a mentett pozíciók kanonikus tere az egy-programos nézet - BA+MA nézetben a blokk-eltolással toljuk le
       const positioned = built.nodes.map((n) => {
         const p = data.positions?.[n.id];
         if (!p) return n;
@@ -168,7 +168,7 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
   // Igazítás CSAK az első megjelenítéskor, illetve ha közben verziót/programot váltottunk.
   // Nézetek közti oda-vissza lépkedésnél (ugyanaz a ver/prog) NEM igazítunk újra, hogy a
   // felhasználó zoom/pásztázás pozíciója megmaradjon. (A komponens mountolva marad, csak
-  // rejtjük — így a ReactFlow viewport állapota is megőrződik.)
+  // rejtjük - így a ReactFlow viewport állapota is megőrződik.)
   const lastFitKey = useRef<string | null>(null);
   useEffect(() => {
     if (!active) return;
@@ -204,7 +204,7 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [active, rf, focusId, smartFit]);
-  // jelentős szélesség-változásnál (pl. telefon elforgatása) újraigazítás — a magasság-változást
+  // jelentős szélesség-változásnál (pl. telefon elforgatása) újraigazítás - a magasság-változást
   // (mobil billentyűzet felugrása) szándékosan figyelmen kívül hagyjuk
   useEffect(() => {
     let t: number | null = null;
@@ -225,7 +225,7 @@ function Inner({ data, filter, handlers, persist, theme, view, locked, onToggleL
   const onConnect = useCallback((c: Connection) => {
     if (!c.source || !c.target) return;
     const edge: UserEdge = { id: `u-${c.source}.${c.sourceHandle || ''}-${c.target}.${c.targetHandle || ''}`, source: c.source, target: c.target, sourceHandle: c.sourceHandle, targetHandle: c.targetHandle };
-    // a két összekötött node-ot rácsra igazítjuk, hogy az él tiszta legyen — az éllel EGYÜTT, egyetlen mentésben
+    // a két összekötött node-ot rácsra igazítjuk, hogy az él tiszta legyen - az éllel EGYÜTT, egyetlen mentésben
     const defY: Record<string, number> = {};
     built.nodes.forEach((n) => { if (n.type === 'course') defY[n.id] = n.position.y; });
     const snap: Record<string, { x: number; y: number }> = {};

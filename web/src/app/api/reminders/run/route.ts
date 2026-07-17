@@ -70,7 +70,7 @@ export async function POST(req: Request) {
   });
   agenda.tasks.forEach((t) => {
     if (!t.dueDate || t.status === 'done') return;
-    // a dueDate lehet hónap-pontosságú ('ÉÉÉÉ-HH') vagy órás ('ÉÉÉÉ-HH-NN ÓÓ:PP') is —
+    // a dueDate lehet hónap-pontosságú ('ÉÉÉÉ-HH') vagy órás ('ÉÉÉÉ-HH-NN ÓÓ:PP') is -
     // emlékeztetőt csak nap-pontosságú határidőre számolunk
     const ymd = t.dueDate.length >= 10 ? t.dueDate.slice(0, 10) : null;
     if (!ymd) return;
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
     if (!emails.length) { results.push({ key: d.key, sent: 0, skipped: 'nincs email-cím' }); state[d.key] = new Date().toISOString(); continue; }
     const whenTxt = d.days === 0 ? 'ma' : d.days === 1 ? 'holnap' : `${d.days} nap múlva`;
     const label = d.kind === 'event' ? 'Esemény' : 'Feladat határidő';
-    const subject = `Emlékeztető: ${d.title} — ${whenTxt}`;
+    const subject = `Emlékeztető: ${d.title} - ${whenTxt}`;
     const html = `<p><strong>${esc(label)}:</strong> ${esc(d.title)}</p>`
       + `<p>Időpont: <strong>${esc(d.when)}</strong> (${whenTxt})</p>`
       + (d.place ? `<p>Helyszín: ${esc(d.place)}</p>` : '')

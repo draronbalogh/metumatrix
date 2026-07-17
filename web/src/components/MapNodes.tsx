@@ -42,7 +42,7 @@ export const CourseNode = memo(function CourseNode({ data }: { data: CourseData 
       <div className="cn-accent" />
       <div className="cn-name">{x.name}</div>
       <div className={`cn-okt${x.instructors ? '' : ' none'}`}>
-        {x.instructors ? x.instructors : 'oktató: —'}
+        {x.instructors ? x.instructors : 'oktató: -'}
       </div>
       <div className="cn-meta">
         <span className={`cn-tag${ea ? ' ea' : ''}`}>{ea ? 'előadás' : 'gyakorlat'}</span>
@@ -111,7 +111,7 @@ export const SemesterNode = memo(function SemesterNode({ data }: { data: SemData
   );
 });
 
-// Csoport-zóna („swimlane”) a mátrixban — nem interaktív, a kártyák MÖGÖTT ül (pointer-events: none a CSS-ben).
+// Csoport-zóna („swimlane”) a mátrixban - nem interaktív, a kártyák MÖGÖTT ül (pointer-events: none a CSS-ben).
 // zt/zb: a függőleges futam első/utolsó darabja (lekerekítés csak a futam tetején/alján, így a darabok egybeolvadnak)
 export const FrameNode = memo(function FrameNode({ data }: { data: { g: number; w: number; h: number; zt?: boolean; zb?: boolean } }) {
   return (
@@ -119,7 +119,7 @@ export const FrameNode = memo(function FrameNode({ data }: { data: { g: number; 
   );
 });
 
-// A zóna-felirat KÜLÖN node, magas z-indexszel — így a piros élek (nyilak) NEM takarják ki.
+// A zóna-felirat KÜLÖN node, magas z-indexszel - így a piros élek (nyilak) NEM takarják ki.
 export const ZoneLabelNode = memo(function ZoneLabelNode({ data }: { data: { g: number; label: string } }) {
   return <span className={`spec-zone-lbl zln g${data.g}`}>{data.label}</span>;
 });

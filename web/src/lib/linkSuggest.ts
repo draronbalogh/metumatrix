@@ -25,7 +25,7 @@ export function suggestEventFor(taskText: string, events: EventRef[]): EventRef 
     const hits = ws.filter((w) => hay.some((h) => wordHit(w, h))).length;
     const cover = hits / ws.length;
     if (cover < 0.6) continue;
-    // egyszavas esemény-cím csak hosszú (>= 6 betűs) szóra ugorjon be — kevesebb téves találat
+    // egyszavas esemény-cím csak hosszú (>= 6 betűs) szóra ugorjon be - kevesebb téves találat
     if (ws.length === 1 && ws[0].length < 6) continue;
     const score = hits + cover;
     if (score > bestScore) { bestScore = score; best = { id: e.id, title: e.title }; }

@@ -40,7 +40,7 @@ function baseAndNum(name: string): { base: string; num: number | null } {
   return { base, num };
 }
 
-// BA+MA nézetben a programok blokkjai közé eső üres sáv — elég nagy, hogy a csoport-zónák
+// BA+MA nézetben a programok blokkjai közé eső üres sáv - elég nagy, hogy a csoport-zónák
 // futamai (MapView buildZones, ROW_H*1.6 küszöb) ne olvadjanak át a programhatáron.
 const PROG_GAP = ROW_H;
 const PROG_ORDER: Record<string, number> = { BA: 0, MA: 1 };
@@ -127,7 +127,7 @@ export function buildGraph(data: Curriculum, filter: Filter, h: Handlers, view: 
         data: { course, ci, xi, dim: filterActive && !hit, hit, onEdit: h.onEdit, onDetails: h.onDetails, onCategory: h.onCategory, onCatEdit: h.onCatEdit },
       });
       const { base, num } = baseAndNum(course.name);
-      // programonként külön lánc — BA+MA nézetben se kössön át egyik programból a másikba
+      // programonként külön lánc - BA+MA nézetben se kössön át egyik programból a másikba
       if (num != null) (series[`${c.program}|${base}`] ||= []).push({ id, sem: c.semester || 0, num });
     });
 

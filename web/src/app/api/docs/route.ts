@@ -10,7 +10,7 @@ import { canWrite } from '@/lib/editauth';
 const DIR = process.env.DOCS_DIR || 'C:/node/metu_tanterv/grid/docs';
 
 const PPTX = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
-// CSAK a legfrissebb változatok — a korábbi (2024/25-ös) segédletek lekerültek
+// CSAK a legfrissebb változatok - a korábbi (2024/25-ös) segédletek lekerültek
 const FILES: Record<string, string> = {
   'zoom-utmutato-2026-27.pdf': 'application/pdf',
   'zoom-resztvevok.pptx': PPTX,

@@ -40,7 +40,7 @@ export function parseStyleBank(md: string | null): StyleBank {
   return bank;
 }
 
-// magyar keresztnév: az utolsó (nem titulus) névtag — „Dr. Végh Zoltán" → „Zoltán"
+// magyar keresztnév: az utolsó (nem titulus) névtag - „Dr. Végh Zoltán" → „Zoltán"
 export const givenNameHu = (full: string): string => {
   const parts = full.trim().split(/\s+/).filter((p) => !/^(dr|habil|prof)\.?$/i.test(p));
   return parts[parts.length - 1] ?? full;

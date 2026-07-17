@@ -1,5 +1,5 @@
 /* ============================================================
-   METU Média Design — refined system + 4 presets + fullscreen
+   METU Média Design - refined system + 4 presets + fullscreen
    ============================================================ */
 
 :root {
@@ -15,7 +15,7 @@
   --muted: #9a9ca2;
   --line: rgba(21, 23, 26, .12);
   --line-2: rgba(21, 23, 26, .22);
-  /* ALAPSZÍN: semleges szürke — a piros (--hot) KIZÁRÓLAG az aktív/kiemelt
+  /* ALAPSZÍN: semleges szürke - a piros (--hot) KIZÁRÓLAG az aktív/kiemelt
      elemeké, különben minden "hibának" néz ki (felhasználói visszajelzés) */
   --brand: #5b6470;
   --brand-text: #4a525d;
@@ -35,7 +35,7 @@
   --shadow-1: 0 1px 2px rgba(16, 17, 20, .05);
   --shadow-2: 0 1px 2px rgba(16, 17, 20, .04), 0 14px 32px -16px rgba(16, 17, 20, .18);
   --head-ls: -.015em;
-  --pad: clamp(12px, 1.6vw, 20px); /* szukebb keret — a logo/menu ne uljon melyen bent */
+  --pad: clamp(12px, 1.6vw, 20px); /* szukebb keret - a logo/menu ne uljon melyen bent */
 }
 
 /* ---- presets (font + feel) ---- */
@@ -62,7 +62,7 @@ body {
 .wrap { width: 100%; padding: 0 var(--pad); }
 
 /* ---- masthead ---- */
-/* fejlec-csik: kompakt (felhasznaloi keres — ne vigyen el ennyi helyet) */
+/* fejlec-csik: kompakt (felhasznaloi keres - ne vigyen el ennyi helyet) */
 .masthead { flex: none; background: var(--card); border-bottom: 1px solid var(--line); padding: 8px 0; }
 .masthead .wrap { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
 .brandmark { display: flex; align-items: center; gap: 10px; min-width: 0; }
@@ -75,9 +75,9 @@ body {
 
 /* ---- toolbar ---- */
 .toolbar { flex: none; background: var(--card); border-bottom: 1px solid var(--line); }
-/* az oldalso padding a .wrap-pel azonos (var(--pad)) — a menu a logoval EGY vonalban kezdodik */
+/* az oldalso padding a .wrap-pel azonos (var(--pad)) - a menu a logoval EGY vonalban kezdodik */
 .toolbar__inner { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; padding: 6px var(--pad); }
-/* menü/fül-váltók: visszafogott, szögletes fülek — az aktívat a piros alávonás jelöli.
+/* menü/fül-váltók: visszafogott, szögletes fülek - az aktívat a piros alávonás jelöli.
    NINCS belső padding/gap: a kijelölés a menü TELJES magasságát kitölti */
 .viewtoggle { display: inline-flex; background: var(--paper-2); border: 1px solid var(--line); border-radius: 6px; padding: 0; gap: 0; overflow: hidden; }
 .viewtoggle button { border: 0; background: transparent; font-family: var(--ff); font-size: .82rem; font-weight: 600; padding: 8px 15px; border-radius: 0; cursor: pointer; color: var(--ink-2); }
@@ -105,9 +105,9 @@ body {
 /* témaváltó a jobb felső sarokban: fixen a menü és minden sáv FÖLÖTT (csak a modálok takarják) */
 .masthead .wrap { position: relative; }
 .themebtn--head { position: fixed; top: 12px; right: 14px; z-index: 70; box-shadow: 0 2px 10px rgba(16, 17, 20, .18); }
-/* teljes kepernyo gomb — kozvetlenul a tema-valto mellett */
+/* teljes kepernyo gomb - kozvetlenul a tema-valto mellett */
 .fsbtn--head { right: 58px; }
-/* értesítés-csengő — a sorban a következő hely; ha nincs fullscreen-gomb, közelebb csúszik */
+/* értesítés-csengő - a sorban a következő hely; ha nincs fullscreen-gomb, közelebb csúszik */
 .notifbtn--head { right: 58px; }
 .notifbtn--head.notifbtn--shift { right: 102px; }
 
@@ -181,7 +181,7 @@ body {
 .cn-card.g2 .cn-kw, .cc-card.g2 .cc-kw { color: var(--g2); background: var(--g2-100); }
 .cn-name { font-family: var(--ff-display); font-size: .92rem; font-weight: 600; line-height: 1.2; letter-spacing: -.006em; }
 .cn-okt { margin-top: 5px; font-size: .78rem; font-weight: 500; color: var(--ink); }
-.cn-okt::before { content: '— '; color: var(--muted); }
+.cn-okt::before { content: '- '; color: var(--muted); }
 .cn-okt.none { color: var(--muted); }
 .cn-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .cn-tag { font-size: .62rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; background: var(--paper-2); color: var(--ink-2); }
@@ -219,7 +219,7 @@ body {
 .spec-zone.g1 .spec-zone-lbl { background: var(--g1); }
 .spec-zone.g2 .spec-zone-lbl { background: var(--g2); }
 .spec-zone.g3 .spec-zone-lbl { background: var(--g3); }
-/* különálló felirat-node (a piros élek FÖLÖTT) — statikus pozíció, saját háttér, kattintást átereszt */
+/* különálló felirat-node (a piros élek FÖLÖTT) - statikus pozíció, saját háttér, kattintást átereszt */
 .spec-zone-lbl.zln { position: static; top: auto; left: auto; display: inline-block; pointer-events: none; }
 .spec-zone-lbl.zln.g0 { background: var(--g0); }
 .spec-zone-lbl.zln.g1 { background: var(--g1); }
@@ -230,12 +230,12 @@ body {
 .react-flow__handle.hdl { width: 14px; height: 14px; border: 2px solid var(--card); opacity: .6; z-index: 3; transform-origin: center; transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease; }
 .react-flow__handle.hdl.out { background: var(--brand); }
 .react-flow__handle.hdl.in { background: var(--card); box-shadow: inset 0 0 0 2.5px var(--brand); }
-/* megjelenés (szín/gyűrű) — pozíciótól független */
+/* megjelenés (szín/gyűrű) - pozíciótól független */
 .cn-card:hover .react-flow__handle.hdl { opacity: 1; box-shadow: 0 0 0 3px color-mix(in srgb, var(--hot) 14%, transparent); }
 .cn-card:hover .react-flow__handle.hdl.in { box-shadow: inset 0 0 0 2.5px var(--hot), 0 0 0 3px color-mix(in srgb, var(--hot) 14%, transparent); }
 .react-flow__handle.hdl:hover { opacity: 1 !important; cursor: crosshair; box-shadow: 0 0 0 5px color-mix(in srgb, var(--brand) 24%, transparent); }
 .react-flow__handle.hdl.in:hover { box-shadow: inset 0 0 0 2.5px var(--brand), 0 0 0 5px color-mix(in srgb, var(--brand) 24%, transparent); }
-/* növekedés a SAJÁT középpont körül — a React Flow középre-igazító translate-jét megtartva (különben elugrik) */
+/* növekedés a SAJÁT középpont körül - a React Flow középre-igazító translate-jét megtartva (különben elugrik) */
 .cn-card:hover .react-flow__handle-top.hdl, .cn-card:hover .react-flow__handle-bottom.hdl { transform: translate(-50%, 0) scale(1.6); }
 .cn-card:hover .react-flow__handle-left.hdl, .cn-card:hover .react-flow__handle-right.hdl { transform: translate(0, -50%) scale(1.6); }
 .react-flow__handle-top.hdl:hover, .react-flow__handle-bottom.hdl:hover { transform: translate(-50%, 0) scale(2.3) !important; }
@@ -258,7 +258,7 @@ body {
 /* ============================================================
    CATALOG VIEW
    ============================================================ */
-/* csak függőlegesen görgethet — vízszintes túllógás levágva, különben a mobil swipe is megáll rajta */
+/* csak függőlegesen görgethet - vízszintes túllógás levágva, különben a mobil swipe is megáll rajta */
 .catalog { position: absolute; inset: 0; overflow: hidden auto; padding: 18px var(--pad) 80px; }
 /* Egységes nézet-fejléc (PageHead): minden főnézet azonos címsorral, azonos pozícióban indul */
 .cat-block-head { display: flex; align-items: baseline; gap: 11px; margin: 0 0 14px; }
@@ -281,7 +281,7 @@ body {
 .cc-card.ea .cc-accent { background: var(--yellow-deep); }
 .cc-name { font-family: var(--ff-display); font-size: 1rem; font-weight: 600; line-height: 1.2; letter-spacing: -.006em; padding-right: 22px; }
 .cc-okt { margin-top: 6px; font-size: .82rem; font-weight: 500; color: var(--ink); }
-.cc-okt::before { content: '— '; color: var(--muted); }
+.cc-okt::before { content: '- '; color: var(--muted); }
 .cc-okt.none { color: var(--muted); }
 .cc-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
 .cc-tag { font-size: .62rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 3px 7px; border-radius: 5px; background: var(--paper-2); color: var(--ink-2); }
@@ -317,7 +317,7 @@ body {
 /* ============================================================
    Details drawer + modal
    ============================================================ */
-/* a részletező is jobbról csúszik be, a háttér-sötétítés finoman úszik elő — a szerkesztő (.modal) ugyanígy */
+/* a részletező is jobbról csúszik be, a háttér-sötétítés finoman úszik elő - a szerkesztő (.modal) ugyanígy */
 .drawer-scrim { position: fixed; inset: 0; background: rgba(21, 23, 26, .3); z-index: 70; animation: scrimIn .22s ease both; }
 @keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
 .drawer { position: fixed; right: 0; top: 0; bottom: 0; width: min(760px, 94vw); background: var(--paper); border-left: 1px solid var(--line); box-shadow: -16px 0 50px rgba(16, 17, 20, .14); z-index: 75; display: flex; flex-direction: column; overflow: hidden; animation: modalIn .26s cubic-bezier(.2, .8, .25, 1) both; }
@@ -325,12 +325,12 @@ body {
 .dr-scroll { flex: 1 1 auto; overflow-y: auto; padding: 14px 18px 12px; }
 .dr-foot { flex: none; display: flex; gap: 8px; justify-content: flex-end; padding: 10px 18px 12px; border-top: 1px solid var(--line); background: var(--card); }
 .dr-foot .btn { flex: 0 0 auto; }
-/* Szerkesztes + Bezaras egy sorban a reszletezo tetejen (viewer modban csak a Bezaras latszik) —
+/* Szerkesztes + Bezaras egy sorban a reszletezo tetejen (viewer modban csak a Bezaras latszik) -
    a gombok a tartalmukhoz mereteznek, nem nyulnak teljes szelesre */
 .dr-actrow { display: flex; gap: 8px; margin-top: 10px; }
 .dr-actrow .btn { flex: 0 0 auto; }
 .dr-edit-top { margin-top: 0; }
-/* a sarki ✕ megszűnt — a bezárás egységesen a feliratos "✕ Bezárás" gomb (felül + alul) */
+/* a sarki ✕ megszűnt - a bezárás egységesen a feliratos "✕ Bezárás" gomb (felül + alul) */
 .dr-eyebrow { font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--brand-text); }
 .dr-name { margin: 5px 0 0; font-family: var(--ff-display); font-size: 1.35rem; font-weight: 700; line-height: 1.15; letter-spacing: var(--head-ls); }
 .dr-spec { margin-top: 6px; display: inline-block; font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; color: var(--brand-text); background: var(--brand-100); padding: 3px 8px; border-radius: 6px; }
@@ -354,7 +354,7 @@ body {
 .dr-pdf:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
 .dr-edit { margin: 0; }
 
-/* MINDEN szerkesztő JOBB OLDALI, teljes magasságú panelként nyílik — ugyanaz a
+/* MINDEN szerkesztő JOBB OLDALI, teljes magasságú panelként nyílik - ugyanaz a
    design, mint a részletező drawer (felhasználói kérés: egységes, széles oldalpanel) */
 .ovl { position: fixed; inset: 0; background: rgba(21, 23, 26, .46); backdrop-filter: blur(3px); display: flex; z-index: 80; align-items: stretch; justify-content: flex-end; padding: 0; animation: scrimIn .22s ease both; }
 .modal { background: var(--card); border: 0; border-left: 1px solid var(--line); border-radius: 0; width: min(760px, 94vw); height: 100dvh; max-height: 100dvh; overflow: hidden; display: flex; flex-direction: column; box-shadow: -16px 0 50px rgba(16, 17, 20, .22); animation: modalIn .24s cubic-bezier(.2, .8, .25, 1) both; }
@@ -363,15 +363,15 @@ body {
 .modal h3::after { content: ''; position: absolute; left: 24px; bottom: -1.5px; width: 46px; height: 3px; border-radius: 2px; background: var(--brand); }
 /* a szerkesztett tárgy neve piros (brand) hátterű jelvényben a modál-cím elején */
 .mh-name { display: inline-block; margin-right: 10px; padding: 2px 11px; border-radius: 9px; background: var(--brand); color: #fff; max-width: 100%; overflow-wrap: anywhere; }
-/* a törzs görget, a fejléc és a lábléc rögzített marad — a Mentés mindig elérhető görgetés nélkül */
+/* a törzs görget, a fejléc és a lábléc rögzített marad - a Mentés mindig elérhető görgetés nélkül */
 .modal > .f, .modal > .pm-body { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; min-height: 0; overscroll-behavior: contain; }
 /* automatikusan növő textarea: nincs belső görgetés, csak a modál törzse görget */
-/* a tartalom-mezők mindenhol kapjanak rendes helyet — üresen is legalább ~7 sornyit */
+/* a tartalom-mezők mindenhol kapjanak rendes helyet - üresen is legalább ~7 sornyit */
 .ta-grow { overflow: hidden; resize: none; min-height: 160px; }
 .f { padding: 18px 24px 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px 16px; }
-/* KRITIKUS: a grid-cellák tudjanak összemenni — enélkül a hosszú select kitolja a modalt (vízszintes scroll) */
+/* KRITIKUS: a grid-cellák tudjanak összemenni - enélkül a hosszú select kitolja a modalt (vízszintes scroll) */
 .f > * { min-width: 0; }
-/* színkódolt szekciófejek — markánsan elválnak, mobilon is jól látszik, hol tartunk */
+/* színkódolt szekciófejek - markánsan elválnak, mobilon is jól látszik, hol tartunk */
 .f-sec { --sec-c: var(--brand); grid-column: 1 / -1; display: flex; align-items: center; gap: 9px; font-size: .76rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: color-mix(in srgb, var(--sec-c) 70%, var(--ink)); margin: 18px -10px 0; padding: 10px 12px; border-radius: 9px; background: color-mix(in srgb, var(--sec-c) 14%, transparent); border-left: 4px solid var(--sec-c); }
 .f-sec::before { content: ''; width: 9px; height: 9px; border-radius: 3px; background: var(--sec-c); flex: none; }
 .f-sec:first-child { margin-top: 0; }
@@ -386,7 +386,7 @@ body {
 .field input:hover, .field select:hover, .field textarea:hover { border-color: var(--line-2); }
 .field textarea { min-height: 160px; line-height: 1.55; }
 .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid color-mix(in srgb, var(--brand) 35%, transparent); outline-offset: 1px; border-color: var(--brand); background: var(--card); }
-/* chip-választó (állapot / prioritás / kategória) — ujjbarát, színnel beszél */
+/* chip-választó (állapot / prioritás / kategória) - ujjbarát, színnel beszél */
 .chipradio { display: flex; flex-wrap: wrap; gap: 6px; }
 .crx { font-family: var(--ff); font-size: .78rem; font-weight: 600; padding: 8px 13px; border-radius: 11px; cursor: pointer; color: var(--ink-2); background: var(--paper); border: 1px solid var(--line); transition: all .12s; }
 .crx:hover { border-color: var(--line-2); color: var(--ink); }
@@ -472,12 +472,12 @@ body {
 .viewer .ag-mailsum { pointer-events: none; }
 .ev-card .cc-name .ag-mailsum { margin-left: 8px; vertical-align: 2px; }
 
-/* mobil: nagyobb alapbetű — a rem-alapú méretek (kártyák, listák, űrlapok) együtt nőnek */
+/* mobil: nagyobb alapbetű - a rem-alapú méretek (kártyák, listák, űrlapok) együtt nőnek */
 @media (max-width: 720px) {
   html { font-size: 19px; }
 }
 
-/* mobil: teljes képernyős szerkesztő (Material full-screen dialog minta) —
+/* mobil: teljes képernyős szerkesztő (Material full-screen dialog minta) -
    nincs elsötétített háttér-sáv, a teljes magasság az űrlapé; a fejléc és a
    Mentés-sáv rögzített, csak a törzs görget */
 @media (max-width: 720px) {
@@ -581,7 +581,7 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 @keyframes newBlink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 @media (prefers-reduced-motion: reduce) { .ag-new { animation: none; } }
 /* a kijelölt kártya jelzése: a vastag piros (brand) keret a kártyán (lásd .react-flow__node.selected
-   .cn-card) — külön külső gyűrű nincs */
+   .cn-card) - külön külső gyűrű nincs */
 /* a ReactFlow beépített kijelölés-téglalapja ne adjon MÁSODIK keretet a kártyák köré */
 .react-flow__nodesselection-rect { border: none !important; background: transparent !important; }
 /* a húzás közbeni gumiszalag (marquee) viszont látsszon, brand színnel */
@@ -626,7 +626,7 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
   .toolbar-more.open .filters { width: 100%; padding-top: 2px; border-top: 1px dashed var(--line); }
   .toolbar-more.open .themebtn { background: var(--card); }
 
-  /* részletek panel teljes szélességben — plusz padding NINCS, a belső szekciók (dr-top/scroll/foot)
+  /* részletek panel teljes szélességben - plusz padding NINCS, a belső szekciók (dr-top/scroll/foot)
      hozzák a sajátjukat; a dupla margó tette régen aránytalanul üressé mobilon */
   .drawer { width: 100vw; padding: 0; }
   .f { grid-template-columns: 1fr; padding: 12px 14px 4px; }
@@ -681,7 +681,7 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 
 @media (max-width: 720px) {
   .cat-block-head { flex-wrap: wrap; }
-  /* mobilon az alcim csak helyet foglal — a cim alatti kis szurke sor elrejtve */
+  /* mobilon az alcim csak helyet foglal - a cim alatti kis szurke sor elrejtve */
   .cat-block-head > .nm { display: none; }
   .ag-intro { flex-direction: column; }
   .ag-intro-edit { margin-left: 0; }
@@ -789,7 +789,7 @@ html[data-theme='dark'] .pb.p { color: var(--yellow-deep); }
 /* NINCS belső görgetés: a lista a tartalommal együtt nő, csak a modál törzse görget */
 .pp-picker { border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
 /* Resztvevo-valaszto (attekintheto): kivalasztottak felul, kereses-elso hozzaadas,
-   kategoria-fulek — a teljes nevfal sosem latszik egyben */
+   kategoria-fulek - a teljes nevfal sosem latszik egyben */
 .pp-wrap { display: flex; flex-direction: column; gap: 7px; }
 .pp-selrow { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; padding: 7px 9px; border: 1px dashed var(--line); border-radius: 10px; background: var(--paper-2); }
 .pp-selcount { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-right: 3px; }
@@ -1066,7 +1066,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .place-quick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 7px; }
 .pq-sep { width: 1px; height: 18px; background: var(--line-2); margin: 0 3px; flex: none; }
 
-/* mobil: KOMPAKT másolósáv — a 3 gomb egy sorban, az Outlook vékony sávként alatta,
+/* mobil: KOMPAKT másolósáv - a 3 gomb egy sorban, az Outlook vékony sávként alatta,
    így a szerkesztő felület kap minél több magasságot */
 @media (max-width: 720px) {
   .nm-copyrow.big { grid-template-columns: repeat(3, 1fr); gap: 6px; }
@@ -1078,9 +1078,9 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 
 /* ============ Levelek nezet (TopicsView): 3 oszlop = lista | elonezet | szerkeszto ============
    Desktopon az OLDAL nem gorget: a fejlec fix, a harom oszlop toltike ki a magassagot,
-   es mindegyikben PONTOSAN EGY gorgeto van — nincs egymasba agyazott scroll. */
+   es mindegyikben PONTOSAN EGY gorgeto van - nincs egymasba agyazott scroll. */
 .tpv { position: absolute; inset: 0; overflow: hidden; padding: 18px var(--pad) 14px; display: flex; flex-direction: column; }
-/* (a régi tp-headrow/tp-title fejléc-minta megszűnt — mindenhol a PageHead / .cat-block-head él) */
+/* (a régi tp-headrow/tp-title fejléc-minta megszűnt - mindenhol a PageHead / .cat-block-head él) */
 .tpv > .cat-block-head { flex: none; }
 /* ÍRÁS-KÖZPONTÚ: keskeny lista + NAGY szerkesztő (nincs előnézet-oszlop) */
 .tp3 { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(250px, 320px) minmax(0, 1fr); gap: 12px; align-items: stretch; }
@@ -1101,7 +1101,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .tp-item .s { display: block; font-size: .8rem; font-weight: 700; color: var(--ink); }
 .tp-item .d { display: block; margin-top: 2px; font-size: .68rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tp-empty { padding: 14px; color: var(--muted); font-size: .82rem; }
-/* (az előnézet-oszlop megszűnt — a lista-kattintás rögtön a szerkesztőbe tölt) */
+/* (az előnézet-oszlop megszűnt - a lista-kattintás rögtön a szerkesztőbe tölt) */
 .tp-pv-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
 .tp-pv-cta { flex: none; white-space: nowrap; }
 .tp-pv-meta { font-size: .64rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--brand-text); }
@@ -1119,12 +1119,12 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .nm-inline .mt-tabs { padding: 6px 2px 0; }
 .nm-inline .nm-topicpanel { display: none; } /* a sablontár itt a bal oszlop, nem duplikáljuk */
 @media (max-width: 720px) {
-  /* mobilon egy oszlop van és CSAK AZ OLDAL gorget — a belso gorgetok kikapcsolva;
+  /* mobilon egy oszlop van és CSAK AZ OLDAL gorget - a belso gorgetok kikapcsolva;
      a felso padding a tobbi nezettel azonos (18px), hogy a cim ne uljon feljebb */
   .tpv { overflow-y: auto; overflow-x: hidden; display: block; padding: 18px var(--pad) 40px; }
   .tp-scroll { overflow: visible; border: 0; border-radius: 0; background: transparent; }
   .tp3 { grid-template-columns: 1fr; }
-  /* mobilon csak a lista látszik — a sablon/levél koppintásra MODÁLKÉNT nyíló szerkesztőbe töltődik */
+  /* mobilon csak a lista látszik - a sablon/levél koppintásra MODÁLKÉNT nyíló szerkesztőbe töltődik */
   .tp3 .tp-composer { display: none; }
 }
 
@@ -1148,7 +1148,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 
 /* Orarend nezet */
 .orv { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding: 18px var(--pad) 48px; }
-/* Orarend + Segedletek: a cim a gorgeton KIVUL all — gorgeteskor semmi nem uszik
+/* Orarend + Segedletek: a cim a gorgeton KIVUL all - gorgeteskor semmi nem uszik
    a cim moge/fole; EGYETLEN fuggoleges gorgeto: .orv-scroll */
 .orv--fixhead { overflow: hidden; display: flex; flex-direction: column; padding-bottom: 0; }
 .orv--fixhead > .cat-block-head { flex: none; }
@@ -1175,7 +1175,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .or-warn { margin-left: 5px; cursor: help; }
 @media (max-width: 720px) { .or-table { font-size: .74rem; } .or-table th, .or-table td { padding: 6px 7px; } }
 
-/* Orarend HETI tabla: klasszikus orarend — idosavok sorokban, napok oszlopokban,
+/* Orarend HETI tabla: klasszikus orarend - idosavok sorokban, napok oszlopokban,
    a parhuzamos orak a cellaban egymas ALATT (teljes szelessegu, olvashato kartyak).
    Nincs fix magassag es nincs belso gorgetes: a tabla a lappal egyutt folyik,
    vizszintes gorgetosav csak akkor, ha tenyleg nem fer ki (mobil, minden nap). */
@@ -1192,7 +1192,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .orc-time b { font-weight: 800; color: var(--ink); }
 .orc-time span { color: var(--muted); font-size: .62rem; }
 .orc-cell { display: flex; flex-direction: column; gap: 5px; padding: 6px; min-height: 44px; border-top: 1px solid var(--line); border-left: 2px solid var(--orc-sep); }
-/* minden masodik naposzlop enyhe tonust kap — a napok ranezesre elvalnak */
+/* minden masodik naposzlop enyhe tonust kap - a napok ranezesre elvalnak */
 .orc-dh.alt { background-color: color-mix(in srgb, var(--brand) 8%, var(--paper)); }
 .orc-cell.alt { background-color: color-mix(in srgb, var(--brand) 4%, var(--card)); }
 .orc-card {
@@ -1202,7 +1202,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
   font-size: .74rem; line-height: 1.3; cursor: help;
 }
 .orc-card:hover { border-color: var(--line-2); background: var(--card); box-shadow: 0 3px 10px rgba(0, 0, 0, .12); }
-/* tantervi kartyara illesztett ora: kattinthato — ugyanaz a reszletezo nyilik, mint a Matrixban */
+/* tantervi kartyara illesztett ora: kattinthato - ugyanaz a reszletezo nyilik, mint a Matrixban */
 .orc-card--link { cursor: pointer; }
 .orc-card--link:hover { border-color: var(--g1); box-shadow: 0 3px 12px rgba(0, 0, 0, .16), 0 0 0 2px color-mix(in srgb, var(--g1) 30%, transparent); }
 .orc-card--link:focus-visible { outline: 2px solid var(--g1); outline-offset: 1px; }
@@ -1217,7 +1217,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .orc.orc--single { min-width: 0; }
 @media (max-width: 720px) { .orc-card { font-size: .7rem; } }
 
-/* Fomenu mobilon: EGYETLEN vizszintesen (jobbra) gorgetheto sor — csak ~1 sornyi
+/* Fomenu mobilon: EGYETLEN vizszintesen (jobbra) gorgetheto sor - csak ~1 sornyi
    helyet foglal; nezetvaltaskor az aktiv ful scrollIntoView-val beuszik a kepbe */
 @media (max-width: 900px) {
   .toolbar__inner > .viewtoggle--nav {
@@ -1228,7 +1228,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
   .viewtoggle--nav button { flex: none; white-space: nowrap; text-align: center; padding: 8px 12px; }
 }
 
-/* Nevjegyzek nezetkent: a cim a gorgeton KIVUL all (mint a Levelek nezetben) —
+/* Nevjegyzek nezetkent: a cim a gorgeton KIVUL all (mint a Levelek nezetben) -
    gorgeteskor a tartalom nem uszik a cim moge/fole; EGYETLEN gorgeto: .pmv-scroll */
 .pmv { position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column; padding: 18px var(--pad) 0; }
 .pmv > .cat-block-head { flex: none; }
@@ -1242,8 +1242,8 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 /* Orarendben a napfejlec nem ragad (a nap-szuro sav a ragados) es nem kulon csik */
 .orv .tp-gh { position: static; background: transparent; border-bottom: 0; border-left: 4px solid var(--brand); padding: 4px 0 4px 10px; }
 
-/* Segedletek: ket oszlop — bal a dokumentumok, jobb a Gyakori linkek sav.
-   A sav NEM onallo gorgeto (a .orv-scroll-lal egyutt gorog) — dupla scroll tilos. */
+/* Segedletek: ket oszlop - bal a dokumentumok, jobb a Gyakori linkek sav.
+   A sav NEM onallo gorgeto (a .orv-scroll-lal egyutt gorog) - dupla scroll tilos. */
 .docs-cols { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 22px; align-items: start; }
 .docs-main { order: 1; min-width: 0; }
 .doc-links { order: 2; border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 12px 14px 14px; }
@@ -1275,7 +1275,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .nm-titem.is-on { background: var(--hot); color: #fff; font-weight: 800; }
 .nm-titem.is-on:hover { background: var(--hot); color: #fff; }
 
-/* Nevjegyzek mobilon: minden szemely KULON KARTYA — latszik, hol kezdodik egy uj nev.
+/* Nevjegyzek mobilon: minden szemely KULON KARTYA - latszik, hol kezdodik egy uj nev.
    Felul a teljes szelessegu, felkover nev; a torles gomb a jobb felso sarokban. */
 @media (max-width: 720px) {
   .pm-rows { gap: 10px; }
@@ -1462,7 +1462,7 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .save-msg { font-size: .72rem; font-weight: 700; color: var(--danger); }
 .save-msg.ok { color: var(--g0); }
 
-/* automentes-allapot chip (toolbar) — a nema mentesi hibak lathatova tetele */
+/* automentes-allapot chip (toolbar) - a nema mentesi hibak lathatova tetele */
 .autosave-chip { display: inline-flex; align-items: center; gap: 6px; font-size: .72rem; font-weight: 700; color: var(--muted); white-space: nowrap; padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); }
 .autosave-chip.ok { color: var(--g0); border-color: color-mix(in srgb, var(--g0) 40%, var(--line)); }
 .autosave-chip.err { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, var(--line)); }
@@ -1470,7 +1470,7 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .autosave-chip .chip-retry:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
 
 /* KITOLTO-PANEL a levelszerkeszto jobb oldalan: a levelben maradt [szogletes]
-   mezok kis inputokkal toltehok — Enter/pipa a targy ES torzs MINDEN
+   mezok kis inputokkal toltehok - Enter/pipa a targy ES torzs MINDEN
    azonos mezojebe beirja az erteket */
 .nm-fill { border: 1px solid var(--line); border-radius: 10px; background: var(--card); padding: 10px 12px 12px; }
 .nm-fillrow { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
@@ -1486,7 +1486,7 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .nm-fillgo:hover { border-color: var(--hot); color: var(--hot); }
 .nm-fillgo.nm-fillback:hover { border-color: var(--g0); color: var(--g0); }
 .nm-outprev { margin-top: 5px; font-size: .76rem; color: var(--ink-2); background: color-mix(in srgb, var(--brand) 7%, transparent); border-radius: 8px; padding: 5px 9px; }
-/* POSTA nézet — válaszra váró bejövő levelek listája, lenyitható választervekkel.
+/* POSTA nézet - válaszra váró bejövő levelek listája, lenyitható választervekkel.
    Egy sor = egy levél: dátum + feladó + tárgy, alatta EGY mondat arról, mire válaszolunk. */
 .po-list { display: flex; flex-direction: column; gap: 8px; }
 /* a sor bal színcsíkja a SÁVOT kódolja: piros csak a Visszatért (figyelem!),
@@ -1526,7 +1526,7 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .po-actrow .btn { padding: 4px 10px; font-size: .76rem; }
 .po-snlbl { font-size: .74rem; color: var(--muted); }
 .po-foot { margin-top: 14px; font-size: .78rem; color: var(--muted); }
-/* Posta-sávok: stabil szakaszok fix sorrendben — a sávcím szürke, nem piros */
+/* Posta-sávok: stabil szakaszok fix sorrendben - a sávcím szürke, nem piros */
 .po-lane { display: flex; flex-direction: column; gap: 8px; }
 .po-lane + .po-lane { margin-top: 16px; }
 .po-lane-h { margin: 0; font-size: .78rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-2); display: flex; align-items: baseline; gap: 8px; }
@@ -1552,7 +1552,7 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .po-brief .pill--hot { background: var(--hot-100); color: var(--hot); }
 .po-brief .btn { padding: 4px 10px; font-size: .76rem; }
 .po-decide-h { font-size: .78rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 4px; }
-/* címzett-sor a tervek felett: kinek megy a válasz — másolás előtt ellenőrizhető */
+/* címzett-sor a tervek felett: kinek megy a válasz - másolás előtt ellenőrizhető */
 .po-tocc { font-size: .76rem; color: var(--ink-2); padding: 5px 10px; border: 1px dashed var(--line); border-radius: 8px; background: var(--card); }
 /* feladó-szabály sor (Screener): egy feladóról egyszer döntünk */
 .po-screen { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
@@ -1568,10 +1568,10 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .po-tmsg .f, .dr-tmsg .f { font-weight: 700; }
 .po-tmsg .g { flex: 1; min-width: 0; }
 .dr-thread { margin-top: 8px; border-left: 2px solid var(--line); padding-left: 10px; }
-/* visszavonási sáv a lap alján — a verdikt 6 mp-ig visszavonható */
+/* visszavonási sáv a lap alján - a verdikt 6 mp-ig visszavonható */
 .po-undotoast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 999px; background: var(--ink); color: var(--bg); font-size: .82rem; box-shadow: 0 8px 24px rgba(16, 17, 20, .25); z-index: 60; }
 .po-undotoast .btn { padding: 3px 10px; font-size: .76rem; background: var(--bg); color: var(--ink); border-color: transparent; }
-/* a verdikt-sor vizuálisan elkülönül a tervektől — ez a döntés helye */
+/* a verdikt-sor vizuálisan elkülönül a tervektől - ez a döntés helye */
 .po-actrow { border-top: 1px dashed var(--line); padding-top: 9px; margin-top: 2px; }
 @media (max-width: 720px) {
   .po-lane-h .hint { display: none; }
@@ -1591,7 +1591,7 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
   .po-draft-h { flex-wrap: wrap; }
 }
 
-/* MENTES-DOKK: jobb also sarok — desktopon a harom gomb mindig latszik,
+/* MENTES-DOKK: jobb also sarok - desktopon a harom gomb mindig latszik,
    mobilon hamburger-FAB, amibol felfele nyilnak a gombok */
 .savedock { position: fixed; right: 14px; bottom: 14px; z-index: 60; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 .savedock-btns { display: flex; gap: 8px; }
@@ -1615,7 +1615,7 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 
 /* ============ AGENDA-LISTA (Feladatok + Esemenyek) ============
    LISTA, nem racs: desktopon minden feladat EGYETLEN sor (pipa + cim + meta
-   jobbra), mint egy levelezoklien listaja — igy fentrol le olvashato.
+   jobbra), mint egy levelezoklien listaja - igy fentrol le olvashato.
    Mobilon 2 sor (cim-sor + meta-sor). Minden reszlet a reszletezoben. */
 .agenda .cc-grid { display: flex; flex-direction: column; gap: 6px; }
 .agc { display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; }
@@ -1630,7 +1630,7 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .agc-meta .m.warn { color: color-mix(in srgb, var(--yellow-deep) 75%, var(--ink)); }
 .agc-meta .m.doing { color: var(--g1); }
 .agc-meta .m.ev { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
-/* prioritas: bal szinsav — piros CSAK a magas; a tobbi visszafogott */
+/* prioritas: bal szinsav - piros CSAK a magas; a tobbi visszafogott */
 .agc.prio-high { border-left: 3px solid var(--hot); }
 .agc.prio-normal { border-left: 3px solid var(--line-2); }
 .agc.prio-low { border-left: 3px solid transparent; }
@@ -1680,7 +1680,7 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .dr-task .t, .dr-letter .t { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dr-task .m, .dr-letter .m { flex: none; font-size: .72rem; color: var(--ink-2); white-space: nowrap; }
 .dr-addtask { margin: 2px 0 12px; }
-/* KI MIT CSINÁL — személyenként elkülönülő kártya: név + szerep + saját teendők, itt pipálhatók.
+/* KI MIT CSINÁL - személyenként elkülönülő kártya: név + szerep + saját teendők, itt pipálhatók.
    A felelős kártyája piros csíkot kap (kiemelt), a kiosztatlan lépéseké sárgát (figyelmeztet). */
 .dr-person { margin: 0 0 10px; padding: 10px 12px 11px; border: 1px solid var(--line); border-left: 4px solid var(--brand); border-radius: 10px; background: color-mix(in srgb, var(--brand) 4%, var(--card)); }
 .dr-person--owner { border-left-color: var(--hot); background: color-mix(in srgb, var(--hot) 3%, var(--card)); }
@@ -1716,7 +1716,7 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .dr-lst.draft { background: color-mix(in srgb, var(--yellow-deep) 20%, transparent); color: color-mix(in srgb, var(--yellow-deep) 80%, var(--ink)); }
 .dr-lst.sent { background: color-mix(in srgb, var(--g0) 18%, transparent); color: var(--g0); }
 
-/* Katalogus mobilon: kompakt felev-fejlecek — a program-fej (BA/MA) kicsi,
+/* Katalogus mobilon: kompakt felev-fejlecek - a program-fej (BA/MA) kicsi,
    a felev + az osszesito (targy/kredit/ora) EGY karcsu sorban, kis paddingokkal */
 @media (max-width: 720px) {
   .catalog > div > .cat-block-head { margin-top: 12px; margin-bottom: 4px; }

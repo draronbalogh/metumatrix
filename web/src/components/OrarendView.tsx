@@ -18,7 +18,7 @@ interface Orarend { cim: string; forras: string; frissitve: string; entries: Ent
 
 const DAYS = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek'];
 
-// az EventsCalendar palettája — tantárgyanként stabil szín (név-hash alapján)
+// az EventsCalendar palettája - tantárgyanként stabil szín (név-hash alapján)
 const PALETTE = ['#d7144b', '#2f6fe0', '#17935f', '#7b3fe4', '#e08b00', '#0e9aa7', '#c2185b', '#5d7a12', '#b3541e', '#4b5bd7', '#8e24aa', '#00796b'];
 const colorOf = (s: string): string => {
   let h = 0;
@@ -27,7 +27,7 @@ const colorOf = (s: string): string => {
 };
 
 // "8-11:10", "13:20-16:30", vagy heti bontás: "13:20-16:30, 1.3.5.7.9. hét, …"
-// — mindig az ELSŐ időtartományt vesszük, a többi a tooltipben olvasható
+// - mindig az ELSŐ időtartományt vesszük, a többi a tooltipben olvasható
 const parseIdo = (ido: string | null): { start: number; end: number } | null => {
   if (!ido) return null;
   const m = ido.match(/(\d{1,2})(?::(\d{2}))?\s*-\s*(\d{1,2})(?::(\d{2}))?/);
@@ -55,7 +55,7 @@ const bandOf = (startMin: number): number => {
   return bi;
 };
 
-// A 2026/27. őszi félév kulcsdátumai a hivatalos Tanév rendjéből (MKK) —
+// A 2026/27. őszi félév kulcsdátumai a hivatalos Tanév rendjéből (MKK) -
 // az órarend tetején mindig szem előtt
 const KEY_DATES: { l: string; d: string }[] = [
   { l: 'Projekthét', d: 'szept. 7–11.' },
@@ -120,7 +120,7 @@ export default function OrarendView({ knownNames, q, displayName, resolveCourse,
 
   // U+FE0F variációs szelektorral: e nélkül Windowson tofu/kérdőjelként renderelt
   const warn = (name: string | null) =>
-    name && !known.has(normName(name)) ? <span className="or-warn" title="Ez a név nem szerepel a ☎ Névjegyzékben — érdemes felvenni az elérhetőségét">⚠️</span> : null;
+    name && !known.has(normName(name)) ? <span className="or-warn" title="Ez a név nem szerepel a ☎ Névjegyzékben - érdemes felvenni az elérhetőségét">⚠️</span> : null;
 
   return (
     <section className="wrap orv orv--fixhead">
@@ -163,7 +163,7 @@ export default function OrarendView({ knownNames, q, displayName, resolveCourse,
                         const ref = resolveCourse(e.targy, e.szint);
                         return (
                           <div key={i} className={`orc-card${ref ? ' orc-card--link' : ''}`}
-                            title={ref ? `${tip} — kattints a tárgy kártyájáért` : tip}
+                            title={ref ? `${tip} - kattints a tárgy kártyájáért` : tip}
                             style={{ borderLeftColor: colorOf(e.targy) }}
                             role={ref ? 'button' : undefined} tabIndex={ref ? 0 : undefined}
                             onClick={ref ? () => onOpenCourse(ref.ci, ref.xi) : undefined}
@@ -188,7 +188,7 @@ export default function OrarendView({ knownNames, q, displayName, resolveCourse,
                 const ref = resolveCourse(e.targy, e.szint);
                 return (
                   <span key={i} className={`cc-tag${ref ? ' orc-card--link' : ''}`}
-                    title={[okt, e.tankor, e.szint].filter(Boolean).join(' · ') + (ref ? ' — kattints a tárgy kártyájáért' : '')}
+                    title={[okt, e.tankor, e.szint].filter(Boolean).join(' · ') + (ref ? ' - kattints a tárgy kártyájáért' : '')}
                     role={ref ? 'button' : undefined} tabIndex={ref ? 0 : undefined}
                     onClick={ref ? () => onOpenCourse(ref.ci, ref.xi) : undefined}
                     onKeyDown={ref ? (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); onOpenCourse(ref.ci, ref.xi); } } : undefined}>
@@ -213,7 +213,7 @@ export default function OrarendView({ knownNames, q, displayName, resolveCourse,
                   <tbody>
                     {[...g.items].sort((a, b) => (a.ido ?? '99').localeCompare(b.ido ?? '99')).map((e, i) => (
                       <tr key={i}>
-                        <td className="or-ido">{e.ido ?? '—'}</td>
+                        <td className="or-ido">{e.ido ?? '-'}</td>
                         <td className="or-targy">
                           {(() => {
                             const ref = resolveCourse(e.targy, e.szint);
@@ -226,8 +226,8 @@ export default function OrarendView({ knownNames, q, displayName, resolveCourse,
                           {e.oktato ? displayName(e.oktato) : 'nincs megadva'}
                           {warn(e.oktato)}
                         </td>
-                        <td>{e.terem ?? '—'}</td>
-                        <td>{e.tankor ?? '—'}</td>
+                        <td>{e.terem ?? '-'}</td>
+                        <td>{e.tankor ?? '-'}</td>
                         <td>{e.szint ?? ''}{e.nyelv === 'E' ? ' (EN)' : ''}</td>
                         <td>{[e.kovetelmeny, e.kredit ? `${e.kredit} kr` : null].filter(Boolean).join(' · ')}</td>
                       </tr>
@@ -240,7 +240,7 @@ export default function OrarendView({ knownNames, q, displayName, resolveCourse,
           {groups.filter((g) => !day || g.label === day).length === 0 && <p className="tp-empty">Nincs találat.</p>}
         </>
       )}
-      <p className="tp-pv-hint">Forrás: {data.forras} · frissítve: {data.frissitve}. Csak a Média Design szak (magyar nyelvű BA + MA) órái — az animációs és angol nyelvű sorok az Excelből ki vannak szűrve a mintatanterv kurzuslistája alapján. Az oktatónevek a ☎ Névjegyzék szerinti írásmóddal (titulussal) jelennek meg; a ⚠️ jel oktatót jelöl, aki még nincs a Névjegyzékben. Az órákra kattintva a tárgy tantervi kártyája nyílik meg — ugyanaz, mint a Mátrixban és a Katalógusban. A heti táblában minden óra a kezdő idősávjában szerepel — a kártyán a pontos idő olvasható, a hosszabb (több sávot átfogó) óráké is.</p>
+      <p className="tp-pv-hint">Forrás: {data.forras} · frissítve: {data.frissitve}. Csak a Média Design szak (magyar nyelvű BA + MA) órái - az animációs és angol nyelvű sorok az Excelből ki vannak szűrve a mintatanterv kurzuslistája alapján. Az oktatónevek a ☎ Névjegyzék szerinti írásmóddal (titulussal) jelennek meg; a ⚠️ jel oktatót jelöl, aki még nincs a Névjegyzékben. Az órákra kattintva a tárgy tantervi kártyája nyílik meg - ugyanaz, mint a Mátrixban és a Katalógusban. A heti táblában minden óra a kezdő idősávjában szerepel - a kártyán a pontos idő olvasható, a hosszabb (több sávot átfogó) óráké is.</p>
       </div>
     </section>
   );

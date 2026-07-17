@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 
 interface LogEntry {
   at: string;                // ISO időbélyeg
-  sel: string;               // 't:id' / 'e:id' — melyik Posta-tételhez
+  sel: string;               // 't:id' / 'e:id' - melyik Posta-tételhez
   label: string;             // a választott terv címkéje
   action: 'copy' | 'send';   // vágólapra másolás / elküldés a levélíróból
   edited?: boolean;          // küldésnél: átírta-e a tervet a felhasználó

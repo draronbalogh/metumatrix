@@ -66,7 +66,7 @@ export default function ITView({ q }: { q: string }) {
 
   return (
     <section className="wrap orv orv--fixhead itv">
-      {/* a cím EGYETLEN rövid szó — a hosszú megnevezés az alcímben (mobilon rejtve) */}
+      {/* a cím EGYETLEN rövid szó - a hosszú megnevezés az alcímben (mobilon rejtve) */}
       <PageHead title="IT" sub={`${data.cim} · frissítve: ${data.frissitve} · ${rooms.length} terem · ${swList.length} szoftver`} />
       {/* a cím a görgetőn KÍVÜL: a szűrősáv közvetlenül a felső sorhoz tapad,
           görgetéskor nem látszik mögötte/fölötte elhaladó szöveg */}
@@ -114,7 +114,7 @@ export default function ITView({ q }: { q: string }) {
         </div>
       )}
 
-      <p className="tp-pv-hint">Forrás: {data.forras} — újrageneráláskor a lista frissül. A kereső teremre és szoftverre is illeszkedik (pl. „Maya", „225", „Avid").</p>
+      <p className="tp-pv-hint">Forrás: {data.forras} - újrageneráláskor a lista frissül. A kereső teremre és szoftverre is illeszkedik (pl. „Maya", „225", „Avid").</p>
       </div>
     </section>
   );

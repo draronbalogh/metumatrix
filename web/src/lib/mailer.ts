@@ -33,7 +33,7 @@ const BCC_BATCH_SIZE = Math.max(1, Number(process.env.BCC_BATCH_SIZE || 90));
 // sebességkorlátozásába nagy köröknél.
 const BATCH_DELAY_MS = Math.max(0, Number(process.env.BCC_BATCH_DELAY_MS || 1200));
 
-// Brevo (transactional email, HTTPS API) — 2FA nélkül működik, és a 443-as porton
+// Brevo (transactional email, HTTPS API) - 2FA nélkül működik, és a 443-as porton
 // megy, így a munkahelyi SMTP-tiltást is megkerüli. Ha a kulcs be van állítva,
 // ez az elsődleges küldő; a Gmail SMTP csak tartalék.
 const BREVO_API_KEY = process.env.BREVO_API_KEY;

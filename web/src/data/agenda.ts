@@ -13,7 +13,7 @@ export const STATUS_ORDER: TaskStatus[] = ['todo', 'doing', 'done'];
 export const nextStatus = (s: TaskStatus): TaskStatus =>
   STATUS_ORDER[(STATUS_ORDER.indexOf(s) + 1) % STATUS_ORDER.length];
 
-// Prioritás — 3 szint, a nyitott feladatok alapból e szerint csoportosulnak
+// Prioritás - 3 szint, a nyitott feladatok alapból e szerint csoportosulnak
 export type TaskPriority = 'high' | 'normal' | 'low';
 export const PRIORITY_LABEL: Record<TaskPriority, string> = {
   high: 'Magas', normal: 'Közepes', low: 'Alacsony',
@@ -29,10 +29,10 @@ export const TASK_CATEGORIES = [
   'Infrastruktúra', 'HR & demonstrátor', 'Web & archívum', 'Egyéb',
 ] as const;
 
-// A bot által előre megírt választervezet (aláírás NÉLKÜL — azt az app teszi hozzá)
+// A bot által előre megírt választervezet (aláírás NÉLKÜL - azt az app teszi hozzá)
 export interface ReplyDraft { label: string; subject: string; body: string }
 
-// A Posta állapotgépe — minden bejövő levél pontosan EGY állapotban van:
+// A Posta állapotgépe - minden bejövő levél pontosan EGY állapotban van:
 // pending → rám várnak · snoozed → halasztva (csak felbukkanási dátum, határidőt sosem
 // módosít) · waiting → rájuk várok (válaszoltam, követési dátummal) · replied →
 // megválaszolva · noreply → lezárva, nem igényelt választ. Lezárt/várakozó állapotból
@@ -53,7 +53,7 @@ export interface ThreadMsg {
   gist: string;          // egy mondat a lényegről
 }
 
-// A tételt kiváltó bejövő email feladója — neki külön válasz-levél írható.
+// A tételt kiváltó bejövő email feladója - neki külön válasz-levél írható.
 export interface AgendaSource {
   name: string;
   email: string;
@@ -64,14 +64,14 @@ export interface AgendaSource {
   gist?: string | null;    // EGY tényszerű mondat: mit kér / mire vár választ a feladó
   cc?: string[] | null;    // levélszálnál a válasz további címzettjei (email-címek)
   replies?: ReplyDraft[] | null; // a bot 3 előre megírt választerve (a levél + agenda + stílusfájl alapján)
-  status?: SourceStatus;        // állapotgép — hiányzó érték betöltéskor migrálódik
+  status?: SourceStatus;        // állapotgép - hiányzó érték betöltéskor migrálódik
   repliedAt?: string | null;    // mikor ment el a válasz (ISO)
   snoozeUntil?: string | null;  // halasztás felbukkanási napja (ÉÉÉÉ-HH-NN)
   followUpAt?: string | null;   // rájuk-várok: eddig várunk a válaszukra, utána visszatér
-  waitingSince?: string | null; // a legrégebbi megválaszolatlan bejövő napja — a bot származtatja újra
-  repliesFor?: string | null;   // melyik bejövőhöz készültek a tervek (ISO) — elavulás-jelzéshez
-  lastInboundAt?: string | null; // a legutolsó bejövő levél ISO időbélyege — elavulás: lastInboundAt > repliesFor
-  returned?: string | null;     // ébresztés/újranyitás időpontja (ISO) — a Visszatért sáv jelzője
+  waitingSince?: string | null; // a legrégebbi megválaszolatlan bejövő napja - a bot származtatja újra
+  repliesFor?: string | null;   // melyik bejövőhöz készültek a tervek (ISO) - elavulás-jelzéshez
+  lastInboundAt?: string | null; // a legutolsó bejövő levél ISO időbélyege - elavulás: lastInboundAt > repliesFor
+  returned?: string | null;     // ébresztés/újranyitás időpontja (ISO) - a Visszatért sáv jelzője
   draftMode?: 'reply' | 'ping' | null; // 'ping': a tervek követő-emlékeztetők (T7 ébresztés után), nem válaszok
   thread?: ThreadMsg[] | null;  // a szál idővonala (bot: bejövők, app: kimenők)
   shadow?: boolean;             // árnyék-forrás kapcsolt feladat–esemény ikernél: a Posta-sor és az állapot a feladaton él
@@ -92,7 +92,7 @@ export const draftsStale = (s: AgendaSource): boolean => {
 export interface TaskStep {
   text: string;
   done: boolean;
-  owner?: string | null; // a lépés felelőse — üresen a feladat felelőse viszi
+  owner?: string | null; // a lépés felelőse - üresen a feladat felelőse viszi
   due?: string | null;   // a lépés pontos határideje (ÉÉÉÉ-HH-NN)
 }
 
@@ -100,7 +100,7 @@ export interface AgendaTask {
   id: string;
   title: string;
   summary: string;
-  /** @deprecated a régi soronkénti lépéslista — olvasni a taskSteps()-szel kell, mentéskor a steps tükre */
+  /** @deprecated a régi soronkénti lépéslista - olvasni a taskSteps()-szel kell, mentéskor a steps tükre */
   ideas: string[];
   steps?: TaskStep[];
   status: TaskStatus;
@@ -109,9 +109,9 @@ export interface AgendaTask {
   owner: string | null;
   due: string | null;       // szabadszavas határidő a megjelenítéshez (pl. „szeptemberre")
   dueDate: string | null;   // pontos határidő (ÉÉÉÉ-HH-NN) az automatikus emlékeztetőhöz
-  people: string[];        // résztvevők: oktatók és/vagy hallgatók — bárki hozzárendelhető
+  people: string[];        // résztvevők: oktatók és/vagy hallgatók - bárki hozzárendelhető
   eventId: string | null;  // ha a feladat egy naptári eseményhez kötődik
-  createdAt: string | null; // létrehozás időpontja (ISO) — dátum szerinti rendezéshez és az ÚJ jelzéshez
+  createdAt: string | null; // létrehozás időpontja (ISO) - dátum szerinti rendezéshez és az ÚJ jelzéshez
   source?: AgendaSource | null; // a kiváltó email feladója (válasz-levélhez)
 }
 
@@ -119,10 +119,10 @@ export interface AgendaEvent {
   id: string;
   title: string;
   when: string;          // megjelenített időpont, szabad szöveg
-  sort: string | null;   // rendezéshez: ÉÉÉÉ-HH — üresen a lista végére kerül
-  day: string | null;    // kezdőnap (ÉÉÉÉ-HH-NN), ha már ismert — a naptárban ettől jelölődik
-  dayEnd: string | null; // időszak utolsó napja (ÉÉÉÉ-HH-NN) — többnapos eseménynél/időszaknál
-  featured: boolean;     // kiemelt esemény — hangsúlyosan jelenik meg (sáv, csillag, vastag csík)
+  sort: string | null;   // rendezéshez: ÉÉÉÉ-HH - üresen a lista végére kerül
+  day: string | null;    // kezdőnap (ÉÉÉÉ-HH-NN), ha már ismert - a naptárban ettől jelölődik
+  dayEnd: string | null; // időszak utolsó napja (ÉÉÉÉ-HH-NN) - többnapos eseménynél/időszaknál
+  featured: boolean;     // kiemelt esemény - hangsúlyosan jelenik meg (sáv, csillag, vastag csík)
   note: string | null;
   place: string | null;
   owner: string | null;
@@ -130,7 +130,7 @@ export interface AgendaEvent {
   source?: AgendaSource | null; // a kiváltó email feladója (válasz-levélhez)
 }
 
-// Mentett levél (Outlookba másoláshoz készített üzenet) — tételhez (esemény/feladat) köthető
+// Mentett levél (Outlookba másoláshoz készített üzenet) - tételhez (esemény/feladat) köthető
 export interface Letter {
   id: string;
   createdAt: string;               // ISO időbélyeg
@@ -139,7 +139,7 @@ export interface Letter {
   subject: string;
   body: string;
   names: string[];                 // a címzett-nevek a mentés pillanatában
-  status?: 'draft' | 'sent';       // vázlat / kiküldve — hiányzó érték = vázlat
+  status?: 'draft' | 'sent';       // vázlat / kiküldve - hiányzó érték = vázlat
 }
 
 export interface Agenda {
@@ -169,7 +169,7 @@ const HU_MON = ['jan.', 'febr.', 'márc.', 'ápr.', 'máj.', 'jún.', 'júl.', '
 export const fmtDayHu = (d?: string | null): string =>
   d && d.length >= 10 ? `${HU_MON[Number(d.slice(5, 7)) - 1] ?? ''} ${Number(d.slice(8, 10))}.` : '';
 
-// Strukturált határidő megjelenítése — a dueDate három pontosságot hordozhat:
+// Strukturált határidő megjelenítése - a dueDate három pontosságot hordozhat:
 // 'ÉÉÉÉ-HH' → „szept." (más évnél „2027. szept."), 'ÉÉÉÉ-HH-NN' → „szept. 2.",
 // 'ÉÉÉÉ-HH-NN ÓÓ:PP' → „szept. 2. 14:30". Szabadszavas határidő nincs többé.
 export const fmtDueHu = (d?: string | null): string => {
@@ -196,7 +196,7 @@ export const fmtEventWhen = (day: string | null, dayEnd: string | null, sortMont
 };
 
 // A régi szabadszavas határidők egyszeri migrációja: ha hónapnév szerepel a
-// szövegben („szeptemberre kész"), abból ÉÉÉÉ-HH lesz — a legközelebbi ilyen hónap.
+// szövegben („szeptemberre kész"), abból ÉÉÉÉ-HH lesz - a legközelebbi ilyen hónap.
 const HU_MONTH_STEMS = ['jan', 'febr', 'márc', 'ápr', 'máj', 'jún', 'júl', 'aug', 'szept', 'okt', 'nov', 'dec'];
 export const parseLooseDue = (text?: string | null): string | null => {
   if (!text) return null;
@@ -212,7 +212,7 @@ export const emptyEvent = (): AgendaEvent => ({
   title: '', when: '', sort: null, day: null, dayEnd: null, featured: false, note: null, place: null, owner: DEFAULT_OWNER, people: [],
 });
 
-// ---- Dátum-helperek a Posta állapotgépéhez (Date-string-parse NÉLKÜL — Safari!) ----
+// ---- Dátum-helperek a Posta állapotgépéhez (Date-string-parse NÉLKÜL - Safari!) ----
 const pad2 = (n: number): string => String(n).padStart(2, '0');
 export const localTodayYmd = (): string => {
   const d = new Date();
@@ -228,7 +228,7 @@ export const nextMondayYmd = (): string => {
   const dow = new Date().getDay();
   return addDaysYmd(localTodayYmd(), ((8 - dow) % 7) || 7);
 };
-// n munkanap hozzáadása (szombat/vasárnap átugrása) — a követési dátumhoz
+// n munkanap hozzáadása (szombat/vasárnap átugrása) - a követési dátumhoz
 export const addWorkdaysYmd = (days: number): string => {
   let d = localTodayYmd();
   let left = days;
@@ -259,7 +259,7 @@ export const isAwaiting = (s?: AgendaSource | null): boolean =>
   !!s && !!s.email && !s.shadow && (s.status ?? 'pending') === 'pending';
 
 // Korábban mentett (régebbi sémájú) adat kiegészítése az új mezőkkel.
-// A steps itt materializálódik az ideas-ból, és az ideas a steps tükre marad —
+// A steps itt materializálódik az ideas-ból, és az ideas a steps tükre marad -
 // az első mentés így az egész fájlt átviszi az új sémára, adatvesztés nélkül.
 // a source csak érvényes feladó-objektumként fogadható el; a tévesen ide írt
 // forrásmegjelölés-szöveg (pl. "Tanév rendje xlsx") a note/summary végére kerül
@@ -267,7 +267,7 @@ const cleanSource = (raw: unknown): { src: AgendaSource | null; provenance: stri
   if (raw && typeof raw === 'object') {
     const o = raw as AgendaSource;
     if (typeof o.email === 'string') return { src: o, provenance: null };
-    // hibás bot-írás (pl. email:null): üres emailre javítjuk, NEM dobjuk — az
+    // hibás bot-írás (pl. email:null): üres emailre javítjuk, NEM dobjuk - az
     // állapot-mezők nem veszhetnek el; email nélkül a Posta úgysem listázza
     if (typeof o.name === 'string' && o.name.trim()) return { src: { ...o, email: '' }, provenance: null };
   }
@@ -326,7 +326,7 @@ export const normalizeAgenda = (a: Partial<Agenda>): Agenda => {
     const past = last ? last < today : !!(e.sort && e.sort < today.slice(0, 7));
     let source = src ? migrateSource(src, past) : null;
     // kapcsolt feladat–esemény iker ugyanazzal a feladóval: az állapot EGYETLEN
-    // írója a feladat — az esemény forrása árnyékká válik (provenance marad,
+    // írója a feladat - az esemény forrása árnyékká válik (provenance marad,
     // állapot- és draft-mezők nélkül), így a Posta nem mutat két sort egy levélre
     if (source && emailKey(source)) {
       const twin = tasks.find((t) => t.eventId === e.id && emailKey(t.source) === emailKey(source));
@@ -385,7 +385,7 @@ export const agendaPeople = (a: Agenda): string[] => {
   return [...s];
 };
 
-const DEFAULT_INTRO = 'Aktuálisan a 2026/27-es tanév őszi félévében az alábbi feladatok várnak ránk — az oktatói eligazító munkavázlata alapján, szabadon bővíthető és szerkeszthető.';
+const DEFAULT_INTRO = 'Aktuálisan a 2026/27-es tanév őszi félévében az alábbi feladatok várnak ránk - az oktatói eligazító munkavázlata alapján, szabadon bővíthető és szerkeszthető.';
 
 // Az előtöltött tartalom a régi (szűkebb) sémával van felírva; a hiányzó mezőket lentebb pótoljuk.
 type RawTask = Omit<AgendaTask, 'people' | 'eventId' | 'dueDate' | 'priority' | 'category' | 'createdAt'>
@@ -415,14 +415,14 @@ const RAW_TASKS: RawTask[] = [
       summary: 'Egységes hiányzáskezelés kell minden oktatónál.',
       ideas: ['Egységes hiányzási szabály és küszöb (ne legyen oktatónként más)', 'Megengedett hiányzások száma és a következmények rögzítése', 'Igazolt és igazolatlan hiányzás kezelése', 'Hol vezetjük: Neptun vagy közös felület'] },
     { id: 't3', title: 'Értékelési protokoll (közös, nem egyéni)', status: 'todo', owner: null, due: null,
-      summary: 'A hallgatókat közösen, mindenki előtt értékeljük — ezt protokollként rögzítsük.',
+      summary: 'A hallgatókat közösen, mindenki előtt értékeljük - ezt protokollként rögzítsük.',
       ideas: ['A nyilvános értékelés menetének rögzítése (ki, mikor, milyen sorrendben)', 'Egységes értékelési szempontrendszer', 'Pótértékelés rendje, ha valaki kimarad'] },
-    { id: 't4', title: 'Vállalások mérete — szkóp definiálása', status: 'todo', owner: null, due: null,
+    { id: 't4', title: 'Vállalások mérete - szkóp definiálása', status: 'todo', owner: null, due: null,
       summary: 'Diploma- és szakdolgozati projektek elvárásainak egységesítése oktatók között.',
       ideas: ['Minimum és maximum elvárás rögzítése', 'Terhelés kiegyenlítése hallgatók és témavezetők között', 'Projekt eleji rövid szkóp-megállapodás', 'Írott támpont: mi számít teljes BA vagy MA munkának'] },
     { id: 't5', title: 'Kiállítások, marketing, kommunikáció', status: 'todo', owner: null, due: null,
       summary: 'Csatornák és rendszerek kialakítása befelé és kifelé.',
-      ideas: ['Belső infómegosztás: közös naptár, csatorna', 'Külső kommunikáció: közösségi média, sajtó, egyetemi felületek — felelősökkel', 'Kiállítási sablon és visszaszámláló ütemterv (checklist)', 'Fotó–videó dokumentáció minden kiállításról', 'Nyitott kérdés: ki keresi a helyszínt'] },
+      ideas: ['Belső infómegosztás: közös naptár, csatorna', 'Külső kommunikáció: közösségi média, sajtó, egyetemi felületek - felelősökkel', 'Kiállítási sablon és visszaszámláló ütemterv (checklist)', 'Fotó–videó dokumentáció minden kiállításról', 'Nyitott kérdés: ki keresi a helyszínt'] },
     { id: 't6', title: 'Külső partnerkapcsolatok gondozása', status: 'todo', owner: null, due: null,
       summary: 'A szálak felvétele, gondozása és ápolása.',
       ideas: ['Partnerlista egy helyen (kapcsolattartó, státusz, utolsó egyeztetés)', 'Felelősök kapcsolatonként', 'Rendszeres ráérdeklődés, hogy ne aludjon el'] },
@@ -433,13 +433,13 @@ const RAW_TASKS: RawTask[] = [
       summary: 'Elébe kell mennünk, mielőtt a hallgatók vagy a vezetőség rákényszerít.',
       ideas: ['Szabályozás: mi megengedett és mi elvárt a hallgatói munkákban', 'Tantervi beépítés: melyik tárgyban, hogyan', 'Oktatói felkészítés (a Pikaso-workshop mintájára)', 'Etikai és hivatkozási iránymutatás'] },
     { id: 't9', title: 'Szoftverek túlhalmozása, kitettség', status: 'todo', owner: null, due: null,
-      summary: 'Túl sok eszköz, és függőség alakult ki — átvilágítás kell.',
+      summary: 'Túl sok eszköz, és függőség alakult ki - átvilágítás kell.',
       ideas: ['Jelenlegi szoftverek és licencek átvilágítása', 'Átfedések kiszűrése (több eszköz ugyanarra)', 'Függőség és kiszolgáltatottság csökkentése', 'Indokolt helyen nyílt forráskódú vagy saját üzemeltetésű alternatíva'] },
     { id: 't10', title: 'Jogi aspektusok', status: 'todo', owner: null, due: null,
       summary: 'A kiállításokhoz és a hallgatói munkákhoz kapcsolódó jogi kérdések rendezése.',
       ideas: ['Szerzői jog: hallgatói munkák felhasználása, megnevezés, engedély', 'Képmáshoz fűződő jog és GDPR a kiállítási fotóknál, videóknál', 'Szerződések a helyszínekkel és a külső partnerekkel', 'Biztosítás: eszközök és kiállítások', 'AI-generált tartalom jogi státusza'] },
     { id: 't11', title: 'Őszi események előkészítése', status: 'todo', owner: null, due: 'augusztustól',
-      summary: 'Dátumhoz kötött vállalások, visszafelé tervezett határidőkkel — a részletek az Események fülön.',
+      summary: 'Dátumhoz kötött vállalások, visszafelé tervezett határidőkkel - a részletek az Események fülön.',
       ideas: ['Közös ütemterv és felelősök eseményenként', 'Helyszín-, eszköz- és hallgatói igények előre', 'Összehangolás a kurzusokkal, hogy a hallgatói munka beleférjen a tanmenetbe'] },
     { id: 't12', title: 'Szoftver- és hardverbeszerzés', status: 'todo', owner: null, due: 'szeptemberre',
       summary: 'Igények összegyűjtése és beszerzés, hogy szeptemberre meglegyen.',
@@ -455,12 +455,12 @@ const RAW_TASKS: RawTask[] = [
       ideas: ['Egyoldalas hallgatói kódex a tanév elején, élőszóban is bevezetve', 'E-mail aláírás minta, elvárt hangnem és csatornák', 'Szoftverválasztás kötött az alsóbb években, szabadabb a diplomaprojektekben'] },
     { id: 't16', title: 'Belső fejlesztésű alkalmazások', status: 'todo', owner: null, due: null,
       summary: 'Saját eszközök a működés támogatására (a raktárszoftver is ide tartozik).',
-      ideas: ['Kiértékelési és kipakolási menetrend kezelő alkalmazás', 'Bálint sorsoló órája (véletlenszerű beosztó)', 'Melyik alkalmazás mit old meg — átfedések tisztázása', 'Felelős és karbantartó mindegyikhez'] },
+      ideas: ['Kiértékelési és kipakolási menetrend kezelő alkalmazás', 'Bálint sorsoló órája (véletlenszerű beosztó)', 'Melyik alkalmazás mit old meg - átfedések tisztázása', 'Felelős és karbantartó mindegyikhez'] },
     { id: 't17', title: 'Interaktív publikációs platform', status: 'doing', owner: 'Tamás', due: null,
-      summary: 'Felület, ahol mindenki publikálhatja a munkáit — a megvalósítás elindult.',
+      summary: 'Felület, ahol mindenki publikálhatja a munkáit - a megvalósítás elindult.',
       ideas: ['Hol tart most, mi kell a folytatáshoz', 'Cél tisztázása: hallgatói portfólió, szakos kirakat vagy belső megosztó', 'Kapcsolat a szakos weboldallal és az archívummal'] },
     { id: 't18', title: 'Szakdolgozati témavezetés', status: 'todo', owner: null, due: null,
-      summary: 'Ki mennyit és hol vállal — átlátható elosztás.',
+      summary: 'Ki mennyit és hol vállal - átlátható elosztás.',
       ideas: ['Témavezetői terhelés elosztása (hány hallgató jut egy oktatóra)', 'Ki mely területen vállal témát', 'Kapcsolódik a szkóp-egységesítéshez (4. pont)'] },
     { id: 't19', title: 'Szakos weboldal rendbetétele', status: 'todo', owner: null, due: null,
       summary: 'A szak weboldalát rendbe kell tenni.',
@@ -475,7 +475,7 @@ const RAW_TASKS: RawTask[] = [
       summary: 'A projekt hétre előadókat kell szervezni.',
       ideas: ['Kit hívjunk, milyen témákban', 'Időben felkérni és egyeztetni', 'Kapcsolódhat a külső partnerekhez (6. pont)'] },
     { id: 't23', title: 'Rokoko egyeztetés', status: 'todo', owner: null, due: null,
-      summary: 'Hogy állunk most, mi a helyzet — a státusz tisztázása.',
+      summary: 'Hogy állunk most, mi a helyzet - a státusz tisztázása.',
       ideas: ['Jelenlegi státusz és következő lépés', 'Felelős a kapcsolattartásért'] },
     { id: 't24', title: 'Sztenderdek: prezentáció, showreel, 3D', status: 'todo', owner: null, due: null,
       summary: 'Egységes minőségi sztenderdek a prezentációkhoz, showreelekhez és 3D anyagokhoz.',
@@ -484,7 +484,7 @@ const RAW_TASKS: RawTask[] = [
       summary: 'Jelenleg körülbelül 90%-os eséllyel indul szeptembertől.',
       ideas: ['Mi kell még a biztos induláshoz (jelentkezők, oktatók, angol kurzusleírások)', 'Ki tanít angolul, nyelvi felkészültség', 'Anyagok és kommunikáció angol nyelvű változata'] },
     { id: 't26', title: 'Workshopok', status: 'todo', owner: null, due: null,
-      summary: 'Külső vagy belső workshopok — kérdés, hogy a szak kéri-e (pl. Dremel Áron workshopja).',
+      summary: 'Külső vagy belső workshopok - kérdés, hogy a szak kéri-e (pl. Dremel Áron workshopja).',
       ideas: ['Cél és célközönség: hallgatók, oktatók, kívülállók', 'Időzítés, helyszín, eszközigény', 'Kapcsolódhat a Kutatók Éjszakájához és a demonstrátori körhöz (7.)'] },
     { id: 't27', title: 'Biofeedback és új fejlesztési irányok', status: 'todo', owner: null, due: null,
       summary: 'Kérdés: van-e létjogosultsága.',
@@ -504,12 +504,12 @@ const RAW_EVENTS: RawEvent[] = [
     { id: 'e1', title: 'Pótfelvételi', when: '2026. augusztus', sort: '2026-08', place: null, owner: null,
       note: 'Előre készülni: kommunikáció, jelentkezők fogadása.' },
     { id: 'e2', title: 'Kutatók Éjszakája', when: '2026. szeptember', sort: '2026-09', place: null, owner: null,
-      note: 'Bemutatók, workshopok — kapcsolódhat a demonstrátori körhöz és a workshopokhoz.' },
+      note: 'Bemutatók, workshopok - kapcsolódhat a demonstrátori körhöz és a workshopokhoz.' },
     { id: 'e3', title: 'Angol nyelvű szak indulása', when: '2026. szeptember', sort: '2026-09', place: null, owner: null,
-      note: 'Kb. 90% eséllyel indul — angol kurzusleírások és kommunikáció kell hozzá.' },
+      note: 'Kb. 90% eséllyel indul - angol kurzusleírások és kommunikáció kell hozzá.' },
     { id: 'e4', title: 'Ars Electronica Fesztivál', when: '2026. szeptember', sort: '2026-09', place: 'Linz', owner: null,
       note: null },
-    { id: 'e5', title: 'Épületvetítés — körépület kivilágítása', when: 'szeptember vagy október eleje', sort: '2026-09', place: 'METU körépület', owner: null,
+    { id: 'e5', title: 'Épületvetítés - körépület kivilágítása', when: 'szeptember vagy október eleje', sort: '2026-09', place: 'METU körépület', owner: null,
       note: 'Fény- vagy projekciós projekt; hallgatói munkák bevonásával.' },
     { id: 'e6', title: 'Futuroszkóp', when: 'szeptember vagy október eleje', sort: '2026-10', place: null, owner: null,
       note: 'Az installációk bemutatása.' },

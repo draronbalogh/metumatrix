@@ -15,7 +15,7 @@ const ZOOM_FOGLALO = 'https://bkfhu-my.sharepoint.com/:x:/g/personal/pgulyas_met
 const L = ({ href, children }: { href: string; children: ReactNode }) => (
   <a className="doc-link" href={href} target="_blank" rel="noreferrer">{children}</a>
 );
-// személy: NEM mailto — a Névjegyzéket nyitja ÚJ LAPON, a névre szűrve
+// személy: NEM mailto - a Névjegyzéket nyitja ÚJ LAPON, a névre szűrve
 // (a ?ts= kulcs átöröklődik, így az új fül is szerkesztő módban nyílik)
 const personJump = (name: string) => {
   const p = new URLSearchParams();
@@ -33,7 +33,7 @@ const P = ({ name }: { name: string }) => (
 interface Doc { f: string; icon: string; title: string; desc: string; kivonat: ReactNode; }
 interface DocGroup { cim: string; docs: Doc[]; }
 
-// 🔗 Gyakori linkek — a jobb oldali sáv tartalma: a leggyakrabban használt
+// 🔗 Gyakori linkek - a jobb oldali sáv tartalma: a leggyakrabban használt
 // rendszerek, a szakos felületek és a foglalási kontaktok EGY helyen
 interface QuickLink { ic: string; t: string; d?: string; href: string; }
 interface QuickLinkGroup { cim: string; links: QuickLink[]; }
@@ -42,11 +42,11 @@ const QUICK_LINKS: QuickLinkGroup[] = [
     cim: 'Rendszerek',
     links: [
       // a leggyakoribbak legelöl: mail, Neptun, CooSpace, tematika
-      { ic: '📧', t: 'Outlook — levelezés', d: 'abalogh@metropolitan.hu', href: 'https://outlook.cloud.microsoft/mail/' },
-      { ic: '🧾', t: 'Neptun — oktatói web', href: 'https://neptunweb1.metropolitan.hu/' },
+      { ic: '📧', t: 'Outlook - levelezés', d: 'abalogh@metropolitan.hu', href: 'https://outlook.cloud.microsoft/mail/' },
+      { ic: '🧾', t: 'Neptun - oktatói web', href: 'https://neptunweb1.metropolitan.hu/' },
       { ic: '🎓', t: 'CooSpace', d: 'belépés Neptun-azonosítóval', href: 'https://coospace.metropolitan.hu/' },
       { ic: '📄', t: 'Tematikák kitöltése', d: 'Neptun tematika-felület', href: 'https://neptun.metropolitan.hu/tematika/' },
-      { ic: '🛠', t: 'TopDesk — IT- és teremhiba', href: 'https://metu.topdesk.net/' },
+      { ic: '🛠', t: 'TopDesk - IT- és teremhiba', href: 'https://metu.topdesk.net/' },
       { ic: '📖', t: 'MTMT', d: 'tudományos művek tára', href: 'https://www.mtmt.hu/' },
     ],
   },
@@ -63,7 +63,7 @@ const QUICK_LINKS: QuickLinkGroup[] = [
     cim: 'Szak és social',
     links: [
       { ic: '🌐', t: 'metumediadesign.hu', d: 'szakos honlap', href: 'https://www.metumediadesign.hu' },
-      { ic: '💬', t: 'Discord — szakos szerver', href: 'https://discord.gg/KrmxpDS5T' },
+      { ic: '💬', t: 'Discord - szakos szerver', href: 'https://discord.gg/KrmxpDS5T' },
       { ic: '👥', t: 'Facebook-csoport', href: 'https://www.facebook.com/groups/metumediadesign' },
       { ic: '📘', t: 'Facebook-oldal', href: 'https://www.facebook.com/metumediadesign' },
       { ic: '📷', t: 'Instagram', href: 'https://www.instagram.com/metumediadesign' },
@@ -91,17 +91,17 @@ const QUICK_LINKS: QuickLinkGroup[] = [
 
 const GROUPS: DocGroup[] = [
   {
-    cim: '📹 Zoom — online órák és meetingek',
+    cim: '📹 Zoom - online órák és meetingek',
     docs: [
       {
         f: 'zoom-utmutato-2026-27.pdf', icon: '📹', title: 'Zoom használati útmutató (2026/27. ősz)',
-        desc: 'Fiókfoglalás, belépés, óraindítás, hibakezelés — a hivatalos, aktuális útmutató.',
+        desc: 'Fiókfoglalás, belépés, óraindítás, hibakezelés - a hivatalos, aktuális útmutató.',
         kivonat: (
           <ol>
-            <li>Fiók foglalása: <L href={ZOOM_FOGLALO}>Zoom foglalási táblázat (SharePoint)</L> — oktatásra a ZOOM01–ZOOM18 és a ZOOM20 fiókok foglalhatók (a ZOOM19 a távoktatásé).</li>
+            <li>Fiók foglalása: <L href={ZOOM_FOGLALO}>Zoom foglalási táblázat (SharePoint)</L> - oktatásra a ZOOM01–ZOOM18 és a ZOOM20 fiókok foglalhatók (a ZOOM19 a távoktatásé).</li>
             <li>Belépés: <L href="https://zoom.us">zoom.us</L> → Sign In · email: a foglalt fiók neve, pl. zoom07@metropolitan.hu · jelszó: Stream2020.</li>
-            <li>Az órát a foglalótáblában lévő linkről indítsd — a link CSAK belépés után él. New meetingnél legyen bepipálva a „Use My Personal Meeting ID".</li>
-            <li>Ha belépéskor egyszer használatos kódot kér: <L href="https://zoomokt.metropolitan.hu/">zoomokt.metropolitan.hu</L> — itt a 6 számjegyű kód (10 percig érvényes).</li>
+            <li>Az órát a foglalótáblában lévő linkről indítsd - a link CSAK belépés után él. New meetingnél legyen bepipálva a „Use My Personal Meeting ID".</li>
+            <li>Ha belépéskor egyszer használatos kódot kér: <L href="https://zoomokt.metropolitan.hu/">zoomokt.metropolitan.hu</L> - itt a 6 számjegyű kód (10 percig érvényes).</li>
             <li>A kód-kérés elkerülhető a telepített klienssel: <L href="https://zoom.us/download">zoom.us/download</L>.</li>
             <li>Óra után: kijelentkezés, az átállított beállítások visszaállítása; a fiókot ne nevezd át, képet ne tölts fel rá.</li>
             <li>Szabályok: minden órát az órarendi időpontban, élőben kell megtartani; az óra linkjét legalább 24 órával előre közzé kell tenni a CooSpace-en; 300 fő feletti előadáshoz központi speciális account jár.</li>
@@ -114,7 +114,7 @@ const GROUPS: DocGroup[] = [
         kivonat: (
           <ol>
             <li>Lépj be a <L href="https://zoom.us">zoom.us</L> oldalon → Reports → Usage.</li>
-            <li>Dátum alapján keresd meg a kurzust; a Participants oszlop száma kattintható — felugró ablakban a résztvevők.</li>
+            <li>Dátum alapján keresd meg a kurzust; a Participants oszlop száma kattintható - felugró ablakban a résztvevők.</li>
             <li>Pipáld be a „Show unique users" opciót: egy-egy belépő idejét összesíti. Export gombbal csv-be menthető.</li>
             <li>A csv-t NE ikonról nyisd: Excel → Megnyitás → Tallózás → Szövegfájlok, tagolt elrendezés, határoló jel: vessző.</li>
           </ol>
@@ -123,11 +123,11 @@ const GROUPS: DocGroup[] = [
     ],
   },
   {
-    cim: '📘 Oktatói segédletek — 2026/27. őszi félév',
+    cim: '📘 Oktatói segédletek - 2026/27. őszi félév',
     docs: [
       {
         f: 'fooallasu-oktatoi-segedlet-2026-27.pdf', icon: '📘', title: 'Főállású oktatói segédlet (2026/27/1 · MKK)',
-        desc: 'Adminisztráció, rendszerek, határidők — főállású oktatóknak, aktuális kiadás.',
+        desc: 'Adminisztráció, rendszerek, határidők - főállású oktatóknak, aktuális kiadás.',
         kivonat: (
           <ul>
             <li>Kapcsolat: AMD tanszéki referens <P name="Bejczi Zsolt" /> · órarend és teremfoglalás (MKK) <P name="Kálny Rita" /> · oktatásszervezési vezető <P name="Nagy Tünde" /> · többletórák <P name="Gulyás Péter" />.</li>
@@ -143,7 +143,7 @@ const GROUPS: DocGroup[] = [
       },
       {
         f: 'oraado-oktatoi-segedlet-2026-27.pdf', icon: '📗', title: 'Óraadó oktatói segédlet (2026/27/1 · MKK)',
-        desc: 'A legfontosabb tudnivalók óraadóknak — aktuális kiadás.',
+        desc: 'A legfontosabb tudnivalók óraadóknak - aktuális kiadás.',
         kivonat: (
           <ul>
             <li>Kapcsolat: AMD tanszéki referens <P name="Bejczi Zsolt" /> · órarend és teremfoglalás (MKK) <P name="Kálny Rita" /> · oktatásszervezési vezető <P name="Nagy Tünde" />.</li>
@@ -160,7 +160,7 @@ const GROUPS: DocGroup[] = [
         desc: 'Bemutató az egyetemi rendszerek használatáról (letölthető pptx).',
         kivonat: (
           <ul>
-            <li>10 diás oktatói tájékoztató: Neptun, CooSpace, Zoom, videórögzítés és videotár — a képernyőmegosztás beállításaival és a tipikus Zoom-hibákkal.</li>
+            <li>10 diás oktatói tájékoztató: Neptun, CooSpace, Zoom, videórögzítés és videotár - a képernyőmegosztás beállításaival és a tipikus Zoom-hibákkal.</li>
             <li>Gyors linkek: <L href="https://neptunweb1.metropolitan.hu/">Neptun</L> · <L href="https://coospace.metropolitan.hu/">CooSpace</L> · <L href="https://zoom.us">zoom.us</L>.</li>
           </ul>
         ),
@@ -177,7 +177,7 @@ const GROUPS: DocGroup[] = [
           <ol>
             <li>Lépj be: <L href="https://neptunweb1.metropolitan.hu/">Neptun</L> → Oktatás → Órarend.</li>
             <li>Megjelenítés: Órák + féléves listázás + a kívánt félév a legördülőből.</li>
-            <li>Export: lista-nyomtatás VAGY naptár-export (Excel / .ics) — de ez az export változáskor NEM frissül.</li>
+            <li>Export: lista-nyomtatás VAGY naptár-export (Excel / .ics) - de ez az export változáskor NEM frissül.</li>
             <li>Frissülő naptárhoz az oldal felső soraiban lévő frissítési linket használd: Outlooknál kattints rá, más naptárnál másold ki a linket és importáld a kalendáriumodba.</li>
           </ol>
         ),
@@ -188,9 +188,9 @@ const GROUPS: DocGroup[] = [
         kivonat: (
           <ol>
             <li>Órarenden kívüli önálló teremhasználathoz a hallgatónak kötelező a tűz- és munkavédelmi oktatás: Neptun → Tanulmányok → Elektronikus tananyagok (a recepció a kulcs kiadása előtt webes felületen ellenőrzi; átfutás 1 munkanap).</li>
-            <li>Speciális termek (TV stúdió, hangstúdió, műhelyek) CooSpace-en foglalhatók a kapcsolódó színtéren, technikussal — hangstúdió: <L href="mailto:hapongor@gmail.com">hapongor@gmail.com</L> · TV stúdió: <L href="mailto:infop.tvstudio@metropolitan.hu">infop.tvstudio@metropolitan.hu</L>.</li>
+            <li>Speciális termek (TV stúdió, hangstúdió, műhelyek) CooSpace-en foglalhatók a kapcsolódó színtéren, technikussal - hangstúdió: <L href="mailto:hapongor@gmail.com">hapongor@gmail.com</L> · TV stúdió: <L href="mailto:infop.tvstudio@metropolitan.hu">infop.tvstudio@metropolitan.hu</L>.</li>
             <li>Infopark: a D épületi hangstúdió csak külön technikai vizsgával, az I épületi TV stúdió CSAK technikusi/oktatói felügyelettel használható.</li>
-            <li>Tanulásra, online óra meghallgatására a tanulószobák valók: <L href="https://coospace.metropolitan.hu/CooSpace/Scene-75179/Folder-572245">CooSpace — Campusok, teremjelölések és tanulószobák</L>.</li>
+            <li>Tanulásra, online óra meghallgatására a tanulószobák valók: <L href="https://coospace.metropolitan.hu/CooSpace/Scene-75179/Folder-572245">CooSpace - Campusok, teremjelölések és tanulószobák</L>.</li>
             <li>Általános teremügyek: <L href="mailto:terem@metropolitan.hu">terem@metropolitan.hu</L>; gépterembe saját eszköz csatlakoztatható, de használat után az eredeti kábelezést vissza kell állítani.</li>
           </ol>
         ),
@@ -198,7 +198,7 @@ const GROUPS: DocGroup[] = [
     ],
   },
   {
-    cim: '🎓 MTMT — tudományos és művészeti alkotások',
+    cim: '🎓 MTMT - tudományos és művészeti alkotások',
     docs: [
       {
         f: 'mtmt-tutorial-2026.pptx', icon: '🎓', title: 'MTMT: alkotások bevitele (2026, Művész Kar)',
@@ -208,9 +208,9 @@ const GROUPS: DocGroup[] = [
             <li>Belépés: <L href="https://www.mtmt.hu/">mtmt.hu</L> → „Belépés az adatbázisba".</li>
             <li>Új → Saját közlemény; alkotásnál a mű/kiállítás CÍMÉT írd be (duplum-ellenőrzéshez), ha van webes link, az URL is megadható.</li>
             <li>Típus: Alkotás · Besorolás: a művészi terület (Tárgy / Kép / Tér stb.) · Jelleg: általában Művészi.</li>
-            <li>Szerző: „Szerzők hozzáadása" → saját név beírása → a találatnál még egyszer beírva megjelenik az „Én vagyok" — e hozzárendelés NÉLKÜL az alkotás nem jelenik meg a saját felületeden.</li>
+            <li>Szerző: „Szerzők hozzáadása" → saját név beírása → a találatnál még egyszer beírva megjelenik az „Én vagyok" - e hozzárendelés NÉLKÜL az alkotás nem jelenik meg a saját felületeden.</li>
             <li>Kötelező mezők: Cím + Megjelenés éve (kiállításnál pontos dátum is lehet); ajánlott: műfaj/technika, helyszín, ország.</li>
-            <li>Végén: „Mentés és nyilvánossá tesz" — csak így lesz látható a nyilvános felületen.</li>
+            <li>Végén: „Mentés és nyilvánossá tesz" - csak így lesz látható a nyilvános felületen.</li>
             <li>Segítenek az MTMT referens könyvtárosok: <P name="Vargáné Nánási Mária" /> · <P name="Kissné Aftin Katalin" />; további segédletek az MTMT honlap Dokumentumok menüjében.</li>
           </ol>
         ),
@@ -232,11 +232,11 @@ export default function DocsView({ q }: { q: string }) {
 
   return (
     <section className="wrap orv orv--fixhead docsv">
-      <PageHead title="Segédletek" sub={`${total} dokumentum — mindig csak a LEGFRISSEBB kiadás · csak szerkesztő módban látszik`} />
+      <PageHead title="Segédletek" sub={`${total} dokumentum - mindig csak a LEGFRISSEBB kiadás · csak szerkesztő módban látszik`} />
       {/* a cím a görgetőn KÍVÜL: görgetéskor semmi nem úszik a cím mögé/fölé */}
       <div className="orv-scroll">
       <div className="docs-cols">
-      {/* jobb oldali sáv: a leggyakrabban használt linkek — mobilon a tartalom ELŐTT, kompakt pill-ekként */}
+      {/* jobb oldali sáv: a leggyakrabban használt linkek - mobilon a tartalom ELŐTT, kompakt pill-ekként */}
       <aside className="doc-links">
         <div className="dl-title">Gyakori linkek</div>
         {QUICK_LINKS.map((g) => (
@@ -246,7 +246,7 @@ export default function DocsView({ q }: { q: string }) {
               {g.links.map((l) => (
                 <a key={l.href} className="dl-link" href={l.href}
                   target={l.href.startsWith('mailto:') ? undefined : '_blank'} rel="noreferrer"
-                  title={l.d ? `${l.t} — ${l.d}` : l.t}>
+                  title={l.d ? `${l.t} - ${l.d}` : l.t}>
                   <span className="dl-ic">{l.ic}</span>
                   <span className="dl-body">
                     <span className="dl-t">{l.t}</span>
@@ -284,7 +284,7 @@ export default function DocsView({ q }: { q: string }) {
         </div>
       ))}
       {groups.length === 0 && <p className="tp-empty">Nincs a keresésnek megfelelő segédlet.</p>}
-      <p className="tp-pv-hint">A kivonatok a dokumentumok tartalmából készültek; a teljes, hivatalos szöveghez az eredeti fájlt nyisd meg. A PDF-ek új lapon nyílnak, a pptx-ek letöltődnek. Régebbi kiadású segédletet nem tartunk kint — mindig az aktuális félévé érhető el.</p>
+      <p className="tp-pv-hint">A kivonatok a dokumentumok tartalmából készültek; a teljes, hivatalos szöveghez az eredeti fájlt nyisd meg. A PDF-ek új lapon nyílnak, a pptx-ek letöltődnek. Régebbi kiadású segédletet nem tartunk kint - mindig az aktuális félévé érhető el.</p>
       </div>
       </div>
       </div>

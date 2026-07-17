@@ -9,10 +9,10 @@ import PageHead from './PageHead';
 interface Props {
   agenda: Agenda;
   q: string;
-  instr: string;                          // aktív név-szűrő — üres = mindenki
+  instr: string;                          // aktív név-szűrő - üres = mindenki
   letterStats: Record<string, { n: number; drafts: number }>; // esemény-id → kapcsolt levelek száma / vázlatok
   onAdd: () => void;
-  onOpen: (id: string) => void;           // az esemény RÉSZLETEZŐJE (drawer) — innen nyílik minden más
+  onOpen: (id: string) => void;           // az esemény RÉSZLETEZŐJE (drawer) - innen nyílik minden más
   onOpenTask: (id: string) => void;       // a naptárban jelölt feladat-határidő → a feladat részletezője
   onPerson: (name: string) => void;
 }
@@ -81,7 +81,7 @@ export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpe
             const doneN = linked.filter((t) => t.status === 'done').length;
             const ls = letterStats[e.id];
             return (
-              // TÖMÖR kártya: cím-sor + meta-sor — minden részlet a részletezőben (koppintásra)
+              // TÖMÖR kártya: cím-sor + meta-sor - minden részlet a részletezőben (koppintásra)
               <article key={e.id} className={`cc-card agc${e.featured ? ' is-featured' : ''}`} onClick={() => onOpen(e.id)}>
                 <div className="agc-top">
                   <span className="agc-title">{e.featured && <span className="ev-star" title="Kiemelt esemény">★ </span>}{e.title}</span>

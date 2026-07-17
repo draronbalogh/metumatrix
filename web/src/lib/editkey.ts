@@ -1,6 +1,6 @@
 // Kliens-oldali hozzáférés: tárolás NINCS. A saját tailnet-eszközök kulcs nélkül is
 // szerkesztők (a szerver a Tailscale-fejlécből ismeri fel őket); idegen gépen a
-// szerkesztői link működik: ?ts=<kulcs> az URL-ben — ezt küldjük tovább fejlécben.
+// szerkesztői link működik: ?ts=<kulcs> az URL-ben - ezt küldjük tovább fejlécben.
 export const getEditKey = (): string | null => {
   try {
     if (typeof window === 'undefined') return null;

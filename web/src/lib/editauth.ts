@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-// Hozzáférés — KÉT szerkesztői út, egy megtekintői:
+// Hozzáférés - KÉT szerkesztői út, egy megtekintői:
 // 1) A saját tailnet-eszközökről érkező kérésre a Tailscale proxy ráteszi a
 //    Tailscale-User-Login fejlécet (hamisítás ellen védve) → automatikus szerkesztő mód.
 // 2) IDEGEN gépen (pl. egyetemi asztali gép) a szerkesztői link használható:

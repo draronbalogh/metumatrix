@@ -120,10 +120,10 @@ export default function EditModal({ course, cohortLabel, isNew, teacherNames, st
           {isNew ? 'Új tárgy · ' : 'Tárgy szerkesztése · '}{cohortLabel}
         </h3>
         <div className="mt-sum">
-          <button type="button" className="mt-chip" title="Óraszám és kredit — az Alap fülön" onClick={() => setTab('alap')}>⏱ {d.hours.trim() || '–'} óra · {d.credits.trim() || '–'} kr</button>
+          <button type="button" className="mt-chip" title="Óraszám és kredit - az Alap fülön" onClick={() => setTab('alap')}>⏱ {d.hours.trim() || '–'} óra · {d.credits.trim() || '–'} kr</button>
           <button type="button" className="mt-chip" title="Felelős és oktatók" onClick={() => setTab('people')}>👥 {toList(d.instructors).length} oktató</button>
-          <button type="button" className="mt-chip" title="Kategóriák — a Tartalom fülön" onClick={() => setTab('content')}>🏷 {toList(d.category).length} kategória</button>
-          {!d.short.trim() && <button type="button" className="mt-chip mt-warn" title="A kártyán látszó rövid leírás hiányzik — a Tartalom fülön pótolhatod" onClick={() => setTab('content')}>⚠ nincs rövid leírás</button>}
+          <button type="button" className="mt-chip" title="Kategóriák - a Tartalom fülön" onClick={() => setTab('content')}>🏷 {toList(d.category).length} kategória</button>
+          {!d.short.trim() && <button type="button" className="mt-chip mt-warn" title="A kártyán látszó rövid leírás hiányzik - a Tartalom fülön pótolhatod" onClick={() => setTab('content')}>⚠ nincs rövid leírás</button>}
         </div>
         <ModalTabs tabs={EDIT_TABS} active={tab} onPick={setTab} />
         <form className="f" onSubmit={(e) => { e.preventDefault(); save(); }}>
@@ -152,8 +152,8 @@ export default function EditModal({ course, cohortLabel, isNew, teacherNames, st
             <label>Specializáció</label>
             <select value={d.specialization} onChange={(e) => set('specialization', e.target.value)}>
               <option value="">Közös tárgy (nincs specializáció)</option>
-              <option value="Multimédia specializáció">Multimédia specializáció — kék zóna</option>
-              <option value="Játéktervezés specializáció">Játéktervezés specializáció — lila zóna</option>
+              <option value="Multimédia specializáció">Multimédia specializáció - kék zóna</option>
+              <option value="Játéktervezés specializáció">Játéktervezés specializáció - lila zóna</option>
               {d.specialization && !['Multimédia specializáció', 'Játéktervezés specializáció'].includes(d.specialization) && (
                 <option value={d.specialization}>{d.specialization}</option>
               )}
@@ -163,10 +163,10 @@ export default function EditModal({ course, cohortLabel, isNew, teacherNames, st
             <label>Besorolás / szín (kézi felülbírálás)</label>
             <select value={d.group} onChange={(e) => set('group', e.target.value)}>
               <option value="">Automatikus (specializáció + típus szerint)</option>
-              <option value="0">Közös gyakorlati — zöld</option>
-              <option value="1">Multimédia specializáció — kék</option>
-              <option value="2">Játéktervezés specializáció — lila</option>
-              <option value="3">Elméleti — sárga</option>
+              <option value="0">Közös gyakorlati - zöld</option>
+              <option value="1">Multimédia specializáció - kék</option>
+              <option value="2">Játéktervezés specializáció - lila</option>
+              <option value="3">Elméleti - sárga</option>
             </select>
           </div>
           <div className="f-sec c-yellow">Óraszám, létszám, kredit</div>
@@ -197,15 +197,15 @@ export default function EditModal({ course, cohortLabel, isNew, teacherNames, st
             </select>
           </div>
           <div className="field">
-            <label>Felelős — az oktatói adatbázisból</label>
+            <label>Felelős - az oktatói adatbázisból</label>
             <select value={d.felelos} onChange={(e) => set('felelos', e.target.value)}>
-              <option value="">— nincs —</option>
+              <option value="">- nincs -</option>
               {d.felelos && !teacherNames.includes(d.felelos) && <option value={d.felelos}>{d.felelos} (egyedi név)</option>}
               {teacherNames.map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
           </div>
           <div className="field full">
-            <label>Oktató(k) — {toList(d.instructors).length} kiválasztva; a kiválasztott név kattintásra lekerül</label>
+            <label>Oktató(k) - {toList(d.instructors).length} kiválasztva; a kiválasztott név kattintásra lekerül</label>
             {(() => {
               const sel = toList(d.instructors);
               const toggle = (n: string) => set('instructors', (sel.includes(n) ? sel.filter((x) => x !== n) : [...sel, n]).join(', '));
@@ -220,10 +220,10 @@ export default function EditModal({ course, cohortLabel, isNew, teacherNames, st
                   </div>
                 )}
                 <input value={instrQ} onChange={(e) => setInstrQ(e.target.value)}
-                  placeholder={`Szűrés névre — gépelj, és megjelenik a választható névsor (${teacherNames.length} oktató)`} />
+                  placeholder={`Szűrés névre - gépelj, és megjelenik a választható névsor (${teacherNames.length} oktató)`} />
                 {q !== '' && (
                   <div className="cat-picker pp-picker pp-scroll">
-                    {matches.length === 0 && <span className="nm-empty">Nincs több találat — lent új névként felveheted.</span>}
+                    {matches.length === 0 && <span className="nm-empty">Nincs több találat - lent új névként felveheted.</span>}
                     {matches.map((n) => (
                       <button type="button" key={n} className="chip" onClick={() => toggle(n)}>{n}</button>
                     ))}
@@ -238,13 +238,13 @@ export default function EditModal({ course, cohortLabel, isNew, teacherNames, st
             </div>
           </div>
           <div className="field full">
-            <label>Hallgatói demonstrátor — {toList(d.demonstrators).length} kiválasztva</label>
+            <label>Hallgatói demonstrátor - {toList(d.demonstrators).length} kiválasztva</label>
             {(() => {
               const sel = toList(d.demonstrators);
               const toggle = (n: string) => set('demonstrators', (sel.includes(n) ? sel.filter((x) => x !== n) : [...sel, n]).join(', '));
               const q = demoQ.trim().toLowerCase();
               const matches = q === '' ? [] : students.filter((n) => n.toLowerCase().includes(q) && !sel.includes(n));
-              if (students.length === 0 && sel.length === 0) return <span className="nm-empty">Még nincs hallgató a Névjegyzékben — a ☎ Névjegyzék „Hallgatók” részében vehetsz fel.</span>;
+              if (students.length === 0 && sel.length === 0) return <span className="nm-empty">Még nincs hallgató a Névjegyzékben - a ☎ Névjegyzék „Hallgatók” részében vehetsz fel.</span>;
               return (<>
                 {sel.length > 0 && (
                   <div className="cat-picker pp-picker">
@@ -256,7 +256,7 @@ export default function EditModal({ course, cohortLabel, isNew, teacherNames, st
                   </div>
                 )}
                 <input value={demoQ} onChange={(e) => setDemoQ(e.target.value)}
-                  placeholder={`Szűrés névre — gépelj, és megjelenik a hallgatói névsor (${students.length} hallgató)`} />
+                  placeholder={`Szűrés névre - gépelj, és megjelenik a hallgatói névsor (${students.length} hallgató)`} />
                 {q !== '' && (
                   <div className="cat-picker pp-picker pp-scroll">
                     {matches.length === 0 && <span className="nm-empty">Nincs találat.</span>}
@@ -278,11 +278,11 @@ export default function EditModal({ course, cohortLabel, isNew, teacherNames, st
             <GrowArea minRows={4} value={d.cel} onChange={(e) => set('cel', e.target.value)} placeholder="a tárgy célja, tanulási eredmények" />
           </div>
           <div className="field full">
-            <label>Rövid leírás — a kártyán ez látszik (max ~110 karakter)</label>
+            <label>Rövid leírás - a kártyán ez látszik (max ~110 karakter)</label>
             <input maxLength={140} value={d.short} onChange={(e) => set('short', e.target.value)} placeholder="távirati, tartalom-első összefoglaló, pl.: Vektor- és pixelgrafika: piktogram, logó, hibrid grafikák." />
           </div>
           <div className="field full">
-            <label>Összegzés — a részletek panelen látszik</label>
+            <label>Összegzés - a részletek panelen látszik</label>
             <GrowArea minRows={6} value={d.description} onChange={(e) => set('description', e.target.value)} placeholder="néhány mondatos összefoglaló a tárgyról" />
           </div>
           <div className="field full">

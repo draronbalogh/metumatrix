@@ -21,7 +21,7 @@ function OwnerSelect({ value, roster, onChange }: { value: string; roster: Roste
   const known = roster.some((r) => r.name === value);
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="">— nincs —</option>
+      <option value="">- nincs -</option>
       {value && !known && <option value={value}>{value} (régi bejegyzés)</option>}
       {(['T', 'H', 'I', 'A', 'O', 'P'] as PersonKind[]).map((k) => {
         const items = roster.filter((r) => r.kind === k);
@@ -36,7 +36,7 @@ function OwnerSelect({ value, roster, onChange }: { value: string; roster: Roste
   );
 }
 
-// Chip-választó (állapot / prioritás / kategória) — select helyett ujjbarát, színes
+// Chip-választó (állapot / prioritás / kategória) - select helyett ujjbarát, színes
 function ChipRadio<T extends string>({ value, options, onChange }: { value: T; options: { v: T; label: string; cls?: string }[]; onChange: (v: T) => void }) {
   return (
     <div className="chipradio">
@@ -47,7 +47,7 @@ function ChipRadio<T extends string>({ value, options, onChange }: { value: T; o
   );
 }
 
-// Strukturált határidő-választó: hónap VAGY konkrét nap, opcionális óra:perccel —
+// Strukturált határidő-választó: hónap VAGY konkrét nap, opcionális óra:perccel -
 // szabad szöveg nincs. Érték: '' | 'ÉÉÉÉ-HH' | 'ÉÉÉÉ-HH-NN' | 'ÉÉÉÉ-HH-NN ÓÓ:PP'.
 function DueInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [mode, setMode] = useState<'none' | 'month' | 'day'>(value.length >= 10 ? 'day' : value.length === 7 ? 'month' : 'none');
@@ -69,7 +69,7 @@ function DueInput({ value, onChange }: { value: string; onChange: (v: string) =>
       {mode === 'day' && (
         <div className="due-row">
           <input type="date" value={day} onChange={(e) => onChange(e.target.value ? (time ? `${e.target.value} ${time}` : e.target.value) : '')} />
-          <input type="time" value={time} disabled={!day} title="Óra:perc — csak ha kell" onChange={(e) => onChange(e.target.value ? `${day} ${e.target.value}` : day)} />
+          <input type="time" value={time} disabled={!day} title="Óra:perc - csak ha kell" onChange={(e) => onChange(e.target.value ? `${day} ${e.target.value}` : day)} />
         </div>
       )}
       {value !== '' && <div className="due-preview">Kijelzés: <strong>{fmtDueHu(value)}</strong></div>}
@@ -77,10 +77,10 @@ function DueInput({ value, onChange }: { value: string; onChange: (v: string) =>
   );
 }
 
-// Résztvevő-választó — áttekinthető, keresés-első felépítés:
+// Résztvevő-választó - áttekinthető, keresés-első felépítés:
 //   1. felül CSAK a kiválasztottak (✕-szel eltávolíthatók),
 //   2. hozzáadni kereséssel lehet (gépelésre max 40 találat),
-//   3. böngészni kategória-fülből lehet — a teljes, több száz fős névfal
+//   3. böngészni kategória-fülből lehet - a teljes, több száz fős névfal
 //      SOHA nem jelenik meg egyszerre.
 const normName = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 function PeoplePicker({ selected, roster, onToggle, onSet }: { selected: string[]; roster: RosterEntry[]; onToggle: (name: string) => void; onSet?: (names: string[]) => void }) {
@@ -95,7 +95,7 @@ function PeoplePicker({ selected, roster, onToggle, onSet }: { selected: string[
     : [];
   return (
     <div className="pp-wrap">
-      {/* 1) a kiválasztottak — csak ők látszanak mindig */}
+      {/* 1) a kiválasztottak - csak ők látszanak mindig */}
       <div className="pp-selrow">
         <span className="pp-selcount">{selected.length || 'Nincs'} résztvevő</span>
         {selected.map((n) => {
@@ -108,7 +108,7 @@ function PeoplePicker({ selected, roster, onToggle, onSet }: { selected: string[
           );
         })}
         {legacy.map((n) => (
-          <button key={n} type="button" className="chip is-on pp-selchip" title="Régi, listán kívüli bejegyzés — kattintva lekerül"
+          <button key={n} type="button" className="chip is-on pp-selchip" title="Régi, listán kívüli bejegyzés - kattintva lekerül"
             onClick={() => onToggle(n)}>{n}<span className="pp-x">✕</span></button>
         ))}
         {selected.length > 1 && onSet && (
@@ -125,11 +125,11 @@ function PeoplePicker({ selected, roster, onToggle, onSet }: { selected: string[
               + <span className={`pb ${r.kind.toLowerCase()}`}>{r.kind}</span>{r.name}
             </button>
           ))}
-          {hits.length === 0 && <span className="pp-nohit">Nincs ilyen név a listákban — a ☎ Névjegyzékben tudod felvenni.</span>}
+          {hits.length === 0 && <span className="pp-nohit">Nincs ilyen név a listákban - a ☎ Névjegyzékben tudod felvenni.</span>}
         </div>
       ) : (
         <>
-          {/* 3) böngészés kategóriánként — csak a megnyitott fül nevei látszanak */}
+          {/* 3) böngészés kategóriánként - csak a megnyitott fül nevei látszanak */}
           <div className="pp-cats">
             {(['T', 'H', 'I', 'A', 'O', 'P'] as PersonKind[]).map((k) => {
               const n = kindNames(k).length;
@@ -166,7 +166,7 @@ function PeoplePicker({ selected, roster, onToggle, onSet }: { selected: string[
   );
 }
 
-// A szerkesztő-modálok közös, színes fülsora — szabad ugrálás, egyszerre egy egység
+// A szerkesztő-modálok közös, színes fülsora - szabad ugrálás, egyszerre egy egység
 // (a NotifyModal is ezt használja, ezért exportált)
 export interface TabDef { id: string; label: string; cls?: string }
 export function ModalTabs({ tabs, active, onPick }: { tabs: TabDef[]; active: string; onPick: (id: string) => void }) {
@@ -204,12 +204,12 @@ function StepsEditor({ steps, roster, onChange }: { steps: TaskStep[]; roster: R
   const add = () => { const t = draft.trim(); if (!t) return; onChange([...steps, { text: t, done: false }]); setDraft(''); };
   return (
     <div className="se-wrap">
-      {steps.length === 0 && <div className="se-empty">Még nincs alfeladat — írd be lent az elsőt, és nyomj Entert.</div>}
+      {steps.length === 0 && <div className="se-empty">Még nincs alfeladat - írd be lent az elsőt, és nyomj Entert.</div>}
       {steps.map((s, i) => (
         <div key={i} className={`se-row${s.done ? ' is-done' : ''}`}>
           <div className="se-main">
             <button type="button" className={`ag-check se-check${s.done ? ' is-on' : ''}`}
-              title={s.done ? 'Visszaállítás nyitottra' : 'Kész — pipa'} onClick={() => upd(i, { done: !s.done })}>{s.done ? '✓' : ''}</button>
+              title={s.done ? 'Visszaállítás nyitottra' : 'Kész - pipa'} onClick={() => upd(i, { done: !s.done })}>{s.done ? '✓' : ''}</button>
             <input className="se-text" value={s.text} onChange={(e) => upd(i, { text: e.target.value })} placeholder="alfeladat…" />
             {(s.owner || s.due) && (
               <button type="button" className="se-meta" title="Felelős / határidő szerkesztése" onClick={() => setOpenIx((o) => (o === i ? null : i))}>
@@ -225,7 +225,7 @@ function StepsEditor({ steps, roster, onChange }: { steps: TaskStep[]; roster: R
           {openIx === i && (
             <div className="se-det">
               <div className="fld">
-                <label>A lépés felelőse — üresen a feladat felelőse viszi</label>
+                <label>A lépés felelőse - üresen a feladat felelőse viszi</label>
                 <OwnerSelect value={s.owner ?? ''} roster={roster} onChange={(v) => upd(i, { owner: v || null })} />
               </div>
               <div className="fld">
@@ -239,7 +239,7 @@ function StepsEditor({ steps, roster, onChange }: { steps: TaskStep[]; roster: R
       <div className="se-add">
         <input value={draft} onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
-          placeholder="+ új alfeladat — Enter a hozzáadáshoz" />
+          placeholder="+ új alfeladat - Enter a hozzáadáshoz" />
         <button type="button" className="btn" disabled={!draft.trim()} onClick={add}>+ Hozzáadás</button>
       </div>
     </div>
@@ -247,7 +247,7 @@ function StepsEditor({ steps, roster, onChange }: { steps: TaskStep[]; roster: R
 }
 
 // Levelezés fül (Feladat + Esemény modál közösen): kapcsolt levelek állapot-badge-dzsel,
-// új levél gomb és a kártya címéhez illő sablon-ajánlások — minden útvonal előbb MENT
+// új levél gomb és a kártya címéhez illő sablon-ajánlások - minden útvonal előbb MENT
 function MailTab({ letters, title, saveFirst, onOpenLetter, onLetterStatus, onNotify, onNotifyTopic }: {
   letters: Letter[];
   title: string;
@@ -263,7 +263,7 @@ function MailTab({ letters, title, saveFirst, onOpenLetter, onLetterStatus, onNo
     <>
       <div className="f-sec c-green">Levelezés</div>
       <div className="field full">
-        <label>Kapcsolt levelek ({letters.length}){letters.length && onOpenLetter ? ' — kattintásra mentés után a levélíróban nyílik meg' : ''}</label>
+        <label>Kapcsolt levelek ({letters.length}){letters.length && onOpenLetter ? ' - kattintásra mentés után a levélíróban nyílik meg' : ''}</label>
         {letters.length === 0 && <div className="se-empty">Ehhez a tételhez még nincs mentett levél.</div>}
         {letters.length > 0 && (
           <div className="mt-letters">
@@ -277,7 +277,7 @@ function MailTab({ letters, title, saveFirst, onOpenLetter, onLetterStatus, onNo
                     <span className="d">{fmt(l.createdAt)} · {l.names.length} címzett</span>
                   </button>
                   <button type="button" className={`mt-lst ${st}`} disabled={!onLetterStatus}
-                    title={st === 'sent' ? 'Kiküldve — kattints, ha mégis vázlat' : 'Vázlat — kattints, ha már kiküldted (pl. Outlookból)'}
+                    title={st === 'sent' ? 'Kiküldve - kattints, ha mégis vázlat' : 'Vázlat - kattints, ha már kiküldted (pl. Outlookból)'}
                     onClick={() => onLetterStatus?.(l.id, st === 'sent' ? 'draft' : 'sent')}>
                     {st === 'sent' ? '✓ Kiküldve' : '✎ Vázlat'}
                   </button>
@@ -296,7 +296,7 @@ function MailTab({ letters, title, saveFirst, onOpenLetter, onLetterStatus, onNo
           </div>
           {onNotifyTopic && suggested.length > 0 && (
             <>
-              <label className="mt-sublabel">Ehhez illő sablonok — kattintásra a levélíró a sablonnal nyílik</label>
+              <label className="mt-sublabel">Ehhez illő sablonok - kattintásra a levélíró a sablonnal nyílik</label>
               <div className="nm-groups">
                 {suggested.map((t) => (
                   <button key={t.id} type="button" className="chip" title={t.group}
@@ -348,7 +348,7 @@ export function TaskModal({ task, isNew, events, roster, letters, onSave, onDele
   const [people, setPeopleRaw] = useState<string[]>(task.people);
   const [steps, setStepsRaw] = useState<TaskStep[]>(() => taskSteps(task));
   const [tab, setTab] = useState('alap');
-  // elmentetlen módosítás követése — bezárás előtt rákérdezünk
+  // elmentetlen módosítás követése - bezárás előtt rákérdezünk
   const dirty = useRef(false);
   const tryClose = () => { if (dirty.current && !confirm('Elmentetlen módosítások vannak. Bezárod mentés nélkül?')) return; onClose(); };
   useEsc(tryClose);
@@ -370,7 +370,7 @@ export function TaskModal({ task, isNew, events, roster, letters, onSave, onDele
       priority: d.priority as TaskPriority,
       category: d.category || null,
       owner: d.owner.trim() || null,
-      // a strukturált határidő az egyetlen forrás — a régi szöveges csak addig él, amíg nincs
+      // a strukturált határidő az egyetlen forrás - a régi szöveges csak addig él, amíg nincs
       due: d.dueDate.trim() ? null : d.due.trim() || null,
       dueDate: d.dueDate.trim() || null,
       people,
@@ -390,7 +390,7 @@ export function TaskModal({ task, isNew, events, roster, letters, onSave, onDele
       <div className="modal modal--tabs">
         <h3>{d.title.trim() || (isNew ? 'Új feladat' : 'Feladat szerkesztése')}</h3>
         <div className="mt-sum">
-          <button type="button" className="mt-chip" title="Határidő — az Alap fülön" onClick={() => setTab('alap')}>🕑 {fmtDueHu(d.dueDate) || d.due.trim() || 'nincs határidő'}</button>
+          <button type="button" className="mt-chip" title="Határidő - az Alap fülön" onClick={() => setTab('alap')}>🕑 {fmtDueHu(d.dueDate) || d.due.trim() || 'nincs határidő'}</button>
           <button type="button" className="mt-chip" title="Alfeladatok" onClick={() => setTab('steps')}>☑ {doneN}/{steps.length} alfeladat</button>
           <button type="button" className="mt-chip" title="Felelős és résztvevők" onClick={() => setTab('people')}>👥 {(d.owner ? 1 : 0) + people.length} fő</button>
           <button type="button" className="mt-chip" title="Kapcsolt levelek" onClick={() => setTab('mail')}>✉ {letters?.length ?? 0} levél</button>
@@ -420,48 +420,48 @@ export function TaskModal({ task, isNew, events, roster, letters, onSave, onDele
             </div>
             <div className="f-sec c-yellow">Időzítés és kapcsolat</div>
             <div className="field full">
-              <label>Határidő — hónap vagy pontos nap, óra:perc ha kell</label>
+              <label>Határidő - hónap vagy pontos nap, óra:perc ha kell</label>
               <DueInput value={d.dueDate} onChange={(v) => set('dueDate', v)} />
               {d.due.trim() !== '' && !d.dueDate && (
-                <div className="due-legacy">Régi szöveges bejegyzés: „{d.due}" — válassz fent hónapot vagy napot, az váltja ki.</div>
+                <div className="due-legacy">Régi szöveges bejegyzés: „{d.due}" - válassz fent hónapot vagy napot, az váltja ki.</div>
               )}
             </div>
             <div className="field full">
               <label>Kapcsolódó esemény</label>
               <select value={d.eventId} onChange={(e) => set('eventId', e.target.value)}>
-                <option value="">— nincs —</option>
+                <option value="">- nincs -</option>
                 {events.map((ev) => <option key={ev.id} value={ev.id}>{ev.title}</option>)}
               </select>
               {!d.eventId && eventSugg && (
                 <button type="button" className="chip due-sugg" title="A rendszer a címek egyezése alapján ezt az eseményt javasolja"
-                  onClick={() => set('eventId', eventSugg.id)}>⚡ Javaslat: ▤ {eventSugg.title} — összekapcsolás</button>
+                  onClick={() => set('eventId', eventSugg.id)}>⚡ Javaslat: ▤ {eventSugg.title} - összekapcsolás</button>
               )}
             </div>
             <div className="f-sec c-green">Tartalom</div>
             <div className="field full">
-              <label>Rövid összefoglaló — a kártyán ez látszik</label>
+              <label>Rövid összefoglaló - a kártyán ez látszik</label>
               <GrowArea minRows={7} value={d.summary} onChange={(e) => set('summary', e.target.value)} placeholder="miről szól a feladat" />
             </div>
           </>)}
           {tab === 'steps' && (<>
             <div className="f-sec c-yellow">Alfeladatok</div>
             <div className="field full">
-              <label>Pipálhatók és átrendezhetők — a 👤 gombbal lépésenként felelős és határidő adható</label>
+              <label>Pipálhatók és átrendezhetők - a 👤 gombbal lépésenként felelős és határidő adható</label>
               <StepsEditor steps={steps} roster={roster} onChange={setSteps} />
             </div>
           </>)}
           {tab === 'people' && (<>
             <div className="f-sec c-blue">Felelős és résztvevők</div>
             <div className="field full">
-              <label>Felelős — az állandó listából</label>
+              <label>Felelős - az állandó listából</label>
               <OwnerSelect value={d.owner} roster={roster} onChange={(v) => set('owner', v)} />
             </div>
             <div className="field full">
-              <label>Résztvevők — keress névre, vagy nyiss meg egy kategóriát</label>
+              <label>Résztvevők - keress névre, vagy nyiss meg egy kategóriát</label>
               <PeoplePicker selected={people} roster={roster} onToggle={togglePerson} onSet={setPeople} />
             </div>
             <div className="field">
-              <label>Feladó neve — ha emailből jött a feladat</label>
+              <label>Feladó neve - ha emailből jött a feladat</label>
               <input value={d.srcName} onChange={(e) => set('srcName', e.target.value)} placeholder="pl. Rizmajer Andrea" />
             </div>
             <div className="field">
@@ -514,7 +514,7 @@ const EVENT_TABS: TabDef[] = [
 ];
 
 export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDelete, onNotify, onOpenTask, onAddTask, onOpenLetter, onLetterStatus, onNotifyTopic, onClose }: EventProps) {
-  // az időpont strukturált: hónap VAGY nap/időszak (+ opcionális óra:perc) — szabad szöveg nincs;
+  // az időpont strukturált: hónap VAGY nap/időszak (+ opcionális óra:perc) - szabad szöveg nincs;
   // a régi when-szövegből az óra:percet kiolvassuk, a kijelzett szöveget mentéskor generáljuk
   const m0 = event.when.match(/(\d{1,2})[:.](\d{2})/);
   const [d, setD] = useState(() => ({
@@ -565,8 +565,8 @@ export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDel
       <div className="modal modal--tabs">
         <h3>{d.title.trim() || (isNew ? 'Új esemény' : 'Esemény szerkesztése')}</h3>
         <div className="mt-sum">
-          <button type="button" className="mt-chip" title="Időpont — az Alap fülön" onClick={() => setTab('alap')}>🕑 {whenOut}</button>
-          {d.place.trim() !== '' && <button type="button" className="mt-chip" title="Helyszín — az Alap fülön" onClick={() => setTab('alap')}>📍 {d.place.trim()}</button>}
+          <button type="button" className="mt-chip" title="Időpont - az Alap fülön" onClick={() => setTab('alap')}>🕑 {whenOut}</button>
+          {d.place.trim() !== '' && <button type="button" className="mt-chip" title="Helyszín - az Alap fülön" onClick={() => setTab('alap')}>📍 {d.place.trim()}</button>}
           <button type="button" className="mt-chip" title="Az esemény feladatai" onClick={() => setTab('tasks')}>▤ {linked.length} feladat</button>
           <button type="button" className="mt-chip" title="Felelős és résztvevők" onClick={() => setTab('people')}>👥 {(d.owner ? 1 : 0) + people.length} fő</button>
           <button type="button" className="mt-chip" title="Kapcsolt levelek" onClick={() => setTab('mail')}>✉ {letters?.length ?? 0} levél</button>
@@ -587,11 +587,11 @@ export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDel
             </div>
             <div className="f-sec c-yellow">Időpont és helyszín</div>
             <div className="field full">
-              <label>Időpont — hónap vagy konkrét nap/időszak</label>
+              <label>Időpont - hónap vagy konkrét nap/időszak</label>
               <div className="chipradio">
                 <button type="button" className={`crx c-grey${mode === 'none' ? ' is-on' : ''}`} onClick={() => setMode('none')}>Nincs még</button>
                 <button type="button" className={`crx${mode === 'month' ? ' is-on' : ''}`} title="Csak a hónap ismert" onClick={() => setMode('month')}>Hónap</button>
-                <button type="button" className={`crx${mode === 'day' ? ' is-on' : ''}`} title="Konkrét nap vagy többnapos időszak — a naptárban is jelölődik" onClick={() => setMode('day')}>Nap / időszak</button>
+                <button type="button" className={`crx${mode === 'day' ? ' is-on' : ''}`} title="Konkrét nap vagy többnapos időszak - a naptárban is jelölődik" onClick={() => setMode('day')}>Nap / időszak</button>
               </div>
             </div>
             {mode === 'month' && (
@@ -606,11 +606,11 @@ export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDel
                 <input type="date" value={d.day} onChange={(e) => set('day', e.target.value)} title="A naptárban ettől a naptól jelölődik" />
               </div>
               <div className="field">
-                <label>Utolsó nap — ha időszak</label>
-                <input type="date" value={d.dayEnd} onChange={(e) => set('dayEnd', e.target.value)} title="Többnapos esemény/időszak záró napja — a naptár a teljes tartományt jelöli" />
+                <label>Utolsó nap - ha időszak</label>
+                <input type="date" value={d.dayEnd} onChange={(e) => set('dayEnd', e.target.value)} title="Többnapos esemény/időszak záró napja - a naptár a teljes tartományt jelöli" />
               </div>
               <div className="field">
-                <label>Óra:perc — ha van</label>
+                <label>Óra:perc - ha van</label>
                 <input type="time" value={d.time} disabled={!d.day.trim()} onChange={(e) => set('time', e.target.value)} />
               </div>
             </>)}
@@ -631,7 +631,7 @@ export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDel
           {tab === 'tasks' && (<>
             <div className="f-sec c-yellow">Az esemény feladatai</div>
             <div className="field full">
-              <label>Kapcsolt feladatok ({linked.length}){onOpenTask ? ' — kattintásra az esemény mentődik, és a feladat nyílik meg' : ''}</label>
+              <label>Kapcsolt feladatok ({linked.length}){onOpenTask ? ' - kattintásra az esemény mentődik, és a feladat nyílik meg' : ''}</label>
               {linked.length === 0 && <div className="se-empty">Ehhez az eseményhez még nincs feladat.</div>}
               {linked.length > 0 && (
                 <div className="mt-tasklist">
@@ -654,11 +654,11 @@ export function EventModal({ event, isNew, roster, tasks, letters, onSave, onDel
           {tab === 'people' && (<>
             <div className="f-sec c-blue">Felelős és résztvevők</div>
             <div className="field full">
-              <label>Felelős — az állandó listából</label>
+              <label>Felelős - az állandó listából</label>
               <OwnerSelect value={d.owner} roster={roster} onChange={(v) => set('owner', v)} />
             </div>
             <div className="field full">
-              <label>Résztvevők — keress névre, vagy nyiss meg egy kategóriát</label>
+              <label>Résztvevők - keress névre, vagy nyiss meg egy kategóriát</label>
               <PeoplePicker selected={people} roster={roster} onToggle={togglePerson} onSet={setPeople} />
             </div>
           </>)}

@@ -97,7 +97,11 @@ body {
 .btn:hover { border-color: var(--line-2); }
 .btn.is-on { background: var(--hot); border-color: var(--hot); color: #fff; }
 .btn--ink { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-.btn--ink:hover { background: #000; }
+/* témafüggetlen hover: az alap felé sötétít, DE a szöveg (--paper) kontrasztja megmarad
+   (a régi fix #000 dark módban fekete alapon sötét betűt adott - olvashatatlan) */
+.btn--ink:hover { background: color-mix(in srgb, var(--ink) 85%, #000); border-color: color-mix(in srgb, var(--ink) 85%, #000); }
+.btn--hot { background: var(--hot); border-color: var(--hot); color: #fff; }
+.btn--hot:hover { background: color-mix(in srgb, var(--hot) 86%, #000); border-color: color-mix(in srgb, var(--hot) 86%, #000); color: #fff; }
 .btn--danger { color: var(--brand-text); }
 .btn--danger:hover { border-color: var(--hot); background: var(--hot-100); }
 .themebtn { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; cursor: pointer; font-size: 1rem; }

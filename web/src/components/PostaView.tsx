@@ -131,19 +131,25 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
       awaiting,
       waiting: rows.filter((r) => st(r) === 'waiting').sort((a, b) => (a.src.followUpAt ?? '').localeCompare(b.src.followUpAt ?? '')),
       snoozed: rows.filter((r) => st(r) === 'snoozed').sort((a, b) => (a.src.snoozeUntil ?? '').localeCompare(b.src.snoozeUntil ?? '')),
+      drafted: rows.filter((r) => st(r) === 'drafted').sort((a, b) => (a.src.date ?? '').localeCompare(b.src.date ?? '')),
       closed: rows.filter((r) => st(r) === 'replied' || st(r) === 'noreply')
         .sort((a, b) => (b.src.repliedAt ?? b.src.date ?? '').localeCompare(a.src.repliedAt ?? a.src.date ?? '')),
     };
   }, [rows, now]);
 
-  // mely kártyákhoz van mentett (draft) válasz-vázlat - 📝 jelvény a sorokon
-  const draftLetters = useMemo(() => {
-    const s = new Set<string>();
+  // kártya-sel → a hozzá mentett LEGUTÓBBI draft levél (a másolható blokk ebből másol)
+  const draftBySel = useMemo(() => {
+    const m = new Map<string, Letter>();
     (agenda.letters || []).forEach((l) => {
-      if (l.targetType && l.targetId && (l.status ?? 'draft') === 'draft') s.add(`${l.targetType === 'task' ? 't' : 'e'}:${l.targetId}`);
+      if (!l.targetType || !l.targetId || (l.status ?? 'draft') !== 'draft') return;
+      const key = `${l.targetType === 'task' ? 't' : 'e'}:${l.targetId}`;
+      const prev = m.get(key);
+      if (!prev || (l.createdAt ?? '') > (prev.createdAt ?? '')) m.set(key, l);
     });
-    return s;
+    return m;
   }, [agenda]);
+  const draftLetters = useMemo(() => new Set(draftBySel.keys()), [draftBySel]);
+  const [showDrafted, setShowDrafted] = useState(true); // a másolható blokk alapból NYITVA (aktív teendő)
   const pendingAll = useMemo(() => [...lanes.returned, ...lanes.deadline, ...lanes.awaiting], [lanes]);
   const urgent = lanes.deadline.filter((r) => r.duePrec && r.dueKey !== null && r.dueKey <= now + 2 * DAY).length;
   const decideQueue = pendingAll.filter((r) => !decideSkip.has(r.sel));
@@ -176,6 +182,14 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
       logChoice(sel, d.label);
       window.setTimeout(() => setCopied((c) => (c === key ? null : c)), 1800);
     } catch { /* http vagy régi böngésző - a levélíróból másolható */ }
+  };
+  // a másolható blokk: a mentett draft levél törzse + aláírás a vágólapra
+  const copyLetter = async (key: string, l: Letter) => {
+    try {
+      await navigator.clipboard.writeText(`${l.body}\n\n${footer}`);
+      setCopied(key);
+      window.setTimeout(() => setCopied((c) => (c === key ? null : c)), 1800);
+    } catch { /* ignore */ }
   };
 
   // beszéd-réteg (ingyenes böngésző-TTS, hu-HU) - a seq-számláló kiszűri a cancel
@@ -565,7 +579,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
           <div className="po-dictbtns">
             <button type="button" className="btn" title="Vissza a nyers döntéshez - módosítsd, és fogalmazd újra" onClick={() => setWizStep('answer')}>🔁 Újrafogalmazás</button>
           </div>
-          <div className="po-wiz-hint">El is mentettem vázlatként a kártya leveleihez - később is megtalálod (📝 jelvény a Posta-soron, illetve a kártya Levelezés fülén).</div>
+          <div className="po-wiz-hint">A kész levél a Posta alján a <b>„📋 Másolható válaszok"</b> blokkba kerül. Onnan másolod az Outlookba (küldeni ott kell), és utána zárod le.</div>
         </div>
         <details className="po-wiz-tpl">
           <summary>A szinkron {r.drafts.length} választerve (minta, önmagában is használható)</summary>
@@ -583,8 +597,8 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
           ))}
         </details>
         <div className="po-wiz-foot">
-          <button type="button" className="btn btn--ink" title="Elküldtem a választ (pl. Outlookból) - lezárom és jön a következő" onClick={() => advance(r.sel, { status: 'replied', repliedAt: nowIso(), returned: null, thread: withOutEntry(r.src, 'megválaszolva (titkárnő-mód)') }, 'Megválaszolva')}>✓ Kész, következő</button>
-          <button type="button" className="btn" title="Megválaszolva + követés: ha 5 munkanapon belül nem jön válasz, visszatér a Postába" onClick={() => advance(r.sel, { status: 'waiting', repliedAt: nowIso(), followUpAt: addWorkdaysYmd(5), returned: null, thread: withOutEntry(r.src, 'megválaszolva, követés bekapcsolva') }, 'Megválaszolva + követés')}>✓⏳ Válasz + követés</button>
+          <button type="button" className="btn btn--ink" title="A kész levél a Posta alján a Másolható válaszok blokkba kerül (még NEM ment el); onnan másolod az Outlookba, és utána zárod le" onClick={() => advance(r.sel, { status: 'drafted', returned: null }, 'Másolható listába')}>📋 Kész, másolható listába</button>
+          <button type="button" className="btn" title="Már el is küldtem (pl. Outlookból) - lezárom és jön a következő" onClick={() => advance(r.sel, { status: 'replied', repliedAt: nowIso(), returned: null, thread: withOutEntry(r.src, 'megválaszolva (titkárnő-mód)') }, 'Elküldve, lezárva')}>✓ Már elküldtem</button>
           {closeBtn}
           <span className="sp" />
           {snoozeBtns}
@@ -602,6 +616,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
         <span className="pill">{pendingAll.length} válaszra vár</span>
         {lanes.returned.length > 0 && <span className="pill pill--hot" title="Felébredt halasztás vagy új levél lezárt szálban">{lanes.returned.length} visszatért</span>}
         {urgent > 0 && <span className="pill pill--hot" title="Határidő 48 órán belül">{urgent} sürgős</span>}
+        {lanes.drafted.length > 0 && <span className="pill pill--draft" title="Megírt válaszok, amelyeket még át kell másolni az Outlookba">{lanes.drafted.length} másolható</span>}
         {lanes.waiting.length > 0 && <span className="pill" title="Válaszoltam, az ő válaszukra várok">{lanes.waiting.length} rájuk várok</span>}
         {lanes.snoozed.length > 0 && <span className="pill" title="Halasztva - a felbukkanási napon visszatér">{lanes.snoozed.length} halasztva</span>}
         <span className="sp" />
@@ -623,6 +638,27 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
             {lane('Rájuk várok', 'válaszoltam - ha nem jön válasz, a követési napon visszatér', lanes.waiting, 'waiting')}
           </div>
         </>
+      )}
+      {!decide && lanes.drafted.length > 0 && (
+        <section className="po-fold po-fold--draft">
+          <button type="button" className="po-fold-h" onClick={() => setShowDrafted((v) => !v)}>📋 Másolható válaszok ({lanes.drafted.length}) {showDrafted ? '▴' : '▾'}</button>
+          {showDrafted && <div className="po-fold-hint">Ezek a válaszaid MEGvannak írva, de még NEM mentek el. Másold be az Outlook (vagy webes levelező) válaszába, küldd el ott, majd itt zárd le.</div>}
+          {showDrafted && lanes.drafted.map((r) => {
+            const l = draftBySel.get(r.sel);
+            return (
+              <div key={r.sel} className="po-mini po-mini--draft">
+                <span className="d">{fmtD(r.src.date) || '·'}</span>
+                <span className="n">{r.src.name}</span>
+                <span className="s">„{r.src.subject ?? r.title}"</span>
+                {l
+                  ? <button type="button" className="btn btn--ink" title="A megírt válasz a vágólapra - illeszd be az Outlook válaszába" onClick={() => copyLetter(`d-${r.sel}`, l)}>{copied === `d-${r.sel}` ? '✓ Másolva' : '⧉ Másolás'}</button>
+                  : <button type="button" className="btn" title="A levél megnyitása a levélíróban" onClick={() => onOpenCard(r.sel)}>▤ Megnyitás</button>}
+                <button type="button" className="btn" title="Beillesztettem és elküldtem az Outlookban - lezárás" onClick={() => onState(r.sel, { status: 'replied', repliedAt: nowIso(), returned: null, thread: withOutEntry(r.src, 'megválaszolva (átmásolva az Outlookba)') }, 'Elküldve, lezárva')}>✓ Elküldtem</button>
+                <button type="button" className="btn" title="Vissza a válaszra várók közé" onClick={() => onState(r.sel, { status: 'pending', returned: null }, 'Vissza a Postába')}>↩ Vissza</button>
+              </div>
+            );
+          })}
+        </section>
       )}
       {!decide && lanes.snoozed.length > 0 && (
         <section className="po-fold">

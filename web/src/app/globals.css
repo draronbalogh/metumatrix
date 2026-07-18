@@ -1631,17 +1631,23 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 /* lenyitható szekciók: Halasztva / Lezárt */
 .po-fold { margin-top: 18px; }
 .po-fold-h { display: block; width: 100%; text-align: left; background: none; border: 0; border-top: 1px solid var(--line); padding: 10px 2px; font: inherit; font-size: .78rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
+/* a másolható blokk kiemelt (aktív teendő), nem szürke mint a lezártak */
+.po-fold--draft .po-fold-h { color: var(--g0); border-top-color: color-mix(in srgb, var(--g0) 40%, var(--line)); }
+.po-fold-hint { font-size: .76rem; color: var(--ink-2); line-height: 1.45; margin: 0 2px 8px; }
 .po-mini { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--card); margin-bottom: 6px; font-size: .84rem; }
+.po-mini--draft { border-left: 4px solid var(--g0); }
 .po-mini .d { flex: none; font-size: .72rem; font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .po-mini .n { flex: none; font-weight: 700; }
 .po-mini .s { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
 .po-mini .btn { padding: 3px 9px; font-size: .74rem; }
 .po-date { border: 1px solid var(--line); border-radius: 7px; padding: 2px 6px; font: inherit; font-size: .74rem; color: var(--ink); background: var(--card); }
 /* brífing-sáv: sávonkénti darabszámok + Döntés-sor / Sorban módváltók */
-.po-brief { position: sticky; top: 0; z-index: 6; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 2px 0 14px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--brand) 5%, var(--bg)); font-size: .82rem; color: var(--ink-2); box-shadow: 0 4px 14px rgba(16, 17, 20, .05); }
+/* NEM ragadós: korábban sticky volt, és görgetéskor az alcím átütött rajta */
+.po-brief { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 2px 0 14px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--brand) 5%, var(--bg)); font-size: .82rem; color: var(--ink-2); }
 .po-brief .sp { flex: 1; }
 .po-brief .pill { font-size: .74rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: color-mix(in srgb, var(--brand) 10%, transparent); color: var(--ink-2); white-space: nowrap; }
 .po-brief .pill--hot { background: var(--hot-100); color: var(--hot); }
+.po-brief .pill--draft { background: color-mix(in srgb, var(--g0) 16%, transparent); color: var(--g0); }
 .po-brief .btn { padding: 4px 10px; font-size: .76rem; }
 .po-decide-h { font-size: .78rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 4px; }
 /* címzett-sor a tervek felett: kinek megy a válasz - másolás előtt ellenőrizhető */

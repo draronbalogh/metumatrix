@@ -37,11 +37,13 @@ export interface ReplyDraft { label: string; subject: string; body: string }
 // módosít) · waiting → rájuk várok (válaszoltam, követési dátummal) · replied →
 // megválaszolva · noreply → lezárva, nem igényelt választ. Lezárt/várakozó állapotból
 // új bejövő levél automatikusan visszanyit pending-be (auto-reopen, a bot végzi).
-export type SourceStatus = 'pending' | 'snoozed' | 'waiting' | 'replied' | 'noreply';
-export const SOURCE_STATUSES: SourceStatus[] = ['pending', 'snoozed', 'waiting', 'replied', 'noreply'];
+// 'drafted': a válasz MEGÍRVA és mentve (Titkárnő), de MÉG NEM ment el - a felhasználó
+// átmásolja a levelezőjébe, és utána zárja le. Külön „Másolható" blokkban él.
+export type SourceStatus = 'pending' | 'snoozed' | 'waiting' | 'drafted' | 'replied' | 'noreply';
+export const SOURCE_STATUSES: SourceStatus[] = ['pending', 'snoozed', 'waiting', 'drafted', 'replied', 'noreply'];
 export const SOURCE_STATUS_LABEL: Record<SourceStatus, string> = {
   pending: 'válaszra vár', snoozed: 'halasztva', waiting: 'rájuk várok',
-  replied: 'megválaszolva', noreply: 'lezárva',
+  drafted: 'másolásra kész', replied: 'megválaszolva', noreply: 'lezárva',
 };
 
 // A szál-idővonal egy bejegyzése: ki írt, mikor, melyik irányba, egy mondatban mit.

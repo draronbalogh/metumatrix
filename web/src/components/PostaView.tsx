@@ -195,18 +195,21 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     }).catch(() => { /* a napló nem kritikus */ });
   };
 
+  // a levél zárása („Köszönöm/Üdvözlettel, Áron") már a törzsben van; a titulusos
+  // aláírás alapból KI (azt az Outlook adja), csak akkor kerül a végére, ha a footer nem üres
+  const withFooter = (b: string): string => (footer.trim() ? `${b}\n\n${footer}` : b);
   const copyDraft = async (key: string, sel: string, d: ReplyDraft) => {
     try {
-      await navigator.clipboard.writeText(`${d.body}\n\n${footer}`);
+      await navigator.clipboard.writeText(withFooter(d.body));
       setCopied(key);
       logChoice(sel, d.label);
       window.setTimeout(() => setCopied((c) => (c === key ? null : c)), 1800);
     } catch { /* http vagy régi böngésző - a levélíróból másolható */ }
   };
-  // a másolható blokk: a mentett draft levél törzse + aláírás a vágólapra
+  // a másolható blokk: a mentett draft levél törzse a vágólapra
   const copyLetter = async (key: string, l: Letter) => {
     try {
-      await navigator.clipboard.writeText(`${l.body}\n\n${footer}`);
+      await navigator.clipboard.writeText(withFooter(l.body));
       setCopied(key);
       window.setTimeout(() => setCopied((c) => (c === key ? null : c)), 1800);
     } catch { /* ignore */ }

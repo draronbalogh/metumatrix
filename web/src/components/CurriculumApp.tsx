@@ -804,7 +804,7 @@ export default function CurriculumApp() {
       targetType: isTask ? 'task' : 'event', targetId: sel.slice(2), task: t, event: e,
       names: [], steps: t ? taskSteps(t).map((s) => s.text).filter(Boolean) : [],
       source: src,
-      preload: { subject: draft.subject, body: `${draft.body}\n\n${buildFooter(peopleDB, true)}`, names: [src.email, ...(src.cc ?? [])] },
+      preload: { subject: draft.subject, body: draft.body, names: [src.email, ...(src.cc ?? [])] },
       replyDrafts: drafts, replySel: sel,
     });
   }, [peopleDB]);
@@ -1379,7 +1379,7 @@ export default function CurriculumApp() {
           ) : view === 'posta' ? (
             <PostaView
               agenda={agenda}
-              footer={buildFooter(peopleDB, true)}
+              footer={buildFooter(peopleDB, false)}
               senderRules={peopleDB.senderRules}
               onSenderRule={setSenderRule}
               onReply={notifyReply}

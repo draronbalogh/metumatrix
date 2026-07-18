@@ -147,10 +147,10 @@ const loadUi = (): { kind: LetterKind; sigOn: boolean } => {
     if (typeof window !== 'undefined') {
       const j = JSON.parse(localStorage.getItem(UI_KEY) || '{}') as { kind?: string; sigOn?: boolean };
       const k = LETTER_KINDS.some((x) => x.id === j.kind) ? (j.kind as LetterKind) : 'felkeres';
-      return { kind: k, sigOn: j.sigOn !== false };
+      return { kind: k, sigOn: j.sigOn === true }; // titulusos aláírás ALAPBÓL KI (az Outlook adja)
     }
   } catch { /* privát mód */ }
-  return { kind: 'felkeres', sigOn: true };
+  return { kind: 'felkeres', sigOn: false };
 };
 const saveUi = (kind: LetterKind, sigOn: boolean): void => {
   try { localStorage.setItem(UI_KEY, JSON.stringify({ kind, sigOn })); } catch { /* privát mód */ }

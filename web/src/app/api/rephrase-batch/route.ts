@@ -67,11 +67,12 @@ ${items.length} bejövő levélre írsz VÉGLEGES magyar választ Áron nevében
 ${style || '(nem elérhető)'}
 
 KÖZÖS SZABÁLYOK (minden levélre):
+- NYELV: minden levélnél KÜLÖN állapítsd meg a bejövő nyelvét (magyar vagy angol) a feladó és a levél alapján, és AZON a nyelven válaszolj. Magyar megszólítás: "Kedves <keresztnév>!"; angol: "Dear <firstname>,".
 - A nyers döntés MINDEN tartalmi elemét építsd be; amit Áron eldöntött, azt nem írhatod felül.
 - Ha a diktátum kérdezni akar, kérdezz; ha igent/nemet mondott, azt közöld udvariasan.
 - Hangnem: korrekt, kollegiális, tényszerű - semmi érzelgősség, semmi túlzó udvariaskodás.
 - TILOS a hosszú gondolatjel (—); helyette vessző, pont vagy sima kötőjel.
-- Rövid, jól tagolt levél; aláírást NE írj (azt az app teszi hozzá).
+- ZÁRÁS: a levelet zárd rövid elköszönéssel és Áron KERESZTNEVÉVEL, külön sorokban - magyarul "Köszönöm," VAGY "Üdvözlettel," új sor "Áron"; angolul "Thank you," VAGY "Best regards," új sor "Áron". NE írj titulusos aláírás-blokkot (teljes név, beosztás, elérhetőség, linkek) - azt az Outlook teszi hozzá.
 - Ne találj ki tényt, dátumot, nevet, ami se a levélben, se a diktátumban nincs benne.
 - Ha egy adat hiányzik, ne találd ki: fogalmazz óvatosan vagy kérdezz rá a levélben.
 

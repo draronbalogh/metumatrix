@@ -519,6 +519,9 @@ export function buildLetter(kind: LetterKind, target: LetterTarget, signature: s
       ? `Kedves ${recipient?.name ? givenName(recipient.name) : '[Név]'}!`
       : greetingFor(audience);
   const core = blocks.filter(Boolean).join('\n\n');
-  const body = `${greet}\n\n${core ? core + '\n\n' : ''}${closer ? closer + '\n\n' : ''}${signature}`;
+  // zárás: ha van bekapcsolt titulusos aláírás, azt tesszük; különben rövid elköszönés
+  // + Áron keresztneve (a titulusos aláírást ilyenkor az Outlook adja)
+  const signOff = signature.trim() ? signature : 'Üdvözlettel,\nÁron';
+  const body = `${greet}\n\n${core ? core + '\n\n' : ''}${closer ? closer + '\n\n' : ''}${signOff}`;
   return { subject, body };
 }

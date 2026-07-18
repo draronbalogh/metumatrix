@@ -1761,6 +1761,7 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .agc-meta .m.ok { color: var(--g0); }
 .agc-meta .m.warn { color: color-mix(in srgb, var(--yellow-deep) 75%, var(--ink)); }
 .agc-meta .m.doing { color: var(--g1); }
+.agc-meta .m.hot { color: var(--hot); }
 .agc-meta .m.ev { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
 /* prioritas: bal szinsav - piros CSAK a magas; a tobbi visszafogott */
 .agc.prio-high { border-left: 3px solid var(--hot); }

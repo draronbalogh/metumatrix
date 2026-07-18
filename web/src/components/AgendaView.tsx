@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import {
   Agenda, AgendaTask, STATUS_LABEL, PRIORITY_LABEL, PRIORITY_ORDER, TASK_CATEGORIES,
-  TaskPriority, taskHasPerson, eventHasPerson, taskSteps, stepsDone, fmtDueHu,
+  TaskPriority, taskHasPerson, eventHasPerson, taskSteps, stepsDone, fmtDueHu, isAwaiting,
 } from '@/data/agenda';
 import { PersonKind } from '@/data/people';
 import PageHead from './PageHead';
@@ -181,6 +181,8 @@ export default function AgendaView({ agenda, q, instr, taught, letterStats, onAd
                   {t.owner && <span className="m">👤 {familyName(t.owner)}{t.people.length > 0 ? ` +${t.people.length}` : ''}</span>}
                   {steps.length > 0 && <span className={`m${doneN === steps.length ? ' ok' : ''}`}>☑ {doneN}/{steps.length}</span>}
                   {ls && <span className={`m${ls.drafts ? ' warn' : ''}`}>✉ {ls.n}</span>}
+                  {isAwaiting(t.source) && <span className="m hot" title="Levél érkezett, válaszra vár - a Postában elintézhető (választervekkel)">✉ válaszra vár{t.source?.returned ? ' (új)' : ''}</span>}
+                  {t.source?.status === 'drafted' && <span className="m warn" title="Megírt válasz készen áll - a Postából másolható/küldhető">✉ válasz kész</span>}
                   {t.status === 'doing' && <span className="m doing">▶ folyamatban</span>}
                   {t.eventId && eventTitle(t.eventId) && <span className="m ev">▤ {eventTitle(t.eventId)}</span>}
                 </div>

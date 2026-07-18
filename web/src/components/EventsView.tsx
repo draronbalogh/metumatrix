@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Agenda, AgendaEvent, eventHasPerson, fmtDayHu, taskHasPerson } from '@/data/agenda';
+import { Agenda, AgendaEvent, eventHasPerson, fmtDayHu, taskHasPerson, isAwaiting } from '@/data/agenda';
 import EventsCalendar, { CalDeadline } from './EventsCalendar';
 import { familyName } from './AgendaView';
 import PageHead from './PageHead';
@@ -92,6 +92,8 @@ export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpe
                   {e.owner && <span className="m">👤 {familyName(e.owner)}{e.people.length > 0 ? ` +${e.people.length}` : ''}</span>}
                   {linked.length > 0 && <span className={`m${doneN === linked.length ? ' ok' : ''}`}>▤ {doneN}/{linked.length} feladat</span>}
                   {ls && <span className={`m${ls.drafts ? ' warn' : ''}`}>✉ {ls.n}</span>}
+                  {isAwaiting(e.source) && <span className="m hot" title="Levél érkezett, válaszra vár - a Postában elintézhető (választervekkel)">✉ válaszra vár{e.source?.returned ? ' (új)' : ''}</span>}
+                  {e.source?.status === 'drafted' && <span className="m warn" title="Megírt válasz készen áll - a Postából másolható/küldhető">✉ válasz kész</span>}
                 </div>
               </article>
             );

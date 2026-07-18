@@ -16,11 +16,27 @@ const PROMPT = `${ROOT}/automation/outlook-agenda-prompt.md`;
 const LOCK = `${ROOT}/automation/agenda-sync.lock`;
 const TMP = `${ROOT}/automation/_today-prompt.md`;
 const LOG = `${ROOT}/automation/logs/runs.log`;
+const STATE = `${ROOT}/automation/outlook-agenda-state.json`;
 const ALLOWED = 'mcp__plugin_playwright_playwright,Read,Glob,Grep,Write,Edit,Bash(python:*),Bash(py:*),Bash(curl:*)';
 const LOCK_TTL = 15 * 60 * 1000; // 15 perc: ennél régebbi lock elavult (elakadt futás)
 
 const ymdLocal = (d: Date): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+// ÁLLAPOT: fut-e még a beolvasás (lock-fájl él-e), mennyi ideje, és a legutóbbi futás
+// eredménye (vízjel lastRun + processed). A UI ezt pollozza a folyamatjelzőhöz.
+export async function GET(req: Request) {
+  if (!canWrite(req)) return writeDenied();
+  let running = false, elapsedSec = 0;
+  try { const st = await fs.stat(LOCK); const age = Date.now() - st.mtimeMs; running = age < LOCK_TTL; elapsedSec = Math.round(age / 1000); } catch { /* nincs lock */ }
+  let lastRunMs = 0, processed: number | null = null;
+  try {
+    const s = JSON.parse(await fs.readFile(STATE, 'utf8')) as { lastRun?: string; processed?: number };
+    if (s.lastRun) lastRunMs = new Date(s.lastRun).getTime();
+    if (typeof s.processed === 'number') processed = s.processed;
+  } catch { /* nincs state */ }
+  return NextResponse.json({ running, elapsedSec, lastRunMs, processed });
+}
 
 export async function POST(req: Request) {
   if (!canWrite(req)) return writeDenied();
@@ -57,5 +73,5 @@ export async function POST(req: Request) {
     try { await fs.unlink(LOCK); } catch { /* ignore */ }
     return NextResponse.json({ ok: false, error: `indítás sikertelen: ${(e as Error).message}` }, { status: 500 });
   }
-  return NextResponse.json({ ok: true, started: true, today });
+  return NextResponse.json({ ok: true, started: true, today, startedAtMs: Date.now() });
 }

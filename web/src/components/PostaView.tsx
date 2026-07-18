@@ -43,6 +43,7 @@ interface Props {
   onOpenCard: (sel: string) => void;
   onSaveLetter?: (l: Letter) => void;   // a titkárnő végleges levele draftként tárolódik
   onDeleteLetter?: (id: string) => void; // újrafogalmazásnál a régi példány cserélődik
+  onRefresh?: () => void;                // a szerver-állapot azonnali behúzása (pl. szinkron után)
 }
 
 const fmtD = (d?: string | null): string => (d && d.length >= 10 ? `${d.slice(5, 7)}. ${Number(d.slice(8, 10))}.` : '');
@@ -51,7 +52,7 @@ const ymdTs = (d?: string | null): number | null =>
 
 const DAY = 86400000;
 
-export default function PostaView({ agenda, footer, senderRules, onSenderRule, onReply, onState, undo, onUndo, onOpenCard, onSaveLetter, onDeleteLetter }: Props) {
+export default function PostaView({ agenda, footer, senderRules, onSenderRule, onReply, onState, undo, onUndo, onOpenCard, onSaveLetter, onDeleteLetter, onRefresh }: Props) {
   const [bank, setBank] = useState<StyleBank | null>(null);
   useEffect(() => {
     fetch('/api/style', { headers: editHeaders() }).then((r) => r.json())
@@ -213,21 +214,50 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
       setPushMsg('⚠ Nem sikerült elindítani a küldést (fut a dev-szerver és a klasszikus Outlook?).');
     } finally { setSendAllBusy(false); }
   };
-  // MAI levelek beolvasása most (a helyi Outlook->agenda szinkront indítja el, mai napra szűkítve)
-  const [syncBusy, setSyncBusy] = useState(false);
+  // MAI levelek beolvasása most: elindítja a helyi szinkront, majd POLLOZZA az állapotot
+  // (fut-e még / hány levél), és élő folyamatjelzőt mutat (eltelt idő + kész-eredmény).
+  const [syncPhase, setSyncPhase] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
+  const [syncElapsed, setSyncElapsed] = useState(0);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const syncStartRef = useRef(0);   // kliens-idő: az eltelt idő kijelzéséhez
+  const syncSrvRef = useRef(0);     // szerver-idő: a befejezés (vízjel) összevetéséhez
+  const mmss = (s: number): string => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
   const runSync = async () => {
-    if (syncBusy) return;
-    setSyncBusy(true); setSyncMsg('Mai levelek beolvasása indul…');
+    if (syncPhase === 'running') return;
+    setSyncPhase('running'); setSyncMsg(null); setSyncElapsed(0);
+    syncStartRef.current = Date.now(); syncSrvRef.current = Date.now();
     try {
       const res = await fetch('/api/agenda-sync', { method: 'POST', headers: editHeaders() });
-      const j = await res.json() as { ok: boolean; started?: boolean; running?: boolean; msg?: string; today?: string };
-      if (j.running) setSyncMsg(`⏳ ${j.msg ?? 'Már fut egy beolvasás.'}`);
-      else if (j.ok && j.started) setSyncMsg(`✓ Elindítva a mai (${j.today}) levelek beolvasása. Pár perc, és magától frissül a lista.`);
-      else setSyncMsg('⚠ Nem sikerült elindítani a beolvasást.');
-    } catch { setSyncMsg('⚠ Nem sikerült elindítani a beolvasást (fut a dev-szerver?).'); }
-    finally { setSyncBusy(false); }
+      const j = await res.json() as { ok: boolean; started?: boolean; running?: boolean; startedAtMs?: number; msg?: string };
+      if (typeof j.startedAtMs === 'number') syncSrvRef.current = j.startedAtMs;
+      if (!j.ok && !j.running) { setSyncPhase('error'); setSyncMsg(`⚠ ${j.msg ?? 'Nem sikerült elindítani a beolvasást.'}`); }
+      // ok/started VAGY „már fut" -> a polling-effekt figyeli a befejezést
+    } catch { setSyncPhase('error'); setSyncMsg('⚠ Nem sikerült elindítani a beolvasást (fut a dev-szerver?).'); }
   };
+  // amíg fut: 1 mp-enként az eltelt idő, 4 mp-enként állapot-lekérdezés; befejezéskor eredmény + frissítés
+  useEffect(() => {
+    if (syncPhase !== 'running') return;
+    const tick = window.setInterval(() => setSyncElapsed(Math.max(0, Math.round((Date.now() - syncStartRef.current) / 1000))), 1000);
+    const poll = window.setInterval(async () => {
+      try {
+        const r = await fetch('/api/agenda-sync', { cache: 'no-store', headers: editHeaders() });
+        const s = await r.json() as { running?: boolean; lastRunMs?: number; processed?: number | null };
+        if (s.running === false && Date.now() - syncStartRef.current > 6000) {
+          const completed = (s.lastRunMs ?? 0) >= syncSrvRef.current - 3000; // ez a futás írta a vízjelet?
+          if (completed) {
+            const n = typeof s.processed === 'number' ? s.processed : 0;
+            setSyncMsg(n > 0 ? `✓ Kész: ${n} levél feldolgozva. A lista frissült.` : '✓ Kész, nem jött új levél.');
+            onRefresh?.();
+          } else {
+            setSyncMsg('⚠ A beolvasás nem fejeződött be rendben (lehet kvóta vagy hiba). Próbáld később.');
+          }
+          setSyncPhase('done');
+        }
+      } catch { /* átmeneti hiba: a következő poll újrapróbálja */ }
+    }, 4000);
+    const safety = window.setTimeout(() => { setSyncPhase('done'); setSyncMsg('A beolvasás a szokásosnál tovább tart. Frissítsd később a listát.'); }, 12 * 60 * 1000);
+    return () => { window.clearInterval(tick); window.clearInterval(poll); window.clearTimeout(safety); };
+  }, [syncPhase, onRefresh]);
   const pendingAll = useMemo(() => [...lanes.returned, ...lanes.deadline, ...lanes.awaiting], [lanes]);
   const urgent = lanes.deadline.filter((r) => r.duePrec && r.dueKey !== null && r.dueKey <= now + 2 * DAY).length;
   // gyűjtő-mód: akihez már van NYERS jegyzet, az kikerül a wizard-sorból (kötegelt megfogalmazásra vár)
@@ -774,12 +804,22 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
         {lanes.waiting.length > 0 && <span className="pill" title="Válaszoltam, az ő válaszukra várok">{lanes.waiting.length} rájuk várok</span>}
         {lanes.snoozed.length > 0 && <span className="pill" title="Halasztva - a felbukkanási napon visszatér">{lanes.snoozed.length} halasztva</span>}
         <span className="sp" />
-        {!decide && <button type="button" className="btn btn--ink" disabled={syncBusy} title="A MAI beérkezett és elküldött leveleket beolvassa és beteszi az agendába (a napi ütemezett szinkronon felül, kézzel). Pár perc, magától frissül." onClick={runSync}>{syncBusy ? '⏳ Indítás…' : '🔄 Mai levelek beolvasása'}</button>}
+        {!decide && <button type="button" className="btn btn--ink" disabled={syncPhase === 'running'} title="A MAI beérkezett és elküldött leveleket beolvassa és beteszi az agendába (a napi ütemezett szinkronon felül, kézzel). Pár perc, magától frissül." onClick={runSync}>{syncPhase === 'running' ? `⏳ Beolvasás… ${mmss(syncElapsed)}` : '🔄 Mai levelek beolvasása'}</button>}
         {pendingAll.length > 0 && !decide && <button type="button" className="btn" title="Levelenként, lépésről lépésre: levél (felolvasással) - a döntésed nyersen - végleges válasz - következő" onClick={() => { setDecide(true); setTitkarMode(null); setDecideSkip(new Set()); setAllOpen(false); }}>🗣 Titkárnő</button>}
         {pendingAll.length > 0 && !decide && <button type="button" className="btn" title="Minden válaszra váró tétel terveivel együtt, egy listában végigdolgozható" onClick={() => setAllOpen((v) => !v)}>{allOpen ? '▴ Összecsukás' : '▤ Sorban mind'}</button>}
         {decide && <button type="button" className="btn" onClick={() => { setDecide(false); setTitkarMode(null); stopSpeak(); }}>✕ Kilépés a titkárnő-módból</button>}
       </div>
-      {syncMsg && <div className="po-pushmsg" style={{ margin: '0 0 12px' }}>{syncMsg}</div>}
+      {(syncPhase === 'running' || syncMsg) && (
+        <div className={`po-sync${syncPhase === 'running' ? ' is-running' : ''}${syncMsg && syncMsg[0] === '⚠' ? ' is-err' : ''}`}>
+          {syncPhase === 'running' && <span className="po-sync-spin" aria-hidden />}
+          <span className="po-sync-txt">
+            {syncPhase === 'running'
+              ? <><b>Levelek beolvasása folyamatban…</b> <span className="po-sync-clock">{mmss(syncElapsed)}</span> · általában 2-4 perc. Az Outlookot a háttérben olvassa, majd frissíti a listát.</>
+              : syncMsg}
+          </span>
+          {syncPhase !== 'running' && syncMsg && <button type="button" className="po-sync-x" onClick={() => { setSyncMsg(null); setSyncPhase('idle'); }} title="Elrejtés">✕</button>}
+        </div>
+      )}
       {decide ? (
         <div className="po-list">{renderWizard()}</div>
       ) : (

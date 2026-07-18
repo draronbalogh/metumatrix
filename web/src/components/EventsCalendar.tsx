@@ -129,6 +129,7 @@ export default function EventsCalendar({ events, deadlines, onEdit, onTask }: Pr
                   const hasFeat = h.some((x) => x.featured);
                   return (
                     <span key={d} className={`dd${dk === todayKey ? ' today' : ''}${hasFeat ? ' has-feat' : ''}`}>
+                      {dk === todayKey && <em className="today-tag" title="Ma">MA</em>}
                       <b>{d}</b>
                       <span className="bars">
                         {/* a színcsík interaktív: hoverre kiemelés + azonnali tooltip, kattintásra

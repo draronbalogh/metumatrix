@@ -1390,6 +1390,7 @@ export default function CurriculumApp() {
               onOpenCard={(sel) => setAgendaDetails({ kind: sel.startsWith('t:') ? 'task' : 'event', id: sel.slice(2) })}
               onSaveLetter={saveLetter}
               onDeleteLetter={deleteLetter}
+              onRefresh={() => setLoadN((n) => n + 1)}
             />
           ) : view === 'people' ? (
             // csak betöltött adattal mountolunk: a PeopleModal szerkesztőként mount-kor

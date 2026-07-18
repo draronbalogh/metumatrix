@@ -44,6 +44,7 @@ export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpe
       && (!q || t.title.toLowerCase().includes(q.toLowerCase())))
     .map((t) => ({ id: t.id, title: t.title, day: t.dueDate as string, done: false }));
 
+  const todayStr = new Date().toLocaleDateString('hu-HU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   return (
     <main className="catalog agenda">
       <PageHead title="Események" sub="szakos események · 2026/27 ősz">
@@ -53,6 +54,7 @@ export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpe
         </div>
         <button className="btn btn--ink ag-add" onClick={onAdd}>+ Új esemény</button>
       </PageHead>
+      <div className="ev-todaybar">📅 Ma: <b>{todayStr}</b></div>
 
       {instr && (
         <div className="ag-person slim">

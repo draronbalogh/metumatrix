@@ -1534,23 +1534,42 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .po-draft--gen { border-left-color: var(--hot); margin-left: 14px; }
 .po-draft--gen .po-draft-h .l { color: var(--hot); background: color-mix(in srgb, var(--hot) 10%, transparent); }
 
-/* Titkárnő-blokk: felolvasás + nyers döntés diktálása */
-.po-sec { border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; background: var(--card); display: flex; flex-direction: column; gap: 8px; }
-.po-sec-h { display: flex; align-items: center; gap: 10px; }
-.po-sec-h .l { font-size: .78rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-2); }
-.po-sec-h .btn { padding: 4px 10px; font-size: .78rem; }
-.po-sec-hint { font-size: .76rem; color: var(--ink-2); line-height: 1.45; }
-.po-dict { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: .85rem; line-height: 1.5; background: var(--paper); color: inherit; resize: vertical; }
-.po-dict:focus { outline: none; border-color: var(--ink); }
-.po-dictbtns { display: flex; gap: 8px; flex-wrap: wrap; }
+/* TITKÁRNŐ-WIZARD: egyszerre egy levél, lépésekre bontva */
+.po-wiz { display: flex; flex-direction: column; gap: 14px; max-width: 760px; margin: 0 auto; }
+.po-wiz-prog { font-size: .8rem; color: var(--ink-2); font-weight: 700; }
+.po-wiz-letter { border: 1px solid var(--line); border-radius: 12px; padding: 13px 15px; background: var(--card); display: flex; flex-direction: column; gap: 7px; }
+.po-wiz-from { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .9rem; }
+.po-wiz-from .d { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.po-wiz-from .cc { font-size: .74rem; color: var(--ink-2); }
+.po-wiz-subj { font-size: 1.02rem; font-weight: 700; line-height: 1.35; }
+.po-wiz-gist { font-size: .9rem; line-height: 1.55; color: var(--ink); margin: 2px 0 0; }
+.po-wiz-thread { margin-top: 2px; }
+.po-wiz-toolrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
+.po-wiz-letter .po-tocc { margin-top: 2px; }
 
-/* keskeny kijelzo (telefon): kisebb behuzas, teljes szelessegu gombok - mas
+.po-wiz-step { display: flex; flex-direction: column; gap: 8px; }
+.po-wiz-steph { display: flex; align-items: center; gap: 8px; font-size: .82rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: var(--ink-2); }
+.po-wiz-steph .n { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--hot); color: #fff; font-size: .8rem; font-weight: 800; flex: none; }
+.po-wiz-hint { font-size: .78rem; color: var(--ink-2); line-height: 1.5; }
+.po-dict { width: 100%; border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; font-size: .92rem; line-height: 1.55; background: var(--paper); color: inherit; resize: vertical; min-height: 92px; }
+.po-dict:focus { outline: none; border-color: var(--hot); box-shadow: 0 0 0 3px color-mix(in srgb, var(--hot) 14%, transparent); }
+.po-dictbtns { display: flex; gap: 8px; flex-wrap: wrap; }
+.po-wiz-tpl { border: 1px dashed var(--line); border-radius: 10px; padding: 4px 12px 10px; background: color-mix(in srgb, var(--brand) 3%, var(--card)); }
+.po-wiz-tpl > summary { cursor: pointer; font-size: .78rem; color: var(--ink-2); padding: 7px 2px; user-select: none; }
+.po-wiz-tpl .po-draft { margin-left: 0; margin-top: 8px; }
+.po-wiz-decide { border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.po-wiz-dbtns { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.po-wiz-dbtns .sp { flex: 1; }
+.po-wiz-dbtns .btn { padding: 6px 12px; font-size: .82rem; }
+.po-wiz-decide .po-wiz-steph .n { background: var(--g0); }
+
+/* keskeny kijelzo (telefon): kisebb margo, teljes szelessegu fo-gombok - mas
    kepernyoarany es felbontas mellett is minden latsszon es koppinthato legyen */
 @media (max-width: 720px) {
   .po-draft, .po-draft--gen { margin-left: 6px; }
-  .po-sec { padding: 8px 9px; }
-  .po-sec-h { flex-wrap: wrap; }
-  .po-dictbtns .btn { flex: 1 1 auto; min-height: 40px; }
+  .po-wiz-tpl .po-draft { margin-left: 0; }
+  .po-dictbtns .btn { flex: 1 1 auto; min-height: 42px; }
+  .po-wiz-dbtns .btn { min-height: 40px; }
 }
 .po-draft-h { display: flex; align-items: center; gap: 8px; padding: 7px 11px; border-bottom: 1px solid var(--line); }
 .po-draft-h .l { font-size: .74rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--brand-text); padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--brand) 10%, transparent); }

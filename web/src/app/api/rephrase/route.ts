@@ -23,13 +23,17 @@ interface RephraseReq {
   instruction: string;   // a felhasználó nyers döntése/diktátuma
 }
 
-const runClaude = (prompt: string): Promise<string> => new Promise((resolve, reject) => {
+// a CLI kimenetét akkor is visszaadjuk, ha nem-nulla kóddal lép ki (pl. keret-limit
+// üzenetet a stdout-ra írja) - a hívó dönti el, használható-e
+const runClaude = (prompt: string): Promise<{ out: string; err: string; failed: boolean }> => new Promise((resolve) => {
   const child = execFile(CLAUDE_BIN, ['-p', '--max-turns', '1'], {
     cwd: os.tmpdir(), timeout: 150000, maxBuffer: 1024 * 1024, windowsHide: true,
-  }, (err, stdout) => (err ? reject(err) : resolve(String(stdout))));
+  }, (e, stdout, stderr) => resolve({ out: String(stdout || ''), err: String(stderr || ''), failed: !!e }));
   child.stdin?.write(prompt, 'utf8');
   child.stdin?.end();
 });
+// a helyi claude keret/hitelesítés kifogyott-e (ezt a szöveget a CLI a kimenetre írja)
+const isQuota = (s: string): boolean => /limit|usage-?credit|rate.?limit|quota|Run \/login|not (?:logged|authenticated)/i.test(s);
 
 export async function POST(req: Request) {
   if (!canWrite(req)) return writeDenied();
@@ -76,7 +80,13 @@ A VÁLASZOD KIZÁRÓLAG ez a JSON legyen, más szöveg nélkül:
 {"subject": "a válasz tárgysora (Re: ...)", "body": "a levél teljes szövege"}`;
 
   try {
-    const raw = (await runClaude(prompt)).trim();
+    const { out, err } = await runClaude(prompt);
+    const raw = out.trim();
+    // keret/hitelesítés kifogyott: a CLI ilyenkor rövid, "limit" jellegű szöveget ad
+    if ((isQuota(raw) && raw.length < 400) || (!raw && isQuota(err))) {
+      return NextResponse.json({ ok: false, quota: true, error: 'A megfogalmazó (helyi claude) most elérte a keretét. Használd addig a 3 kész választervet vagy a levélírót; a keret feloldódása után újra megy.' }, { status: 503 });
+    }
+    if (!raw) return NextResponse.json({ ok: false, error: `A megfogalmazó nem adott választ${err ? `: ${err.slice(0, 160)}` : ''}` }, { status: 502 });
     const jsonTxt = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
     let subject = b.subject ? `Re: ${b.subject.replace(/^(Re|Vá|Válasz):\s*/i, '')}` : 'Válasz';
     let body = jsonTxt;

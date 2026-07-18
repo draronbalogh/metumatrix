@@ -313,38 +313,48 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     onState(r.sel, { rawReply: t }, 'Jegyzet elmentve (kötegre vár)');
     setDict(''); setQa(''); setPendingQ(null);
   };
-  // KÖTEGELT MEGFOGALMAZÁS: minden jegyzetelt kártyát egyben megfogalmaz, egyenként
-  // mentve draftként + 'drafted' állapotba téve. Egy várakozás, nem tételenként.
+  // KÖTEGELT MEGFOGALMAZÁS: EGY hívás írja meg az ÖSSZES választ, így a stílusfájl csak
+  // egyszer megy fel (nem levelenként). Az eredmények egyenként draftként mentődnek +
+  // 'drafted' állapotba kerülnek. Egy várakozás az egész kötegre, nem tételenként.
   const generateAll = async () => {
     if (batchBusy || noted.length === 0) return;
-    setBatchBusy(true); setGenErr(null);
     const items = [...noted];
-    let done = 0, failed = 0, stopMsg: string | null = null;
-    for (let i = 0; i < items.length; i++) {
-      const r = items[i];
-      setBatchProg(`${i + 1}/${items.length}: ${r.src.name}…`);
-      try {
-        const res = await fetch('/api/rephrase', {
-          method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-          body: JSON.stringify({
-            senderName: r.src.name, senderEmail: r.src.email,
+    setBatchBusy(true); setGenErr(null);
+    setBatchProg(`Fogalmazás… (${items.length} levél egyben, kb. fél-egy perc)`);
+    try {
+      const res = await fetch('/api/rephrase-batch', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+        body: JSON.stringify({
+          items: items.map((r) => ({
+            sel: r.sel, senderName: r.src.name, senderEmail: r.src.email,
             subject: r.src.subject ?? null, gist: r.src.gist ?? null,
             thread: (r.src.thread ?? []).map((m) => `${m.at.slice(0, 10)} · ${m.dir === 'in' ? 'bejövő' : 'kimenő'} · ${m.from}: ${m.gist}`),
             drafts: r.drafts.map((d) => ({ label: d.label, subject: d.subject, body: d.body })),
-            instruction: r.src.rawReply, askAllowed: false,
-          }),
-        });
-        const j = await res.json() as { ok: boolean; subject?: string; body?: string; error?: string; quota?: boolean };
-        if (!j.ok || !j.body) { failed++; if (j.quota) { stopMsg = j.error ?? 'A megfogalmazó elérte a keretét.'; break; } continue; }
-        const draft: ReplyDraft = { label: 'A döntésed szerint', subject: j.subject ?? (r.src.subject ? `Re: ${r.src.subject}` : r.title), body: j.body };
+            instruction: r.src.rawReply,
+          })),
+        }),
+      });
+      const j = await res.json() as { ok: boolean; results?: { sel: string; subject: string; body: string }[]; error?: string; quota?: boolean };
+      if (!j.ok || !j.results) {
+        setBatchProg(`⚠ ${j.error ?? 'A megfogalmazás nem sikerült.'} A jegyzeteid megmaradtak - próbáld újra.`);
+        setBatchBusy(false); return;
+      }
+      const bySel = new Map(items.map((r) => [r.sel, r]));
+      let done = 0;
+      j.results.forEach((out, i) => {
+        const r = bySel.get(out.sel);
+        if (!r || !out.body) return;
+        const draft: ReplyDraft = { label: 'A döntésed szerint', subject: out.subject || (r.src.subject ? `Re: ${r.src.subject}` : r.title), body: out.body };
         if (onSaveLetter) onSaveLetter({ id: `l-${Date.now().toString(36)}-${i}`, createdAt: new Date().toISOString(), targetType: r.sel.startsWith('t:') ? 'task' : 'event', targetId: r.sel.slice(2), subject: draft.subject, body: draft.body, names: [r.src.name], status: 'draft' });
         onState(r.sel, { status: 'drafted', rawReply: null, returned: null }, 'Megfogalmazva (köteg)');
         logChoice(r.sel, 'titkárnő-köteg');
         done++;
-      } catch { failed++; }
-    }
-    setBatchProg(`Kész: ${done} megfogalmazva${failed ? `, ${failed} sikertelen` : ''}${stopMsg ? ` - ${stopMsg}` : ''}. A „📋 Másolható válaszok" blokkban vannak.`);
-    setBatchBusy(false);
+      });
+      const missed = items.length - done;
+      setBatchProg(`Kész: ${done} megfogalmazva${missed > 0 ? `, ${missed} kimaradt (a jegyzetük megvan, nyomd újra)` : ''}. A „📋 Másolható válaszok" blokkban vannak.`);
+    } catch {
+      setBatchProg('⚠ Nem sikerült elindítani a megfogalmazást. A jegyzeteid megmaradtak - próbáld újra.');
+    } finally { setBatchBusy(false); }
   };
 
   const nowIso = () => new Date().toISOString();

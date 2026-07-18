@@ -759,7 +759,7 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .cal-bar { position: relative; display: block; width: 100%; height: 4.5px; border: 0; border-radius: 2px; padding: 0; cursor: pointer; }
 .cal-bar.ft { height: 6px; border-radius: 3px; }
 .cal-bar:hover, .cal-bar:focus-visible { filter: brightness(1.22) saturate(1.15); box-shadow: 0 0 0 1.5px var(--card), 0 0 0 3px color-mix(in srgb, var(--ink) 35%, transparent); z-index: 5; }
-.cal-bar::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%); z-index: 30; display: none; width: max-content; max-width: min(230px, calc(100vw - 20px)); white-space: normal; text-align: left; font-family: var(--ff); font-size: .68rem; font-weight: 600; line-height: 1.35; color: #fff; background: color-mix(in srgb, var(--ink) 94%, transparent); border-radius: 8px; padding: 6px 9px; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); }
+.cal-bar::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%); z-index: 30; display: none; width: max-content; max-width: min(230px, calc(100vw - 20px)); white-space: normal; text-align: left; font-family: var(--ff); font-size: .68rem; font-weight: 600; line-height: 1.35; color: #fff; background: rgba(24, 25, 30, .97); border-radius: 8px; padding: 6px 9px; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, .35); }
 .cal-bar:hover::after, .cal-bar:focus-visible::after { display: block; }
 .cal-bar.tip-left::after, .cal-flag.tip-left::after { left: 0; transform: none; }
 .cal-bar.tip-right::after, .cal-flag.tip-right::after { left: auto; right: 0; transform: none; }
@@ -772,7 +772,7 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 /* FELADAT-HATÁRIDŐK a naptárban (tengely-szinkron): ⚑ a napon, sor a hónap-listában */
 .cal-flag { position: relative; display: block; width: 100%; border: 0; background: none; padding: 0; cursor: pointer; font-size: .6rem; line-height: 1; color: var(--hot); text-align: center; }
 .cal-flag:hover, .cal-flag:focus-visible { transform: scale(1.35); z-index: 5; }
-.cal-flag::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%); z-index: 30; display: none; width: max-content; max-width: min(230px, calc(100vw - 20px)); white-space: normal; text-align: left; font-family: var(--ff); font-size: .68rem; font-weight: 600; line-height: 1.35; color: #fff; background: color-mix(in srgb, var(--ink) 94%, transparent); border-radius: 8px; padding: 6px 9px; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); }
+.cal-flag::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%); z-index: 30; display: none; width: max-content; max-width: min(230px, calc(100vw - 20px)); white-space: normal; text-align: left; font-family: var(--ff); font-size: .68rem; font-weight: 600; line-height: 1.35; color: #fff; background: rgba(24, 25, 30, .97); border-radius: 8px; padding: 6px 9px; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, .35); }
 .cal-flag:hover::after, .cal-flag:focus-visible::after { display: block; }
 .cal-dot.flag { width: auto; background: none; color: var(--hot); font-size: .66rem; line-height: 1; }
 .cal-ev.dl .t { color: var(--ink-2); }

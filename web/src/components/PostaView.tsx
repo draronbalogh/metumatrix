@@ -696,6 +696,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
         <span className="pill">{pendingAll.length} válaszra vár</span>
         {lanes.returned.length > 0 && <span className="pill pill--hot" title="Felébredt halasztás vagy új levél lezárt szálban">{lanes.returned.length} visszatért</span>}
         {urgent > 0 && <span className="pill pill--hot" title="Határidő 48 órán belül">{urgent} sürgős</span>}
+        {noted.length > 0 && <span className="pill pill--note" title="Titkárnőben megírt jegyzetek, amelyek megfogalmazásra várnak">{noted.length} jegyzet</span>}
         {lanes.drafted.length > 0 && <span className="pill pill--draft" title="Megírt válaszok, amelyeket még át kell másolni az Outlookba">{lanes.drafted.length} másolható</span>}
         {lanes.waiting.length > 0 && <span className="pill" title="Válaszoltam, az ő válaszukra várok">{lanes.waiting.length} rájuk várok</span>}
         {lanes.snoozed.length > 0 && <span className="pill" title="Halasztva - a felbukkanási napon visszatér">{lanes.snoozed.length} halasztva</span>}
@@ -718,6 +719,26 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
             {lane('Rájuk várok', 'válaszoltam - ha nem jön válasz, a követési napon visszatér', lanes.waiting, 'waiting')}
           </div>
         </>
+      )}
+      {!decide && noted.length > 0 && (
+        <section className="po-fold po-fold--note">
+          <div className="po-notehead">
+            <span className="po-batch-c">📝 Megfogalmazásra vár: {noted.length} jegyzet</span>
+            <button type="button" className="btn btn--ink" disabled={batchBusy} title="Az összes gyűjtött jegyzetet egyben megfogalmazza; az eredmény a Másolható blokkba kerül. Ha félbeszakadt, ez folytatja a hátralévőket." onClick={generateAll}>{batchBusy ? `⏳ ${batchProg ?? 'Fogalmazás…'}` : `✍ Fogalmazd meg mind (${noted.length})`}</button>
+          </div>
+          <div className="po-fold-hint">Ezeket a Titkárnőben megírtad; a szerveren biztonságban vannak, nem vesznek el. A gombbal egyben elkészülnek. (Ha közben elnavigálsz, a böngésző leállíthatja a folyamatot - visszatérve nyomd meg újra, a hátralévőket folytatja.)</div>
+          {batchProg && !batchBusy && <div className="po-fold-hint">{batchProg}</div>}
+          {noted.map((r) => (
+            <div key={r.sel} className="po-mini po-mini--note">
+              <span className="d">{fmtD(r.src.date) || '·'}</span>
+              <span className="n">{r.src.name}</span>
+              <span className="s">„{r.src.subject ?? r.title}"</span>
+              <span className="po-notesnip" title={r.src.rawReply ?? ''}>{(r.src.rawReply ?? '').replace(/\s+/g, ' ').slice(0, 44)}…</span>
+              <button type="button" className="btn" title="A jegyzet megnyitása a Titkárnőben (szerkesztés)" onClick={() => { setDecide(true); setTitkarMode('write'); setDict(r.src.rawReply ?? ''); }}>✎</button>
+              <button type="button" className="btn" title="Jegyzet elvetése (a levél visszakerül a válaszra várók közé)" onClick={() => onState(r.sel, { rawReply: null }, 'Jegyzet elvetve')}>✕</button>
+            </div>
+          ))}
+        </section>
       )}
       {!decide && lanes.drafted.length > 0 && (
         <section className="po-fold po-fold--draft">

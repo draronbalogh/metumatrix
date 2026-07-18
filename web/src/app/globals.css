@@ -1638,6 +1638,13 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .po-fold-h { display: block; width: 100%; text-align: left; background: none; border: 0; border-top: 1px solid var(--line); padding: 10px 2px; font: inherit; font-size: .78rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
 /* a másolható blokk kiemelt (aktív teendő), nem szürke mint a lezártak */
 .po-fold--draft .po-fold-h { color: var(--g0); border-top-color: color-mix(in srgb, var(--g0) 40%, var(--line)); }
+/* megfogalmazásra váró jegyzetek - mindig látható, kiemelt (piros) blokk */
+.po-fold--note { border-top: 1px solid color-mix(in srgb, var(--hot) 40%, var(--line)); padding-top: 10px; }
+.po-notehead { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.po-notehead .btn { padding: 6px 12px; font-size: .82rem; }
+.po-mini--note { border-left: 4px solid var(--hot); }
+.po-notesnip { flex: 1 1 200px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .78rem; color: var(--ink-2); font-style: italic; }
+.po-brief .pill--note { background: color-mix(in srgb, var(--hot) 12%, transparent); color: var(--hot); }
 .po-fold-hint { font-size: .76rem; color: var(--ink-2); line-height: 1.45; margin: 0 2px 8px; }
 .po-draftpush { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 2px 10px; }
 .po-pushmsg { font-size: .78rem; color: var(--ink-2); line-height: 1.4; flex: 1 1 300px; min-width: 0; }

@@ -168,6 +168,27 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
       setPushMsg('⚠ Nem sikerült elindítani a vázlatkészítést (fut a dev-szerver és a klasszikus Outlook?).');
     } finally { setPushBusy(false); }
   };
+  // egy konkrét kártya AZONNALI elküldése az Outlookon át (megerősítéssel; nem vonható vissza)
+  const [sendingSel, setSendingSel] = useState<string | null>(null);
+  const sendNow = async (r: Row) => {
+    if (sendingSel) return;
+    if (!window.confirm(`Biztosan ELKÜLDÖD most?\n\nCímzett: ${r.src.name}\nTárgy: „${r.src.subject ?? r.title}"\n\nEz azonnal elküldi az Outlookból, és nem vonható vissza.`)) return;
+    setSendingSel(r.sel); setPushMsg(`Küldés folyamatban: ${r.src.name}…`);
+    try {
+      const res = await fetch('/api/outlook-drafts', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+        body: JSON.stringify({ sendId: r.sel.slice(2) }),
+      });
+      const j = await res.json() as { ok: boolean; sent?: boolean; comError?: boolean };
+      if (j.comError) setPushMsg('⚠ A klasszikus Outlook nem elérhető COM-on. Nyisd meg (Go to classic Outlook), és próbáld újra.');
+      else if (j.ok && j.sent) {
+        onState(r.sel, { status: 'replied', repliedAt: nowIso(), returned: null, thread: withOutEntry(r.src, 'elküldve (Küldés most)') }, 'Elküldve');
+        setPushMsg(`✓ Elküldve: ${r.src.name}.`);
+      } else setPushMsg('⚠ A küldés nem sikerült (nincs piszkozat vagy eredeti levél?). Nézd meg az Outlookban.');
+    } catch {
+      setPushMsg('⚠ Nem sikerült elindítani a küldést (fut a dev-szerver és a klasszikus Outlook?).');
+    } finally { setSendingSel(null); }
+  };
   const pendingAll = useMemo(() => [...lanes.returned, ...lanes.deadline, ...lanes.awaiting], [lanes]);
   const urgent = lanes.deadline.filter((r) => r.duePrec && r.dueKey !== null && r.dueKey <= now + 2 * DAY).length;
   // gyűjtő-mód: akihez már van NYERS jegyzet, az kikerül a wizard-sorból (kötegelt megfogalmazásra vár)
@@ -773,6 +794,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                 {l
                   ? <button type="button" className="btn btn--ink" title="A megírt válasz a vágólapra - illeszd be az Outlook válaszába" onClick={() => copyLetter(`d-${r.sel}`, l)}>{copied === `d-${r.sel}` ? '✓ Másolva' : '⧉ Másolás'}</button>
                   : <button type="button" className="btn" title="A levél megnyitása a levélíróban" onClick={() => onOpenCard(r.sel)}>▤ Megnyitás</button>}
+                <button type="button" className="btn btn--hot" disabled={sendingSel === r.sel} title="AZONNALI küldés az Outlookon át (megerősítéssel, nem vonható vissza). Ha van piszkozat, azt küldi." onClick={() => sendNow(r)}>{sendingSel === r.sel ? '⏳ Küldés…' : '✉ Küldés most'}</button>
                 <button type="button" className="btn" title="Beillesztettem és elküldtem az Outlookban - lezárás" onClick={() => onState(r.sel, { status: 'replied', repliedAt: nowIso(), returned: null, thread: withOutEntry(r.src, 'megválaszolva (átmásolva az Outlookba)') }, 'Elküldve, lezárva')}>✓ Elküldtem</button>
                 <button type="button" className="btn" title="Vissza a válaszra várók közé" onClick={() => onState(r.sel, { status: 'pending', returned: null }, 'Vissza a Postába')}>↩ Vissza</button>
               </div>

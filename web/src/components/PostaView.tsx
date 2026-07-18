@@ -150,6 +150,22 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   }, [agenda]);
   const draftLetters = useMemo(() => new Set(draftBySel.keys()), [draftBySel]);
   const [showDrafted, setShowDrafted] = useState(true); // a másolható blokk alapból NYITVA (aktív teendő)
+  // Outlook-vázlatok készítése a klasszikus Outlookon át (COM), a nem-emelt dev-szerverről
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushMsg, setPushMsg] = useState<string | null>(null);
+  const pushDrafts = async () => {
+    if (pushBusy) return;
+    setPushBusy(true); setPushMsg('Vázlatok készítése az Outlookban… (pár másodperc)');
+    try {
+      const r = await fetch('/api/outlook-drafts', { method: 'POST', headers: editHeaders() });
+      const j = await r.json() as { ok: boolean; made: number | null; skipped: number | null; comError: boolean; output?: string };
+      if (j.comError) setPushMsg('⚠ A klasszikus Outlook nem elérhető COM-on. Nyisd meg a klasszikus Outlookot (Go to classic Outlook), és próbáld újra.');
+      else if (!j.ok) setPushMsg('⚠ A vázlatkészítés hibába futott. Nézd meg az automation/logs/drafts.log fájlt.');
+      else setPushMsg(`✓ Kész: ${j.made ?? 0} új piszkozat az Outlook Piszkozatok mappájában${j.skipped ? ` (${j.skipped} már megvolt)` : ''}. Küldés nem történt - nézd át és küldd el az Outlookban, majd itt jelöld „Elküldtem".`);
+    } catch {
+      setPushMsg('⚠ Nem sikerült elindítani a vázlatkészítést (fut a dev-szerver és a klasszikus Outlook?).');
+    } finally { setPushBusy(false); }
+  };
   const pendingAll = useMemo(() => [...lanes.returned, ...lanes.deadline, ...lanes.awaiting], [lanes]);
   const urgent = lanes.deadline.filter((r) => r.duePrec && r.dueKey !== null && r.dueKey <= now + 2 * DAY).length;
   const decideQueue = pendingAll.filter((r) => !decideSkip.has(r.sel));
@@ -642,7 +658,13 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
       {!decide && lanes.drafted.length > 0 && (
         <section className="po-fold po-fold--draft">
           <button type="button" className="po-fold-h" onClick={() => setShowDrafted((v) => !v)}>📋 Másolható válaszok ({lanes.drafted.length}) {showDrafted ? '▴' : '▾'}</button>
-          {showDrafted && <div className="po-fold-hint">Ezek a válaszaid MEGvannak írva, de még NEM mentek el. Másold be az Outlook (vagy webes levelező) válaszába, küldd el ott, majd itt zárd le.</div>}
+          {showDrafted && <div className="po-fold-hint">Ezek a válaszaid MEGvannak írva, de még NEM mentek el. Egy gombbal piszkozatként az Outlookba teheted őket (küldés nélkül), vagy soronként a vágólapra másolod. Utána az Outlookban küldöd el, és itt zárod le.</div>}
+          {showDrafted && (
+            <div className="po-draftpush">
+              <button type="button" className="btn btn--ink" disabled={pushBusy} title="Mindegyik kész válaszból Válasz-piszkozatot készít a klasszikus asztali Outlookban (küldés SOHA). A duplikátumokat kihagyja." onClick={pushDrafts}>{pushBusy ? '⏳ Készül…' : '✉ Mind az Outlookba (piszkozat)'}</button>
+              {pushMsg && <span className="po-pushmsg">{pushMsg}</span>}
+            </div>
+          )}
           {showDrafted && lanes.drafted.map((r) => {
             const l = draftBySel.get(r.sel);
             return (

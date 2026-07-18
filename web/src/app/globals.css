@@ -1634,6 +1634,8 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 /* a másolható blokk kiemelt (aktív teendő), nem szürke mint a lezártak */
 .po-fold--draft .po-fold-h { color: var(--g0); border-top-color: color-mix(in srgb, var(--g0) 40%, var(--line)); }
 .po-fold-hint { font-size: .76rem; color: var(--ink-2); line-height: 1.45; margin: 0 2px 8px; }
+.po-draftpush { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 2px 10px; }
+.po-pushmsg { font-size: .78rem; color: var(--ink-2); line-height: 1.4; flex: 1 1 300px; min-width: 0; }
 .po-mini { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--card); margin-bottom: 6px; font-size: .84rem; }
 .po-mini--draft { border-left: 4px solid var(--g0); }
 .po-mini .d { flex: none; font-size: .72rem; font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; }

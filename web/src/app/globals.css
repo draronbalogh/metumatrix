@@ -1666,6 +1666,18 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 /* a verdikt-sor vizuálisan elkülönül a tervektől - ez a döntés helye */
 .po-actrow { border-top: 1px dashed var(--line); padding-top: 9px; margin-top: 2px; }
 @media (max-width: 720px) {
+  /* a lebego fejlec-gombok (tema/csengo/fullscreen) ne ussznak ra semmilyen szovegre:
+     kisebb gombok + a fejlec-cim helyet hagy nekik es ellipszissel rovidul */
+  .themebtn--head { width: 32px; height: 32px; top: 8px; right: 10px; font-size: .9rem; }
+  .fsbtn--head, .notifbtn--head { right: 48px; }
+  .notifbtn--head.notifbtn--shift { right: 86px; }
+  .masthead .wrap { padding-right: 122px; }
+  .masthead .brandmark, .masthead .brandmark > div { min-width: 0; }
+  .masthead .title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Posta brief-sor: a pillek egy sorban, a ket mod-gomb kulon, teljes szeles sorban */
+  .po-brief .sp { display: none; }
+  .po-brief { row-gap: 8px; }
+  .po-brief .btn { flex: 1 1 45%; min-height: 38px; }
   .po-lane-h .hint { display: none; }
   .po-mini { flex-wrap: wrap; }
   .po-brief { position: static; box-shadow: none; }

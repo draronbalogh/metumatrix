@@ -17,6 +17,7 @@ const LOCK = `${ROOT}/automation/agenda-sync.lock`;
 const TMP = `${ROOT}/automation/_today-prompt.md`;
 const LOG = `${ROOT}/automation/logs/runs.log`;
 const STATE = `${ROOT}/automation/outlook-agenda-state.json`;
+const WRAPPER = `${ROOT}/automation/_agenda-sync-run.cmd`;
 const ALLOWED = 'mcp__plugin_playwright_playwright,Read,Glob,Grep,Write,Edit,Bash(python:*),Bash(py:*),Bash(curl:*)';
 const LOCK_TTL = 15 * 60 * 1000; // 15 perc: ennél régebbi lock elavult (elakadt futás)
 
@@ -62,15 +63,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: `előkészítés sikertelen: ${(e as Error).message}` }, { status: 500 });
   }
 
-  // detached háttérfutás: claude a szűkített prompttal; a végén a lock + temp törlődik (a & miatt
-  // a claude kilépési kódjától függetlenül). A route NEM várja meg (fire-and-forget).
+  // detached háttérfutás. FONTOS: NEM inline `cmd /c "..."` (a több idézőjeles útvonalat a
+  // cmd elrontja, a takarító `del` nem futott le -> beragadt lock). Helyette WRAPPER .cmd
+  // fájlba írjuk a parancsot (mint a működő run-outlook-agenda.cmd), és azt futtatjuk.
   const win = (p: string) => p.replace(/\//g, '\\');
-  const line = `type "${win(TMP)}" | "${win(CLAUDE)}" -p --allowedTools "${ALLOWED}" --max-turns 150 >> "${win(LOG)}" 2>&1 & del "${win(LOCK)}" & del "${win(TMP)}"`;
+  const wrapper = [
+    '@echo off',
+    `cd /d "${win(ROOT)}"`,
+    `echo. >> "${win(LOG)}"`,
+    `echo ================ GOMBOS MAI FUTAS: %date% %time% ================ >> "${win(LOG)}"`,
+    `"${win(CLAUDE)}" -p --allowedTools "${ALLOWED}" --max-turns 150 < "${win(TMP)}" >> "${win(LOG)}" 2>&1`,
+    `echo ---- CLAUDE UTAN, kilepesi kod: %errorlevel% (%date% %time%) ---- >> "${win(LOG)}"`,
+    `del "${win(LOCK)}" 2>nul`,
+    `del "${win(TMP)}" 2>nul`,
+    '',
+  ].join('\r\n');
   try {
-    const child = spawn('cmd.exe', ['/c', line], { cwd: win(ROOT), detached: true, stdio: 'ignore', windowsHide: true });
+    await fs.writeFile(WRAPPER, wrapper, 'utf8');
+    // a headless claude a felhasználói profilból tölti a configot/auth-ot; a dev-szerver
+    // env-je hiányos lehet (pl. nincs HOME) -> claude exit 1 kimenet nélkül. Explicit env.
+    const env = { ...process.env, HOME: process.env.USERPROFILE || process.env.HOME || '' };
+    const child = spawn('cmd.exe', ['/c', win(WRAPPER)], { cwd: win(ROOT), detached: true, stdio: 'ignore', windowsHide: true, env });
     child.unref();
   } catch (e) {
     try { await fs.unlink(LOCK); } catch { /* ignore */ }
+    try { await fs.unlink(TMP); } catch { /* ignore */ }
     return NextResponse.json({ ok: false, error: `indítás sikertelen: ${(e as Error).message}` }, { status: 500 });
   }
   return NextResponse.json({ ok: true, started: true, today, startedAtMs: Date.now() });

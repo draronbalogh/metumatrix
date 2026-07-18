@@ -20,7 +20,7 @@ const readDisk = async (): Promise<Doc | null> => {
 // A source felhasználó-tulajdonú (állapotgép-) mezői: bot-írásnál a lemezen lévő
 // érték él tovább, kivéve a megengedett bot-átmeneteket - ébresztés/újranyitás
 // → 'pending', saját kimenő válasz észlelése → 'replied', de csak 'pending'-ből.
-const USER_SOURCE_FIELDS = ['status', 'replied', 'repliedAt', 'snoozeUntil', 'followUpAt', 'returned'] as const;
+const USER_SOURCE_FIELDS = ['status', 'replied', 'repliedAt', 'snoozeUntil', 'followUpAt', 'returned', 'rawReply'] as const;
 const guardSource = (inc: AgendaSource | null | undefined, disk: AgendaSource | null | undefined): AgendaSource | null => {
   if (!disk) return inc ?? null;
   if (!inc) return disk; // a bot forrást nem törölhet

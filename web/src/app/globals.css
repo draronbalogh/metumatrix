@@ -1558,6 +1558,11 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .po-modebtn .d { font-size: .78rem; color: var(--ink-2); line-height: 1.45; }
 .po-modebtn .last { font-size: .7rem; color: var(--hot); font-weight: 700; }
 /* visszautaló sor + kérdés-sáv + lábléc */
+/* köteg-sáv: gyűjtött jegyzetek + 'Fogalmazd meg mind' */
+.po-batch { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px; border: 1px solid color-mix(in srgb, var(--hot) 35%, var(--line)); border-radius: 10px; background: color-mix(in srgb, var(--hot) 6%, var(--card)); }
+.po-batch-c { font-size: .82rem; font-weight: 800; color: var(--hot); }
+.po-batch .btn { padding: 6px 12px; font-size: .82rem; }
+.po-batch-msg { font-size: .78rem; color: var(--ink-2); flex: 1 1 240px; min-width: 0; }
 .po-wiz-recap { align-self: flex-start; border: 0; background: none; cursor: pointer; font: inherit; font-size: .8rem; color: var(--ink-2); padding: 0; text-align: left; }
 .po-wiz-recap:hover { color: var(--ink); text-decoration: underline; }
 .po-wiz-q { border: 1px solid color-mix(in srgb, var(--yellow-deep) 55%, var(--line)); border-left-width: 4px; border-radius: 10px; padding: 10px 12px; background: color-mix(in srgb, var(--yellow-deep) 8%, var(--card)); display: flex; flex-direction: column; gap: 8px; }

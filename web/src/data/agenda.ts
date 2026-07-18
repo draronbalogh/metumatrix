@@ -77,6 +77,7 @@ export interface AgendaSource {
   draftMode?: 'reply' | 'ping' | null; // 'ping': a tervek követő-emlékeztetők (T7 ébresztés után), nem válaszok
   thread?: ThreadMsg[] | null;  // a szál idővonala (bot: bejövők, app: kimenők)
   shadow?: boolean;             // árnyék-forrás kapcsolt feladat–esemény ikernél: a Posta-sor és az állapot a feladaton él
+  rawReply?: string | null;     // Titkárnő gyűjtő-mód: a felhasználó NYERS döntése, a kötegelt megfogalmazásig
 }
 
 // Kimenő bejegyzés hozzáfűzése a szál-idővonalhoz (válasz elküldésekor / kézi jelöléskor)

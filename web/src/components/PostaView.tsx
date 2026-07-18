@@ -77,6 +77,8 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   const [gen, setGen] = useState<Record<string, { draft: ReplyDraft; letterId: string | null }>>({});
   const [genBusy, setGenBusy] = useState(false);
   const [genErr, setGenErr] = useState<string | null>(null);
+  const [batchBusy, setBatchBusy] = useState(false);
+  const [batchProg, setBatchProg] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(false);
   const [speakKind, setSpeakKind] = useState<'short' | 'full' | null>(null); // melyik gomb szól épp
   useEffect(() => { if (!speaking) setSpeakKind(null); }, [speaking]);
@@ -168,7 +170,9 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   };
   const pendingAll = useMemo(() => [...lanes.returned, ...lanes.deadline, ...lanes.awaiting], [lanes]);
   const urgent = lanes.deadline.filter((r) => r.duePrec && r.dueKey !== null && r.dueKey <= now + 2 * DAY).length;
-  const decideQueue = pendingAll.filter((r) => !decideSkip.has(r.sel));
+  // gyűjtő-mód: akihez már van NYERS jegyzet, az kikerül a wizard-sorból (kötegelt megfogalmazásra vár)
+  const noted = useMemo(() => pendingAll.filter((r) => (r.src.rawReply ?? '').trim()), [pendingAll]);
+  const decideQueue = pendingAll.filter((r) => !decideSkip.has(r.sel) && !(r.src.rawReply ?? '').trim());
   // a wizard aktuális tétele - tételváltáskor minden lépés-állapot nullázódik,
   // és az 1/3 (levél) képernyő jön (ha már van kész terv, egyből a 3/3)
   const curSel = decide ? (decideQueue[0]?.sel ?? null) : null;
@@ -299,6 +303,48 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     } catch (e) {
       setGenErr(e instanceof Error ? e.message : String(e));
     } finally { setGenBusy(false); }
+  };
+
+  // GYŰJTŐ-MÓD: a nyers jegyzet mentése + továbblépés (megfogalmazás NÉLKÜL, azonnal).
+  // A jegyzetelt kártya kikerül a wizard-sorból; a köteg a végén fogalmazza meg mind.
+  const saveNote = (r: Row) => {
+    const t = dict.trim();
+    if (!t) return;
+    onState(r.sel, { rawReply: t }, 'Jegyzet elmentve (kötegre vár)');
+    setDict(''); setQa(''); setPendingQ(null);
+  };
+  // KÖTEGELT MEGFOGALMAZÁS: minden jegyzetelt kártyát egyben megfogalmaz, egyenként
+  // mentve draftként + 'drafted' állapotba téve. Egy várakozás, nem tételenként.
+  const generateAll = async () => {
+    if (batchBusy || noted.length === 0) return;
+    setBatchBusy(true); setGenErr(null);
+    const items = [...noted];
+    let done = 0, failed = 0, stopMsg: string | null = null;
+    for (let i = 0; i < items.length; i++) {
+      const r = items[i];
+      setBatchProg(`${i + 1}/${items.length}: ${r.src.name}…`);
+      try {
+        const res = await fetch('/api/rephrase', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+          body: JSON.stringify({
+            senderName: r.src.name, senderEmail: r.src.email,
+            subject: r.src.subject ?? null, gist: r.src.gist ?? null,
+            thread: (r.src.thread ?? []).map((m) => `${m.at.slice(0, 10)} · ${m.dir === 'in' ? 'bejövő' : 'kimenő'} · ${m.from}: ${m.gist}`),
+            drafts: r.drafts.map((d) => ({ label: d.label, subject: d.subject, body: d.body })),
+            instruction: r.src.rawReply, askAllowed: false,
+          }),
+        });
+        const j = await res.json() as { ok: boolean; subject?: string; body?: string; error?: string; quota?: boolean };
+        if (!j.ok || !j.body) { failed++; if (j.quota) { stopMsg = j.error ?? 'A megfogalmazó elérte a keretét.'; break; } continue; }
+        const draft: ReplyDraft = { label: 'A döntésed szerint', subject: j.subject ?? (r.src.subject ? `Re: ${r.src.subject}` : r.title), body: j.body };
+        if (onSaveLetter) onSaveLetter({ id: `l-${Date.now().toString(36)}-${i}`, createdAt: new Date().toISOString(), targetType: r.sel.startsWith('t:') ? 'task' : 'event', targetId: r.sel.slice(2), subject: draft.subject, body: draft.body, names: [r.src.name], status: 'draft' });
+        onState(r.sel, { status: 'drafted', rawReply: null, returned: null }, 'Megfogalmazva (köteg)');
+        logChoice(r.sel, 'titkárnő-köteg');
+        done++;
+      } catch { failed++; }
+    }
+    setBatchProg(`Kész: ${done} megfogalmazva${failed ? `, ${failed} sikertelen` : ''}${stopMsg ? ` - ${stopMsg}` : ''}. A „📋 Másolható válaszok" blokkban vannak.`);
+    setBatchBusy(false);
   };
 
   const nowIso = () => new Date().toISOString();
@@ -447,8 +493,22 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
         </div>
       );
     }
+    // köteg-sáv: a gyűjtött jegyzetek + EGY gomb az összes megfogalmazására
+    const batchBar = (noted.length > 0 || (batchProg && !batchBusy)) ? (
+      <div className="po-batch">
+        {noted.length > 0 && <span className="po-batch-c">📝 {noted.length} jegyzet gyűjtve</span>}
+        {noted.length > 0 && <button type="button" className="btn btn--ink" disabled={batchBusy} title="Az összes gyűjtött jegyzetet egyben megfogalmazza (annyi fél perc, ahány levél, de nem kell tételenként várnod). Az eredmény a Másolható blokkba kerül." onClick={generateAll}>{batchBusy ? `⏳ ${batchProg ?? 'Fogalmazás…'}` : `✍ Fogalmazd meg mind (${noted.length})`}</button>}
+        {batchProg && <span className="po-batch-msg">{batchProg}</span>}
+      </div>
+    ) : null;
+
     if (decideQueue.length === 0) {
-      return <div className="cc-empty"><span>Kész! Minden levélről döntöttél{decideSkip.size > 0 ? ` (${decideSkip.size} átugorva)` : ''}. Kiléphetsz a titkárnő-módból.</span></div>;
+      return (
+        <div className="po-wiz">
+          {batchBar}
+          <div className="cc-empty"><span>{noted.length > 0 ? 'Minden levelet átnéztél. Most nyomd meg a „✍ Fogalmazd meg mind" gombot fent.' : `Kész! Minden levélről döntöttél${decideSkip.size > 0 ? ` (${decideSkip.size} átugorva)` : ''}. Kiléphetsz a titkárnő-módból.`}</span></div>
+        </div>
+      );
     }
     const r = decideQueue[0];
     const g = gen[r.sel];
@@ -459,16 +519,19 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     const subj = r.src.subject ?? r.title;
     const stepIx = step === 'letter' ? 0 : step === 'answer' ? 1 : 2;
     const header = (
-      <div className="po-wiz-prog">
-        <span className="po-wiz-dots">{[0, 1, 2].map((i) => <span key={i} className={`dt${i === stepIx ? ' on' : i < stepIx ? ' done' : ''}`} />)}</span>
-        <span className="stepname">{step === 'letter' ? '1/3 · A levél' : step === 'answer' ? '2/3 · A válaszod' : '3/3 · A végleges levél'}</span>
-        <span className="sp" />
-        <span className="cnt">még <b>{decideQueue.length}</b> levél{decideSkip.size > 0 ? ` (+${decideSkip.size})` : ''}</span>
-        <span className="po-modetgl">
-          <button type="button" className={titkarMode === 'voice' ? 'is-on' : ''} title="Hang mód: felolvasás + diktálás" onClick={() => pickMode('voice')}>🔊</button>
-          <button type="button" className={titkarMode === 'write' ? 'is-on' : ''} title="Írás mód: csendes olvasás + gépelés" onClick={() => pickMode('write')}>✍</button>
-        </span>
-      </div>
+      <>
+        <div className="po-wiz-prog">
+          <span className="po-wiz-dots">{[0, 1, 2].map((i) => <span key={i} className={`dt${i === stepIx ? ' on' : i < stepIx ? ' done' : ''}`} />)}</span>
+          <span className="stepname">{step === 'letter' ? '1/3 · A levél' : step === 'answer' ? '2/3 · A válaszod' : '3/3 · A végleges levél'}</span>
+          <span className="sp" />
+          <span className="cnt">még <b>{decideQueue.length}</b> levél{decideSkip.size > 0 ? ` (+${decideSkip.size})` : ''}</span>
+          <span className="po-modetgl">
+            <button type="button" className={titkarMode === 'voice' ? 'is-on' : ''} title="Hang mód: felolvasás + diktálás" onClick={() => pickMode('voice')}>🔊</button>
+            <button type="button" className={titkarMode === 'write' ? 'is-on' : ''} title="Írás mód: csendes olvasás + gépelés" onClick={() => pickMode('write')}>✍</button>
+          </span>
+        </div>
+        {batchBar}
+      </>
     );
     // a "rejtés/kihagyás" gombok minden lépésen elérhetők
     const closeBtn = <button type="button" className="btn" title="Nem kell rá válasz - lezárás/elrejtés (új levélre magától újranyílik)" onClick={() => advance(r.sel, { status: 'noreply', returned: null }, 'Lezárva (nem kell válasz)')}>✕ Nem kell válasz</button>;
@@ -547,10 +610,10 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
           {header}
           {recap}
           <div className="po-wiz-step">
-            <div className="po-wiz-hint">Írd vagy diktáld be NYERSEN, mit döntöttél - kapkodva is jó, ez csak vázlat, nem ez megy ki. A végleges levelet a stílusodban fogalmazom meg belőle.</div>
+            <div className="po-wiz-hint">Írd vagy diktáld be NYERSEN, mit döntöttél - kapkodva is jó, ez csak vázlat, nem ez megy ki. Mentheted jegyzetként és mehetsz a következőre (a végén EGY gombbal fogalmazom meg mindet), vagy most rögtön megfogalmaztatod.</div>
             <textarea ref={taRef} className="po-dict" rows={5} value={dict} onChange={(e) => setDict(e.target.value)}
               placeholder="pl. jó a szerda, de csak délután; kérdezd meg, hogy online is mehet-e; a határidőt told péntekre…"
-              onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); if (pendingQ) generate(r, qa.trim() ? qa.trim() : null); else generate(r); } }} />
+              onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); if (pendingQ) generate(r, qa.trim() ? qa.trim() : null); else saveNote(r); } }} />
             {pendingQ ? (
               <div className="po-wiz-q">
                 <div className="q">❓ {pendingQ}</div>
@@ -563,7 +626,8 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
               </div>
             ) : (
               <div className="po-dictbtns">
-                <button type="button" className="btn btn--ink" disabled={genBusy || !dict.trim()} title="A nyers döntésből végleges levél készül (kb. fél perc) - Ctrl+Enter is indítja" onClick={() => generate(r)}>{genBusy ? '⏳ Fogalmazás… (fél perc)' : '✍ Fogalmazd meg a választ'}</button>
+                <button type="button" className="btn btn--ink" disabled={!dict.trim()} title="Elmenti a jegyzeted és a következő levélre lép - a megfogalmazás a végén, egyben (Ctrl+Enter)" onClick={() => saveNote(r)}>📝 Jegyzet + következő ▸</button>
+                <button type="button" className="btn" disabled={genBusy || !dict.trim()} title="Ezt az egyet most rögtön megfogalmazza (kb. fél perc várakozás)" onClick={() => generate(r)}>{genBusy ? '⏳ Fogalmazás…' : '✍ Most megfogalmazom'}</button>
                 {g && <button type="button" className="btn" onClick={() => setWizStep('final')}>▸ A kész tervhez</button>}
               </div>
             )}

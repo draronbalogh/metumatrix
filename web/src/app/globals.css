@@ -798,6 +798,15 @@ html[data-theme='dark'] .pb.p { color: var(--yellow-deep); }
 .pp-selchip .pp-x { margin-left: 6px; opacity: .7; font-size: .72rem; }
 .pp-selchip:hover .pp-x { opacity: 1; }
 .pp-cats { display: flex; flex-wrap: wrap; gap: 5px; }
+/* Órarend: oktató-összehasonlító chipsor + színkód */
+.or-teach { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
+.or-tin { border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; font: inherit; font-size: 13px; background: var(--paper); color: inherit; min-width: 250px; }
+.or-tin:focus { outline: none; border-color: var(--ink); }
+.or-tchip { font-weight: 700; border-width: 2px; }
+.or-tdot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 5px; flex: none; }
+.or-tsugg { margin-top: 4px; }
+.orc-card--sel { border-left-width: 5px; }
+
 /* Kulcs nélküli publikus látogató: teljes, üres zár-oldal - semmilyen adat/menü/név */
 .lockpane { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg, #f5f5f4); font-size: 28px; opacity: .35; user-select: none; }
 

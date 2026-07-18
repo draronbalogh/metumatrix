@@ -82,17 +82,45 @@ export default function OrarendView({ knownNames, q, displayName, resolveCourse,
   const [failed, setFailed] = useState(false);
   const [day, setDay] = useState('');
   const [mode, setMode] = useState<'cal' | 'list'>('cal'); // alapból a heti naptár nyílik
+  // oktató-összehasonlítás: chipekbe gyűjtött nevek, mindegyik saját színnel
+  const [tsel, setTsel] = useState<string[]>([]);
+  const [tq, setTq] = useState('');
 
   useEffect(() => {
     fetch('/api/orarend', { headers: editHeaders() }).then((r) => r.json()).then((j) => (j.ok && j.data ? setData(j.data) : setFailed(true))).catch(() => setFailed(true));
   }, []);
 
   const known = useMemo(() => new Set(knownNames.map(normName)), [knownNames]);
+  // az órarendben ténylegesen előforduló oktatónevek (vesszős cellák szétbontva)
+  const allTeachers = useMemo(() => {
+    const m = new Map<string, string>();
+    (data?.entries ?? []).forEach((e) => (e.oktato ?? '').split(',').map((x) => x.trim()).filter(Boolean)
+      .forEach((n) => { const k = normName(n); if (!m.has(k)) m.set(k, n); }));
+    return [...m.values()].sort((a, b) => a.localeCompare(b, 'hu'));
+  }, [data]);
+  const selKeys = useMemo(() => tsel.map(normName), [tsel]);
+  // hanyadik kiválasztott oktatóé az óra (-1: egyiké sem) - a szín ebből jön
+  const selIdx = (e: Entry): number => {
+    const parts = (e.oktato ?? '').split(',').map((x) => normName(x.trim()));
+    return selKeys.findIndex((k) => parts.includes(k));
+  };
+  const addTeacher = (raw: string) => {
+    // vesszővel elválasztva több név is beírható egyszerre
+    const found = raw.split(',').map((t) => t.trim()).filter(Boolean)
+      .map((t) => allTeachers.find((n) => normName(n).includes(normName(t))))
+      .filter((n): n is string => !!n);
+    if (found.length) setTsel((s) => [...new Set([...s, ...found])]);
+    setTq('');
+  };
+  const sugg = tq.trim()
+    ? allTeachers.filter((n) => normName(n).includes(normName(tq.split(',').pop() ?? tq)) && !tsel.includes(n)).slice(0, 8)
+    : [];
   const list = useMemo(() => {
     if (!data) return [];
     return data.entries.filter((e) =>
-      !q.trim() || norm(`${e.targy} ${e.oktato ?? ''} ${e.terem ?? ''} ${e.tankor ?? ''} ${e.szint ?? ''}`).includes(norm(q)));
-  }, [data, q]);
+      (!q.trim() || norm(`${e.targy} ${e.oktato ?? ''} ${e.terem ?? ''} ${e.tankor ?? ''} ${e.szint ?? ''}`).includes(norm(q)))
+      && (selKeys.length === 0 || (e.oktato ?? '').split(',').some((x) => selKeys.includes(normName(x.trim())))));
+  }, [data, q, selKeys]);
   const teacherCount = useMemo(() => new Set(list.map((e) => e.oktato).filter(Boolean)).size, [list]);
 
   if (failed) return <section className="wrap orv"><p className="tp-empty">Az órarend-adat még nincs feltöltve (grid/orarend.json).</p></section>;
@@ -145,6 +173,29 @@ export default function OrarendView({ knownNames, q, displayName, resolveCourse,
             <button key={d} type="button" className={`chip${day === d ? ' is-on' : ''}`} onClick={() => setDay((v) => (v === d ? '' : d))}>{d}</button>
           ))}
         </div>
+        <div className="or-teach">
+          {tsel.map((n, i) => (
+            <button key={n} type="button" className="chip is-on or-tchip" style={{ borderColor: PALETTE[i % PALETTE.length] }}
+              title="Kattints a levételhez" onClick={() => setTsel((s) => s.filter((x) => x !== n))}>
+              <span className="or-tdot" style={{ background: PALETTE[i % PALETTE.length] }} />{displayName(n)}<span className="pp-x">✕</span>
+            </button>
+          ))}
+          <input className="or-tin" value={tq} autoComplete="off" name="oktato-osszehasonlitas"
+            placeholder={tsel.length ? 'további oktató hozzáadása…' : 'Oktató-összehasonlítás: írj be egy nevet (többet vesszővel)…'}
+            onChange={(e) => setTq(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') { e.preventDefault(); addTeacher(tq.trim() ? tq : ''); }
+              else if (e.key === 'Backspace' && !tq && tsel.length) setTsel((s) => s.slice(0, -1));
+            }} />
+          {tsel.length > 0 && (
+            <button type="button" className="chip chip--danger" title="Minden oktató-szűrő törlése" onClick={() => setTsel([])}>✕ mind</button>
+          )}
+        </div>
+        {sugg.length > 0 && (
+          <div className="cat-picker or-tsugg">
+            {sugg.map((n) => <button key={n} type="button" className="chip" onClick={() => addTeacher(n)}>+ {displayName(n)}</button>)}
+          </div>
+        )}
       </div>
 
       {mode === 'cal' ? (
@@ -162,10 +213,11 @@ export default function OrarendView({ knownNames, q, displayName, resolveCourse,
                         const okt = e.oktato ? displayName(e.oktato) : null;
                         const tip = [e.ido, e.targy, okt, e.terem, e.tankor, e.szint].filter(Boolean).join(' · ');
                         const ref = resolveCourse(e.targy, e.szint);
+                        const si = selKeys.length ? selIdx(e) : -1; // összehasonlításkor az oktató színe viszi a kártyát
                         return (
-                          <div key={i} className={`orc-card${ref ? ' orc-card--link' : ''}`}
+                          <div key={i} className={`orc-card${ref ? ' orc-card--link' : ''}${si >= 0 ? ' orc-card--sel' : ''}`}
                             title={ref ? `${tip} - kattints a tárgy kártyájáért` : tip}
-                            style={{ borderLeftColor: colorOf(e.targy) }}
+                            style={{ borderLeftColor: si >= 0 ? PALETTE[si % PALETTE.length] : colorOf(e.targy) }}
                             role={ref ? 'button' : undefined} tabIndex={ref ? 0 : undefined}
                             onClick={ref ? () => onOpenCourse(ref.ci, ref.xi) : undefined}
                             onKeyDown={ref ? (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); onOpenCourse(ref.ci, ref.xi); } } : undefined}>
@@ -224,6 +276,7 @@ export default function OrarendView({ knownNames, q, displayName, resolveCourse,
                           })()}
                         </td>
                         <td>
+                          {(() => { const si = selKeys.length ? selIdx(e) : -1; return si >= 0 ? <span className="or-tdot" style={{ background: PALETTE[si % PALETTE.length] }} /> : null; })()}
                           {e.oktato ? displayName(e.oktato) : 'nincs megadva'}
                           {warn(e.oktato)}
                         </td>

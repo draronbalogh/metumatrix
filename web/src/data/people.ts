@@ -64,7 +64,7 @@ export interface PeopleDB {
   market: Person[]; // piaci / ipari kapcsolatok (titulus + terület)
   groups: PeopleGroup[]; // egyedi email-csoportok
   signature: string; // hivatalos aláírás-blokk - a levélben KI-BE kapcsolható
-  signatureLinks: string; // szakos linkek - MINDIG a levél legaljára kerül, elválasztó vonallal
+  signatureLinks: string; // szakos / social linkek - ALAPBÓL KI, a levélben kézzel kapcsolható
   senderRules: Record<string, SenderRule>; // feladó-szabályok email (kisbetűs) szerint - a bot is olvassa
 }
 
@@ -91,9 +91,14 @@ A Facebookon is folytathatjuk az egyeztetést, és Discord szerverünkön is sz�
 
 export const SIGNATURE_SEPARATOR = '---------------------';
 
-// A levél lábléce: opcionális hivatalos aláírás + mindig a link-blokk, elválasztó vonallal.
-export const buildFooter = (db: PeopleDB, withSignature: boolean): string =>
-  `${withSignature ? db.signature + '\n\n' : ''}${SIGNATURE_SEPARATOR}\n${db.signatureLinks}`;
+// A levél lábléce: opcionális hivatalos aláírás + opcionális social-link blokk.
+// A linkek ALAPBÓL KI vannak (withLinks=false) - a felhasználó kézzel kapcsolja, ha kell.
+export const buildFooter = (db: PeopleDB, withSignature: boolean, withLinks = false): string => {
+  const parts: string[] = [];
+  if (withSignature && db.signature.trim()) parts.push(db.signature.trim());
+  if (withLinks && db.signatureLinks.trim()) parts.push(`${SIGNATURE_SEPARATOR}\n${db.signatureLinks.trim()}`);
+  return parts.join('\n\n');
+};
 
 export type PersonKind = 'T' | 'H' | 'I' | 'A' | 'O' | 'P'; // Tanár | Hallgató | Intézményi | Alumni | Opponens | Piaci
 export const KIND_LABEL: Record<PersonKind, string> = {

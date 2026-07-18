@@ -163,7 +163,8 @@ const norm = normText;
 export default function NotifyModal({ target, teacherNames, db, letters, onSaveLetter, onDeleteLetter, onLetterStatus, onPlaceChange, onSourceChange, onClose, inline, topicReq, letterReq, ctxEvents, ctxTasks, topicLinks, onLinkTopic, onMarkReplied }: Props) {
   const ui0 = useMemo(loadUi, []);
   const [kind, setKind] = useState<LetterKind>(ui0.kind);
-  const [sigOn, setSigOn] = useState(ui0.sigOn); // hivatalos aláírás a levélben (a link-blokk mindig ott van)
+  const [sigOn, setSigOn] = useState(ui0.sigOn); // hivatalos aláírás a levélben
+  const [linksOn, setLinksOn] = useState(false); // social linkek: ALAPBÓL KI, kézzel kapcsolható
   const initial = useMemo(() => buildLetter(ui0.kind, { type: target.targetType, event: target.event, task: target.task, source: target.source }, buildFooter(db, ui0.sigOn), []), [target, db, ui0]);
   const [subject, setSubject] = useState(initial.subject);
   const [body, setBody] = useState(initial.body);
@@ -298,7 +299,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       lastGreetRef.current = next; // a címzett-kör későbbi változásakor is cserélhető marad
       txt = lines.join('\n');
     }
-    setBody(`${txt}\n\n${buildFooter(db, sigOn)}`);
+    setBody(`${txt}\n\n${buildFooter(db, sigOn, linksOn)}`);
     setBodyDirty(true);
     const linked = ev ?? tk;
     const guessed = !linked && (gEv || gTk) ? (gEv?.title ?? gTk?.title) : null;
@@ -369,7 +370,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const appliedDraftRef = useRef<{ label: string; body: string } | null>(null);
   const applyReplyVariant = (v: ReplyDraft) => {
     setSubject(v.subject);
-    const b = `${v.body}\n\n${buildFooter(db, sigOn)}`;
+    const b = `${v.body}\n\n${buildFooter(db, sigOn, linksOn)}`;
     setBody(b);
     appliedDraftRef.current = { label: v.label, body: b };
     setBodyDirty(true);
@@ -394,7 +395,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     fetch('/api/notify').then((r) => r.json()).then((j) => setConfigured(!!j.configured)).catch(() => setConfigured(false));
   }, []);
 
-  const regenerate = (k: LetterKind, placeOverride?: string, sigOverride?: boolean, stepsOverride?: string[], meetOverride?: MeetingPlan | null) => {
+  const regenerate = (k: LetterKind, placeOverride?: string, sigOverride?: boolean, stepsOverride?: string[], meetOverride?: MeetingPlan | null, linksOverride?: boolean) => {
     setKind(k);
     lastTopicRef.current = null; // a hangnem-motorra váltás kilép a témasablon-módból
     setActiveTopic(null);
@@ -404,7 +405,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     const ev = target.event ? { ...target.event, place: p || null } : target.event;
     const meet = meetOverride !== undefined ? meetOverride
       : (meetMode === 'nincs' ? null : { mode: meetMode, date: meetDate, time: meetTime, link: meetLink });
-    const gen = buildLetter(k, { type: target.targetType, event: ev, task: target.task, source: src }, buildFooter(db, sigOverride ?? sigOn), stepsOverride ?? selSteps, meet, audience, recipient);
+    const gen = buildLetter(k, { type: target.targetType, event: ev, task: target.task, source: src }, buildFooter(db, sigOverride ?? sigOn, linksOverride ?? linksOn), stepsOverride ?? selSteps, meet, audience, recipient);
     setSubject(gen.subject);
     setBody(gen.body);
     setBodyDirty(false);
@@ -434,11 +435,23 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     const next = !sigOn;
     setSigOn(next);
     saveUi(kind, next);
-    const oldF = buildFooter(db, sigOn);
-    const newF = buildFooter(db, next);
+    const oldF = buildFooter(db, sigOn, linksOn);
+    const newF = buildFooter(db, next, linksOn);
     setBody((b) => {
-      if (b.endsWith(oldF)) return b.slice(0, b.length - oldF.length) + newF;
+      if (oldF && b.endsWith(oldF)) return b.slice(0, b.length - oldF.length) + newF;
       if (!bodyDirty) { regenerate(kind, undefined, next); return b; }
+      return b;
+    });
+  };
+  // social linkek ki/be (alapból ki): ugyanaz a lábléc-csere logika
+  const toggleLinks = () => {
+    const next = !linksOn;
+    const oldF = buildFooter(db, sigOn, linksOn);
+    const newF = buildFooter(db, sigOn, next);
+    setLinksOn(next);
+    setBody((b) => {
+      if (oldF && b.endsWith(oldF)) return b.slice(0, b.length - oldF.length) + newF;
+      if (!bodyDirty) { regenerate(kind, undefined, undefined, undefined, undefined, next); return b; }
       return b;
     });
   };
@@ -1002,7 +1015,8 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                     setBodyDirty(true);
                     setResult(`✓ ${r.changed} fordulat átfogalmazva; a tartalom és az adatok változatlanok.`);
                   }}>≈ Finom átfogalmazás</button>
-                <button type="button" aria-pressed={sigOn} className={`nm-bodytoggle${sigOn ? '' : ' nm-off'}`} title="A hivatalos aláírás ki-be kapcsolása; a szakos linkek mindig a levél alján maradnak" onClick={toggleSig}>✒ Aláírás: {sigOn ? 'be' : 'ki'}</button>
+                <button type="button" aria-pressed={sigOn} className={`nm-bodytoggle${sigOn ? '' : ' nm-off'}`} title="A hivatalos aláírás (név-blokk) ki-be kapcsolása" onClick={toggleSig}>✒ Aláírás: {sigOn ? 'be' : 'ki'}</button>
+                <button type="button" aria-pressed={linksOn} className={`nm-bodytoggle${linksOn ? '' : ' nm-off'}`} title="Social / szakos linkek a levél alján (Web, Facebook, Instagram, TikTok, Discord). Alapból KI - kapcsold be, ha kell." onClick={toggleLinks}>🔗 Linkek: {linksOn ? 'be' : 'ki'}</button>
                 <button type="button" className="nm-bodytoggle" onClick={() => setBodyOpen((v) => !v)}>{bodyOpen ? '▲ elrejtés' : '▼ szerkesztés'}</button>
               </div>
               {bodyOpen ? (

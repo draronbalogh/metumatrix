@@ -1387,6 +1387,8 @@ export default function CurriculumApp() {
               undo={postaUndo ? { label: postaUndo.label } : null}
               onUndo={undoSourceState}
               onOpenCard={(sel) => setAgendaDetails({ kind: sel.startsWith('t:') ? 'task' : 'event', id: sel.slice(2) })}
+              onSaveLetter={saveLetter}
+              onDeleteLetter={deleteLetter}
             />
           ) : view === 'people' ? (
             // csak betöltött adattal mountolunk: a PeopleModal szerkesztőként mount-kor

@@ -21,6 +21,9 @@ interface RephraseReq {
   thread: string[];      // "dátum · irány · ki: mit" sorok
   drafts: { label: string; subject: string; body: string }[]; // a bot 3 terve: regiszter-minta
   instruction: string;   // a felhasználó nyers döntése/diktátuma
+  askAllowed?: boolean;  // 1. kör: a modell EGY kritikus kérdést tehet fel a levél helyett
+  question?: string | null;        // 2. kör: az 1. körben feltett kérdés
+  questionAnswer?: string | null;  // 2. kör: a felhasználó válasza (null = nem tudja, kihagyta)
 }
 
 // a CLI kimenetét akkor is visszaadjuk, ha nem-nulla kóddal lép ki (pl. keret-limit
@@ -60,7 +63,11 @@ ${b.thread?.length ? `- A szál idővonala:\n${b.thread.map((t) => `  ${t}`).joi
 """
 ${b.instruction.trim()}
 """
-
+${b.question ? `
+TISZTÁZÓ KÖR (már lezajlott): a kérdésedre ("${b.question}") ${b.questionAnswer
+    ? `Áron válasza: "${b.questionAnswer}" - ezt is építsd be.`
+    : 'Áron NEM tud válaszolni. Írd meg a levelet enélkül, óvatos fogalmazással (ne találj ki adatot, hagyd nyitva vagy kérdezz rá a levélben, ha az természetes).'}
+` : ''}
 REGISZTER-MINTA - a szinkron által erre a levélre írt tervek (a megszólítás,
 tegeződés/magázódás és hangnem EZEKHEZ igazodjon):
 ${draftsTxt || '(nincs terv - a stílusfájl megszólalásaiból dolgozz)'}
@@ -76,7 +83,13 @@ SZABÁLYOK:
 - Rövid, jól tagolt levél; aláírást NE írj (azt az app teszi hozzá).
 - Ne találj ki tényt, dátumot, nevet, ami se a levélben, se a diktátumban nincs benne.
 
-A VÁLASZOD KIZÁRÓLAG ez a JSON legyen, más szöveg nélkül:
+${b.askAllowed && !b.question ? `HA HIÁNYZIK EGY KRITIKUS INFORMÁCIÓ: ha a levél megírásához egyetlen konkrét
+adat hiányzik (pl. pontos dátum, igen/nem döntés, összeg, név), akkor NE írd meg
+a levelet, hanem a válaszod KIZÁRÓLAG ez a JSON legyen:
+{"question": "egyetlen rövid, konkrét magyar kérdés Áronnak"}
+Csak akkor kérdezz, ha tényleg megakadnál nélküle - különben írd meg a levelet.
+
+` : ''}A VÁLASZOD KIZÁRÓLAG ez a JSON legyen, más szöveg nélkül:
 {"subject": "a válasz tárgysora (Re: ...)", "body": "a levél teljes szövege"}`;
 
   try {
@@ -91,7 +104,12 @@ A VÁLASZOD KIZÁRÓLAG ez a JSON legyen, más szöveg nélkül:
     let subject = b.subject ? `Re: ${b.subject.replace(/^(Re|Vá|Válasz):\s*/i, '')}` : 'Válasz';
     let body = jsonTxt;
     try {
-      const p = JSON.parse(jsonTxt) as { subject?: string; body?: string };
+      const p = JSON.parse(jsonTxt) as { subject?: string; body?: string; question?: string };
+      // tisztázó kérdés jött levél helyett: azt adjuk vissza, a kliens kérdez-válaszol
+      if (p.question && !p.body) {
+        const q = p.question.replace(/\s*—\s*/g, ', ').trim();
+        return NextResponse.json({ ok: true, question: q });
+      }
       if (p.body) { body = p.body; if (p.subject) subject = p.subject; }
     } catch { /* nem JSON jött: a teljes szöveg a törzs */ }
     body = body.replace(/\s*—\s*/g, ', ').trim();

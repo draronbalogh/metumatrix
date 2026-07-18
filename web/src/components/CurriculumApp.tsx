@@ -42,7 +42,8 @@ const AGENDA_LS_KEY = 'md-agenda-v1';
 const PEOPLE_LS_KEY = 'md-people-v1';
 const THEME_KEY = 'md-theme2'; // új kulcs: az ideiglenes sötét-alap időszak mentett 'dark' értékei ne ragadjanak be
 
-// ÉJSZAKAI MÓD: 20:00-07:00 között magától sötét a téma, napközben világos.
+// TÉMA: az ALAP a SÖTÉT; napközben (07:00-20:00) vált világosra, este 8-tól újra sötét.
+// A villanásmentes kezdőállítás a layout.tsx fejléc-szkriptjében van (festés előtt).
 // A kézi ☾/☀ kapcsoló felülbírálja, de csak az AKTUÁLIS nap-/éj-időszakra - a
 // következő váltásnál (este 8 / reggel 7) az automatika visszaveszi az irányítást.
 // A tárolt érték {t, p}: a választott téma + az időszak azonosítója; a régi, sima
@@ -127,7 +128,7 @@ export default function CurriculumApp() {
   const [view, setView] = useState<ViewId>('map');
   const [agenda, setAgenda] = useState<Agenda>(DEFAULT_AGENDA);
   const [peopleDB, setPeopleDB] = useState<PeopleDB>(DEFAULT_PEOPLE);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light'); // alapértelmezés: világos téma
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark'); // alapértelmezés: SÖTÉT (nappal vált világosra)
   const [notifOn, setNotifOn] = useState(false); // értesítés sürgős kártyánál (engedély + kapcsoló együtt)
   const [canEdit, setCanEdit] = useState(true); // bemutató mód: érvényes kulcs nélkül csak olvasás
   const canEditRef = useRef(true);

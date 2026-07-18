@@ -21,11 +21,28 @@ export const metadata: Metadata = {
   description: 'METU Média Design - a tantervi hierarchia (BA/MA, több évfolyam) interaktív, szerkeszthető node-térképen és kártya-katalógusban. Készítette: Dr. Balogh Áron.',
 };
 
+// villanásmentes téma: az ALAP sötét (data-theme="dark"), és ha NAPPAL van (07-20),
+// a festés ELŐTT futó szkript világosra vált. A kézi ☾/☀ felülbírálást (md-theme2,
+// az aktuális nap-/éj-időszakra) tiszteletben tartja. Ugyanaz a logika, mint a
+// CurriculumApp themePeriodId/autoTheme/storedThemeFor - hogy ne legyen hidratálás-eltérés.
+const THEME_INIT = `(function(){try{
+  var d=new Date(),h=d.getHours(),night=(h>=20||h<7),b=new Date(d);
+  if(h<7)b.setDate(b.getDate()-1);
+  var p=function(n){return(n<10?'0':'')+n;};
+  var period=b.getFullYear()+'-'+p(b.getMonth()+1)+'-'+p(b.getDate())+(night?'-n':'-d');
+  var t=night?'dark':'light',raw=localStorage.getItem('md-theme2');
+  if(raw&&raw[0]==='{'){var o=JSON.parse(raw);if((o.t==='light'||o.t==='dark')&&o.p===period)t=o.t;}
+  document.documentElement.dataset.theme=t;
+}catch(e){document.documentElement.dataset.theme='dark';}})();`;
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const fontVars = `${schibsted.variable} ${hanken.variable} ${bricolage.variable} ${instrument.variable} ${splineMono.variable}`;
   return (
-    <html lang="hu" data-preset="muszerfal" className={fontVars}>
-      <body>{children}</body>
+    <html lang="hu" data-preset="muszerfal" data-theme="dark" className={fontVars} suppressHydrationWarning>
+      <body>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
+        {children}
+      </body>
     </html>
   );
 }

@@ -78,6 +78,8 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   const [genBusy, setGenBusy] = useState(false);
   const [genErr, setGenErr] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(false);
+  const [speakKind, setSpeakKind] = useState<'short' | 'full' | null>(null); // melyik gomb szól épp
+  useEffect(() => { if (!speaking) setSpeakKind(null); }, [speaking]);
   const speakSeq = useRef(0); // elavult onend-ek kiszűrése (cancel is end-et lő Chrome-ban)
   const taRef = useRef<HTMLTextAreaElement | null>(null); // a wizard válaszmezője - ide fókuszálunk
   useEffect(() => () => { if (typeof window !== 'undefined') window.speechSynthesis?.cancel(); }, []);
@@ -184,6 +186,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     const seq = ++speakSeq.current;
     const u = new SpeechSynthesisUtterance(txt);
     u.lang = 'hu-HU';
+    u.rate = 1.5; // a felhasználó kérése: másfeles tempó
     const hu = synth.getVoices().find((v) => v.lang?.toLowerCase().startsWith('hu'));
     if (hu) u.voice = hu;
     u.onend = () => { if (seq !== speakSeq.current) return; setSpeaking(false); onDone?.(); };
@@ -191,13 +194,19 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     synth.cancel(); synth.speak(u); setSpeaking(true);
   };
   const stopSpeak = () => { speakSeq.current++; window.speechSynthesis?.cancel(); setSpeaking(false); };
-  const letterText = (r: Row): string => {
-    const th = (r.src.thread ?? []).slice(-3).map((m) => `${m.dir === 'in' ? 'Írta' : 'Válaszoltad'}, ${m.from}: ${m.gist}.`);
+  // rövid felolvasás: CSAK a lényeg (feladó, tárgy, összegzés) - a szál külön gombra megy
+  const letterText = (r: Row): string => [
+    `${r.src.name} levele.`,
+    r.src.subject ? `Tárgy: ${r.src.subject}.` : '',
+    r.src.gist ? `Összefoglaló: ${r.src.gist}` : 'Ehhez a levélhez még nincs összefoglaló.',
+  ].filter(Boolean).join(' ');
+  // teljes szál: időrendben az ELSŐ levéltől, a végén az összegzéssel zárva
+  const threadText = (r: Row): string => {
+    const th = (r.src.thread ?? []).map((m) => `${m.dir === 'in' ? `${m.from} írta` : 'Válaszoltad'}: ${m.gist}.`);
     return [
-      `${r.src.name} levele.`,
-      r.src.subject ? `Tárgy: ${r.src.subject}.` : '',
-      r.src.gist ? `Összefoglaló: ${r.src.gist}` : 'Ehhez a levélhez még nincs összefoglaló.',
+      `${r.src.name} levélszála, ${th.length} üzenet, időrendben.`,
       ...th,
+      r.src.gist ? `Összegzés: ${r.src.gist}` : '',
     ].filter(Boolean).join(' ');
   };
   // HANG mód: a levél-lépésre érve azonnal indul a felolvasás, a végén automatikus
@@ -206,7 +215,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     if (!decide || titkarMode !== 'voice' || wizStep !== 'letter' || !curSel) return;
     const r = decideQueue[0];
     if (!r) return;
-    const id = window.setTimeout(() => speakText(letterText(r), () => setWizStep('answer')), 250);
+    const id = window.setTimeout(() => { setSpeakKind('short'); speakText(letterText(r), () => setWizStep('answer')); }, 250);
     return () => { window.clearTimeout(id); stopSpeak(); };
   }, [decide, titkarMode, wizStep, curSel]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -477,10 +486,16 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
               </div>
             )}
             <div className="po-wiz-toolrow">
-              <button type="button" className="btn" title="Felolvasás magyarul (a böngésző ingyenes hangjával)"
-                onClick={() => (speaking ? stopSpeak() : speakText(letterText(r), titkarMode === 'voice' ? () => setWizStep('answer') : undefined))}>
-                {speaking ? '⏹ Állj' : '🔊 Felolvasás'}
+              <button type="button" className="btn" title="Rövid felolvasás: feladó, tárgy, összegzés (1.5x tempó)"
+                onClick={() => { if (speaking) { stopSpeak(); return; } setSpeakKind('short'); speakText(letterText(r), titkarMode === 'voice' ? () => setWizStep('answer') : undefined); }}>
+                {speaking && speakKind === 'short' ? '⏹ Állj' : '🔊 Felolvasás'}
               </button>
+              {thread.length > 0 && (
+                <button type="button" className="btn" title="A teljes szál felolvasása időrendben, az első levéltől az összegzésig (1.5x tempó)"
+                  onClick={() => { if (speaking) { stopSpeak(); return; } setSpeakKind('full'); speakText(threadText(r), titkarMode === 'voice' ? () => setWizStep('answer') : undefined); }}>
+                  {speaking && speakKind === 'full' ? '⏹ Állj' : '🧵 Teljes szál felolvasása'}
+                </button>
+              )}
               <button type="button" className="po-card" title={r.sel.startsWith('t:') ? 'A levélből készült FELADAT megnyitása' : 'A levélhez tartozó ESEMÉNY megnyitása'} onClick={() => onOpenCard(r.sel)}>▤ {r.sel.startsWith('t:') ? 'Feladat' : 'Esemény'}: {r.title}</button>
             </div>
             {titkarMode === 'voice' && speaking && <div className="po-wiz-hint">🔊 Felolvasás megy - a végén magától jön a válasz-lépés. A Tovább gombbal átugorhatod.</div>}

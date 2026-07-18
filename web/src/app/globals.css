@@ -51,6 +51,14 @@ html[data-preset='muterem'] { --ff-display: var(--font-bricolage), system-ui, sa
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 html { -webkit-text-size-adjust: 100%; }
+/* modern, témába illő görgetősávok a natív helyett (mindkét témában; a szándékosan
+   rejtett sávok - .mt-tabs stb. - felülírják ezt saját scrollbar-width:none-nal) */
+* { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--brand) 42%, transparent) transparent; }
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--brand) 34%, transparent); border-radius: 10px; border: 3px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--brand) 60%, transparent); background-clip: padding-box; }
+::-webkit-scrollbar-corner { background: transparent; }
 body {
   margin: 0; background: var(--paper); color: var(--ink);
   font-family: var(--ff); font-size: 15px; line-height: 1.5;
@@ -1260,7 +1268,9 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
    gorgeteskor a tartalom nem uszik a cim moge/fole; EGYETLEN gorgeto: .pmv-scroll */
 .pmv { position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column; padding: 18px var(--pad) 0; }
 .pmv > .cat-block-head { flex: none; }
-.pmv-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad); }
+/* alsó térköz: a Névjegyzék „💾 Mentés" lába NE kerüljön a fix mentés-dokk (jobb alsó
+   sarok) alá - a dokk fölé emeljük, így nem takarják egymást */
+.pmv-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad) 66px; }
 .pmv .pm-body { padding-bottom: 14px; }
 .pmv .pm-body { padding: 0; }
 .pmv .pm-toolbar { top: 0; border-radius: 0 0 10px 10px; }

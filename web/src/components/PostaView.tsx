@@ -189,6 +189,45 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
       setPushMsg('⚠ Nem sikerült elindítani a küldést (fut a dev-szerver és a klasszikus Outlook?).');
     } finally { setSendingSel(null); }
   };
+  // MIND küldése egyben (megerősítéssel): minden kész választ elküld, a sikeres kártyákat lezárja
+  const [sendAllBusy, setSendAllBusy] = useState(false);
+  const sendAllNow = async () => {
+    if (sendAllBusy) return;
+    const n = lanes.drafted.length;
+    if (n === 0) return;
+    if (!window.confirm(`Biztosan ELKÜLDÖD MOST mind a ${n} kész választ az Outlookon át?\n\nEz azonnal elküldi mindet, és nem vonható vissza.`)) return;
+    setSendAllBusy(true); setPushMsg(`Mind küldése folyamatban (${n})…`);
+    try {
+      const res = await fetch('/api/outlook-drafts', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+        body: JSON.stringify({ sendAll: true }),
+      });
+      const j = await res.json() as { ok: boolean; sent?: number; failed?: number; sentIds?: string[]; comError?: boolean };
+      if (j.comError) { setPushMsg('⚠ A klasszikus Outlook nem elérhető COM-on. Nyisd meg (Go to classic Outlook), és próbáld újra.'); return; }
+      const ids = j.sentIds ?? [];
+      for (const r of lanes.drafted) {
+        if (ids.includes(r.sel.slice(2))) onState(r.sel, { status: 'replied', repliedAt: nowIso(), returned: null, thread: withOutEntry(r.src, 'elküldve (Mind küldése)') }, 'Elküldve');
+      }
+      setPushMsg(`✓ Elküldve: ${j.sent ?? ids.length}${j.failed ? `, ${j.failed} sikertelen (nézd meg az Outlookban)` : ''}.`);
+    } catch {
+      setPushMsg('⚠ Nem sikerült elindítani a küldést (fut a dev-szerver és a klasszikus Outlook?).');
+    } finally { setSendAllBusy(false); }
+  };
+  // MAI levelek beolvasása most (a helyi Outlook->agenda szinkront indítja el, mai napra szűkítve)
+  const [syncBusy, setSyncBusy] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const runSync = async () => {
+    if (syncBusy) return;
+    setSyncBusy(true); setSyncMsg('Mai levelek beolvasása indul…');
+    try {
+      const res = await fetch('/api/agenda-sync', { method: 'POST', headers: editHeaders() });
+      const j = await res.json() as { ok: boolean; started?: boolean; running?: boolean; msg?: string; today?: string };
+      if (j.running) setSyncMsg(`⏳ ${j.msg ?? 'Már fut egy beolvasás.'}`);
+      else if (j.ok && j.started) setSyncMsg(`✓ Elindítva a mai (${j.today}) levelek beolvasása. Pár perc, és magától frissül a lista.`);
+      else setSyncMsg('⚠ Nem sikerült elindítani a beolvasást.');
+    } catch { setSyncMsg('⚠ Nem sikerült elindítani a beolvasást (fut a dev-szerver?).'); }
+    finally { setSyncBusy(false); }
+  };
   const pendingAll = useMemo(() => [...lanes.returned, ...lanes.deadline, ...lanes.awaiting], [lanes]);
   const urgent = lanes.deadline.filter((r) => r.duePrec && r.dueKey !== null && r.dueKey <= now + 2 * DAY).length;
   // gyűjtő-mód: akihez már van NYERS jegyzet, az kikerül a wizard-sorból (kötegelt megfogalmazásra vár)
@@ -735,10 +774,12 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
         {lanes.waiting.length > 0 && <span className="pill" title="Válaszoltam, az ő válaszukra várok">{lanes.waiting.length} rájuk várok</span>}
         {lanes.snoozed.length > 0 && <span className="pill" title="Halasztva - a felbukkanási napon visszatér">{lanes.snoozed.length} halasztva</span>}
         <span className="sp" />
+        {!decide && <button type="button" className="btn btn--ink" disabled={syncBusy} title="A MAI beérkezett és elküldött leveleket beolvassa és beteszi az agendába (a napi ütemezett szinkronon felül, kézzel). Pár perc, magától frissül." onClick={runSync}>{syncBusy ? '⏳ Indítás…' : '🔄 Mai levelek beolvasása'}</button>}
         {pendingAll.length > 0 && !decide && <button type="button" className="btn" title="Levelenként, lépésről lépésre: levél (felolvasással) - a döntésed nyersen - végleges válasz - következő" onClick={() => { setDecide(true); setTitkarMode(null); setDecideSkip(new Set()); setAllOpen(false); }}>🗣 Titkárnő</button>}
         {pendingAll.length > 0 && !decide && <button type="button" className="btn" title="Minden válaszra váró tétel terveivel együtt, egy listában végigdolgozható" onClick={() => setAllOpen((v) => !v)}>{allOpen ? '▴ Összecsukás' : '▤ Sorban mind'}</button>}
         {decide && <button type="button" className="btn" onClick={() => { setDecide(false); setTitkarMode(null); stopSpeak(); }}>✕ Kilépés a titkárnő-módból</button>}
       </div>
+      {syncMsg && <div className="po-pushmsg" style={{ margin: '0 0 12px' }}>{syncMsg}</div>}
       {decide ? (
         <div className="po-list">{renderWizard()}</div>
       ) : (
@@ -781,6 +822,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
           {showDrafted && (
             <div className="po-draftpush">
               <button type="button" className="btn btn--ink" disabled={pushBusy} title="Mindegyik kész válaszból Válasz-piszkozatot készít a klasszikus asztali Outlookban (küldés SOHA). A duplikátumokat kihagyja." onClick={pushDrafts}>{pushBusy ? '⏳ Készül…' : '✉ Mind az Outlookba (piszkozat)'}</button>
+              <button type="button" className="btn btn--hot" disabled={sendAllBusy} title="AZONNAL elküldi MIND a kész választ az Outlookon át (megerősítéssel, nem vonható vissza). A meglévő piszkozatokat küldi." onClick={sendAllNow}>{sendAllBusy ? '⏳ Küldés…' : `✉ Mind küldése (${lanes.drafted.length})`}</button>
               {pushMsg && <span className="po-pushmsg">{pushMsg}</span>}
             </div>
           )}

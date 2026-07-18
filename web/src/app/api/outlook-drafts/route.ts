@@ -23,9 +23,23 @@ export async function POST(req: Request) {
   if (!canWrite(req)) return writeDenied();
   const dry = new URL(req.url).searchParams.get('dry') === '1';
   const fresh = new URL(req.url).searchParams.get('fresh') === '1';
-  // a kártya id-t csak a törzsből olvassuk (küldés-ág); a piszkozat-ág törzs nélkül is megy
+  // a kártya id-t / a mind-küldés jelzőt a törzsből olvassuk; a piszkozat-ág törzs nélkül is megy
   let sendId: string | null = null;
-  try { const b = await req.json() as { sendId?: unknown }; if (typeof b?.sendId === 'string' && b.sendId.trim()) sendId = b.sendId.trim(); } catch { /* nincs törzs */ }
+  let sendAll = false;
+  try { const b = await req.json() as { sendId?: unknown; sendAll?: unknown }; if (typeof b?.sendId === 'string' && b.sendId.trim()) sendId = b.sendId.trim(); if (b?.sendAll === true) sendAll = true; } catch { /* nincs törzs */ }
+
+  // KÜLDÉS-MIND-ÁG: az ÖSSZES kész válasz elküldése (a UI „Mind küldése" gombja, megerősítéssel).
+  if (sendAll) {
+    const { out, code } = await runPs(['-SendAll']);
+    try {
+      await fs.mkdir(LOG.replace(/[\\/][^\\/]+$/, ''), { recursive: true });
+      await fs.appendFile(LOG, `\n==== ${new Date().toISOString()} (SENDALL, exit=${code}) ====\n${out}\n`, 'utf8');
+    } catch { /* a napló nem kritikus */ }
+    const sentIds = [...out.matchAll(/SENT_ID=(\S+)/g)].map((m) => m[1]);
+    const mm = out.match(/SENTALL=(\d+)\s+FAILED=(\d+)/);
+    const comError = /COM HIBA/i.test(out);
+    return NextResponse.json({ ok: !comError && code === 0, sentAll: true, sent: mm ? Number(mm[1]) : sentIds.length, failed: mm ? Number(mm[2]) : 0, sentIds, comError, output: out });
+  }
 
   // KÜLDÉS-ÁG: egy konkrét kártya elküldése (a UI „Küldés most" gombja). Csak whitelistelt
   // id-alak (t123 / e123-szerű) mehet a parancssorba, hogy ne lehessen argumentumot injektálni.

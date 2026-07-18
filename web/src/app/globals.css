@@ -1524,9 +1524,34 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .po-main .x { flex: none; color: var(--muted); }
 .po-gist { display: flex; align-items: baseline; gap: 10px; padding: 2px 13px 10px; font-size: .84rem; line-height: 1.45; color: var(--ink-2); }
 .po-card { flex: none; margin-left: auto; border: 0; background: none; padding: 0; font: inherit; font-size: .74rem; color: var(--brand-text); cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; white-space: nowrap; max-width: 34%; overflow: hidden; text-overflow: ellipsis; }
-.po-drafts { border-top: 1px solid var(--line); padding: 10px 13px 12px; display: flex; flex-direction: column; gap: 9px; background: color-mix(in srgb, var(--brand) 3%, var(--card)); }
+.po-drafts { border-top: 1px solid var(--line); padding: 10px 13px 12px; display: flex; flex-direction: column; gap: 12px; background: color-mix(in srgb, var(--brand) 3%, var(--card)); }
 .po-note { font-size: .76rem; color: color-mix(in srgb, var(--yellow-deep) 75%, var(--ink)); background: color-mix(in srgb, var(--yellow-deep) 9%, transparent); border-radius: 8px; padding: 6px 10px; }
-.po-draft { border: 1px solid var(--line); border-radius: 9px; background: var(--card); overflow: hidden; }
+.po-draft { border: 1px solid var(--line); border-left-width: 4px; border-radius: 9px; background: var(--card); overflow: hidden; margin-left: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+.po-draft--0 { border-left-color: var(--g0); }
+.po-draft--1 { border-left-color: var(--yellow-deep); }
+.po-draft--2 { border-left-color: #2f6fe0; }
+/* a diktált döntésből megfogalmazott VÉGLEGES terv - ez a kiemelt elem */
+.po-draft--gen { border-left-color: var(--hot); margin-left: 14px; }
+.po-draft--gen .po-draft-h .l { color: var(--hot); background: color-mix(in srgb, var(--hot) 10%, transparent); }
+
+/* Titkárnő-blokk: felolvasás + nyers döntés diktálása */
+.po-sec { border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; background: var(--card); display: flex; flex-direction: column; gap: 8px; }
+.po-sec-h { display: flex; align-items: center; gap: 10px; }
+.po-sec-h .l { font-size: .78rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-2); }
+.po-sec-h .btn { padding: 4px 10px; font-size: .78rem; }
+.po-sec-hint { font-size: .76rem; color: var(--ink-2); line-height: 1.45; }
+.po-dict { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: .85rem; line-height: 1.5; background: var(--paper); color: inherit; resize: vertical; }
+.po-dict:focus { outline: none; border-color: var(--ink); }
+.po-dictbtns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* keskeny kijelzo (telefon): kisebb behuzas, teljes szelessegu gombok - mas
+   kepernyoarany es felbontas mellett is minden latsszon es koppinthato legyen */
+@media (max-width: 720px) {
+  .po-draft, .po-draft--gen { margin-left: 6px; }
+  .po-sec { padding: 8px 9px; }
+  .po-sec-h { flex-wrap: wrap; }
+  .po-dictbtns .btn { flex: 1 1 auto; min-height: 40px; }
+}
 .po-draft-h { display: flex; align-items: center; gap: 8px; padding: 7px 11px; border-bottom: 1px solid var(--line); }
 .po-draft-h .l { font-size: .74rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--brand-text); padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--brand) 10%, transparent); }
 /* a három terv szándék szerint színkódolt címkét kap: igen / módosítás / kérdés */

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Agenda, AgendaSource, ReplyDraft, ThreadMsg, addDaysYmd, addWorkdaysYmd, draftsStale, dueTs, duePrecise, fmtDayHu, fmtDueHu, nextMondayYmd, tomorrowYmd, withOutEntry } from '@/data/agenda';
 import { SenderRule, SENDER_RULE_LABEL } from '@/data/people';
 import { parseStyleBank, replyVariants, StyleBank } from '@/lib/replies';
@@ -11,9 +11,27 @@ import PageHead from './PageHead';
 // Stabil sávok fix sorrendben (egy kártya pontosan EGY sávban, a többi tulajdonság
 // jelvény): Visszatért → Határidős → Válaszra vár → Rájuk várok. A halasztottak
 // rejtve (lenyitható), a lezártak külön szekcióban, újranyitással. Minden verdikt
-// egy koppintás + visszavonási sáv. Extra módok: Döntés-sor (tételenként egy
-// kötelező döntés, Sunsama-minta) és Sorban (minden terv egyszerre lenyitva,
-// Hey Focus&Reply-minta). Új feladónál egyszeri szabály-döntés (Screener-minta).
+// egy koppintás + visszavonási sáv. Extra módok: Titkárnő (tételenként: felolvasás,
+// összegzés, diktált nyers döntés -> a helyi claude a stílus + a bot-tervek regisztere
+// szerint VÉGLEGES levelet fogalmaz; Sunsama-minta) és Sorban (minden terv egyszerre
+// lenyitva, Hey Focus&Reply-minta). Új feladónál egyszeri szabály-döntés (Screener).
+// A felolvasás/diktálás a böngésző INGYENES beszéd-API-jait használja (speechSynthesis
+// + SpeechRecognition, hu-HU) - ha nincs támogatás, a gombok egyszerűen nem látszanak.
+
+// minimális típusok a böngésző beszédfelismerőjéhez (a lib.dom nem tartalmazza)
+interface SpeechRecLike {
+  lang: string; continuous: boolean; interimResults: boolean;
+  start(): void; stop(): void;
+  onresult: ((ev: { resultIndex: number; results: { length: number; [i: number]: { isFinal: boolean; 0: { transcript: string } } } }) => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+}
+type SpeechRecCtor = new () => SpeechRecLike;
+const sttCtor = (): SpeechRecCtor | null => {
+  if (typeof window === 'undefined') return null;
+  const w = window as unknown as { SpeechRecognition?: SpeechRecCtor; webkitSpeechRecognition?: SpeechRecCtor };
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+};
 
 interface Row {
   sel: string;               // 't:id' / 'e:id'
@@ -58,8 +76,18 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   const [showClosed, setShowClosed] = useState(false);
   const [showThread, setShowThread] = useState<string | null>(null);
   const [allOpen, setAllOpen] = useState(false);          // Sorban mód: minden terv lenyitva
-  const [decide, setDecide] = useState(false);            // Döntés-sor mód: tételenként egy döntés
+  const [decide, setDecide] = useState(false);            // Titkárnő-mód: tételenként egy döntés
   const [decideSkip, setDecideSkip] = useState<Set<string>>(new Set());
+  // Titkárnő: diktált nyers döntés + a belőle megfogalmazott végleges terv tételenként
+  const [dict, setDict] = useState('');
+  const [gen, setGen] = useState<Record<string, ReplyDraft>>({});
+  const [genBusy, setGenBusy] = useState(false);
+  const [genErr, setGenErr] = useState<string | null>(null);
+  const [listening, setListening] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const recRef = useRef<SpeechRecLike | null>(null);
+  const sttOk = useMemo(() => !!sttCtor(), []);
+  useEffect(() => () => { recRef.current?.stop(); if (typeof window !== 'undefined') window.speechSynthesis?.cancel(); }, []);
 
   const rows = useMemo<Row[]>(() => {
     const b = bank ?? parseStyleBank(null);
@@ -133,6 +161,71 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     } catch { /* http vagy régi böngésző - a levélíróból másolható */ }
   };
 
+  // felolvasás: feladó + tárgy + összefoglaló + a szál utolsó bejegyzései (ingyenes, helyi)
+  const speak = (r: Row) => {
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+    if (speaking) { synth.cancel(); setSpeaking(false); return; }
+    const th = (r.src.thread ?? []).slice(-3).map((m) => `${m.dir === 'in' ? 'Írta' : 'Válaszoltad'}, ${m.from}: ${m.gist}.`);
+    const txt = [
+      `${r.src.name} levele.`,
+      r.src.subject ? `Tárgy: ${r.src.subject}.` : '',
+      r.src.gist ? `Összefoglaló: ${r.src.gist}` : 'Ehhez a levélhez még nincs összefoglaló.',
+      ...th,
+    ].filter(Boolean).join(' ');
+    const u = new SpeechSynthesisUtterance(txt);
+    u.lang = 'hu-HU';
+    const hu = synth.getVoices().find((v) => v.lang?.toLowerCase().startsWith('hu'));
+    if (hu) u.voice = hu;
+    u.onend = () => setSpeaking(false);
+    u.onerror = () => setSpeaking(false);
+    synth.cancel(); synth.speak(u); setSpeaking(true);
+  };
+
+  // diktálás: a böngésző beszédfelismerője (hu-HU) a textareába gépel; a telefon
+  // billentyűzetének saját mikrofonja természetesen enélkül is működik
+  const toggleListen = () => {
+    if (listening) { recRef.current?.stop(); return; }
+    const Ctor = sttCtor();
+    if (!Ctor) return;
+    const rec = new Ctor();
+    rec.lang = 'hu-HU'; rec.continuous = true; rec.interimResults = false;
+    rec.onresult = (ev) => {
+      let t = '';
+      for (let i = ev.resultIndex; i < ev.results.length; i++) if (ev.results[i].isFinal) t += ev.results[i][0].transcript;
+      if (t.trim()) setDict((d) => (d ? `${d} ` : '') + t.trim());
+    };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
+    recRef.current = rec; rec.start(); setListening(true);
+  };
+
+  // a nyers döntésből végleges terv: a /api/rephrase a helyi claude-dal fogalmaz
+  const generate = async (r: Row) => {
+    if (!dict.trim() || genBusy) return;
+    recRef.current?.stop();
+    setGenBusy(true); setGenErr(null);
+    try {
+      const res = await fetch('/api/rephrase', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+        body: JSON.stringify({
+          senderName: r.src.name, senderEmail: r.src.email,
+          subject: r.src.subject ?? null, gist: r.src.gist ?? null,
+          thread: (r.src.thread ?? []).map((m) => `${m.at.slice(0, 10)} · ${m.dir === 'in' ? 'bejövő' : 'kimenő'} · ${m.from}: ${m.gist}`),
+          drafts: r.drafts.map((d) => ({ label: d.label, subject: d.subject, body: d.body })),
+          instruction: dict,
+        }),
+      });
+      const j = await res.json() as { ok: boolean; subject?: string; body?: string; error?: string };
+      if (!j.ok || !j.body) throw new Error(j.error || `hiba (${res.status})`);
+      setGen((g) => ({ ...g, [r.sel]: { label: 'A döntésed szerint', subject: j.subject ?? '', body: j.body ?? '' } }));
+      setDict('');
+      logChoice(r.sel, 'titkárnő-megfogalmazás');
+    } catch (e) {
+      setGenErr(e instanceof Error ? e.message : String(e));
+    } finally { setGenBusy(false); }
+  };
+
   const nowIso = () => new Date().toISOString();
   const ageDays = (r: Row): number | null => {
     const t = ymdTs(r.src.waitingSince ?? r.src.date);
@@ -186,6 +279,36 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
             )}
             {/* kinek megy a válasz - másolás előtt ellenőrizhető */}
             <div className="po-tocc">Címzett: <strong>{r.src.name}</strong> &lt;{r.src.email}&gt;{(r.src.cc?.length ?? 0) > 0 && <> · Másolat: {r.src.cc?.join(', ')}</>}</div>
+            {/* TITKÁRNŐ: felolvasás + nyers döntés diktálása -> végleges levél a stílus szerint.
+                MINDEN lenyitott levélnél elérhető (a felhasználó rendszer-szintű diktálót
+                használ - neki csak egy szövegmező kell), nem csak a titkárnő-sorban */}
+            {lane !== 'waiting' && (
+              <div className="po-sec">
+                <div className="po-sec-h">
+                  <span className="l">🗣 Titkárnő</span>
+                  <button type="button" className="btn" title="A levél felolvasása magyarul (a böngésző ingyenes hangjával): feladó, tárgy, összefoglaló, a szál vége" onClick={() => speak(r)}>{speaking ? '⏹ Állj' : '🔊 Felolvasás'}</button>
+                </div>
+                <div className="po-sec-hint">Mondd vagy írd le NYERSEN, mit döntöttél - ez csak vázlat, nem ez megy ki. A végleges levelet a stílusod és a lenti tervek hangneme szerint fogalmazom meg belőle.</div>
+                <textarea className="po-dict" rows={3} value={dict} onChange={(e) => setDict(e.target.value)}
+                  placeholder="pl. jó a szerda de csak délután, és kérdezd meg hogy online lehet-e; a határidőt toljuk péntekre…" />
+                <div className="po-dictbtns">
+                  {sttOk && <button type="button" className={`btn${listening ? ' btn--ink' : ''}`} title="Diktálás a mikrofonnal (magyarul) - a szöveg a fenti mezőbe kerül" onClick={toggleListen}>{listening ? '⏹ Diktálás vége' : '🎤 Diktálás'}</button>}
+                  <button type="button" className="btn btn--ink" disabled={genBusy || !dict.trim()} title="A nyers döntésből végleges levél készül - a kész terv itt jelenik meg, onnan másolható vagy a levélíróba nyitható" onClick={() => generate(r)}>{genBusy ? '⏳ Fogalmazás… (fél perc)' : '✍ Fogalmazd meg a választ'}</button>
+                </div>
+                {genErr && <div className="po-note">⚠ {genErr}</div>}
+              </div>
+            )}
+            {gen[r.sel] && lane !== 'waiting' && (
+              <div className="po-draft po-draft--gen">
+                <div className="po-draft-h">
+                  <span className="l">📝 {gen[r.sel].label}</span>
+                  <span className="sp" />
+                  <button type="button" className="btn" onClick={() => copyDraft(`${r.sel}-gen`, r.sel, gen[r.sel])}>{copied === `${r.sel}-gen` ? '✓ Másolva' : '⧉ Másolás'}</button>
+                  <button type="button" className="btn btn--ink" title="Megnyitás a levélíróban: címzettek és tárgy előtöltve, ott küldhető vagy finomítható" onClick={() => onReply(r.sel, gen[r.sel], r.drafts)}>✉ Levélíróba</button>
+                </div>
+                <div className="po-draft-b">{gen[r.sel].body}</div>
+              </div>
+            )}
             {r.src.draftMode === 'ping' && <div className="po-note">Követő tervek: a követési határidőig nem érkezett válasz - az alábbiak udvarias emlékeztetők.</div>}
             {stale && <div className="po-note">⚠ A tervek egy korábbi levélhez készültek, azóta új bejövő érkezett. A következő szinkron frissíti őket - a szál tartalmát ellenőrizd küldés előtt.</div>}
             {!r.botMade && lane !== 'waiting' && <div className="po-note">Gyors tervek a levélből készült feladat adataiból - a személyre szabott terveket a következő szinkron írja meg a levél teljes szövege alapján.</div>}
@@ -255,9 +378,9 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
         {lanes.waiting.length > 0 && <span className="pill" title="Válaszoltam, az ő válaszukra várok">{lanes.waiting.length} rájuk várok</span>}
         {lanes.snoozed.length > 0 && <span className="pill" title="Halasztva - a felbukkanási napon visszatér">{lanes.snoozed.length} halasztva</span>}
         <span className="sp" />
-        {pendingAll.length > 0 && !decide && <button type="button" className="btn" title="Tételenként egy döntés: válasz / halasztás / lezárás - semmi nem marad függőben" onClick={() => { setDecide(true); setDecideSkip(new Set()); setAllOpen(false); }}>▶ Döntés-sor</button>}
+        {pendingAll.length > 0 && !decide && <button type="button" className="btn" title="Tételenként: felolvasás, összegzés, diktált döntés, kész válasz - és minden levélről döntés születik" onClick={() => { setDecide(true); setDecideSkip(new Set()); setAllOpen(false); }}>🗣 Titkárnő</button>}
         {pendingAll.length > 0 && !decide && <button type="button" className="btn" title="Minden válaszra váró tétel terveivel együtt, egy listában végigdolgozható" onClick={() => setAllOpen((v) => !v)}>{allOpen ? '▴ Összecsukás' : '▤ Sorban mind'}</button>}
-        {decide && <button type="button" className="btn" onClick={() => setDecide(false)}>✕ Kilépés a döntés-sorból</button>}
+        {decide && <button type="button" className="btn" onClick={() => { setDecide(false); window.speechSynthesis?.cancel(); setSpeaking(false); }}>✕ Kilépés a titkárnő-módból</button>}
       </div>
       {decide ? (
         <div className="po-list">
@@ -265,7 +388,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
             <div className="cc-empty"><span>Kész! Minden tételről döntöttél{decideSkip.size > 0 ? ` (${decideSkip.size} átugorva)` : ''}.</span></div>
           ) : (
             <>
-              <div className="po-decide-h">Döntés-sor · még {decideQueue.length} tétel{decideSkip.size > 0 ? ` (+${decideSkip.size} átugorva)` : ''}</div>
+              <div className="po-decide-h">🗣 Titkárnő · még {decideQueue.length} tétel{decideSkip.size > 0 ? ` (+${decideSkip.size} átugorva)` : ''}</div>
               {renderRow(decideQueue[0], laneOf(decideQueue[0]), true)}
               <div className="po-actrow">
                 <button type="button" className="btn" onClick={() => setDecideSkip((s) => new Set([...s, decideQueue[0].sel]))}>↷ Átugrás</button>

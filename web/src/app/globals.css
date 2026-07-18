@@ -9,6 +9,10 @@
 
   --paper: #f4f4f1;
   --paper-2: #ecece7;
+  /* --bg = a háttérszín aliasa (több elem így hivatkozik rá); var(--paper)-t követi,
+     ezért dark módban is helyes (a --paper felülíródik) - eddig definiálatlan volt, így
+     pl. a .po-undotoast szövege érvénytelen színt kapott = láthatatlan volt */
+  --bg: var(--paper);
   --card: #ffffff;
   --ink: #15171a;
   --ink-2: #6b6e73;

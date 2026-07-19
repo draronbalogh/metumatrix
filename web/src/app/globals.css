@@ -1287,9 +1287,17 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
 .doc-links { order: 2; border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 12px 14px 14px; }
 .dl-title { font-weight: 800; font-size: .95rem; color: var(--ink); }
 .dl-group { margin-top: 10px; }
-.dl-h { font-size: .62rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--brand-text); margin-bottom: 3px; }
+.dl-h { font-size: .62rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--brand-text); margin-bottom: 3px; display: flex; align-items: center; gap: 8px; }
+/* „Napi indítás" ikon a Rendszerek fejléc mellett: egy kattintás -> a napi felületek */
+.dl-openall { flex: none; border: 1px solid color-mix(in srgb, var(--hot) 45%, var(--line)); background: var(--hot-100); border-radius: 999px; padding: 1px 8px; font-size: .82rem; line-height: 1.4; cursor: pointer; }
+.dl-openall:hover { background: color-mix(in srgb, var(--hot) 22%, transparent); }
 .dl-link { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 8px; color: var(--ink); text-decoration: none; }
 .dl-link:hover { background: var(--brand-100); }
+/* a Foglalás/kontakt tétel gomb: nézzen ki pontosan úgy, mint egy link-sor */
+button.dl-link { width: 100%; text-align: left; font: inherit; -webkit-appearance: none; appearance: none; background: transparent; border: 0; cursor: pointer; }
+.dl-copied { font-style: normal; font-weight: 700; color: var(--g0); font-size: .72rem; }
+/* a 🚀 Napi indítás blokkolás-üzenete (engedélyezni kell a felugró ablakokat) */
+.dl-note { font-size: .72rem; line-height: 1.4; color: var(--hot); background: var(--hot-100); border: 1px solid color-mix(in srgb, var(--hot) 35%, var(--line)); border-radius: 8px; padding: 6px 9px; margin: 6px 0; }
 .dl-ic { width: 20px; text-align: center; flex: none; }
 .dl-body { min-width: 0; display: flex; flex-direction: column; }
 .dl-t { font-size: .8rem; font-weight: 700; line-height: 1.25; }
@@ -1303,6 +1311,7 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
   .dl-group { margin-top: 8px; }
   .dl-list { display: flex; flex-wrap: wrap; gap: 6px; }
   .dl-link { border: 1px solid var(--line); background: var(--paper); padding: 6px 10px; }
+  button.dl-link { border: 1px solid var(--line); background: var(--paper); } /* a copy-gomb is pill legyen mobilon */
   .dl-d, .dl-open { display: none; }
 }
 /* A ragados savok teljes szelessegben takarjanak (ne latsszon at a gorgo tartalom a szeleken) */
@@ -1684,10 +1693,33 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .po-sync-x:hover { color: var(--ink); }
 .po-mini { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--card); margin-bottom: 6px; font-size: .84rem; }
 .po-mini--draft { border-left: 4px solid var(--g0); }
+/* hajnali ÜTEMEZETT küldés: várakozó állapot (nem „aktív/piros"), visszafogott brand-szín + óra */
+.po-brief .pill--sched { background: color-mix(in srgb, var(--brand) 16%, transparent); color: var(--brand-text); }
+.btn--sched { border-color: color-mix(in srgb, var(--brand) 40%, var(--line)); color: var(--brand-text); background: color-mix(in srgb, var(--brand) 8%, var(--card)); }
+.btn--sched:hover { background: color-mix(in srgb, var(--brand) 16%, var(--card)); }
+.po-fold--sched { border-top: 1px solid color-mix(in srgb, var(--brand) 40%, var(--line)); padding-top: 8px; }
+.po-sched-h { font-size: .78rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--brand-text); padding: 4px 2px; }
+.po-mini--sched { border-left: 4px solid var(--brand); }
+.po-schedtime { flex: none; font-size: .74rem; font-weight: 700; color: var(--brand-text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.po-schedtime.is-over { color: var(--hot); }
 .po-mini .d { flex: none; font-size: .72rem; font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .po-mini .n { flex: none; font-weight: 700; }
 .po-mini .s { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
 .po-mini .btn { padding: 3px 9px; font-size: .74rem; }
+/* kész válasz TELJES szövege kinyitva (mobil olvasás): a mini-sor alá simuló, olvasható panel */
+.po-mini--draft.is-read { margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.po-readbody { border: 1px solid var(--line); border-top: 0; border-left: 4px solid var(--g0); border-radius: 0 0 9px 9px; background: var(--card); margin: 0 0 6px; }
+.po-readbody-h { display: flex; flex-wrap: wrap; gap: 2px 12px; align-items: baseline; padding: 9px 12px 0; }
+.po-readbody-h .s2 { font-weight: 700; font-size: .82rem; }
+.po-readbody-h .to { font-size: .74rem; color: var(--ink-2); }
+.po-readbody-f { display: flex; gap: 8px; padding: 4px 12px 10px; flex-wrap: wrap; }
+.po-readbody-f .btn { padding: 3px 10px; font-size: .74rem; }
+/* kész válasz helyben szerkesztése (tárgy + törzs) */
+.po-readedit { padding: 9px 12px 4px; display: flex; flex-direction: column; gap: 3px; }
+.po-readedit-l { font-size: .68rem; font-weight: 800; color: var(--ink-2); text-transform: uppercase; letter-spacing: .05em; margin-top: 5px; }
+.po-readedit-s { border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; font: inherit; font-size: .84rem; color: var(--ink); background: var(--bg); }
+.po-readedit-b { border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; font: inherit; font-size: .85rem; line-height: 1.5; color: var(--ink); background: var(--bg); resize: vertical; }
+.po-readedit-s:focus, .po-readedit-b:focus { outline: none; border-color: var(--g0); box-shadow: 0 0 0 2px color-mix(in srgb, var(--g0) 22%, transparent); }
 .po-date { border: 1px solid var(--line); border-radius: 7px; padding: 2px 6px; font: inherit; font-size: .74rem; color: var(--ink); background: var(--card); }
 /* brífing-sáv: sávonkénti darabszámok + Döntés-sor / Sorban módváltók */
 /* NEM ragadós: korábban sticky volt, és görgetéskor az alcím átütött rajta */
@@ -1700,6 +1732,13 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .po-decide-h { font-size: .78rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 4px; }
 /* címzett-sor a tervek felett: kinek megy a válasz - másolás előtt ellenőrizhető */
 .po-tocc { font-size: .76rem; color: var(--ink-2); padding: 5px 10px; border: 1px dashed var(--line); border-radius: 8px; background: var(--card); }
+/* melléklet-lista a lenyitott levélnél / a titkárnő levél-lépésén - megnyitható gombok */
+.po-attach { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: .76rem; color: var(--ink-2); padding: 2px 2px; }
+.po-attach-h { font-weight: 700; flex: none; }
+.po-attach-i { font: inherit; font-size: .76rem; font-weight: 600; color: var(--g1); background: color-mix(in srgb, var(--g1) 9%, transparent); border: 1px solid color-mix(in srgb, var(--g1) 28%, var(--line)); border-radius: 7px; padding: 2px 9px; cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.po-attach-i:hover { background: color-mix(in srgb, var(--g1) 16%, transparent); text-decoration: underline; }
+.po-attach-i.is-off { color: var(--muted); background: none; cursor: default; border-style: dashed; }
+.po-attach-i.is-off:hover { text-decoration: none; }
 /* feladó-szabály sor (Screener): egy feladóról egyszer döntünk */
 .po-screen { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
 .po-screen .btn { padding: 3px 9px; font-size: .74rem; }
@@ -1789,6 +1828,21 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .agc-meta .m.doing { color: var(--g1); }
 .agc-meta .m.hot { color: var(--hot); }
 .agc-meta .m.ev { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+/* a levél-jelvény kattintható a kártyán (ugrás a Postába) - a span-stílust örökli */
+.agc-meta .mbtn { background: none; border: 0; padding: 0; margin: 0; font: inherit; font-weight: 600; line-height: inherit; white-space: nowrap; cursor: pointer; }
+.agc-meta .mbtn:hover { text-decoration: underline; }
+/* Legfontosabbak: tömör, kiemelt sáv a Feladatok tetején (levél-ügyek + közeli határidő + magas) */
+.ag-top { margin-top: 4px; }
+.ag-top-h { color: var(--hot); }
+.ag-top-h::before { background: var(--hot); }
+.ag-toplist { display: flex; flex-direction: column; gap: 6px; }
+.ag-toprow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; width: 100%; text-align: left; padding: 8px 12px; border: 1px solid var(--line); border-left: 3px solid var(--brand); border-radius: 9px; background: var(--card); font: inherit; font-size: .85rem; color: var(--ink); cursor: pointer; }
+.ag-toprow:hover { border-color: color-mix(in srgb, var(--hot) 40%, var(--line)); background: color-mix(in srgb, var(--hot) 5%, var(--card)); }
+.ag-toprow.prio-high { border-left-color: var(--hot); }
+.ag-toprow .tt { flex: 1; min-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.ag-toprow .b { flex: none; font-size: .72rem; font-weight: 700; color: var(--ink-2); white-space: nowrap; }
+.ag-toprow .b.hot, .ag-toprow .b.prio { color: var(--hot); }
+.ag-toprow .b.warn { color: color-mix(in srgb, var(--yellow-deep) 75%, var(--ink)); }
 /* prioritas: bal szinsav - piros CSAK a magas; a tobbi visszafogott */
 .agc.prio-high { border-left: 3px solid var(--hot); }
 .agc.prio-normal { border-left: 3px solid var(--line-2); }

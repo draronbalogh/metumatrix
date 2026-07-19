@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Agenda, AgendaSource, Letter, ReplyDraft, ThreadMsg, addDaysYmd, addWorkdaysYmd, draftsStale, dueTs, duePrecise, fmtDayHu, fmtDueHu, nextMondayYmd, tomorrowYmd, withOutEntry } from '@/data/agenda';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Agenda, AgendaAttachment, AgendaSource, Letter, ReplyDraft, ThreadMsg, addDaysYmd, addWorkdaysYmd, draftsStale, dueTs, duePrecise, fmtDayHu, fmtDueHu, nextMondayYmd, taskSteps, tomorrowYmd, withOutEntry } from '@/data/agenda';
 import { SenderRule, SENDER_RULE_LABEL } from '@/data/people';
 import { parseStyleBank, replyVariants, StyleBank } from '@/lib/replies';
+import { suggestTemplatesFor, autoFill, TopicCtx } from '@/lib/topics';
 import { editHeaders } from '@/lib/editkey';
 import PageHead from './PageHead';
 
@@ -44,6 +45,8 @@ interface Props {
   onSaveLetter?: (l: Letter) => void;   // a titkárnő végleges levele draftként tárolódik
   onDeleteLetter?: (id: string) => void; // újrafogalmazásnál a régi példány cserélődik
   onRefresh?: () => void;                // a szerver-állapot azonnali behúzása (pl. szinkron után)
+  focusSel?: string | null;              // a Feladat/Esemény kártyáról idehozott levél - kinyitjuk + odagörgetünk
+  onFocusConsumed?: () => void;          // a fókusz feldolgozva (a szülő nullázhatja)
 }
 
 const fmtD = (d?: string | null): string => (d && d.length >= 10 ? `${d.slice(5, 7)}. ${Number(d.slice(8, 10))}.` : '');
@@ -52,7 +55,7 @@ const ymdTs = (d?: string | null): number | null =>
 
 const DAY = 86400000;
 
-export default function PostaView({ agenda, footer, senderRules, onSenderRule, onReply, onState, undo, onUndo, onOpenCard, onSaveLetter, onDeleteLetter, onRefresh }: Props) {
+export default function PostaView({ agenda, footer, senderRules, onSenderRule, onReply, onState, undo, onUndo, onOpenCard, onSaveLetter, onDeleteLetter, onRefresh, focusSel, onFocusConsumed }: Props) {
   const [bank, setBank] = useState<StyleBank | null>(null);
   useEffect(() => {
     fetch('/api/style', { headers: editHeaders() }).then((r) => r.json())
@@ -67,6 +70,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   const [allOpen, setAllOpen] = useState(false);          // Sorban mód: minden terv lenyitva
   const [decide, setDecide] = useState(false);            // Titkárnő-mód: tételenként egy döntés
   const [decideSkip, setDecideSkip] = useState<Set<string>>(new Set());
+  const [titkarFocus, setTitkarFocus] = useState<string | null>(null); // „Vissza a titkárnőnek": ez a levél kerül a sor elejére
   // Titkárnő: hang vagy írás mód (null = mód-választó képernyő), lépés-gépezet,
   // a nyers döntés + a belőle megfogalmazott végleges terv tételenként
   const [titkarMode, setTitkarMode] = useState<'voice' | 'write' | null>(null);
@@ -140,6 +144,21 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     };
   }, [rows, now]);
 
+  // a Feladat/Esemény kártyáról idehozott levél (focusSel): a megfelelő sávban kinyitjuk
+  // a sort (drafted esetén a Másolható blokkot + az olvasópanelt), és odagörgetünk
+  useEffect(() => {
+    if (!focusSel) return;
+    const r = rows.find((x) => x.sel === focusSel);
+    const st = r?.src.status ?? 'pending';
+    if (st === 'drafted') { setShowDrafted(true); setReadDraft(focusSel); }
+    else { setOpen(focusSel); }
+    const id = window.setTimeout(() => {
+      document.getElementById(`po-${focusSel}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      onFocusConsumed?.();
+    }, 160);
+    return () => window.clearTimeout(id);
+  }, [focusSel]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // kártya-sel → a hozzá mentett LEGUTÓBBI draft levél (a másolható blokk ebből másol)
   const draftBySel = useMemo(() => {
     const m = new Map<string, Letter>();
@@ -153,6 +172,8 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   }, [agenda]);
   const draftLetters = useMemo(() => new Set(draftBySel.keys()), [draftBySel]);
   const [showDrafted, setShowDrafted] = useState(true); // a másolható blokk alapból NYITVA (aktív teendő)
+  const [readDraft, setReadDraft] = useState<string | null>(null); // melyik kész válasz TELJES szövege van kinyitva (mobil olvasás)
+  const [editDraft, setEditDraft] = useState<{ sel: string; subject: string; body: string } | null>(null); // kész válasz helyben szerkesztése
   // Outlook-vázlatok készítése a klasszikus Outlookon át (COM), a nem-emelt dev-szerverről
   const [pushBusy, setPushBusy] = useState(false);
   const [pushMsg, setPushMsg] = useState<string | null>(null);
@@ -168,6 +189,25 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     } catch {
       setPushMsg('⚠ Nem sikerült elindítani a vázlatkészítést (fut a dev-szerver és a klasszikus Outlook?).');
     } finally { setPushBusy(false); }
+  };
+  // EGY kártya piszkozatként az Outlookba (a kártyánkénti „Outlookba" gomb) - küldés NÉLKÜL
+  const [draftingSel, setDraftingSel] = useState<string | null>(null);
+  const pushDraftOne = async (r: Row) => {
+    if (draftingSel) return;
+    setDraftingSel(r.sel); setPushMsg(`Piszkozat készítése az Outlookban: ${r.src.name}…`);
+    try {
+      const res = await fetch('/api/outlook-drafts', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+        body: JSON.stringify({ draftId: r.sel.slice(2) }),
+      });
+      const j = await res.json() as { ok: boolean; made?: number | null; skipped?: number | null; comError?: boolean };
+      if (j.comError) setPushMsg('⚠ A klasszikus Outlook nem elérhető COM-on. Nyisd meg (Go to classic Outlook), és próbáld újra.');
+      else if (j.made && j.made > 0) setPushMsg(`✓ Piszkozat kész az Outlookban: ${r.src.name}. Nézd át és küldd el ott, majd itt jelöld „Elküldtem".`);
+      else if (j.skipped && j.skipped > 0) setPushMsg(`✓ ${r.src.name}: már volt piszkozat az Outlookban (nem duplikáltam).`);
+      else setPushMsg(`⚠ ${r.src.name}: nem készült piszkozat (nincs kész levél vagy eredeti a Beérkezettben?). Nézd meg az Outlookot.`);
+    } catch {
+      setPushMsg('⚠ Nem sikerült elindítani a piszkozat-készítést (fut a dev-szerver és a klasszikus Outlook?).');
+    } finally { setDraftingSel(null); }
   };
   // egy konkrét kártya AZONNALI elküldése az Outlookon át (megerősítéssel; nem vonható vissza)
   const [sendingSel, setSendingSel] = useState<string | null>(null);
@@ -219,21 +259,43 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   const [syncPhase, setSyncPhase] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
   const [syncElapsed, setSyncElapsed] = useState(0);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const [syncScope, setSyncScope] = useState<'today' | 'yesterday'>('today'); // melyik nap fut épp
   const syncStartRef = useRef(0);   // kliens-idő: az eltelt idő kijelzéséhez
   const syncSrvRef = useRef(0);     // szerver-idő: a befejezés (vízjel) összevetéséhez
   const mmss = (s: number): string => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-  const runSync = async () => {
+  const runSync = async (scope: 'today' | 'yesterday' = 'today') => {
     if (syncPhase === 'running') return;
+    setSyncScope(scope);
     setSyncPhase('running'); setSyncMsg(null); setSyncElapsed(0);
     syncStartRef.current = Date.now(); syncSrvRef.current = Date.now();
     try {
-      const res = await fetch('/api/agenda-sync', { method: 'POST', headers: editHeaders() });
+      const res = await fetch('/api/agenda-sync', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+        body: JSON.stringify({ scope }),
+      });
       const j = await res.json() as { ok: boolean; started?: boolean; running?: boolean; startedAtMs?: number; msg?: string };
       if (typeof j.startedAtMs === 'number') syncSrvRef.current = j.startedAtMs;
       if (!j.ok && !j.running) { setSyncPhase('error'); setSyncMsg(`⚠ ${j.msg ?? 'Nem sikerült elindítani a beolvasást.'}`); }
       // ok/started VAGY „már fut" -> a polling-effekt figyeli a befejezést
     } catch { setSyncPhase('error'); setSyncMsg('⚠ Nem sikerült elindítani a beolvasást (fut a dev-szerver?).'); }
   };
+  // BELÉPÉSKOR/visszatéréskor: a beolvasás KÜLÖN helyi feladatként fut, a menüváltás NEM
+  // állítja meg - csak a folyamatjelző él a Posta nézetben. Ezért ha a szerver szerint épp
+  // fut egy beolvasás (lock él), folytassuk a jelzőt onnan, ahol tart (túléli a menüváltást).
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/agenda-sync', { cache: 'no-store', headers: editHeaders() })
+      .then((r) => r.json())
+      .then((s: { running?: boolean; elapsedSec?: number }) => {
+        if (cancelled || !s.running) return;
+        syncStartRef.current = Date.now() - (s.elapsedSec ?? 0) * 1000;
+        syncSrvRef.current = syncStartRef.current;
+        setSyncElapsed(s.elapsedSec ?? 0);
+        setSyncPhase('running');
+      })
+      .catch(() => { /* átmeneti hiba: nem folytatjuk a jelzőt */ });
+    return () => { cancelled = true; };
+  }, []);
   // amíg fut: 1 mp-enként az eltelt idő, 4 mp-enként állapot-lekérdezés; befejezéskor eredmény + frissítés
   useEffect(() => {
     if (syncPhase !== 'running') return;
@@ -260,9 +322,59 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   }, [syncPhase, onRefresh]);
   const pendingAll = useMemo(() => [...lanes.returned, ...lanes.deadline, ...lanes.awaiting], [lanes]);
   const urgent = lanes.deadline.filter((r) => r.duePrec && r.dueKey !== null && r.dueKey <= now + 2 * DAY).length;
+  // a kész válaszok kettéválnak: ÜTEMEZETT (hajnalra felfegyverezve) vs. sima „másolható"
+  const scheduledDrafts = lanes.drafted.filter((r) => (r.src.scheduledFor ?? '').trim());
+  const plainDrafts = lanes.drafted.filter((r) => !(r.src.scheduledFor ?? '').trim());
+
+  // HAJNALI ÜTEMEZETT KÜLDÉS: a kész válaszokat felfegyverezzük a következő HÉTKÖZNAP
+  // 05:40-06:40 ablakára, emailenként szórt random időpontra (helyi idő). A tényleges
+  // küldést a helyi hajnali feladat végzi (valódi .Send()); a 07:00 szinkron igazolja.
+  const p2 = (n: number) => String(n).padStart(2, '0');
+  const localIso = (d: Date): string => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}T${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
+  const nextWeekdayDawn = (): Date => {
+    const d = new Date(); d.setDate(d.getDate() + 1);
+    while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1); // hétvégét átugorjuk
+    d.setHours(5, 40, 0, 0); return d;
+  };
+  // N szórt random időpont a 60 perces ablakban, jitteres slotokkal (nem csúszik kettő egy percbe)
+  const dawnTimes = (n: number): Date[] => {
+    const base = nextWeekdayDawn(); const slot = 60 / Math.max(1, n); const out: Date[] = [];
+    for (let i = 0; i < n; i++) {
+      const t = new Date(base);
+      t.setMinutes(t.getMinutes() + Math.floor(i * slot + Math.random() * slot * 0.85));
+      t.setSeconds(Math.floor(Math.random() * 60));
+      out.push(t);
+    }
+    return out;
+  };
+  const fmtDawn = (iso?: string | null): string => {
+    if (!iso || iso.length < 16) return '';
+    const mon = ['jan.', 'febr.', 'márc.', 'ápr.', 'máj.', 'jún.', 'júl.', 'aug.', 'szept.', 'okt.', 'nov.', 'dec.'][Number(iso.slice(5, 7)) - 1] ?? '';
+    return `${mon} ${Number(iso.slice(8, 10))}. ${iso.slice(11, 16)}`;
+  };
+  const scheduleAllDawn = () => {
+    const targets = plainDrafts;
+    if (targets.length === 0) return;
+    const times = dawnTimes(targets.length);
+    targets.forEach((r, i) => onState(r.sel, { scheduledFor: localIso(times[i]) }, `Ütemezve: ${fmtDawn(localIso(times[i]))}`));
+    setPushMsg(`✓ ${targets.length} válasz ütemezve a következő hétköznap hajnalra (05:40–06:40, szórtan). A gép + Outlook maradjon bekapcsolva; a 07:00 szinkron igazolja a küldést.`);
+  };
+  const scheduleOneDawn = (r: Row) => {
+    // egy random időpont az ablakban, a már ütemezettektől min. 3 percre
+    const used = scheduledDrafts.map((x) => x.src.scheduledFor).filter(Boolean).map((s) => Date.parse(s as string));
+    const base = nextWeekdayDawn(); let t = new Date(base); let tries = 0;
+    do { t = new Date(base); t.setMinutes(t.getMinutes() + Math.floor(Math.random() * 60)); t.setSeconds(Math.floor(Math.random() * 60)); tries++; }
+    while (tries < 25 && used.some((u) => Math.abs(u - t.getTime()) < 3 * 60000));
+    onState(r.sel, { scheduledFor: localIso(t) }, `Ütemezve: ${fmtDawn(localIso(t))}`);
+  };
+  const unschedule = (r: Row) => onState(r.sel, { scheduledFor: null }, 'Ütemezés visszavonva');
   // gyűjtő-mód: akihez már van NYERS jegyzet, az kikerül a wizard-sorból (kötegelt megfogalmazásra vár)
   const noted = useMemo(() => pendingAll.filter((r) => (r.src.rawReply ?? '').trim()), [pendingAll]);
-  const decideQueue = pendingAll.filter((r) => !decideSkip.has(r.sel) && !(r.src.rawReply ?? '').trim());
+  const decideQueue0 = pendingAll.filter((r) => !decideSkip.has(r.sel) && !(r.src.rawReply ?? '').trim());
+  // ha egy KÉSZ választ visszaküldtünk a Titkárnőnek, az a levél kerül a sor elejére
+  const decideQueue = titkarFocus
+    ? [...decideQueue0.filter((r) => r.sel === titkarFocus), ...decideQueue0.filter((r) => r.sel !== titkarFocus)]
+    : decideQueue0;
   // a wizard aktuális tétele - tételváltáskor minden lépés-állapot nullázódik,
   // és az 1/3 (levél) képernyő jön (ha már van kész terv, egyből a 3/3)
   const curSel = decide ? (decideQueue[0]?.sel ?? null) : null;
@@ -271,6 +383,20 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     setDict(''); setQa(''); setPendingQ(null); setGenErr(null);
     setWizStep(gen[curSel] ? 'final' : 'letter');
   }, [curSel]); // eslint-disable-line react-hooks/exhaustive-deps
+  // ADATVÉDELEM: a Titkárnőben BE NEM KÜLDÖTT nyers döntést (dict) ne veszítsük el, ha
+  // menüt váltasz (a nézet leválik). Kilépéskor jegyzetként (rawReply) mentjük az aktuális
+  // levélhez - így a „Megfogalmazásra vár" blokkban megmarad, és később folytatható.
+  const dictRef = useRef(''); dictRef.current = dict;
+  const curSelRef = useRef<string | null>(null); curSelRef.current = curSel;
+  const decideRef = useRef(false); decideRef.current = decide;
+  const pendingQRef = useRef<string | null>(null); pendingQRef.current = pendingQ;
+  const genRef = useRef(gen); genRef.current = gen;
+  useEffect(() => () => {
+    const sel = curSelRef.current;
+    if (decideRef.current && sel && dictRef.current.trim() && !pendingQRef.current && !genRef.current[sel]) {
+      onState(sel, { rawReply: dictRef.current.trim() }, 'Nyers jegyzet elmentve (kilépéskor)');
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // a válasz-lépésre érve a kurzor magától a mezőbe kerül (Wispr Flow ide diktál)
   useEffect(() => {
     if (!decide || wizStep !== 'answer') return;
@@ -303,6 +429,35 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
       setCopied(key);
       window.setTimeout(() => setCopied((c) => (c === key ? null : c)), 1800);
     } catch { /* ignore */ }
+  };
+
+  // MELLÉKLET megnyitása: a route csak x-edit-key FEJLÉCcel ad fájlt (a kulcs sose megy
+  // URL-be), ezért fetch-eljük, blobból töltjük le - így megnyithatod, amit a bot archivált
+  const openAttachment = async (a: AgendaAttachment) => {
+    if (!a.day) return;
+    try {
+      const res = await fetch(`/api/attachment?day=${encodeURIComponent(a.day)}&name=${encodeURIComponent(a.name)}`, { headers: editHeaders() });
+      if (!res.ok) { setPushMsg(`⚠ A melléklet nem nyitható meg: ${a.name} (lehet, hogy még nincs archiválva a következő szinkronig).`); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url; link.download = a.name;
+      document.body.appendChild(link); link.click(); link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 15000);
+    } catch { setPushMsg('⚠ Nem sikerült megnyitni a mellékletet.'); }
+  };
+  // a kártya mellékletei megnyitható listaként (a bot tölti fel a source.attachments-et)
+  const attachList = (src: AgendaSource) => {
+    const at = src.attachments;
+    if (!at?.length) return null;
+    return (
+      <div className="po-attach">
+        <span className="po-attach-h">📎 Melléklet{at.length > 1 ? `ek (${at.length})` : ''}:</span>
+        {at.map((a, i) => (a.day
+          ? <button key={i} type="button" className="po-attach-i" title="Letöltés / megnyitás" onClick={() => openAttachment(a)}>{a.name}</button>
+          : <span key={i} className="po-attach-i is-off" title={a.note || 'nincs archiválva'}>{a.name}</span>))}
+      </div>
+    );
   };
 
   // beszéd-réteg (ingyenes böngésző-TTS, hu-HU) - a seq-számláló kiszűri a cancel
@@ -346,6 +501,46 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     return () => { window.clearTimeout(id); stopSpeak(); };
   }, [decide, titkarMode, wizStep, curSel]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // a megfogalmazónak átadott PLUSZ kontextus: a kártya (feladat/esemény) konkrét
+  // tartalma, az illeszkedő levéltár-sablonok, és a topic-kitöltéshez a kártya ctx-e.
+  // Ezekből ír TELJES levelet a diktált IRÁNY alapján (nem a nyers szavakból).
+  const topicCtxOf = (r: Row): TopicCtx => {
+    const id = r.sel.slice(2);
+    if (r.sel[0] === 'e') {
+      const e = agenda.events.find((x) => x.id === id);
+      return { title: e?.title ?? r.title, when: e?.when ?? null, place: e?.place ?? null, due: null };
+    }
+    const t = agenda.tasks.find((x) => x.id === id);
+    return { title: t?.title ?? r.title, when: null, place: null, due: t?.dueDate ?? t?.due ?? null };
+  };
+  const cardCtx = (r: Row): { kind: string; lines: string[] } => {
+    const id = r.sel.slice(2);
+    if (r.sel[0] === 't') {
+      const t = agenda.tasks.find((x) => x.id === id);
+      if (!t) return { kind: 'feladat', lines: [] };
+      const openSteps = taskSteps(t).filter((s) => !s.done).map((s) => s.text.trim()).filter(Boolean);
+      return { kind: 'feladat', lines: [
+        t.summary ? `Leírás: ${t.summary}` : '',
+        t.dueDate ? `Határidő: ${t.dueDate}` : (t.due ? `Határidő: ${t.due}` : ''),
+        openSteps.length ? `Nyitott lépések: ${openSteps.slice(0, 6).join(' | ')}` : '',
+        t.people?.length ? `Résztvevők: ${t.people.join(', ')}` : '',
+      ].filter(Boolean) };
+    }
+    const e = agenda.events.find((x) => x.id === id);
+    if (!e) return { kind: 'esemény', lines: [] };
+    return { kind: 'esemény', lines: [
+      e.when ? `Időpont: ${e.when}` : (e.day ? `Nap: ${e.day}${e.dayEnd ? ` - ${e.dayEnd}` : ''}` : ''),
+      e.place ? `Helyszín: ${e.place}` : '',
+      e.note ? `Jegyzet: ${e.note}` : '',
+      e.people?.length ? `Résztvevők: ${e.people.join(', ')}` : '',
+    ].filter(Boolean) };
+  };
+  const tplsFor = (r: Row): { label: string; group: string; subject: string; body: string }[] => {
+    const ctx = topicCtxOf(r);
+    return suggestTemplatesFor(`${r.title} ${r.src.subject ?? ''}`, 2)
+      .map((t) => ({ label: t.label, group: t.group, subject: autoFill(t.subject(ctx)), body: autoFill(t.body(ctx)) }));
+  };
+
   // a nyers döntésből végleges terv: a /api/rephrase a helyi claude-dal fogalmaz.
   // Kétfázisú: az 1. körben a modell EGY tisztázó kérdést tehet fel (pendingQ),
   // a 2. kör a kérdés + válasz (vagy "nem tudom") birtokában mindig levelet ír.
@@ -360,6 +555,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
           subject: r.src.subject ?? null, gist: r.src.gist ?? null,
           thread: (r.src.thread ?? []).map((m) => `${m.at.slice(0, 10)} · ${m.dir === 'in' ? 'bejövő' : 'kimenő'} · ${m.from}: ${m.gist}`),
           drafts: r.drafts.map((d) => ({ label: d.label, subject: d.subject, body: d.body })),
+          card: cardCtx(r), templates: tplsFor(r),
           instruction: dict,
           askAllowed: answer === undefined && !pendingQ,
           question: answer !== undefined ? pendingQ : null,
@@ -423,6 +619,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
             subject: r.src.subject ?? null, gist: r.src.gist ?? null,
             thread: (r.src.thread ?? []).map((m) => `${m.at.slice(0, 10)} · ${m.dir === 'in' ? 'bejövő' : 'kimenő'} · ${m.from}: ${m.gist}`),
             drafts: r.drafts.map((d) => ({ label: d.label, subject: d.subject, body: d.body })),
+            card: cardCtx(r), templates: tplsFor(r),
             instruction: r.src.rawReply,
           })),
         }),
@@ -451,6 +648,55 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   };
 
   const nowIso = () => new Date().toISOString();
+
+  // ---- KIMENŐ (Levelek Titkárnő) levelek: dir:'out' + status:'outbox' ----
+  // Új, KEZDEMÉNYEZETT levelek (nem válaszok); a küldő-script levél-id alapján célozza.
+  const outboxLetters = useMemo(() => (agenda.letters || [])
+    .filter((l) => l.dir === 'out' && (l.status ?? 'draft') === 'outbox')
+    .sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? '')), [agenda]);
+  const recipSummary = (l: Letter): string => {
+    const rs = l.recipients ?? [];
+    if (rs.length === 0) return l.names.join(', ') || '(nincs címzett)';
+    if (rs.length === 1) return rs[0].name;
+    return `${rs.length} címzett${l.sendMode === 'bcc' ? ' · BCC' : ' · egyenként'}`;
+  };
+  const [readOut, setReadOut] = useState<string | null>(null);
+  const [editOut, setEditOut] = useState<{ id: string; subject: string; body: string } | null>(null);
+  const [outBusy, setOutBusy] = useState<string | null>(null); // 'd-<id>' piszkozat / 's-<id>' küldés
+  const pushOutboundOne = async (l: Letter) => {
+    if (outBusy) return;
+    setOutBusy(`d-${l.id}`); setPushMsg(`Piszkozat készítése az Outlookban: ${recipSummary(l)}…`);
+    try {
+      const res = await fetch('/api/outlook-drafts', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify({ outboundId: l.id }) });
+      const j = await res.json() as { ok: boolean; made?: number | null; comError?: boolean };
+      if (j.comError) setPushMsg('⚠ A klasszikus Outlook nem elérhető COM-on. Nyisd meg (Go to classic Outlook), és próbáld újra.');
+      else if (j.ok) setPushMsg(`✓ Piszkozat(ok) kész az Outlookban: ${recipSummary(l)}. Nézd át és küldd el ott, majd itt jelöld „Elküldtem".`);
+      else setPushMsg('⚠ Nem készült piszkozat. Nézd meg az Outlookot / az automation/logs/drafts.log-ot.');
+    } catch { setPushMsg('⚠ Nem sikerült elindítani a piszkozat-készítést (fut a dev-szerver és a klasszikus Outlook?).'); }
+    finally { setOutBusy(null); }
+  };
+  const sendOutboundNow = async (l: Letter) => {
+    if (outBusy) return;
+    if (!window.confirm(`Biztosan ELKÜLDÖD most?\n\nCímzett: ${recipSummary(l)}\nTárgy: „${l.subject}"\n\nEz azonnal elküldi az Outlookból, és nem vonható vissza.`)) return;
+    setOutBusy(`s-${l.id}`); setPushMsg(`Küldés folyamatban: ${recipSummary(l)}…`);
+    try {
+      const res = await fetch('/api/outlook-drafts', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify({ outboundSendId: l.id }) });
+      const j = await res.json() as { ok: boolean; sent?: boolean; comError?: boolean };
+      if (j.comError) setPushMsg('⚠ A klasszikus Outlook nem elérhető COM-on. Nyisd meg (Go to classic Outlook), és próbáld újra.');
+      else if (j.ok && j.sent) { onSaveLetter?.({ ...l, status: 'sent' }); setPushMsg(`✓ Elküldve: ${recipSummary(l)}.`); }
+      else setPushMsg('⚠ A küldés nem sikerült (nincs piszkozat / címzett?). Nézd meg az Outlookot.');
+    } catch { setPushMsg('⚠ Nem sikerült elindítani a küldést (fut a dev-szerver és a klasszikus Outlook?).'); }
+    finally { setOutBusy(null); }
+  };
+  const markOutboundSent = (l: Letter) => onSaveLetter?.({ ...l, status: 'sent' });
+  const scheduleOutbound = (l: Letter) => {
+    const t = new Date(nextWeekdayDawn());
+    t.setMinutes(t.getMinutes() + Math.floor(Math.random() * 60));
+    t.setSeconds(Math.floor(Math.random() * 60));
+    onSaveLetter?.({ ...l, scheduledFor: localIso(t) });
+    setPushMsg(`✓ Ütemezve: ${fmtDawn(localIso(t))} (a hajnali feladat küldi ki valódi levélként).`);
+  };
+  const unscheduleOutbound = (l: Letter) => onSaveLetter?.({ ...l, scheduledFor: null });
   const ageDays = (r: Row): number | null => {
     const t = ymdTs(r.src.waitingSince ?? r.src.date);
     return t === null ? null : Math.max(0, Math.floor((now - t) / DAY));
@@ -465,7 +711,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     const noRule = !!r.src.email && !senderRules[r.src.email.trim().toLowerCase()];
     const thread = r.src.thread ?? [];
     return (
-      <article key={r.sel} className={`po-row${isOpen ? ' is-open' : ''}`}>
+      <article key={r.sel} id={`po-${r.sel}`} className={`po-row${isOpen ? ' is-open' : ''}`}>
         <button type="button" className="po-main" onClick={() => setOpen(isOpen && !forceOpen && !allOpen ? null : r.sel)} title={isOpen ? 'A választervek elrejtése' : 'A megírt választervek megjelenítése ehhez a levélhez'}>
           <span className="d">{fmtD(r.src.date) || '·'}</span>
           <span className="n">{r.src.name}</span>
@@ -504,6 +750,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
             )}
             {/* kinek megy a válasz - másolás előtt ellenőrizhető */}
             <div className="po-tocc">Címzett: <strong>{r.src.name}</strong> &lt;{r.src.email}&gt;{(r.src.cc?.length ?? 0) > 0 && <> · Másolat: {r.src.cc?.join(', ')}</>}</div>
+            {attachList(r.src)}
             {r.src.draftMode === 'ping' && <div className="po-note">Követő tervek: a követési határidőig nem érkezett válasz - az alábbiak udvarias emlékeztetők.</div>}
             {stale && <div className="po-note">⚠ A tervek egy korábbi levélhez készültek, azóta új bejövő érkezett. A következő szinkron frissíti őket - a szál tartalmát ellenőrizd küldés előtt.</div>}
             {!r.botMade && lane !== 'waiting' && <div className="po-note">Gyors tervek a levélből készült feladat adataiból - a személyre szabott terveket a következő szinkron írja meg a levél teljes szövege alapján.</div>}
@@ -564,6 +811,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   const advance = (sel: string, patch: Partial<AgendaSource>, label: string) => {
     stopSpeak();
     setGen((g) => { const n = { ...g }; delete n[sel]; return n; }); // a mentett Letter megmarad!
+    setTitkarFocus((f) => (f === sel ? null : f)); // a fókusz feloldódik, ha erről döntöttünk
     onState(sel, patch, label);
   };
   const skipCur = (sel: string) => { stopSpeak(); setDecideSkip((s) => new Set([...s, sel])); };
@@ -571,6 +819,18 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     try { localStorage.setItem('md-titkar-mode', m); } catch { /* ignore */ }
     if (m === 'write') stopSpeak();
     setTitkarMode(m);
+  };
+  // egy KÉSZ (drafted) válasz VISSZAKÜLDÉSE a Titkárnőnek: a státusz visszaáll
+  // válaszra-váróra, a nyers jegyzet + a memóriabeli terv törlődik (a mentett Letter
+  // megmarad referenciának), és a Titkárnő rögtön EZT a levelet nyitja meg elöl,
+  // hangmódban - újra meghallgatható és új válasz adható rá.
+  const backToTitkar = (r: Row) => {
+    stopSpeak();
+    setGen((g) => { const n = { ...g }; delete n[r.sel]; return n; });
+    onState(r.sel, { status: 'pending', returned: null, rawReply: null }, 'Vissza a titkárnőnek');
+    setReadDraft(null); setEditDraft(null);
+    setTitkarFocus(r.sel); setDecideSkip(new Set()); setAllOpen(false);
+    setTitkarMode('voice'); setDecide(true);
   };
 
   const renderWizard = () => {
@@ -696,6 +956,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
             </div>
             {titkarMode === 'voice' && speaking && <div className="po-wiz-hint">🔊 Felolvasás megy - a végén magától jön a válasz-lépés. A Tovább gombbal átugorhatod.</div>}
             <div className="po-tocc">Válasz ide: <strong>{r.src.name}</strong> &lt;{r.src.email}&gt;{(r.src.cc?.length ?? 0) > 0 && <> · Másolat: {r.src.cc?.join(', ')}</>}</div>
+            {attachList(r.src)}
           </div>
           <div className="po-wiz-foot">
             {closeBtn}{skipBtn}{snoozeBtns}
@@ -800,14 +1061,16 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
         {lanes.returned.length > 0 && <span className="pill pill--hot" title="Felébredt halasztás vagy új levél lezárt szálban">{lanes.returned.length} visszatért</span>}
         {urgent > 0 && <span className="pill pill--hot" title="Határidő 48 órán belül">{urgent} sürgős</span>}
         {noted.length > 0 && <span className="pill pill--note" title="Titkárnőben megírt jegyzetek, amelyek megfogalmazásra várnak">{noted.length} jegyzet</span>}
-        {lanes.drafted.length > 0 && <span className="pill pill--draft" title="Megírt válaszok, amelyeket még át kell másolni az Outlookba">{lanes.drafted.length} másolható</span>}
+        {plainDrafts.length > 0 && <span className="pill pill--draft" title="Megírt válaszok, amelyeket még ki kell küldeni / át kell másolni az Outlookba">{plainDrafts.length} másolható</span>}
+        {scheduledDrafts.length > 0 && <span className="pill pill--sched" title="Hajnalra (05:40–06:40) ütemezett, szórt küldések">⏰ {scheduledDrafts.length} ütemezve</span>}
         {lanes.waiting.length > 0 && <span className="pill" title="Válaszoltam, az ő válaszukra várok">{lanes.waiting.length} rájuk várok</span>}
         {lanes.snoozed.length > 0 && <span className="pill" title="Halasztva - a felbukkanási napon visszatér">{lanes.snoozed.length} halasztva</span>}
         <span className="sp" />
-        {!decide && <button type="button" className="btn btn--ink" disabled={syncPhase === 'running'} title="A MAI beérkezett és elküldött leveleket beolvassa és beteszi az agendába (a napi ütemezett szinkronon felül, kézzel). Pár perc, magától frissül." onClick={runSync}>{syncPhase === 'running' ? `⏳ Beolvasás… ${mmss(syncElapsed)}` : '🔄 Mai levelek beolvasása'}</button>}
+        {!decide && <button type="button" className="btn btn--ink" disabled={syncPhase === 'running'} title="A MAI beérkezett és elküldött leveleket beolvassa és beteszi az agendába (a napi ütemezett szinkronon felül, kézzel). Pár perc, magától frissül." onClick={() => runSync('today')}>{syncPhase === 'running' && syncScope === 'today' ? `⏳ Beolvasás… ${mmss(syncElapsed)}` : '🔄 Mai levelek'}</button>}
+        {!decide && <button type="button" className="btn" disabled={syncPhase === 'running'} title="A TEGNAPI beérkezett és elküldött leveleket olvassa be (pl. ha kimaradt egy futás, vagy utólag jött be levél). Ugyanaz a feldolgozás, csak a tegnapi napra. Pár perc, magától frissül." onClick={() => runSync('yesterday')}>{syncPhase === 'running' && syncScope === 'yesterday' ? `⏳ Tegnapi… ${mmss(syncElapsed)}` : '🔄 Tegnapi levelek'}</button>}
         {pendingAll.length > 0 && !decide && <button type="button" className="btn" title="Levelenként, lépésről lépésre: levél (felolvasással) - a döntésed nyersen - végleges válasz - következő" onClick={() => { setDecide(true); setTitkarMode(null); setDecideSkip(new Set()); setAllOpen(false); }}>🗣 Titkárnő</button>}
         {pendingAll.length > 0 && !decide && <button type="button" className="btn" title="Minden válaszra váró tétel terveivel együtt, egy listában végigdolgozható" onClick={() => setAllOpen((v) => !v)}>{allOpen ? '▴ Összecsukás' : '▤ Sorban mind'}</button>}
-        {decide && <button type="button" className="btn" onClick={() => { setDecide(false); setTitkarMode(null); stopSpeak(); }}>✕ Kilépés a titkárnő-módból</button>}
+        {decide && <button type="button" className="btn" onClick={() => { setDecide(false); setTitkarMode(null); stopSpeak(); setTitkarFocus(null); }}>✕ Kilépés a titkárnő-módból</button>}
       </div>
       {(syncPhase === 'running' || syncMsg) && (
         <div className={`po-sync${syncPhase === 'running' ? ' is-running' : ''}${syncMsg && syncMsg[0] === '⚠' ? ' is-err' : ''}`}>
@@ -855,30 +1118,150 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
           ))}
         </section>
       )}
-      {!decide && lanes.drafted.length > 0 && (
+      {!decide && plainDrafts.length > 0 && (
         <section className="po-fold po-fold--draft">
-          <button type="button" className="po-fold-h" onClick={() => setShowDrafted((v) => !v)}>📋 Másolható válaszok ({lanes.drafted.length}) {showDrafted ? '▴' : '▾'}</button>
-          {showDrafted && <div className="po-fold-hint">Ezek a válaszaid MEGvannak írva, de még NEM mentek el. Egy gombbal piszkozatként az Outlookba teheted őket (küldés nélkül), vagy soronként a vágólapra másolod. Utána az Outlookban küldöd el, és itt zárod le.</div>}
+          <button type="button" className="po-fold-h" onClick={() => setShowDrafted((v) => !v)}>📋 Másolható válaszok ({plainDrafts.length}) {showDrafted ? '▴' : '▾'}</button>
+          {showDrafted && <div className="po-fold-hint">Ezek a válaszaid MEGvannak írva, de még NEM mentek el. Kiküldheted őket most, piszkozatként az Outlookba teheted, vagy a vágólapra másolod. VAGY egy gombbal HAJNALRA ütemezed (05:40–06:40, szórtan) - akkor a helyi hajnali feladat küldi ki őket valódi levélként.</div>}
           {showDrafted && (
             <div className="po-draftpush">
+              <button type="button" className="btn btn--sched" title="Mind a kész választ a KÖVETKEZŐ HÉTKÖZNAP hajnalára ütemezi (05:40–06:40, emailenként szórt random időben). A gép + Outlook legyen bekapcsolva; a 07:00 szinkron igazolja a küldést." onClick={scheduleAllDawn}>⏰ Ütemezett küldés (hajnalra)</button>
               <button type="button" className="btn btn--ink" disabled={pushBusy} title="Mindegyik kész válaszból Válasz-piszkozatot készít a klasszikus asztali Outlookban (küldés SOHA). A duplikátumokat kihagyja." onClick={pushDrafts}>{pushBusy ? '⏳ Készül…' : '✉ Mind az Outlookba (piszkozat)'}</button>
-              <button type="button" className="btn btn--hot" disabled={sendAllBusy} title="AZONNAL elküldi MIND a kész választ az Outlookon át (megerősítéssel, nem vonható vissza). A meglévő piszkozatokat küldi." onClick={sendAllNow}>{sendAllBusy ? '⏳ Küldés…' : `✉ Mind küldése (${lanes.drafted.length})`}</button>
+              <button type="button" className="btn btn--hot" disabled={sendAllBusy} title="AZONNAL elküldi MIND a kész választ az Outlookon át (megerősítéssel, nem vonható vissza). A meglévő piszkozatokat küldi." onClick={sendAllNow}>{sendAllBusy ? '⏳ Küldés…' : `✉ Mind küldése most (${plainDrafts.length})`}</button>
               {pushMsg && <span className="po-pushmsg">{pushMsg}</span>}
             </div>
           )}
-          {showDrafted && lanes.drafted.map((r) => {
+          {showDrafted && plainDrafts.map((r) => {
             const l = draftBySel.get(r.sel);
+            const isRead = readDraft === r.sel;
+            const editing = !!l && editDraft?.sel === r.sel;
             return (
-              <div key={r.sel} className="po-mini po-mini--draft">
+              <Fragment key={r.sel}>
+                <div id={`po-${r.sel}`} className={`po-mini po-mini--draft${isRead ? ' is-read' : ''}`}>
+                  <span className="d">{fmtD(r.src.date) || '·'}</span>
+                  <span className="n">{r.src.name}</span>
+                  <span className="s">„{r.src.subject ?? r.title}"</span>
+                  {l && <button type="button" className="btn" title="A megírt válasz TELJES szövegének megnyitása olvasásra/szerkesztésre (mobilon is)" onClick={() => { setReadDraft(isRead ? null : r.sel); setEditDraft(null); }}>{isRead ? '▴ Bezár' : '👁 Elolvasás'}</button>}
+                  {l
+                    ? <button type="button" className="btn btn--ink" title="A megírt válasz a vágólapra - illeszd be az Outlook válaszába" onClick={() => copyLetter(`d-${r.sel}`, l)}>{copied === `d-${r.sel}` ? '✓ Másolva' : '⧉ Másolás'}</button>
+                    : <button type="button" className="btn" title="A levél megnyitása a levélíróban" onClick={() => onOpenCard(r.sel)}>▤ Megnyitás</button>}
+                  <button type="button" className="btn btn--ink" disabled={draftingSel === r.sel} title="EZT az egy kész választ piszkozatként az Outlookba teszi (küldés NÉLKÜL). Az Outlookban átnézed és onnan küldöd el." onClick={() => pushDraftOne(r)}>{draftingSel === r.sel ? '⏳ Piszkozat…' : '✉ Outlookba'}</button>
+                  <button type="button" className="btn btn--hot" disabled={sendingSel === r.sel} title="AZONNALI küldés az Outlookon át (megerősítéssel, nem vonható vissza). Ha van piszkozat, azt küldi." onClick={() => sendNow(r)}>{sendingSel === r.sel ? '⏳ Küldés…' : '✉ Küldés most'}</button>
+                  <button type="button" className="btn btn--sched" title="EZT az egy választ a következő hétköznap hajnalára ütemezi (05:40–06:40, random időben). A helyi hajnali feladat küldi ki valódi levélként." onClick={() => scheduleOneDawn(r)}>⏰ Ütemezve</button>
+                  <button type="button" className="btn" title="Beillesztettem és elküldtem az Outlookban - lezárás" onClick={() => onState(r.sel, { status: 'replied', repliedAt: nowIso(), returned: null, thread: withOutEntry(r.src, 'megválaszolva (átmásolva az Outlookba)') }, 'Elküldve, lezárva')}>✓ Elküldtem</button>
+                  <button type="button" className="btn" title="Vissza a titkárnőnek: a válasz státusza visszaáll, a Titkárnő rögtön ezt a levelet nyitja hangmódban - újra meghallgathatod és új választ adhatsz rá" onClick={() => backToTitkar(r)}>🗣 Titkárnőnek</button>
+                  <button type="button" className="btn" title="Vissza a válaszra várók közé (a Postába, a Titkárnő megnyitása nélkül)" onClick={() => onState(r.sel, { status: 'pending', returned: null }, 'Vissza a Postába')}>↩ Vissza</button>
+                </div>
+                {isRead && l && (
+                  <div className="po-readbody">
+                    {editing ? (
+                      <>
+                        <div className="po-readedit">
+                          <label className="po-readedit-l">Tárgy</label>
+                          <input className="po-readedit-s" value={editDraft.subject} onChange={(e) => setEditDraft((d) => (d ? { ...d, subject: e.target.value } : d))} />
+                          <label className="po-readedit-l">A válasz szövege</label>
+                          <textarea className="po-readedit-b" rows={12} value={editDraft.body} onChange={(e) => setEditDraft((d) => (d ? { ...d, body: e.target.value } : d))} />
+                        </div>
+                        <div className="po-readbody-f">
+                          <button type="button" className="btn btn--ink" title="A módosítások mentése (a kész válasz felülíródik)" onClick={() => { onSaveLetter?.({ ...l, subject: editDraft.subject.trim() || l.subject, body: editDraft.body.trim() }); setEditDraft(null); }}>💾 Mentés</button>
+                          <button type="button" className="btn" title="Módosítások elvetése" onClick={() => setEditDraft(null)}>Mégse</button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="po-readbody-h">
+                          <span className="s2">„{l.subject}"</span>
+                          <span className="to">→ {r.src.name}{(r.src.cc?.length ?? 0) > 0 ? ` · +${r.src.cc?.length} másolat` : ''}</span>
+                        </div>
+                        <div className="po-draft-b">{l.body}</div>
+                        <div className="po-readbody-f">
+                          <button type="button" className="btn" title="A válasz átírása (tárgy és szöveg) - a módosítás helyben menthető" onClick={() => setEditDraft({ sel: r.sel, subject: l.subject, body: l.body })}>✎ Szerkesztés</button>
+                          <button type="button" className="btn" title="Vissza a titkárnőnek: a válasz státusza visszaáll, a Titkárnő rögtön ezt a levelet nyitja hangmódban - újra meghallgathatod és új választ adhatsz rá" onClick={() => backToTitkar(r)}>🗣 Titkárnőnek</button>
+                          <button type="button" className="btn btn--ink" title="A megírt válasz a vágólapra" onClick={() => copyLetter(`d-${r.sel}`, l)}>{copied === `d-${r.sel}` ? '✓ Másolva' : '⧉ Másolás'}</button>
+                          <button type="button" className="btn" onClick={() => { setReadDraft(null); setEditDraft(null); }}>▴ Bezár</button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </Fragment>
+            );
+          })}
+        </section>
+      )}
+      {!decide && outboxLetters.length > 0 && (
+        <section className="po-fold po-fold--draft">
+          <div className="po-fold-h" style={{ cursor: 'default' }}>📤 Kimenő - Titkárnő levelek ({outboxLetters.length})</div>
+          <div className="po-fold-hint">Ezeket a Levelek Titkárnőben írtad (kezdeményezett, nem válasz), még NEM mentek el. Kiküldheted most, piszkozatként az Outlookba teheted, vagy a vágólapra másolod. Több címzettnél a személyre szabott mód címzettenként külön levelet küld, a BCC egy közöset.</div>
+          {outboxLetters.map((l) => {
+            const isRead = readOut === l.id;
+            const editing = editOut?.id === l.id;
+            return (
+              <Fragment key={l.id}>
+                <div id={`po-out-${l.id}`} className="po-mini po-mini--draft">
+                  <span className="d">📤</span>
+                  <span className="n">{recipSummary(l)}</span>
+                  <span className="s">„{l.subject}"</span>
+                  {l.meetLink && <a className="po-badge" href={l.meetLink} target="_blank" rel="noopener noreferrer" title="Google Meet belépés">📹 Meet</a>}
+                  <button type="button" className="btn" title="A levél teljes szövegének megnyitása olvasásra/szerkesztésre" onClick={() => { setReadOut(isRead ? null : l.id); setEditOut(null); }}>{isRead ? '▴ Bezár' : '👁 Elolvasás'}</button>
+                  <button type="button" className="btn btn--ink" title="A levél a vágólapra" onClick={() => copyLetter(`o-${l.id}`, l)}>{copied === `o-${l.id}` ? '✓ Másolva' : '⧉ Másolás'}</button>
+                  <button type="button" className="btn btn--ink" disabled={outBusy === `d-${l.id}`} title="Piszkozatként az Outlookba (küldés nélkül)" onClick={() => pushOutboundOne(l)}>{outBusy === `d-${l.id}` ? '⏳ Piszkozat…' : '✉ Outlookba'}</button>
+                  <button type="button" className="btn btn--hot" disabled={outBusy === `s-${l.id}`} title="AZONNALI küldés az Outlookon át (megerősítéssel, nem vonható vissza)" onClick={() => sendOutboundNow(l)}>{outBusy === `s-${l.id}` ? '⏳ Küldés…' : '✉ Küldés most'}</button>
+                  {l.scheduledFor
+                    ? <span className="po-schedtime" title="Ütemezett hajnali küldés">⏰ {fmtDawn(l.scheduledFor)} <button type="button" className="btn" title="Ütemezés visszavonása" onClick={() => unscheduleOutbound(l)}>✕</button></span>
+                    : <button type="button" className="btn btn--sched" title="A következő hétköznap hajnalára ütemezi (05:40–06:40, szórtan)" onClick={() => scheduleOutbound(l)}>⏰ Ütemezve</button>}
+                  <button type="button" className="btn" title="Elküldtem - lezárás" onClick={() => markOutboundSent(l)}>✓ Elküldtem</button>
+                  <button type="button" className="btn" title="A kimenő levél elvetése" onClick={() => onDeleteLetter?.(l.id)}>🗑</button>
+                </div>
+                {isRead && (
+                  <div className="po-readbody">
+                    {editing ? (
+                      <>
+                        <div className="po-readedit">
+                          <label className="po-readedit-l">Tárgy</label>
+                          <input className="po-readedit-s" value={editOut.subject} onChange={(e) => setEditOut((d) => (d ? { ...d, subject: e.target.value } : d))} />
+                          <label className="po-readedit-l">A levél szövege</label>
+                          <textarea className="po-readedit-b" rows={12} value={editOut.body} onChange={(e) => setEditOut((d) => (d ? { ...d, body: e.target.value } : d))} />
+                        </div>
+                        <div className="po-readbody-f">
+                          <button type="button" className="btn btn--ink" title="A módosítások mentése" onClick={() => { onSaveLetter?.({ ...l, subject: editOut.subject.trim() || l.subject, body: editOut.body.trim() }); setEditOut(null); }}>💾 Mentés</button>
+                          <button type="button" className="btn" onClick={() => setEditOut(null)}>Mégse</button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="po-readbody-h">
+                          <span className="s2">„{l.subject}"</span>
+                          <span className="to">→ {recipSummary(l)}</span>
+                        </div>
+                        <div className="po-draft-b">{l.body}</div>
+                        <div className="po-readbody-f">
+                          <button type="button" className="btn" title="A levél átírása (helyben menthető)" onClick={() => setEditOut({ id: l.id, subject: l.subject, body: l.body })}>✎ Szerkesztés</button>
+                          <button type="button" className="btn btn--ink" onClick={() => copyLetter(`o-${l.id}`, l)}>{copied === `o-${l.id}` ? '✓ Másolva' : '⧉ Másolás'}</button>
+                          <button type="button" className="btn" onClick={() => { setReadOut(null); setEditOut(null); }}>▴ Bezár</button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </Fragment>
+            );
+          })}
+        </section>
+      )}
+      {!decide && scheduledDrafts.length > 0 && (
+        <section className="po-fold po-fold--sched">
+          <div className="po-sched-h">⏰ Ütemezve hajnalra ({scheduledDrafts.length})</div>
+          <div className="po-fold-hint">Ezek a KÖVETKEZŐ hétköznap hajnalán, 05:40–06:40 között, szórt random időben mennek ki (a helyi feladat valódi levélként küldi). A gép + Outlook legyen bekapcsolva; a 07:00 szinkron „megválaszolt"-ra billenti a ténylegesen kimenteket.</div>
+          {scheduledDrafts.map((r) => {
+            const overdue = !!(r.src.scheduledFor && Date.parse(r.src.scheduledFor) < Date.now());
+            return (
+              <div key={r.sel} id={`po-${r.sel}`} className="po-mini po-mini--sched">
                 <span className="d">{fmtD(r.src.date) || '·'}</span>
                 <span className="n">{r.src.name}</span>
                 <span className="s">„{r.src.subject ?? r.title}"</span>
-                {l
-                  ? <button type="button" className="btn btn--ink" title="A megírt válasz a vágólapra - illeszd be az Outlook válaszába" onClick={() => copyLetter(`d-${r.sel}`, l)}>{copied === `d-${r.sel}` ? '✓ Másolva' : '⧉ Másolás'}</button>
-                  : <button type="button" className="btn" title="A levél megnyitása a levélíróban" onClick={() => onOpenCard(r.sel)}>▤ Megnyitás</button>}
-                <button type="button" className="btn btn--hot" disabled={sendingSel === r.sel} title="AZONNALI küldés az Outlookon át (megerősítéssel, nem vonható vissza). Ha van piszkozat, azt küldi." onClick={() => sendNow(r)}>{sendingSel === r.sel ? '⏳ Küldés…' : '✉ Küldés most'}</button>
-                <button type="button" className="btn" title="Beillesztettem és elküldtem az Outlookban - lezárás" onClick={() => onState(r.sel, { status: 'replied', repliedAt: nowIso(), returned: null, thread: withOutEntry(r.src, 'megválaszolva (átmásolva az Outlookba)') }, 'Elküldve, lezárva')}>✓ Elküldtem</button>
-                <button type="button" className="btn" title="Vissza a válaszra várók közé" onClick={() => onState(r.sel, { status: 'pending', returned: null }, 'Vissza a Postába')}>↩ Vissza</button>
+                <span className={`po-schedtime${overdue ? ' is-over' : ''}`} title={overdue ? 'A tervezett idő elmúlt - ha a hajnali feladat nem futott, küldd ki kézzel vagy ütemezd újra' : 'A tervezett küldési idő'}>⏰ {fmtDawn(r.src.scheduledFor)}{overdue ? ' (lejárt?)' : ''}</span>
+                <button type="button" className="btn btn--hot" disabled={sendingSel === r.sel} title="Mégis most küldöm (nem várok hajnalig)" onClick={() => sendNow(r)}>{sendingSel === r.sel ? '⏳ Küldés…' : '✉ Küldés most'}</button>
+                <button type="button" className="btn" title="Ütemezés visszavonása - a válasz visszakerül a Másolható közé" onClick={() => unschedule(r)}>✕ Visszavonás</button>
               </div>
             );
           })}

@@ -1046,3 +1046,31 @@ export const suggestTemplatesFor = (title: string, max = 3): TopicTemplate[] => 
     .sort((a, b) => b.score - a.score);
   return scored.slice(0, max).map((x) => x.t);
 };
+
+// ---- Titkárnő (Levelek): szabad diktált szándék -> sablon-jelöltek mintaszöveggel ----
+// A suggestTemplatesFor-tól eltérően a TÖRZSRE is egyezik, és NEM szűri a folyamat-
+// szavakat (a „meghívó", „időpont", „emlékeztető" itt épp erős jelek), plusz visszaadja
+// a sablon minta-tárgyát és -törzsét (semleges kontextussal, [mezők] meghagyva).
+const NEUTRAL_CTX: TopicCtx = { title: '', when: null, place: null, due: null };
+export interface TemplateMatch { id: string; label: string; group: string; sampleSubject: string; sampleBody: string }
+export const templateSample = (t: TopicTemplate): TemplateMatch => ({
+  id: t.id, label: t.label, group: t.group,
+  sampleSubject: autoFill(t.subject(NEUTRAL_CTX)),
+  sampleBody: autoFill(t.body(NEUTRAL_CTX)),
+});
+export const matchTemplates = (query: string, n = 3): TemplateMatch[] => {
+  const toks = [...new Set(normText(query).split(/[^a-z0-9]+/).filter((w) => w.length >= 4))];
+  if (!toks.length) return TOPIC_TEMPLATES.slice(0, n).map(templateSample);
+  const scored = TOPIC_TEMPLATES.map((t) => {
+    const labelHay = normText(`${t.id.replace(/-/g, ' ')} ${t.label} ${t.group}`);
+    const bodyHay = normText(t.body(NEUTRAL_CTX));
+    let score = 0;
+    for (const w of toks) {
+      if (labelHay.includes(w)) score += 2;
+      else if (bodyHay.includes(w)) score += 1;
+    }
+    return { t, score };
+  }).filter((x) => x.score > 0).sort((a, b) => b.score - a.score);
+  const top = scored.length ? scored.slice(0, n).map((x) => x.t) : TOPIC_TEMPLATES.slice(0, n);
+  return top.map(templateSample);
+};

@@ -1176,10 +1176,12 @@ export default function CurriculumApp() {
   // Hallgató: aktív/képviselő/demonstrátor/...) - a Névjegyzék státusz-címkéiből
   const rosterGroups = useMemo<RosterGroups>(() => ({
     T: [
-      { label: 'Aktív (most tanít)', names: teacherNames },
+      // Aktív = a Névjegyzék főállású + óraadó (az OSZTÓ TT-hez igazított roster), így a
+      // szám kiadja magát (aktív = főállású + óraadó), nem a tantervi nyers névlista.
+      { label: 'Aktív (most tanít)', names: [...teacherStatusNames(peopleDB, 'főállású'), ...teacherStatusNames(peopleDB, 'óraadó')] },
       { label: 'Főállású', names: teacherStatusNames(peopleDB, 'főállású') },
       { label: 'Óraadó', names: teacherStatusNames(peopleDB, 'óraadó') },
-      { label: 'Volt/külsős', names: teacherStatusNames(peopleDB, 'volt/külsős') },
+      { label: 'Korábbi / külsős', names: teacherStatusNames(peopleDB, 'volt/külsős') },
     ],
     H: [
       { label: 'Aktív', names: activeStudentNames(peopleDB) },

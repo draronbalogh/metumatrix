@@ -55,6 +55,14 @@ export interface ThreadMsg {
   gist: string;          // egy mondat a lényegről
 }
 
+// Egy email-melléklet: a bot letölti a mail-attachments/<day>/ mappába, és a kártya
+// source-jába jegyzi (name + day). A UI innen kínálja letöltésre/megnyitásra.
+export interface AgendaAttachment {
+  name: string;         // fájlnév (a mail-attachments/<day>/ alatt)
+  day?: string | null;  // az archív alkönyvtár napja (ÉÉÉÉ-HH-NN); enélkül nem nyitható meg
+  note?: string | null; // opcionális (pl. "linkelt dokumentum", méret)
+}
+
 // A tételt kiváltó bejövő email feladója - neki külön válasz-levél írható.
 export interface AgendaSource {
   name: string;
@@ -74,10 +82,13 @@ export interface AgendaSource {
   repliesFor?: string | null;   // melyik bejövőhöz készültek a tervek (ISO) - elavulás-jelzéshez
   lastInboundAt?: string | null; // a legutolsó bejövő levél ISO időbélyege - elavulás: lastInboundAt > repliesFor
   returned?: string | null;     // ébresztés/újranyitás időpontja (ISO) - a Visszatért sáv jelzője
+  scheduledFor?: string | null; // hajnali ÜTEMEZETT küldés tervezett ideje (helyi "ÉÉÉÉ-HH-NNTÓÓ:PP:MM"); APP-tulajdon, a bot nem írja
   draftMode?: 'reply' | 'ping' | null; // 'ping': a tervek követő-emlékeztetők (T7 ébresztés után), nem válaszok
   thread?: ThreadMsg[] | null;  // a szál idővonala (bot: bejövők, app: kimenők)
+  attachments?: AgendaAttachment[] | null; // az eredeti levél mellékletei (a bot archiválja, a UI megnyithatja)
   shadow?: boolean;             // árnyék-forrás kapcsolt feladat–esemény ikernél: a Posta-sor és az állapot a feladaton él
   rawReply?: string | null;     // Titkárnő gyűjtő-mód: a felhasználó NYERS döntése, a kötegelt megfogalmazásig
+  meetLink?: string | null;     // a levélhez/kártyához kötött Google Meet-link (megjelenítéshez)
 }
 
 // Kimenő bejegyzés hozzáfűzése a szál-idővonalhoz (válasz elküldésekor / kézi jelöléskor)
@@ -116,6 +127,7 @@ export interface AgendaTask {
   eventId: string | null;  // ha a feladat egy naptári eseményhez kötődik
   createdAt: string | null; // létrehozás időpontja (ISO) - dátum szerinti rendezéshez és az ÚJ jelzéshez
   source?: AgendaSource | null; // a kiváltó email feladója (válasz-levélhez)
+  meetLink?: string | null; // a feladathoz kötött Google Meet-link (megjelenítéshez)
 }
 
 export interface AgendaEvent {
@@ -131,7 +143,13 @@ export interface AgendaEvent {
   owner: string | null;
   people: string[];      // résztvevők
   source?: AgendaSource | null; // a kiváltó email feladója (válasz-levélhez)
+  googleEventId?: string | null; // a kapcsolt Google Calendar esemény id-je (Meet)
+  meetLink?: string | null;      // a Google Meet-link (naptár, feladat, levél, Posta)
+  mstatus?: 'tentative' | 'confirmed' | null; // egyeztetés alatt / véglegesítve
 }
+
+// Egy feloldott címzett a kimenő (Levelek-kezdeményezett) levélhez
+export interface LetterRecipient { name: string; email: string; kind: string }
 
 // Mentett levél (Outlookba másoláshoz készített üzenet) - tételhez (esemény/feladat) köthető
 export interface Letter {
@@ -142,7 +160,14 @@ export interface Letter {
   subject: string;
   body: string;
   names: string[];                 // a címzett-nevek a mentés pillanatában
-  status?: 'draft' | 'sent';       // vázlat / kiküldve - hiányzó érték = vázlat
+  status?: 'draft' | 'sent' | 'outbox'; // vázlat / kiküldve / kimenő (küldésre kész)
+  dir?: 'out';                     // Levelek-kezdeményezett kimenő levél
+  recipients?: LetterRecipient[];  // feloldott címzettek (név + email + típus)
+  sendMode?: 'personal' | 'bcc';   // személyre szabott egyenként / közös BCC
+  sendGoogleInvite?: boolean;      // a Google is küldjön .ics naptár-meghívót
+  scheduledFor?: string | null;    // hajnali ütemezett küldés (helyi ISO)
+  templateId?: string;             // a scaffold sablon id-je
+  meetLink?: string;               // a levélbe kerülő Google Meet-link
 }
 
 export interface Agenda {

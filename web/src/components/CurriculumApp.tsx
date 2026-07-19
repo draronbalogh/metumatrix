@@ -713,6 +713,20 @@ export default function CurriculumApp() {
       : cur.tasks;
     commitAgenda({ ...cur, tasks, events: exists ? cur.events.map((x) => (x.id === e.id ? e : x)) : [...cur.events, e] });
     setEventEdit(null);
+    // Google Meet szinkron: ha az eseményhez van kapcsolt Google-esemény és változott a
+    // nap/idő (pl. időpont-véglegesítés a válaszok után), a Google-naptárt is átállítjuk.
+    // A Meet-link marad (a /api/meet update nem írja felül a conferenceData-t). Token nélkül
+    // az /api/meet unconfigured-et ad, így ez ártalmatlanul elhal.
+    if (e.googleEventId && e.day && (prev?.day !== e.day || prev?.when !== e.when)) {
+      const m = e.when.match(/(\d{1,2})[:.](\d{2})/);
+      const hh = m ? String(Math.min(23, parseInt(m[1], 10))).padStart(2, '0') : '09';
+      const mi = m ? m[2] : '00';
+      const he = String(Math.min(23, Number(hh) + 1)).padStart(2, '0');
+      void fetch('/api/meet', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+        body: JSON.stringify({ action: 'update', googleEventId: e.googleEventId, startIso: `${e.day}T${hh}:${mi}:00`, endIso: `${e.day}T${he}:${mi}:00` }),
+      }).catch(() => { /* a Meet-szinkron nem kritikus */ });
+    }
   }, [commitAgenda]);
   const deleteEvent = useCallback((id: string) => {
     const cur = agendaRef.current;
@@ -748,6 +762,12 @@ export default function CurriculumApp() {
       saveEvent({ ...e, googleEventId: j.googleEventId ?? e.googleEventId ?? null, meetLink: j.meetLink ?? null });
       setMeetMsg(j.meetLink ? '✓ Meet-link kész.' : 'Kész (link nélkül).');
     } catch { setMeetMsg('A Meet-szolgáltatás nem elérhető.'); }
+  }, [saveEvent]);
+  // Időpont-egyeztetés lezárása: a tentative esemény véglegessé válik (a dátum-módosítást
+  // az esemény-szerkesztőben teszed; ez csak az 'egyeztetés alatt' jelzőt zárja le).
+  const confirmMeet = useCallback((eventId: string) => {
+    const e = agendaRef.current.events.find((x) => x.id === eventId);
+    if (e) saveEvent({ ...e, mstatus: 'confirmed' });
   }, [saveEvent]);
   const saveIntro = useCallback((s: string) => {
     commitAgenda({ ...agendaRef.current, intro: s });
@@ -1613,6 +1633,7 @@ export default function CurriculumApp() {
           onOpenLetter={openSavedLetter}
           onAddTaskFor={(eid) => { setAgendaDetails(null); addTaskForEvent(eid); }}
           onCreateMeet={createMeetForEvent}
+          onConfirmMeet={confirmMeet}
           meetMsg={meetMsg}
         />
       )}

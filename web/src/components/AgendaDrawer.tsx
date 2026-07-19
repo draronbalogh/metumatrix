@@ -32,6 +32,7 @@ interface Props {
   onAddTaskFor: (eventId: string) => void;
   emailFor: (name: string) => string | null; // a Névjegyzékből - a Meet-meghívó vendégeihez
   onCreateMeet?: (eventId: string) => void;   // automatikus Google Meet-link (API) az eseményhez
+  onConfirmMeet?: (eventId: string) => void;  // időpont-egyeztetés lezárása (tentative -> confirmed)
   meetMsg?: string | null;                     // a Meet-készítés visszajelzése
 }
 
@@ -65,7 +66,7 @@ function Sec({ cls, children }: { cls?: string; children: ReactNode }) {
 // egy kiosztott lépés a személy-kártyán - a taskId+ix révén innen is pipálható
 interface PStep { taskId: string; taskTitle: string | null; ix: number; text: string; done: boolean; due: string | null }
 
-export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor, onCreateMeet, meetMsg }: Props) {
+export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor, onCreateMeet, onConfirmMeet, meetMsg }: Props) {
   const task = det.kind === 'task' ? agenda.tasks.find((t) => t.id === det.id) ?? null : null;
   const event = det.kind === 'event' ? agenda.events.find((e) => e.id === det.id) ?? null : null;
   if (!task && !event) return null;
@@ -224,6 +225,10 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                       const emails = [event.owner, ...event.people].filter((n): n is string => !!n).map(emailFor).filter((x): x is string => !!x);
                       window.open(meetUrl(event, [...new Set(emails)]), '_blank', 'noopener');
                     }}>📹 Meet szervezése (kézi)</button>
+                  {event.mstatus === 'tentative' && onConfirmMeet && (
+                    <button className="btn btn--ink" title="Az időpont-egyeztetés lezárása: az esemény véglegessé válik (a dátumot a szerkesztőben állítod, a Google-naptár követi)"
+                      onClick={() => onConfirmMeet(event.id)}>✔ Időpont véglegesítése</button>
+                  )}
                   {meetMsg && <span style={{ fontSize: '.82rem', color: 'var(--muted)' }}>{meetMsg}</span>}
                 </div>
               )}

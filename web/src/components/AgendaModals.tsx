@@ -83,7 +83,7 @@ function DueInput({ value, onChange }: { value: string; onChange: (v: string) =>
 //   3. böngészni kategória-fülből lehet - a teljes, több száz fős névfal
 //      SOHA nem jelenik meg egyszerre.
 const normName = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-function PeoplePicker({ selected, roster, groups, onToggle, onSet }: { selected: string[]; roster: RosterEntry[]; groups?: RosterGroups; onToggle: (name: string) => void; onSet?: (names: string[]) => void }) {
+export function PeoplePicker({ selected, roster, groups, onToggle, onSet }: { selected: string[]; roster: RosterEntry[]; groups?: RosterGroups; onToggle: (name: string) => void; onSet?: (names: string[]) => void }) {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState<PersonKind | null>(null);
   const [sub, setSub] = useState<string | null>(null); // kategórián belüli gyorsszűrő (pl. Óraadó)
@@ -103,6 +103,9 @@ function PeoplePicker({ selected, roster, groups, onToggle, onSet }: { selected:
       {/* 1) a kiválasztottak - csak ők látszanak mindig */}
       <div className="pp-selrow">
         <span className="pp-selcount">{selected.length || 'Nincs'} résztvevő</span>
+        {selected.length > 0 && onSet && (
+          <button type="button" className="chip chip--danger" title="Senki - minden kijelölt egyben törlése" onClick={() => onSet([])}>Senki</button>
+        )}
         {selected.map((n) => {
           const k = kindOf(n);
           return (
@@ -116,9 +119,6 @@ function PeoplePicker({ selected, roster, groups, onToggle, onSet }: { selected:
           <button key={n} type="button" className="chip is-on pp-selchip" title="Régi, listán kívüli bejegyzés - kattintva lekerül"
             onClick={() => onToggle(n)}>{n}<span className="pp-x">✕</span></button>
         ))}
-        {selected.length > 1 && onSet && (
-          <button type="button" className="chip chip--danger" title="Minden résztvevő törlése" onClick={() => onSet([])}>✕ mind</button>
-        )}
       </div>
       {/* 2) hozzáadás kereséssel */}
       <input className="nm-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Írj be egy nevet a hozzáadáshoz…" />

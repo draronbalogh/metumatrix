@@ -2,10 +2,11 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { Agenda, AgendaEvent, Letter, LetterRecipient, emptyEvent, fmtEventWhen } from '@/data/agenda';
-import { PeopleDB } from '@/data/people';
-import { resolveRecipients, letterPresets, suggestSendMode } from '@/lib/recipients';
+import { PeopleDB, RosterEntry, RosterGroups } from '@/data/people';
+import { resolveRecipients, suggestSendMode } from '@/lib/recipients';
 import { matchTemplates, TemplateMatch } from '@/lib/topics';
 import { editHeaders } from '@/lib/editkey';
+import { PeoplePicker } from './AgendaModals';
 
 // LEVELEK TITKÁRNŐ (kimenő): diktált szándékból sablon-alapú, Áron-hangú VÉGLEGES levél,
 // feladat/esemény-szinkronban, opcionális Google Meet-tel. A kész levél a Posta küldés-
@@ -18,6 +19,8 @@ interface Props {
   onClose: () => void;
   db: PeopleDB;
   teacherNames: string[];
+  roster: RosterEntry[];                   // a mindenhol használt névsor (badge-elt típussal)
+  rosterGroups: RosterGroups;              // kategórián belüli gyorsszűrők (aktív/főállású/óraadó…)
   agenda: Agenda;
   onSaveLetter: (l: Letter) => void;      // upsert a letters[]-be (outbox)
   onSaveEvent: (e: AgendaEvent) => void;  // upsert az events[]-be (tentative)
@@ -56,15 +59,13 @@ const slotLabel = (s: Slot): string => {
   return `${d}${s.start ? ` ${s.start}` : ''}${s.end ? `-${s.end}` : ''}`;
 };
 
-export default function LevelWizard({ open, onClose, db, teacherNames, agenda, onSaveLetter, onSaveEvent }: Props) {
+export default function LevelWizard({ open, onClose, db, teacherNames, roster, rosterGroups, agenda, onSaveLetter, onSaveEvent }: Props) {
   const [mode, setMode] = useState<'voice' | 'write' | null>(null);
   const [step, setStep] = useState<Step>('intent');
   const [intent, setIntent] = useState('');
-  // címzettek
-  const [namesInput, setNamesInput] = useState('');
-  const [recipients, setRecipients] = useState<LetterRecipient[]>([]);
-  const [unresolved, setUnresolved] = useState<string[]>([]);
-  const [sendMode, setSendMode] = useState<'personal' | 'bcc'>('personal');
+  // címzettek: a mindenhol használt PeoplePicker-rel, NEVEK szerint (mint a feladat/esemény)
+  const [selectedNames, setSelectedNames] = useState<string[]>([]);
+  const [sendModeOverride, setSendModeOverride] = useState<'personal' | 'bcc' | null>(null);
   // sablonok
   const [chosenTemplateId, setChosenTemplateId] = useState<string | null>(null);
   // időpont-szervezés
@@ -88,7 +89,10 @@ export default function LevelWizard({ open, onClose, db, teacherNames, agenda, o
   const speakSeq = useRef(0);
 
   const candidates = useMemo<TemplateMatch[]>(() => (intent.trim() ? matchTemplates(intent, 3) : []), [intent]);
-  const presets = useMemo(() => letterPresets(db, teacherNames), [db, teacherNames]);
+  // a kijelölt nevek -> feloldott címzettek (email); email nélküliek az unresolved-ben
+  const { resolved: recipients, unresolved } = useMemo(() => resolveRecipients(db, teacherNames, selectedNames), [db, teacherNames, selectedNames]);
+  const sendMode: 'personal' | 'bcc' = sendModeOverride ?? suggestSendMode(recipients);
+  const toggleName = (n: string) => setSelectedNames((s) => (s.includes(n) ? s.filter((x) => x !== n) : [...s, n]));
 
   if (!open) return null;
 
@@ -107,7 +111,7 @@ export default function LevelWizard({ open, onClose, db, teacherNames, agenda, o
 
   const reset = () => {
     setMode(null); setStep('intent'); setIntent('');
-    setNamesInput(''); setRecipients([]); setUnresolved([]); setSendMode('personal');
+    setSelectedNames([]); setSendModeOverride(null);
     setChosenTemplateId(null);
     setMeetingOn(false); setEvTitle(''); setSlots([{ day: '', start: '', end: '' }]); setPlace('');
     setSendGoogleInvite(false); setMeetLink(''); setGoogleEventId(''); setEventId(''); setMeetMsg(null);
@@ -120,31 +124,6 @@ export default function LevelWizard({ open, onClose, db, teacherNames, agenda, o
     try { localStorage.setItem('md-titkar-mode', m); } catch { /* ignore */ }
     if (m === 'voice') speak('Mondd el, mit szeretnél, kinek és miről írjak levelet.');
   };
-
-  // címzett-feloldás a diktált nevekből
-  const addNames = () => {
-    const names = namesInput.split(/[,;\n]/).map((s) => s.trim()).filter(Boolean);
-    if (!names.length) return;
-    const { resolved, unresolved: miss } = resolveRecipients(db, teacherNames, names);
-    mergeRecipients(resolved);
-    setUnresolved((u) => [...new Set([...u, ...miss])]);
-    setNamesInput('');
-  };
-  const addPreset = (names: string[]) => mergeRecipients(resolveRecipients(db, teacherNames, names).resolved);
-  const mergeRecipients = (add: LetterRecipient[]) => {
-    setRecipients((cur) => {
-      const seen = new Set(cur.map((r) => r.email.toLowerCase()));
-      const next = [...cur];
-      add.forEach((r) => { if (!seen.has(r.email.toLowerCase())) { seen.add(r.email.toLowerCase()); next.push(r); } });
-      setSendMode(suggestSendMode(next));
-      return next;
-    });
-  };
-  const removeRecipient = (email: string) => setRecipients((cur) => {
-    const next = cur.filter((r) => r.email !== email);
-    setSendMode(suggestSendMode(next));
-    return next;
-  });
 
   const setSlot = (i: number, patch: Partial<Slot>) => setSlots((s) => s.map((x, j) => (j === i ? { ...x, ...patch } : x)));
   const addSlot = () => setSlots((s) => (s.length >= 3 ? s : [...s, { day: '', start: '', end: '' }]));
@@ -285,38 +264,18 @@ export default function LevelWizard({ open, onClose, db, teacherNames, agenda, o
               {/* 2. ÖSSZEÁLLÍTÁS */}
               {step === 'assemble' && (
                 <div style={{ display: 'grid', gap: 18 }}>
-                  {/* címzettek */}
+                  {/* címzettek - a mindenhol használt PeoplePicker (toggle, Senki, kategória-böngészés) */}
                   <section style={{ display: 'grid', gap: 8 }}>
-                    <label style={{ fontWeight: 600 }}>Címzettek</label>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <input value={namesInput} onChange={(e) => setNamesInput(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addNames(); } }}
-                        placeholder="nevek vesszővel (pl. Kovács Ajda, Berkes Bálint)"
-                        style={{ flex: 1, padding: 10, borderRadius: 10, border: `1px solid ${st.line}`, font: 'inherit', color: st.ink, background: 'var(--paper, #fff)' }} />
-                      <button type="button" className="btn" onClick={addNames}>+ Hozzáad</button>
-                    </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                      {presets.map((p) => (
-                        <button type="button" key={p.id} className="crx" title={`${p.count} fő`} onClick={() => addPreset(p.names)}>{p.label} ({p.count})</button>
-                      ))}
-                    </div>
-                    {recipients.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                        {recipients.map((r) => (
-                          <span key={r.email} className="crx is-on" style={{ cursor: 'default' }}>
-                            {r.name} <button type="button" onClick={() => removeRecipient(r.email)} style={{ background: 'none', border: 0, color: '#fff', cursor: 'pointer', marginLeft: 4 }} title="Törlés">✕</button>
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    <label style={{ fontWeight: 600 }}>Címzettek - keress névre, vagy nyiss meg egy kategóriát (T oktató, H hallgató…)</label>
+                    <PeoplePicker selected={selectedNames} roster={roster} groups={rosterGroups} onToggle={toggleName} onSet={setSelectedNames} />
                     {unresolved.length > 0 && (
-                      <p style={{ color: st.hot, fontSize: '.82rem', margin: 0 }}>Nincs a névjegyzékben (kihagyva): {unresolved.join(', ')}</p>
+                      <p style={{ color: st.hot, fontSize: '.82rem', margin: 0 }}>Nincs email a Névjegyzékben (kimarad a küldésből): {unresolved.join(', ')}</p>
                     )}
                     {recipients.length > 0 && (
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: '.85rem' }}>
-                        <span style={{ color: st.muted }}>Küldés:</span>
-                        <button type="button" className={`crx${sendMode === 'personal' ? ' is-on' : ''}`} onClick={() => setSendMode('personal')}>Személyre szabott</button>
-                        <button type="button" className={`crx${sendMode === 'bcc' ? ' is-on' : ''}`} onClick={() => setSendMode('bcc')}>Közös (BCC)</button>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: '.85rem', flexWrap: 'wrap' }}>
+                        <span style={{ color: st.muted }}>Küldés ({recipients.length} címre):</span>
+                        <button type="button" className={`crx${sendMode === 'personal' ? ' is-on' : ''}`} onClick={() => setSendModeOverride('personal')}>Személyre szabott</button>
+                        <button type="button" className={`crx${sendMode === 'bcc' ? ' is-on' : ''}`} onClick={() => setSendModeOverride('bcc')}>Közös (BCC)</button>
                         {sendMode === 'personal' && recipients.length > 6 && <span style={{ color: st.hot }}>Sok címzett - a BCC gyorsabb lehet.</span>}
                       </div>
                     )}

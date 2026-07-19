@@ -620,6 +620,31 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     setResult('✓ Levél elmentve vázlatként, lent a listában');
   };
 
+  // A megírt levelet a Posta „Kimenő" listájába teszi (kimenő levél), ahonnan a „Küldés most”
+  // a most megjavított úton küldi ki (jó magyar ékezet + logós Outlook-aláírás). A címzetteket
+  // névből (email) + egyedi címekből oldjuk fel; az app-aláírást (buildFooter) KIVESSZÜK a
+  // törzsből, mert az Outlook-aláírást a küldő-script adja hozzá (különben dupla lenne).
+  const sendToOutbox = () => {
+    if (!emails.length || !outSubject.trim()) return;
+    const recips = [
+      ...selected.map((n) => ({ name: n, email: emailOf(db, n) ?? '', kind: roster.find((r) => r.name === n)?.kind ?? '' })).filter((r) => !!r.email),
+      ...adhoc.map((e) => ({ name: e, email: e, kind: 'egyedi' })),
+    ];
+    let bodyForSend = outBody.replace(/\r\n/g, '\n').trimEnd();
+    const fTrim = buildFooter(db, sigOn, linksOn).trim();
+    if (fTrim && bodyForSend.endsWith(fTrim)) bodyForSend = bodyForSend.slice(0, bodyForSend.length - fTrim.length).trimEnd();
+    onSaveLetter({
+      id: `l-${Date.now().toString(36)}`,
+      createdAt: new Date().toISOString(),
+      targetType: target.targetType,
+      targetId: target.targetId,
+      subject: outSubject.trim(), body: bodyForSend, names: [...selected, ...adhoc],
+      status: 'outbox', dir: 'out', recipients: recips,
+      sendMode: recips.length === 1 ? 'personal' : 'bcc',
+    });
+    setResult('✓ A levél a Posta „Kimenő" listájába került. Onnan a „Küldés most”-tal küldheted el (jó ékezet + logó).');
+  };
+
   const loadLetter = (l: Letter) => {
     setSubject(l.subject); setBody(l.body); setSelected(l.names.filter((n) => !n.includes('@'))); setAdhoc(l.names.filter((n) => n.includes('@')));
     setFillVals({}); setKilled([]); // a mentett levél kész szöveg - a panel-értékek nem vonatkoznak rá
@@ -1074,7 +1099,9 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           {result && <div aria-live="polite" className={`nm-result${result.startsWith('✓') ? ' ok' : ' err'}`}>{result}</div>}
         </div>
         <div className="mfoot">
-          <button className={`btn${configured ? '' : ' btn--ink'}`} onClick={saveLetter} disabled={!subject.trim()}>💾 Levél mentése</button>
+          <button className="btn" onClick={saveLetter} disabled={!subject.trim()}>💾 Levél mentése</button>
+          <button className="btn btn--ink" onClick={sendToOutbox} disabled={!emails.length || !subject.trim()}
+            title="A levél a Posta „Kimenő” listájába kerül; onnan a „Küldés most”-tal küldöd el (jó ékezet + logó)">✉ Küldésre a Postába ({emails.length})</button>
           <span className="sp" />
           {!inline && <button className="btn" onClick={onClose}>Bezárás</button>}
           {configured && (

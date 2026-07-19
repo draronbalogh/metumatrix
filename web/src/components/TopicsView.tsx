@@ -21,9 +21,10 @@ interface Props {
   onUseTopic: (t: TopicTemplate) => void; // sablon betöltése a szerkesztőbe
   onOpenLetter: (l: Letter) => void;      // mentett levél betöltése a szerkesztőbe
   targetTitle: (l: Letter) => string | null;
+  onTitkarno?: () => void;                // 🗣 Titkárnő: diktált szándékból kész levél a Postába
 }
 
-export default function TopicsView({ q, letters, composer, onUseTopic, onOpenLetter, targetTitle }: Props) {
+export default function TopicsView({ q, letters, composer, onUseTopic, onOpenLetter, targetTitle, onTitkarno }: Props) {
   const [tab, setTab] = useState<'sablonok' | 'levelek'>('sablonok');
   const [selT, setSelT] = useState<string | null>(null);
   const [selL, setSelL] = useState<string | null>(null);
@@ -60,6 +61,10 @@ export default function TopicsView({ q, letters, composer, onUseTopic, onOpenLet
           <button type="button" className={tab === 'levelek' ? 'is-on' : ''}
             onClick={() => setTab('levelek')}>Mentett levelek ({letters.length})</button>
         </div>
+        {onTitkarno && (
+          <button type="button" className="btn btn--ink" title="Diktált szándékból kész levelet ír a te stílusodban, és a Postába teszi küldésre"
+            onClick={onTitkarno}>🗣 Titkárnő</button>
+        )}
       </PageHead>
       <div className="tp3">
         <div className="tp-listcol">

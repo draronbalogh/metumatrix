@@ -20,6 +20,7 @@ import { normName, normTitle } from '@/lib/normalize';
 import PeopleModal from './PeopleModal';
 import NotifyModal, { NotifyTarget } from './NotifyModal';
 import TopicsView from './TopicsView';
+import LevelWizard from './LevelWizard';
 import OrarendView from './OrarendView';
 import { TopicTemplate } from '@/lib/topics';
 import type { Handlers, Filter, View, Prog } from '@/lib/buildGraph';
@@ -126,6 +127,7 @@ export default function CurriculumApp() {
   const peopleFileOk = useRef(false);
 
   const [view, setView] = useState<ViewId>('map');
+  const [postaFocus, setPostaFocus] = useState<string | null>(null); // a Feladat/Esemény kártyáról a Postába vitt levél (fókusz)
   const [agenda, setAgenda] = useState<Agenda>(DEFAULT_AGENDA);
   const [peopleDB, setPeopleDB] = useState<PeopleDB>(DEFAULT_PEOPLE);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark'); // alapértelmezés: SÖTÉT (nappal vált világosra)
@@ -821,6 +823,7 @@ export default function CurriculumApp() {
   // töltött beállításai (sablonfajta, aláírás) SSR-ben nem elérhetők (hydration)
   const [booted, setBooted] = useState(false);
   useEffect(() => { setBooted(true); }, []);
+  const [titkarOpen, setTitkarOpen] = useState(false); // 🗣 Titkárnő wizard a Levelekben
   const inlineTarget = useMemo<NotifyTarget>(() => ({ targetType: null, targetId: null, task: null, event: null, names: [], steps: [], source: null }), []);
   const isWide = () => typeof window !== 'undefined' && window.matchMedia('(min-width: 721px)').matches;
   const useTopicInComposer = useCallback((t: TopicTemplate) => {
@@ -864,7 +867,13 @@ export default function CurriculumApp() {
   // mentett levelek kezelése (a levelek az agenda részei, az automentés viszi fájlba)
   const saveLetter = useCallback((l: Letter) => {
     const cur = agendaRef.current;
-    commitAgenda({ ...cur, letters: [l, ...(cur.letters || [])] });
+    // id-alapú upsert: ha már van ilyen id (pl. a Postában szerkesztett kész válasz),
+    // helyben cseréljük - így nem keletkezik duplikátum; egyébként az elejére szúrjuk
+    const list = cur.letters || [];
+    const letters = list.some((x) => x.id === l.id)
+      ? list.map((x) => (x.id === l.id ? l : x))
+      : [l, ...list];
+    commitAgenda({ ...cur, letters });
   }, [commitAgenda]);
   const deleteLetter = useCallback((id: string) => {
     const cur = agendaRef.current;
@@ -1364,6 +1373,7 @@ export default function CurriculumApp() {
               agenda={agenda} q={q} instr={instr} taught={taught} letterStats={letterStats}
               onAdd={() => { if (!canEdit) return; setTaskEdit({ t: emptyTask(), isNew: true }); }}
               onOpen={(id) => setAgendaDetails({ kind: 'task', id })}
+              onOpenPost={(sel) => { if (!canEdit) return; setPostaFocus(sel); setView('posta'); }}
               onEditIntro={() => { if (!canEdit) return; setIntroEdit(true); }}
               onPerson={onInstructor}
               onToggleDone={toggleDone}
@@ -1375,6 +1385,7 @@ export default function CurriculumApp() {
               onAdd={() => { if (!canEdit) return; setEventEdit({ e: emptyEvent(), isNew: true }); }}
               onOpen={(id) => setAgendaDetails({ kind: 'event', id })}
               onOpenTask={(id) => setAgendaDetails({ kind: 'task', id })}
+              onOpenPost={(sel) => { if (!canEdit) return; setPostaFocus(sel); setView('posta'); }}
               onPerson={onInstructor}
             />
           ) : view === 'posta' ? (
@@ -1391,6 +1402,8 @@ export default function CurriculumApp() {
               onSaveLetter={saveLetter}
               onDeleteLetter={deleteLetter}
               onRefresh={() => setLoadN((n) => n + 1)}
+              focusSel={postaFocus}
+              onFocusConsumed={() => setPostaFocus(null)}
             />
           ) : view === 'people' ? (
             // csak betöltött adattal mountolunk: a PeopleModal szerkesztőként mount-kor
@@ -1415,6 +1428,7 @@ export default function CurriculumApp() {
               onUseTopic={useTopicInComposer}
               onOpenLetter={openLetterInComposer}
               targetTitle={letterTargetTitle}
+              onTitkarno={() => { if (canEdit) setTitkarOpen(true); }}
               composer={booted && (
                 <NotifyModal
                   inline
@@ -1437,6 +1451,15 @@ export default function CurriculumApp() {
               )}
             />
           </div>
+          <LevelWizard
+            open={titkarOpen}
+            onClose={() => setTitkarOpen(false)}
+            db={peopleDB}
+            teacherNames={teacherNames}
+            agenda={agenda}
+            onSaveLetter={saveLetter}
+            onSaveEvent={saveEvent}
+          />
         </div>
         )}
 

@@ -2,11 +2,11 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { Agenda, AgendaEvent, Letter, LetterRecipient, emptyEvent, fmtEventWhen } from '@/data/agenda';
-import { PeopleDB, RosterEntry, RosterGroups } from '@/data/people';
+import { PeopleDB } from '@/data/people';
 import { resolveRecipients, suggestSendMode } from '@/lib/recipients';
 import { matchTemplates, TemplateMatch } from '@/lib/topics';
 import { editHeaders } from '@/lib/editkey';
-import { PeoplePicker } from './AgendaModals';
+import RecipientPicker from './RecipientPicker';
 
 // LEVELEK TITKÁRNŐ (kimenő): diktált szándékból sablon-alapú, Áron-hangú VÉGLEGES levél,
 // feladat/esemény-szinkronban, opcionális Google Meet-tel. A kész levél a Posta küldés-
@@ -19,8 +19,6 @@ interface Props {
   onClose: () => void;
   db: PeopleDB;
   teacherNames: string[];
-  roster: RosterEntry[];                   // a mindenhol használt névsor (badge-elt típussal)
-  rosterGroups: RosterGroups;              // kategórián belüli gyorsszűrők (aktív/főállású/óraadó…)
   agenda: Agenda;
   onSaveLetter: (l: Letter) => void;      // upsert a letters[]-be (outbox)
   onSaveEvent: (e: AgendaEvent) => void;  // upsert az events[]-be (tentative)
@@ -59,12 +57,13 @@ const slotLabel = (s: Slot): string => {
   return `${d}${s.start ? ` ${s.start}` : ''}${s.end ? `-${s.end}` : ''}`;
 };
 
-export default function LevelWizard({ open, onClose, db, teacherNames, roster, rosterGroups, agenda, onSaveLetter, onSaveEvent }: Props) {
+export default function LevelWizard({ open, onClose, db, teacherNames, agenda, onSaveLetter, onSaveEvent }: Props) {
   const [mode, setMode] = useState<'voice' | 'write' | null>(null);
   const [step, setStep] = useState<Step>('intent');
   const [intent, setIntent] = useState('');
   // címzettek: a mindenhol használt PeoplePicker-rel, NEVEK szerint (mint a feladat/esemény)
   const [selectedNames, setSelectedNames] = useState<string[]>([]);
+  const [adhocEmails, setAdhocEmails] = useState<string[]>([]);
   const [sendModeOverride, setSendModeOverride] = useState<'personal' | 'bcc' | null>(null);
   // sablonok
   const [chosenTemplateId, setChosenTemplateId] = useState<string | null>(null);
@@ -89,10 +88,15 @@ export default function LevelWizard({ open, onClose, db, teacherNames, roster, r
   const speakSeq = useRef(0);
 
   const candidates = useMemo<TemplateMatch[]>(() => (intent.trim() ? matchTemplates(intent, 3) : []), [intent]);
-  // a kijelölt nevek -> feloldott címzettek (email); email nélküliek az unresolved-ben
-  const { resolved: recipients, unresolved } = useMemo(() => resolveRecipients(db, teacherNames, selectedNames), [db, teacherNames, selectedNames]);
+  // a kijelölt nevek -> feloldott címzettek (email); email nélküliek az unresolved-ben.
+  // az egyedi (listán kívüli) email-ek külön adódnak hozzá.
+  const { resolved: resolvedNames, unresolved } = useMemo(() => resolveRecipients(db, teacherNames, selectedNames), [db, teacherNames, selectedNames]);
+  const recipients = useMemo<LetterRecipient[]>(() => {
+    const seen = new Set(resolvedNames.map((r) => r.email.toLowerCase()));
+    const extra = adhocEmails.filter((e) => !seen.has(e.toLowerCase())).map((e) => ({ name: e, email: e, kind: 'egyedi' }));
+    return [...resolvedNames, ...extra];
+  }, [resolvedNames, adhocEmails]);
   const sendMode: 'personal' | 'bcc' = sendModeOverride ?? suggestSendMode(recipients);
-  const toggleName = (n: string) => setSelectedNames((s) => (s.includes(n) ? s.filter((x) => x !== n) : [...s, n]));
 
   if (!open) return null;
 
@@ -111,7 +115,7 @@ export default function LevelWizard({ open, onClose, db, teacherNames, roster, r
 
   const reset = () => {
     setMode(null); setStep('intent'); setIntent('');
-    setSelectedNames([]); setSendModeOverride(null);
+    setSelectedNames([]); setAdhocEmails([]); setSendModeOverride(null);
     setChosenTemplateId(null);
     setMeetingOn(false); setEvTitle(''); setSlots([{ day: '', start: '', end: '' }]); setPlace('');
     setSendGoogleInvite(false); setMeetLink(''); setGoogleEventId(''); setEventId(''); setMeetMsg(null);
@@ -266,8 +270,9 @@ export default function LevelWizard({ open, onClose, db, teacherNames, roster, r
                 <div style={{ display: 'grid', gap: 18 }}>
                   {/* címzettek - a mindenhol használt PeoplePicker (toggle, Senki, kategória-böngészés) */}
                   <section style={{ display: 'grid', gap: 8 }}>
-                    <label style={{ fontWeight: 600 }}>Címzettek - keress névre, vagy nyiss meg egy kategóriát (T oktató, H hallgató…)</label>
-                    <PeoplePicker selected={selectedNames} roster={roster} groups={rosterGroups} onToggle={toggleName} onSet={setSelectedNames} />
+                    <label style={{ fontWeight: 600 }}>Címzettek (mint a postázóban: gyors csoportok, egyedi csoportok, névsor, egyedi email)</label>
+                    <RecipientPicker teacherNames={teacherNames} db={db} selected={selectedNames} adhoc={adhocEmails}
+                      onChange={(s, a) => { setSelectedNames(s); setAdhocEmails(a); }} />
                     {unresolved.length > 0 && (
                       <p style={{ color: st.hot, fontSize: '.82rem', margin: 0 }}>Nincs email a Névjegyzékben (kimarad a küldésből): {unresolved.join(', ')}</p>
                     )}

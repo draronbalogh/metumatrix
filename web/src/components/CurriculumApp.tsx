@@ -1503,8 +1503,6 @@ export default function CurriculumApp() {
             onClose={() => setTitkarOpen(false)}
             db={peopleDB}
             teacherNames={teacherNames}
-            roster={roster}
-            rosterGroups={rosterGroups}
             agenda={agenda}
             onSaveLetter={saveLetter}
             onSaveEvent={saveEvent}

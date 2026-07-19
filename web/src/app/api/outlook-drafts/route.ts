@@ -26,7 +26,58 @@ export async function POST(req: Request) {
   // a kártya id-t / a mind-küldés jelzőt a törzsből olvassuk; a piszkozat-ág törzs nélkül is megy
   let sendId: string | null = null;
   let sendAll = false;
-  try { const b = await req.json() as { sendId?: unknown; sendAll?: unknown }; if (typeof b?.sendId === 'string' && b.sendId.trim()) sendId = b.sendId.trim(); if (b?.sendAll === true) sendAll = true; } catch { /* nincs törzs */ }
+  let draftId: string | null = null;
+  let testDefer = 0;
+  let checkSent: string | null = null;
+  let outboundId: string | null = null;      // egy Titkárnő-levél piszkozata (levél-id)
+  let outboundSendId: string | null = null;   // egy Titkárnő-levél azonnali küldése
+  let outboundAll = false;                     // az összes kimenő levél piszkozata
+  try {
+    const b = await req.json() as { sendId?: unknown; sendAll?: unknown; draftId?: unknown; testDefer?: unknown; checkSent?: unknown; outboundId?: unknown; outboundSendId?: unknown; outboundAll?: unknown };
+    if (typeof b?.sendId === 'string' && b.sendId.trim()) sendId = b.sendId.trim();
+    if (b?.sendAll === true) sendAll = true;
+    if (typeof b?.draftId === 'string' && b.draftId.trim()) draftId = b.draftId.trim();
+    if (typeof b?.testDefer === 'number' && b.testDefer > 0 && b.testDefer <= 20) testDefer = Math.round(b.testDefer);
+    if (typeof b?.checkSent === 'string' && b.checkSent.trim()) checkSent = b.checkSent.trim().slice(0, 80);
+    if (typeof b?.outboundId === 'string' && b.outboundId.trim()) outboundId = b.outboundId.trim();
+    if (typeof b?.outboundSendId === 'string' && b.outboundSendId.trim()) outboundSendId = b.outboundSendId.trim();
+    if (b?.outboundAll === true) outboundAll = true;
+  } catch { /* nincs törzs */ }
+
+  // TESZT: késleltetett kézbesítés kipróbálása (self-levél) + fióktípus (A/B). Csak saját címre küld.
+  if (testDefer > 0) {
+    const { out, code } = await runPs(['-TestDefer', String(testDefer)]);
+    try { await fs.mkdir(LOG.replace(/[\\/][^\\/]+$/, ''), { recursive: true }); await fs.appendFile(LOG, `\n==== ${new Date().toISOString()} (TESTDEFER ${testDefer}, exit=${code}) ====\n${out}\n`, 'utf8'); } catch { /* ignore */ }
+    const scheduled = /TEST_SCHEDULED=1/.test(out);
+    const whenM = out.match(/WHEN=(\S+)/);
+    const acctM = out.match(/FIOKOK: (.+)/);
+    const comError = /COM HIBA/i.test(out);
+    return NextResponse.json({ ok: scheduled && !comError && code === 0, scheduled, when: whenM ? whenM[1] : null, accounts: acctM ? acctM[1].trim() : null, comError, output: out });
+  }
+  // TESZT-ELLENŐRZÉS: egy tárgy-töredék megvan-e a Sent / Outbox mappában
+  if (checkSent) {
+    const { out, code } = await runPs(['-CheckSent', checkSent]);
+    const m = out.match(/CHECK: SENT=(\d+) OUTBOX=(\d+)/);
+    const comError = /COM HIBA/i.test(out);
+    return NextResponse.json({ ok: !comError && code === 0, sent: m ? Number(m[1]) : null, outbox: m ? Number(m[2]) : null, comError, output: out });
+  }
+
+  // EGY-KÁRTYA PISZKOZAT-ÁG: egyetlen kártya -> Outlook Piszkozatok (a UI kártyánkénti
+  // „Outlookba" gombja). Küldés NEM történik. Csak whitelistelt id-alak mehet a parancssorba.
+  if (draftId) {
+    if (!/^[A-Za-z0-9_-]{1,20}$/.test(draftId)) return NextResponse.json({ ok: false, error: 'ervenytelen id' }, { status: 400 });
+    const { out, code } = await runPs(['-DraftId', draftId]);
+    try {
+      await fs.mkdir(LOG.replace(/[\\/][^\\/]+$/, ''), { recursive: true });
+      await fs.appendFile(LOG, `\n==== ${new Date().toISOString()} (DRAFT ${draftId}, exit=${code}) ====\n${out}\n`, 'utf8');
+    } catch { /* a napló nem kritikus */ }
+    const madeMatch = out.match(/DRAFTS_MADE=(\d+)/);
+    const skipMatch = out.match(/DRAFTS_SKIPPED=(\d+)/);
+    const made = madeMatch ? Number(madeMatch[1]) : null;
+    const skipped = skipMatch ? Number(skipMatch[1]) : null;
+    const comError = /COM HIBA/i.test(out);
+    return NextResponse.json({ ok: !comError && code === 0, draft: true, made, skipped, comError, output: out });
+  }
 
   // KÜLDÉS-MIND-ÁG: az ÖSSZES kész válasz elküldése (a UI „Mind küldése" gombja, megerősítéssel).
   if (sendAll) {
@@ -53,6 +104,38 @@ export async function POST(req: Request) {
     const sent = /SENT=1/.test(out);
     const comError = /COM HIBA/i.test(out);
     return NextResponse.json({ ok: sent && !comError && code === 0, sent, comError, output: out });
+  }
+
+  // KIMENŐ (Titkárnő) PISZKOZAT-ÁG: egy kezdeményezett levél -> Outlook Piszkozatok
+  // (a Posta „Kimenő" szekció „Outlookba" gombja). Levél-id (l-...) whitelist. Küldés NEM.
+  if (outboundId) {
+    if (!/^[A-Za-z0-9_-]{1,24}$/.test(outboundId)) return NextResponse.json({ ok: false, error: 'ervenytelen id' }, { status: 400 });
+    const { out, code } = await runPs(['-OutboundId', outboundId]);
+    try { await fs.mkdir(LOG.replace(/[\\/][^\\/]+$/, ''), { recursive: true }); await fs.appendFile(LOG, `\n==== ${new Date().toISOString()} (OUTBOUND ${outboundId}, exit=${code}) ====\n${out}\n`, 'utf8'); } catch { /* ignore */ }
+    const madeMatch = out.match(/DRAFTS_MADE=(\d+)/);
+    const skipMatch = out.match(/DRAFTS_SKIPPED=(\d+)/);
+    const comError = /COM HIBA/i.test(out);
+    return NextResponse.json({ ok: !comError && code === 0, draft: true, made: madeMatch ? Number(madeMatch[1]) : null, skipped: skipMatch ? Number(skipMatch[1]) : null, comError, output: out });
+  }
+
+  // KIMENŐ KÜLDÉS-ÁG: egy kezdeményezett levél AZONNALI küldése (a „Küldés most" gomb).
+  if (outboundSendId) {
+    if (!/^[A-Za-z0-9_-]{1,24}$/.test(outboundSendId)) return NextResponse.json({ ok: false, error: 'ervenytelen id' }, { status: 400 });
+    const { out, code } = await runPs(['-OutboundSendId', outboundSendId]);
+    try { await fs.mkdir(LOG.replace(/[\\/][^\\/]+$/, ''), { recursive: true }); await fs.appendFile(LOG, `\n==== ${new Date().toISOString()} (OUTBOUND-SEND ${outboundSendId}, exit=${code}) ====\n${out}\n`, 'utf8'); } catch { /* ignore */ }
+    const sent = /SENT=1/.test(out);
+    const comError = /COM HIBA/i.test(out);
+    return NextResponse.json({ ok: sent && !comError && code === 0, sent, comError, output: out });
+  }
+
+  // KIMENŐ MIND PISZKOZAT-ÁG: az összes kimenő levél -> Piszkozatok.
+  if (outboundAll) {
+    const { out, code } = await runPs(['-OutboundAll']);
+    try { await fs.mkdir(LOG.replace(/[\\/][^\\/]+$/, ''), { recursive: true }); await fs.appendFile(LOG, `\n==== ${new Date().toISOString()} (OUTBOUND-ALL, exit=${code}) ====\n${out}\n`, 'utf8'); } catch { /* ignore */ }
+    const madeMatch = out.match(/DRAFTS_MADE=(\d+)/);
+    const skipMatch = out.match(/DRAFTS_SKIPPED=(\d+)/);
+    const comError = /COM HIBA/i.test(out);
+    return NextResponse.json({ ok: !comError && code === 0, made: madeMatch ? Number(madeMatch[1]) : null, skipped: skipMatch ? Number(skipMatch[1]) : null, comError, output: out });
   }
 
   // PISZKOZAT-ÁG (alapértelmezett): a köteg összes kész válasza -> Piszkozatok

@@ -31,6 +31,8 @@ interface Props {
   onOpenLetter: (l: Letter) => void;
   onAddTaskFor: (eventId: string) => void;
   emailFor: (name: string) => string | null; // a Névjegyzékből - a Meet-meghívó vendégeihez
+  onCreateMeet?: (eventId: string) => void;   // automatikus Google Meet-link (API) az eseményhez
+  meetMsg?: string | null;                     // a Meet-készítés visszajelzése
 }
 
 const fmtLetter = (iso: string) => iso.slice(0, 16).replace('T', ' ');
@@ -63,7 +65,7 @@ function Sec({ cls, children }: { cls?: string; children: ReactNode }) {
 // egy kiosztott lépés a személy-kártyán - a taskId+ix révén innen is pipálható
 interface PStep { taskId: string; taskTitle: string | null; ix: number; text: string; done: boolean; due: string | null }
 
-export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor }: Props) {
+export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor, onCreateMeet, meetMsg }: Props) {
   const task = det.kind === 'task' ? agenda.tasks.find((t) => t.id === det.id) ?? null : null;
   const event = det.kind === 'event' ? agenda.events.find((e) => e.id === det.id) ?? null : null;
   if (!task && !event) return null;
@@ -205,13 +207,24 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
               </div>
               {event.place && <div className="dr-field"><h4>Helyszín</h4><p>📍 {event.place}</p></div>}
               {event.note && <div className="dr-field"><h4>Leírás</h4><p>{event.note}</p></div>}
-              {canEdit && (
+              {event.meetLink && (
                 <div className="dr-field">
-                  <button className="btn" title="Google Meet találkozó szervezése: naptár-esemény előtöltve videohívással, résztvevőkkel"
+                  <h4>Google Meet</h4>
+                  <p><a href={event.meetLink} target="_blank" rel="noopener noreferrer">📹 Belépés a meetre</a>{event.mstatus === 'tentative' ? ' · egyeztetés alatt' : ''}</p>
+                </div>
+              )}
+              {canEdit && (
+                <div className="dr-field" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  {onCreateMeet && (
+                    <button className="btn btn--ink" title="Automatikusan létrehoz egy Google Meet-linket ehhez az eseményhez, és beírja ide (a résztvevők vendégként)"
+                      onClick={() => onCreateMeet(event.id)}>{event.meetLink ? '📹 Új Meet-link' : '📹 Meet-link készítése'}</button>
+                  )}
+                  <button className="btn" title="Kézi: Google Naptár-esemény előtöltve videohívással (a Google-ben mented)"
                     onClick={() => {
                       const emails = [event.owner, ...event.people].filter((n): n is string => !!n).map(emailFor).filter((x): x is string => !!x);
                       window.open(meetUrl(event, [...new Set(emails)]), '_blank', 'noopener');
-                    }}>📹 Meet szervezése</button>
+                    }}>📹 Meet szervezése (kézi)</button>
+                  {meetMsg && <span style={{ fontSize: '.82rem', color: 'var(--muted)' }}>{meetMsg}</span>}
                 </div>
               )}
             </>

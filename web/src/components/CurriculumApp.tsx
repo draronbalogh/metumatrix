@@ -724,6 +724,31 @@ export default function CurriculumApp() {
     });
     setEventEdit(null);
   }, [commitAgenda]);
+  // ON-DEMAND Google Meet egy meglévő eseményhez: /api/meet létrehoz + a linket az eseményre írja.
+  // A kezdő óra a when szövegből (ó:pp), különben 9:00; hossz 1 óra. Token nélkül unconfigured.
+  const [meetMsg, setMeetMsg] = useState<string | null>(null);
+  const createMeetForEvent = useCallback(async (eventId: string) => {
+    const e = agendaRef.current.events.find((x) => x.id === eventId);
+    if (!e) return;
+    if (!e.day) { setMeetMsg('Előbb adj meg egy napot az eseménynek.'); return; }
+    const emails = [e.owner, ...e.people].filter((n): n is string => !!n).map((n) => emailOf(peopleRef.current, n)).filter((x): x is string => !!x);
+    const m = e.when.match(/(\d{1,2})[:.](\d{2})/);
+    const hh = m ? String(Math.min(23, parseInt(m[1], 10))).padStart(2, '0') : '09';
+    const mi = m ? m[2] : '00';
+    const he = String(Math.min(23, Number(hh) + 1)).padStart(2, '0');
+    setMeetMsg('Meet-link készítése…');
+    try {
+      const res = await fetch('/api/meet', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+        body: JSON.stringify({ action: 'create', summary: e.title, startIso: `${e.day}T${hh}:${mi}:00`, endIso: `${e.day}T${he}:${mi}:00`, location: e.place || undefined, attendees: [...new Set(emails)], tentative: false }),
+      });
+      const j = await res.json() as { ok: boolean; unconfigured?: boolean; meetLink?: string; googleEventId?: string; error?: string };
+      if (j.unconfigured) { setMeetMsg('A Google Meet még nincs beállítva (OAuth). A kézi „Meet szervezése" addig is működik.'); return; }
+      if (!j.ok) { setMeetMsg(`Meet hiba: ${j.error ?? 'ismeretlen'}`); return; }
+      saveEvent({ ...e, googleEventId: j.googleEventId ?? e.googleEventId ?? null, meetLink: j.meetLink ?? null });
+      setMeetMsg(j.meetLink ? '✓ Meet-link kész.' : 'Kész (link nélkül).');
+    } catch { setMeetMsg('A Meet-szolgáltatás nem elérhető.'); }
+  }, [saveEvent]);
   const saveIntro = useCallback((s: string) => {
     commitAgenda({ ...agendaRef.current, intro: s });
     setIntroEdit(false);
@@ -1583,6 +1608,8 @@ export default function CurriculumApp() {
           onNotify={() => { if (agendaDetails.kind === 'task') notifyTask(agendaDetails.id); else notifyEvent(agendaDetails.id); }}
           onOpenLetter={openSavedLetter}
           onAddTaskFor={(eid) => { setAgendaDetails(null); addTaskForEvent(eid); }}
+          onCreateMeet={createMeetForEvent}
+          meetMsg={meetMsg}
         />
       )}
 

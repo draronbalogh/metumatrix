@@ -13,7 +13,7 @@ import AgendaDrawer, { AgendaDetailsRef } from './AgendaDrawer';
 import ITView from './ITView';
 import DocsView from './DocsView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
-import { Agenda, AgendaEvent, AgendaSource, AgendaTask, DEFAULT_AGENDA, Letter, ReplyDraft, TaskStatus, addDaysYmd, emptyEvent, emptyTask, fmtDayHu, isAwaiting, mergeAgendaDocs, nextPriority, normalizeAgenda, taskSteps, withOutEntry } from '@/data/agenda';
+import { Agenda, AgendaEvent, AgendaMeetSlot, AgendaSource, AgendaTask, DEFAULT_AGENDA, DEFAULT_OWNER, Letter, ReplyDraft, TaskStar, TaskStatus, addDaysYmd, emptyEvent, emptyTask, fmtDayHu, fmtEventWhen, isAwaiting, mergeAgendaDocs, nextPriority, normalizeAgenda, taskSteps, withOutEntry } from '@/data/agenda';
 import { DEFAULT_PEOPLE, PeopleDB, PersonKind, RosterGroups, SenderRule, activeStudentNames, buildCanonicalNames, buildFooter, buildRoster, normalizePeople, emailOf, studentStatusNames, teacherStatusNames } from '@/data/people';
 import PostaView from './PostaView';
 import { normName, normTitle } from '@/lib/normalize';
@@ -624,6 +624,12 @@ export default function CurriculumApp() {
     if (!canEditRef.current) return;
     const cur = agendaRef.current;
     commitAgenda({ ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, priority: nextPriority(x.priority) } : x)) });
+  }, [commitAgenda]);
+  // kézi ⭐: 'on' = mindig a Legfontosabbak sávban, 'off' = soha, null = automatikus
+  const setTaskStar = useCallback((id: string, star: TaskStar | null) => {
+    if (!canEditRef.current) return;
+    const cur = agendaRef.current;
+    commitAgenda({ ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, star, starAt: star ? new Date().toISOString() : null } : x)) });
   }, [commitAgenda]);
   // alfeladat-pipa a kártyáról: done váltás + az ideas tükör frissítése
   const toggleStep = useCallback((taskId: string, ix: number) => {
@@ -1534,6 +1540,8 @@ export default function CurriculumApp() {
               onPerson={onInstructor}
               onToggleDone={toggleDone}
               onCyclePriority={cyclePriority}
+              onSetStar={setTaskStar}
+              onOpenEvent={(id) => setAgendaDetails({ kind: 'event', id })}
             />
           ) : view === 'events' ? (
             <EventsView
@@ -1755,6 +1763,7 @@ export default function CurriculumApp() {
           onCreateMeet={createMeetForEvent}
           onConfirmMeet={confirmMeet}
           onTaskStatus={setTaskStatus}
+          onSetStar={setTaskStar}
           onDelete={() => {
             const d = agendaDetails;
             if (!d || !canEditRef.current) return;

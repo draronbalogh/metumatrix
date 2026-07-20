@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Agenda, AgendaEvent, AgendaTask, Letter, PRIORITY_LABEL, STATUS_LABEL, TaskStatus, fmtDayHu, fmtDueHu, taskSteps, stepsDone } from '@/data/agenda';
+import { Agenda, AgendaEvent, AgendaTask, Letter, PRIORITY_LABEL, STATUS_LABEL, TaskStar, TaskStatus, fmtDayHu, fmtDueHu, nextStarFor, taskSteps, stepsDone, urgencyRank } from '@/data/agenda';
 import { PersonKind } from '@/data/people';
 import { suggestEventFor } from '@/lib/linkSuggest';
 import { PersonChip } from './AgendaView';
@@ -36,6 +36,7 @@ interface Props {
   meetMsg?: string | null;                     // a Meet-készítés visszajelzése
   onTaskStatus?: (id: string, s: TaskStatus) => void; // kész / folyamatban / újranyitás a részletezőből
   onDelete?: () => void; // a tétel törlése innen (a hívó erősít meg)
+  onSetStar?: (id: string, star: TaskStar | null) => void; // kézi ⭐ a részletezőből
 }
 
 const fmtLetter = (iso: string) => iso.slice(0, 16).replace('T', ' ');
@@ -68,7 +69,7 @@ function Sec({ cls, children }: { cls?: string; children: ReactNode }) {
 // egy kiosztott lépés a személy-kártyán - a taskId+ix révén innen is pipálható
 interface PStep { taskId: string; taskTitle: string | null; ix: number; text: string; done: boolean; due: string | null }
 
-export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor, onCreateMeet, onConfirmMeet, meetMsg, onTaskStatus, onDelete }: Props) {
+export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor, onCreateMeet, onConfirmMeet, meetMsg, onTaskStatus, onDelete, onSetStar }: Props) {
   const task = det.kind === 'task' ? agenda.tasks.find((t) => t.id === det.id) ?? null : null;
   const event = det.kind === 'event' ? agenda.events.find((e) => e.id === det.id) ?? null : null;
   if (!task && !event) return null;
@@ -136,6 +137,14 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                   <button className="btn btn--ink" title="A feladat teljesítve - a Kész listába kerül" onClick={() => onTaskStatus(task.id, 'done')}>✓ Kész</button>
                   <button className="btn" title={task.status === 'doing' ? 'Vissza teendőre' : 'Megjelölés folyamatban lévőnek'} onClick={() => onTaskStatus(task.id, task.status === 'doing' ? 'todo' : 'doing')}>{task.status === 'doing' ? '⏸ Nem folyamatban' : '▶ Folyamatban'}</button>
                 </>)}
+            {canEdit && task && task.status !== 'done' && onSetStar && (() => {
+              const soon = Date.now() + 7 * 86400000;
+              const inBand = urgencyRank(task, soon) < 99;
+              return (
+                <button className="btn" title={inBand ? 'Kivétel a Legfontosabbak sávból' : 'Kiemelés a Legfontosabbak sávba'}
+                  onClick={() => onSetStar(task.id, nextStarFor(task, soon))}>{inBand ? '⭐ Legfontosabb' : '☆ Kiemelés'}</button>
+              );
+            })()}
             {canEdit && <button className="btn btn--ink" onClick={onEdit}>✎ Szerkesztés</button>}
             {canEdit && onDelete && <button className="btn btn--danger" onClick={onDelete}>Törlés</button>}
             <button className="btn" onClick={onClose}>✕ Bezárás</button>

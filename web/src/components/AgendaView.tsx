@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import {
   Agenda, AgendaTask, STATUS_LABEL, PRIORITY_LABEL, PRIORITY_ORDER, TASK_CATEGORIES,
-  TaskPriority, taskHasPerson, eventHasPerson, taskSteps, stepsDone, fmtDueHu, isAwaiting,
+  TaskPriority, TaskStar, taskHasPerson, eventHasPerson, taskSteps, stepsDone, fmtDueHu, fmtDayHu, isAwaiting,
+  urgencyRank, nextStarFor,
 } from '@/data/agenda';
 import { PersonKind } from '@/data/people';
 import PageHead from './PageHead';
@@ -21,6 +22,8 @@ interface Props {
   onPerson: (name: string) => void;    // név-szűrő ki/be
   onToggleDone: (id: string) => void;  // pipa: kész / nem kész
   onCyclePriority: (id: string) => void;
+  onSetStar: (id: string, star: TaskStar | null) => void; // kézi ⭐ a Legfontosabbak sávhoz
+  onOpenEvent: (id: string) => void;   // kapcsolt esemény részletezője
 }
 
 // rövid név a meta-sor badge-eihez: a titulusok nélküli első (vezeték)név
@@ -52,26 +55,10 @@ export const isNewTask = (t: AgendaTask): boolean =>
   !!t.createdAt && Date.now() - Date.parse(t.createdAt) < 72 * 3600 * 1000;
 
 const DAY_MS = 86400000;
-// pontos határidő ms-ben (dueDate ÉÉÉÉ-HH-NN), enélkül null
-const dueMsOf = (t: AgendaTask): number | null => {
-  const d = t.dueDate;
-  if (!d || d.length < 10) return null;
-  const ms = new Date(Number(d.slice(0, 4)), Number(d.slice(5, 7)) - 1, Number(d.slice(8, 10))).getTime();
-  return Number.isNaN(ms) ? null : ms;
-};
-// „fontossági" rang a Legfontosabbak sávhoz: kisebb = előrébb; 99 = nem kiemelt.
-// Levél-ügyek elöl (új válasz kell / válaszra vár / kész válasz), majd közeli határidő, majd magas prioritás.
-const urgencyRank = (t: AgendaTask, soon: number): number => {
-  if (t.source?.returned) return 0;
-  if (isAwaiting(t.source)) return 1;
-  if (t.source?.status === 'drafted') return 2;
-  const dm = dueMsOf(t);
-  if (dm !== null && dm <= soon) return 3;
-  if (t.priority === 'high') return 4;
-  return 99;
-};
+// a rang- és ⭐-logika a data/agenda.ts-ben él (urgencyRank, nextStarFor) - a kézi
+// felülbírálatot (star/starAt) is ott kezeli, így a drawer és a modál is ugyanazt látja
 
-export default function AgendaView({ agenda, q, instr, taught, letterStats, onAdd, onOpen, onOpenPost, onEditIntro, onPerson, onToggleDone, onCyclePriority }: Props) {
+export default function AgendaView({ agenda, q, instr, taught, letterStats, onAdd, onOpen, onOpenPost, onEditIntro, onPerson, onToggleDone, onCyclePriority, onSetStar, onOpenEvent }: Props) {
   const [groupBy, setGroupBy] = useState<GroupBy>('newest');
   const [catFilter, setCatFilter] = useState('');
 
@@ -197,6 +184,8 @@ export default function AgendaView({ agenda, q, instr, taught, letterStats, onAd
               return (
                 <div key={t.id} className={`ag-toprow prio-${t.priority}`}>
                   <button type="button" className="ag-check" title="Kész - pipa" onClick={() => onToggleDone(t.id)} />
+                  <button type="button" className="ag-star is-on" title="Kivétel a Legfontosabbak közül"
+                    onClick={() => onSetStar(t.id, nextStarFor(t, soon))}>⭐</button>
                   <button type="button" className="ag-toprow-open" onClick={() => onOpen(t.id)} title="Feladat megnyitása">
                     <span className="tt">{isNewTask(t) && <span className="ag-new">ÚJ</span>}{t.title}</span>
                     {t.source?.returned ? <span className="b hot">✉ új válasz kell</span>
@@ -232,6 +221,9 @@ export default function AgendaView({ agenda, q, instr, taught, letterStats, onAd
                   )}
                 </div>
                 <div className="agc-meta">
+                  <button type="button" className={`ag-star${urgencyRank(t, soon) < 99 ? ' is-on' : ''}`}
+                    title={urgencyRank(t, soon) < 99 ? 'Kivétel a Legfontosabbak közül' : 'Kiemelés a Legfontosabbak közé'}
+                    onClick={(e) => { e.stopPropagation(); onSetStar(t.id, nextStarFor(t, soon)); }}>{urgencyRank(t, soon) < 99 ? '⭐' : '☆'}</button>
                   {(t.dueDate || t.due) && <span className="m">📅 {t.dueDate ? fmtDueHu(t.dueDate) : t.due}</span>}
                   {t.owner && <span className="m">👤 {familyName(t.owner)}{t.people.length > 0 ? ` +${t.people.length}` : ''}</span>}
                   {(t.meetLink || t.source?.meetLink) && <a className="m" href={(t.meetLink || t.source?.meetLink) as string} target="_blank" rel="noopener noreferrer" title="Google Meet belépés" onClick={(ev) => ev.stopPropagation()}>📹 Meet</a>}

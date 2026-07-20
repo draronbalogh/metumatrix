@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { AgendaEvent, AgendaTask, Letter, STATUS_LABEL, TaskStatus, TaskStep, PRIORITY_LABEL, TaskPriority, TASK_CATEGORIES, taskSteps, stepsDone, fmtDueHu, fmtEventWhen } from '@/data/agenda';
+import { AgendaEvent, AgendaMeetSlot, AgendaTask, Letter, STATUS_LABEL, TaskStar, TaskStatus, TaskStep, PRIORITY_LABEL, TaskPriority, TASK_CATEGORIES, taskSteps, stepsDone, fmtDueHu, fmtEventWhen } from '@/data/agenda';
 import { RosterEntry, RosterGroups, PersonKind, KIND_LABEL } from '@/data/people';
 import { suggestTemplatesFor } from '@/lib/topics';
 import { suggestEventFor } from '@/lib/linkSuggest';
@@ -377,6 +377,7 @@ export function TaskModal({ task, isNew, events, roster, rosterGroups, letters, 
   const [d, setD] = useState(() => ({
     title: task.title, summary: task.summary,
     status: task.status as string, priority: task.priority as string, category: task.category ?? '',
+    star: (task.star ?? '') as string,
     owner: task.owner ?? '', due: task.due ?? '', dueDate: task.dueDate ?? '',
     eventId: task.eventId ?? '',
     srcName: task.source?.name ?? '', srcEmail: task.source?.email ?? '',
@@ -411,6 +412,8 @@ export function TaskModal({ task, isNew, events, roster, rosterGroups, letters, 
       dueDate: d.dueDate.trim() || null,
       people,
       eventId: d.eventId || null,
+      star: (d.star || null) as TaskStar | null,
+      starAt: (d.star || null) === (task.star ?? null) ? task.starAt ?? null : (d.star ? new Date().toISOString() : null),
       // a source-csomag (Posta-állapot, szál, választervek) NEM veszhet el a szerkesztéskor:
       // csak a név/email írható át, minden más mező (status, thread, replies, gist...) megmarad
       source: d.srcName.trim() || d.srcEmail.trim()
@@ -452,6 +455,11 @@ export function TaskModal({ task, isNew, events, roster, rosterGroups, letters, 
               <label>Prioritás</label>
               <ChipRadio value={d.priority} onChange={(v) => set('priority', v)}
                 options={[{ v: 'high', label: `⚑ ${PRIORITY_LABEL.high}` }, { v: 'normal', label: PRIORITY_LABEL.normal, cls: 'c-amber' }, { v: 'low', label: PRIORITY_LABEL.low, cls: 'c-grey' }]} />
+            </div>
+            <div className="field full">
+              <label>⭐ Legfontosabbak sáv - kézi felülbírálat</label>
+              <ChipRadio value={d.star} onChange={(v) => set('star', v)}
+                options={[{ v: '', label: 'Automatikus', cls: 'c-grey' }, { v: 'on', label: '⭐ Mindig bent' }, { v: 'off', label: 'Soha', cls: 'c-grey' }]} />
             </div>
             <div className="field full">
               <label>Kategória</label>

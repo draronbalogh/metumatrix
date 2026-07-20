@@ -983,6 +983,31 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
     body: (c) => `Kedves Kollégák és Hallgatók!\n\nInduljon jól a tanév: évindító szakos eseményt tartunk ${or(c.when, '[dátum, óra]')}-kor, ${or(c.place, '[helyszín]')}. Röviden bemutatjuk az évad terveit (kiállítások, versenyek, projektek, vendégek), köszöntjük az elsősöket, és utána kötetlen ismerkedés következik.\n\nHozzátok a jó kedveteket, a kérdéseiteket és az ötleteiteket is. Kérlek, jelezzétek, ki tud jönni.\n\nTalálkozunk!`,
   },
   {
+    id: 'szakos-esemeny-kulso', group: '17 · Rendezvények / hallgatói élet', label: 'Szakos esemény külső helyszínen (meghívó + gyakorlati infók)',
+    subject: (c) => `Meghívó: ${or(c.title, '[esemény]')}, ${or(c.place, '[külső helyszín]')}`,
+    body: (c) => `Kedves Kollégák és Hallgatók!\n\nSzeretettel hívlak Benneteket: ${or(c.title, '[esemény]')}, ${or(c.when, '[dátum, óra]')}, helyszín: ${or(c.place, '[külső helyszín, cím]')}. Gyakorlati tudnivalók: találkozó [óra]-kor [találkozási pont]-nál; megközelítés: [tömegközlekedés / parkolás]; belépés: [ingyenes / jegy / lista alapján].\n\nKérlek, jelezzétek [határidő]-ig, ki jön, hogy a létszámot le tudjam adni. Kérdés esetén hívjatok bátran.\n\nTalálkozunk!`,
+  },
+  {
+    id: 'felevi-buli', group: '17 · Rendezvények / hallgatói élet', label: 'Félévzáró buli meghívó (körlevél)',
+    subject: () => 'Félévzáró: ünnepeljük meg a félévet! [dátum]',
+    body: (c) => `Kedves Mindenki!\n\nA félév kemény munkáját ideje megünnepelni: félévzáró bulit tartunk ${or(c.when, '[dátum, óra]')}-kor, ${or(c.place, '[helyszín]')}. Kötetlen este, zene, beszélgetés, és egy rövid koccintás a félév legjobb pillanataira - oktatók és hallgatók együtt.\n\nHozz magaddal jó kedvet, mást nem kell. Kérlek, jelezd [határidő]-ig, ha jössz, hogy tudjunk tervezni.\n\nTalálkozunk!`,
+  },
+  {
+    id: 'felevzaro-ertekelo', group: '2 · Oktatói kapcsolattartás', label: 'Félév végi értékelő egyeztetés (körlevél, oktatók)',
+    subject: () => 'Félévzáró értékelő egyeztetés: [dátum]',
+    body: (c) => `Kedves Kollégák!\n\nA félév lezárásaként értékelő egyeztetést tartunk ${or(c.when, '[dátum, óra]')}-kor (${or(c.place, '[helyszín / online]')}). Témák: a kurzusok tapasztalatai (mi ment jól, min változtatnánk), a hallgatói eredmények és a kiemelkedő munkák, a következő félév tanulságai és teendői.\n\nKérlek, mindenki hozzon 2-3 pontot a saját kurzusairól. Aki nem tud jönni, előre is küldheti írásban.\n\nKöszönöm, számítok Rátok!`,
+  },
+  {
+    id: 'kiallitas-megnyito', group: '17 · Rendezvények / hallgatói élet', label: 'Kiállítás-megnyitó meghívó (körlevél, külsősöknek is)',
+    subject: (c) => `Meghívó: ${or(c.title, '[kiállítás címe]')} megnyitó, ${or(c.when, '[dátum]')}`,
+    body: (c) => `Kedves Meghívottak!\n\nSok szeretettel hívjuk Önöket a METU Média Design szak kiállításának megnyitójára: ${or(c.title, '[kiállítás címe]')}, ${or(c.when, '[dátum, óra]')}, ${or(c.place, '[helyszín]')}. A kiállításon hallgatóink munkái láthatók: [rövid ízelítő, 1-2 mondat]. A megnyitón köszöntőt mond: [név].\n\nA belépés díjtalan, a kiállítás [időszak]-ig látogatható. Örülnénk, ha együtt ünnepelhetnénk hallgatóink munkáját!`,
+  },
+  {
+    id: 'kirandulas-szakmai', group: '17 · Rendezvények / hallgatói élet', label: 'Szakmai kirándulás / stúdiólátogatás (körlevél, hallgatók)',
+    subject: (c) => `Szakmai kirándulás: ${or(c.title, '[cég / helyszín]')}, ${or(c.when, '[dátum]')}`,
+    body: (c) => `Kedves Hallgatók!\n\nSzakmai látogatásra megyünk: ${or(c.title, '[cég / stúdió / esemény]')}, ${or(c.when, '[dátum, óra]')}. Találkozó: [óra]-kor [találkozási pont]. A program: [mit nézünk meg, kivel találkozunk], a látogatás kb. [időtartam] hosszú.\n\nA létszám korlátozott ([N] fő), ezért kérlek, jelentkezz [határidő]-ig válaszban. A részvétel [ingyenes / útiköltség egyénileg].\n\nÉrdemes jönni, ilyet tanteremben nem lehet megtanulni. Találkozunk!`,
+  },
+  {
     id: 'szakest-szervezes', group: '17 · Rendezvények / hallgatói élet', label: 'Szakest: szervezőcsapat összehívása (körlevél)',
     subject: (c) => `Szervezői egyeztetés: ${or(c.title, '[esemény]')}`,
     body: (c) => `Sziasztok, Szervezők!\n\nIdeje elindítani a következő szakest / szakkör szervezését: ${or(c.title, '[esemény típusa]')} a tervek szerint ${or(c.when, '[időpont]')}-kor${c.place ? ` (${nd(c.place)})` : ', [helyszín]-en'}. Szeretnék egy közös egyeztetést [javasolt dátum]-kor, ahol átbeszéljük a koncepciót, a helyszínfoglalást, a technikát és a promóciót; kérlek, jelezzétek, kinek mikor jó. Első körben [Név] és [Név] vállalná a [feladat] kidolgozását, [Név] pedig a [feladat]-t; ha máshogy osztanátok fel, írjátok meg bátran. Fontos, hogy a promót időben indítsuk, mert tavaly is a korai szórólapozás és a Discord-üzenetek hozták a közönséget.\n\nVárom az ötleteiteket!`,

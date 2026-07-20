@@ -146,6 +146,8 @@ export interface AgendaEvent {
   googleEventId?: string | null; // a kapcsolt Google Calendar esemény id-je (Meet)
   meetLink?: string | null;      // a Google Meet-link (naptár, feladat, levél, Posta)
   mstatus?: 'tentative' | 'confirmed' | null; // egyeztetés alatt / véglegesítve
+  extSource?: 'outlook' | null;  // az abalogh@metropolitan.hu Outlook-naptárból importált tükör-esemény
+  extId?: string | null;         // az Outlook GlobalAppointmentID (dedup/frissítés a szinkronnál)
 }
 
 // Egy feloldott címzett a kimenő (Levelek-kezdeményezett) levélhez

@@ -16,9 +16,10 @@ interface Props {
   onOpenTask: (id: string) => void;       // a naptárban jelölt feladat-határidő → a feladat részletezője
   onOpenPost: (sel: string) => void;      // ugrás a Postába erre a levélre (válaszra vár / kész válasz)
   onPerson: (name: string) => void;
+  onSyncOutlook?: () => void;             // az abalogh@metropolitan.hu Outlook-naptár behúzása (COM)
 }
 
-export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpen, onOpenTask, onOpenPost, onPerson }: Props) {
+export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpen, onOpenTask, onOpenPost, onPerson, onSyncOutlook }: Props) {
   const [mode, setMode] = useState<'list' | 'cal'>('cal'); // alapból a naptár nyílik
 
   const matches = (e: AgendaEvent) => {
@@ -54,6 +55,7 @@ export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpe
           <button className={mode === 'cal' ? 'is-on' : ''} onClick={() => setMode('cal')}>▦ Naptár</button>
         </div>
         <button className="btn btn--ink ag-add" onClick={onAdd}>+ Új esemény</button>
+        {onSyncOutlook && <button className="btn ag-add" onClick={onSyncOutlook} title="A saját (abalogh@metropolitan.hu) Outlook-naptárad időpontjainak behúzása ide (a klasszikus Outlook fusson a gépen). Csak olvas, semmit nem változtat.">🔄 Outlook-naptár</button>}
       </PageHead>
       <div className="ev-todaybar">📅 Ma: <b>{todayStr}</b></div>
 

@@ -13,7 +13,7 @@ import AgendaDrawer, { AgendaDetailsRef } from './AgendaDrawer';
 import ITView from './ITView';
 import DocsView from './DocsView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
-import { Agenda, AgendaEvent, AgendaSource, AgendaTask, DEFAULT_AGENDA, Letter, ReplyDraft, emptyEvent, emptyTask, isAwaiting, mergeAgendaDocs, nextPriority, normalizeAgenda, taskSteps, withOutEntry } from '@/data/agenda';
+import { Agenda, AgendaEvent, AgendaSource, AgendaTask, DEFAULT_AGENDA, Letter, ReplyDraft, emptyEvent, emptyTask, fmtDayHu, isAwaiting, mergeAgendaDocs, nextPriority, normalizeAgenda, taskSteps, withOutEntry } from '@/data/agenda';
 import { DEFAULT_PEOPLE, PeopleDB, PersonKind, RosterGroups, SenderRule, activeStudentNames, buildCanonicalNames, buildFooter, buildRoster, normalizePeople, emailOf, studentStatusNames, teacherStatusNames } from '@/data/people';
 import PostaView from './PostaView';
 import { normName, normTitle } from '@/lib/normalize';
@@ -1027,6 +1027,42 @@ export default function CurriculumApp() {
     } catch { setSaveMsg('⚠ A mentés nem sikerült (hálózati hiba). Próbáld újra.'); }
     window.setTimeout(() => setSaveMsg(null), 8000);
   };
+  // #5: az abalogh@metropolitan.hu Outlook-naptár BEHÚZÁSA (COM) - tükör-események az
+  // agendába, hogy a saját időpontjaidat itt is lásd a kártyákon/naptárban. Az outlook-tükör
+  // eseményeket (extSource:'outlook') minden szinkron lecseréli a friss olvasásra (a törölteket eltünteti).
+  const syncOutlookCalendar = useCallback(async () => {
+    setTitkarBusy('Outlook-naptár szinkron…');
+    try {
+      const res = await fetch('/api/outlook-calendar?days=60', { headers: editHeaders() });
+      const j = await res.json() as { ok: boolean; error?: string; events?: { id: string; subject: string; start: string; end: string; allDay: boolean; location: string; organizer: string; gist: string }[] };
+      if (!j.ok || !j.events) { setSaveMsg(`⚠ Outlook-naptár: ${j.error ?? 'nem sikerült'}`); window.setTimeout(() => setSaveMsg(null), 9000); return; }
+      const cur = agendaRef.current;
+      const prevByExt = new Map(cur.events.filter((e) => e.extId).map((e) => [e.extId as string, e]));
+      let added = 0; let updated = 0;
+      const imported: AgendaEvent[] = j.events.filter((o) => o.subject && o.start).map((o) => {
+        const day = o.start.slice(0, 10);
+        const hhmm = o.start.slice(11, 16);
+        const prev = prevByExt.get(o.id);
+        if (prev) updated++; else added++;
+        return {
+          ...(prev ?? emptyEvent()),
+          id: prev?.id ?? `ox-${o.id.slice(-18)}`,
+          title: o.subject,
+          when: o.allDay ? fmtDayHu(day) : `${fmtDayHu(day)} ${hhmm}`,
+          sort: day.slice(0, 7), day, dayEnd: null,
+          place: o.location || null,
+          owner: o.organizer || null,
+          note: o.gist || null,
+          mstatus: 'confirmed' as const,
+          extSource: 'outlook' as const, extId: o.id,
+        };
+      });
+      const nextEvents = [...cur.events.filter((e) => e.extSource !== 'outlook'), ...imported];
+      commitAgenda({ ...cur, events: nextEvents });
+      setSaveMsg(`✓ Outlook-naptár behúzva: ${added} új, ${updated} frissítve.`);
+    } catch { setSaveMsg('⚠ Az Outlook-naptár olvasása nem sikerült (fut a klasszikus Outlook a gépen?).'); }
+    finally { setTitkarBusy(null); window.setTimeout(() => setSaveMsg(null), 9000); }
+  }, [commitAgenda]);
   // opcionális: hordozható másolat letöltése fájlba (pl. másik gépre költöztetéshez)
   const downloadBackup = () => {
     const b = new Blob([JSON.stringify(backupPayload(), null, 2)], { type: 'application/json;charset=utf-8' });
@@ -1436,6 +1472,7 @@ export default function CurriculumApp() {
               onOpenTask={(id) => setAgendaDetails({ kind: 'task', id })}
               onOpenPost={(sel) => { if (!canEdit) return; setPostaFocus(sel); setView('posta'); }}
               onPerson={onInstructor}
+              onSyncOutlook={canEdit ? syncOutlookCalendar : undefined}
             />
           ) : view === 'posta' ? (
             <PostaView

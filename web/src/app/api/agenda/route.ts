@@ -19,8 +19,9 @@ const readDisk = async (): Promise<Doc | null> => {
 
 // A source felhasználó-tulajdonú (állapotgép-) mezői: bot-írásnál a lemezen lévő
 // érték él tovább, kivéve a megengedett bot-átmeneteket - ébresztés/újranyitás
-// → 'pending', saját kimenő válasz észlelése → 'replied', de csak 'pending'-ből.
-const USER_SOURCE_FIELDS = ['status', 'replied', 'repliedAt', 'snoozeUntil', 'followUpAt', 'returned', 'rawReply'] as const;
+// → 'pending', saját kimenő válasz észlelése → 'replied' (a hajnali ütemezett küldés
+// validálása miatt 'pending'-ből ÉS 'drafted'-ből is). A scheduledFor is APP-tulajdon.
+const USER_SOURCE_FIELDS = ['status', 'replied', 'repliedAt', 'snoozeUntil', 'followUpAt', 'returned', 'rawReply', 'scheduledFor'] as const;
 const guardSource = (inc: AgendaSource | null | undefined, disk: AgendaSource | null | undefined): AgendaSource | null => {
   if (!disk) return inc ?? null;
   if (!inc) return disk; // a bot forrást nem törölhet
@@ -28,7 +29,7 @@ const guardSource = (inc: AgendaSource | null | undefined, disk: AgendaSource | 
   const d = disk as unknown as Record<string, unknown>;
   const s = i.status;
   const okTransition = s === 'pending'
-    || (s === 'replied' && (d.status === 'pending' || d.status == null));
+    || (s === 'replied' && (d.status === 'pending' || d.status === 'drafted' || d.status == null));
   const out: Record<string, unknown> = { ...i };
   if (!(okTransition && s !== d.status)) {
     for (const f of USER_SOURCE_FIELDS) {
@@ -65,9 +66,21 @@ const guardBotWrite = (inc: Doc, disk: Doc | null): Doc => {
     diskList.forEach((dd) => { if (!incIds.has(dd.id)) out.push(dd); });
     return out;
   };
+  // a kézi ⭐ (star/starAt) USER-tulajdon: bot-írásnál mindig a lemezi érték él tovább
+  const guardStar = <T extends { id: string; star?: unknown; starAt?: unknown }>(incList: T[], diskList: T[]): T[] => {
+    const diskById = new Map(diskList.map((x) => [x.id, x]));
+    return incList.map((it) => {
+      const dd = diskById.get(it.id);
+      if (!dd) return it;
+      const out = { ...it };
+      if (dd.star !== undefined) out.star = dd.star; else delete out.star;
+      if (dd.starAt !== undefined) out.starAt = dd.starAt; else delete out.starAt;
+      return out;
+    });
+  };
   return {
     ...inc,
-    tasks: guardList(inc.tasks ?? [], disk.tasks ?? []),
+    tasks: guardStar(guardList(inc.tasks ?? [], disk.tasks ?? []), disk.tasks ?? []),
     events: guardList(inc.events ?? [], disk.events ?? []),
     letters: disk.letters ?? inc.letters ?? [],
     topicLinks: disk.topicLinks ?? inc.topicLinks ?? {},

@@ -182,6 +182,21 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
     body: () => `Szia [Név]!\n\nKöszönöm a mai egyeztetést. Röviden összefoglalom, miben maradtunk:\n\n- [megállapodás 1]\n- [megállapodás 2]\n\nKövetkező lépések:\n- [ki, mit, meddig]\n\nKérlek, jelezd, ha valamit másképp értettél, vagy kimaradt valami.`,
   },
   {
+    id: 'egyeztetes-keres', group: '0 · Találkozó és hívás', label: 'Egyeztetés kérése (az ő időpontjához igazodva)',
+    subject: () => 'Egyeztetést kérnék: [téma]',
+    body: () => `Szia [Név]!\n\nSzeretnék veled egyeztetni [téma] ügyében, kb. [időigény, pl. 20-30 perc]. Teljesen a te naptáradhoz igazodom: írj kérlek 1-2 időpontot, ami neked jó, és azt is, hogy személyesen vagy online (Meet) lenne kényelmesebb.\n\nKöszönöm!`,
+  },
+  {
+    id: 'konzultacio-keres', group: '0 · Találkozó és hívás', label: 'Konzultáció / tanács kérése',
+    subject: () => 'Konzultációt kérnék: [téma]',
+    body: () => `Szia [Név]!\n\n[Téma] ügyében szeretném kikérni a véleményedet, a te tapasztalatod itt sokat segítene. Elég lenne egy rövid konzultáció, személyesen vagy online, ahogy neked jobb; kérlek, írj egy időpontot, ami belefér.\n\nElőre is köszönöm a segítséget!`,
+  },
+  {
+    id: 'spec-talalkozo', group: '0 · Találkozó és hívás', label: 'Specializációs találkozó (Multimédia / Játéktervezés, körlevél)',
+    subject: () => '[Multimédia / Játéktervezés] specializációs találkozó: [dátum]',
+    body: () => `Kedves [Multimédia / Játéktervezés] specializációsok!\n\nSpecializációs találkozót tartunk [téma: a félév projektjei / a specializáció irányai / aktuális feladatok] ügyében. A találkozó [személyes / online / hibrid] formában lesz, az időpont-javaslatokat (és online forma esetén a Meet-linket) lentebb találjátok.\n\nKérlek, mindenki jelezze, melyik időpont felel meg. A specializáció minden oktatóját és hallgatóját várom, a közös irányokról itt döntünk.\n\nTalálkozunk!`,
+  },
+  {
     id: 'idopont-valasz', group: '0 · Találkozó és hívás', label: 'Válasz időpont-kérésre (saját javaslatokkal)',
     subject: () => 'Re: időpont-egyeztetés, [téma]',
     body: () => `Szia [Név]!\n\nKöszönöm a megkeresést, szívesen egyeztetek. Nekem az alábbi időpontok felelnének meg, kérlek, válassz:\n\n[a javasolt időpontok lentebb]\n\nHa egyik sem jó, mondj nyugodtan mást, igyekszem alkalmazkodni.`,

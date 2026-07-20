@@ -1803,10 +1803,10 @@ export default function CurriculumApp() {
           letters={(agenda.letters || []).filter((l) => l.targetType === 'task' && l.targetId === taskEdit.t.id)}
           onSave={saveTask}
           onDelete={() => { if (confirm('Törlöd ezt a feladatot?')) deleteTask(taskEdit.t.id); }}
-          onNotify={taskEdit.isNew ? undefined : () => notifyTask(taskEdit.t.id)}
-          onOpenLetter={taskEdit.isNew ? undefined : openSavedLetter}
+          onNotify={() => notifyTask(taskEdit.t.id)}
+          onOpenLetter={openSavedLetter}
           onLetterStatus={setLetterStatus}
-          onNotifyTopic={taskEdit.isNew ? undefined : (tid) => notifyTask(taskEdit.t.id, tid)}
+          onNotifyTopic={(tid) => notifyTask(taskEdit.t.id, tid)}
           onClose={() => setTaskEdit(null)}
         />
       )}
@@ -1821,12 +1821,12 @@ export default function CurriculumApp() {
           letters={(agenda.letters || []).filter((l) => l.targetType === 'event' && l.targetId === eventEdit.e.id)}
           onSave={saveEvent}
           onDelete={() => { if (confirm('Törlöd ezt az eseményt?')) deleteEvent(eventEdit.e.id); }}
-          onNotify={eventEdit.isNew ? undefined : () => notifyEvent(eventEdit.e.id)}
-          onOpenTask={eventEdit.isNew ? undefined : (id) => { const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
-          onAddTask={eventEdit.isNew ? undefined : () => addTaskForEvent(eventEdit.e.id)}
-          onOpenLetter={eventEdit.isNew ? undefined : openSavedLetter}
+          onNotify={() => notifyEvent(eventEdit.e.id)}
+          onOpenTask={(id) => { const t = agendaRef.current.tasks.find((x) => x.id === id); if (t) setTaskEdit({ t, isNew: false }); }}
+          onAddTask={() => addTaskForEvent(eventEdit.e.id)}
+          onOpenLetter={openSavedLetter}
           onLetterStatus={setLetterStatus}
-          onNotifyTopic={eventEdit.isNew ? undefined : (tid) => notifyEvent(eventEdit.e.id, tid)}
+          onNotifyTopic={(tid) => notifyEvent(eventEdit.e.id, tid)}
           onClose={() => setEventEdit(null)}
         />
       )}

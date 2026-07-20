@@ -662,6 +662,13 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   // a most megjavított úton küldi ki (jó magyar ékezet + logós Outlook-aláírás). A címzetteket
   // névből (email) + egyedi címekből oldjuk fel; az app-aláírást (buildFooter) KIVESSZÜK a
   // törzsből, mert az Outlook-aláírást a küldő-script adja hozzá (különben dupla lenne).
+  // keresztnév a megszólításhoz: magyar névsorrendben az utolsó (nem titulus) tag;
+  // email-címzettnél a Névjegyzékből (people.json) keressük vissza a nevet
+  const firstNameOf = (full: string): string => full.trim().split(/\s+/).filter((p) => !/^dr\.?$/i.test(p) && !/^habil\.?$/i.test(p)).pop() ?? full;
+  const nameByEmail = (em: string): string | null => {
+    const all = [...db.teachers, ...db.institution, ...db.students, ...db.alumni];
+    return all.find((p) => (p.email || '').trim().toLowerCase() === em.trim().toLowerCase())?.name ?? null;
+  };
   const resolveRecips = () => [
     ...selected.map((n) => ({ name: n, email: emailOf(db, n) ?? '', kind: roster.find((r) => r.name === n)?.kind ?? '' })).filter((r) => !!r.email),
     ...adhoc.map((e) => ({ name: e, email: e, kind: 'egyedi' })),
@@ -673,6 +680,13 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     if (!subj) { setResult('⚠ Hiányzik a tárgy. Írj tárgyat, és mehet a Postába.'); return; }
     const recips = resolveRecips();
     let bodyForSend = (ovr?.body ?? outBody).replace(/\r\n/g, '\n').trimEnd();
+    // EGY címzettnél a {keresztnev} helyőrzőt már itt kitöltjük (a Névjegyzékből), ne
+    // maradjon nyers jelölő a levélben; több személyre szabott címzettnél a küldő
+    // script tölti ki fejenként, ott szándékosan marad
+    if (recips.length === 1 && /\{keresztnev\}/.test(bodyForSend)) {
+      const n = recips[0].name.includes('@') ? nameByEmail(recips[0].email) : recips[0].name;
+      if (n) bodyForSend = bodyForSend.replace(/\{keresztnev\}/g, firstNameOf(n));
+    }
     const fTrim = buildFooter(db, sigOn, linksOn).trim();
     if (fTrim && bodyForSend.endsWith(fTrim)) bodyForSend = bodyForSend.slice(0, bodyForSend.length - fTrim.length).trimEnd();
     // ha egy MÁR a Kimenőben álló levelet töltöttél be és küldesz újra, ugyanazt a

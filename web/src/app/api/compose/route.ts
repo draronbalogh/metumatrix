@@ -56,8 +56,10 @@ const ctxBlock = (cards?: CardCtxT[] | null): string => !cards?.length ? '' :
 ${cards.map((c) => `- ${c.title}${c.lines?.length ? `\n  ${c.lines.join('\n  ')}` : ''}`).join('\n')}`;
 const meetBlock = (m?: MeetingT | null): string => !m ? '' :
   `IDŐPONT-EGYEZTETÉS - ezeket SZÓ SZERINT írd a levélbe (ne alakítsd át a dátumokat):
-- Javasolt időpont(ok): ${m.slots.length ? m.slots.join(' ; ') : '(nincs megadva)'}${m.place ? `\n- Helyszín: ${m.place}` : ''}${m.meetLink ? `\n- Online belépés (Google Meet): ${m.meetLink} - ezt a linket is írd bele a levélbe` : ''}
-Ha több időpont van, kérd meg a címzetteket, hogy jelezzék, melyik felel meg nekik.`;
+- Javasolt időpont(ok): ${m.slots.length ? m.slots.join(' ; ') : '(nincs megadva)'}${m.place ? `\n- Helyszín: ${m.place}` : ''}${m.meetLink ? `\n- Online belépés (Google Meet): ${m.meetLink} - ezt a linket KÜLÖN SORBAN, önállóan írd a levélbe (a küldő kattintható hivatkozássá alakítja)` : ''}
+${m.slots.length === 1
+    ? 'EGYETLEN időpont van: EGYES SZÁMBAN írd ("a javasolt időpont: …, kérlek, jelezd, megfelel-e") - TILOS többes számban időpontokról beszélni vagy listát írni.'
+    : 'Több időpont van: sorold fel őket "- " jelekkel külön sorokban, és kérd meg a címzetteket, hogy jelezzék, melyik felel meg nekik.'}`;
 
 const runClaude = (prompt: string): Promise<{ out: string; err: string; failed: boolean }> => new Promise((resolve) => {
   const child = execFile(CLAUDE_BIN, ['-p', '--max-turns', '1'], {

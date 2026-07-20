@@ -170,13 +170,13 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
     id: 'hivas-telefon', group: '0 · Találkozó és hívás', label: 'Hívás kérése telefonszámmal',
     meta: 'telefonhivas telefonhívás csorgess csörgess hivj hívj fel telefon call',
     subject: () => 'Telefonos egyeztetés: [téma]',
-    body: () => `Szia [Név]!\n\n[Téma] ügyében szeretnék veled röviden telefonon egyeztetni. Kérlek, ha lesz időd, hívj fel az alábbi számon: [telefonszám].\n\nHa írod, mikor alkalmas, én is szívesen hívlak.\n\nKöszönöm!`,
+    body: () => `Szia [Név]!\n\nSzeretnék veled röviden telefonon egyeztetni [téma] ügyében. Kérlek, ha lesz időd, hívj fel az alábbi számon: [telefonszám].\n\nHa írod, mikor alkalmas, én is szívesen hívlak.\n\nKöszönöm!`,
   },
   {
     id: 'hivas-idopont', group: '0 · Találkozó és hívás', label: 'Hívás bejelentése adott időpontra',
     meta: 'telefonhivas telefonhívás hivlak hívlak telefon call',
     subject: () => 'Felhívlak: [nap] [óra]',
-    body: () => `Szia [Név]!\n\n[Téma] ügyében felhívnálak [nap] [óra] körül. Kérlek, jelezz vissza, ha ez nem alkalmas, és mondj egy jobb időpontot.\n\nKöszönöm!`,
+    body: () => `Szia [Név]!\n\nFelhívnálak [téma] ügyében [nap] [óra] körül. Kérlek, jelezz vissza, ha ez nem alkalmas, és mondj egy jobb időpontot.\n\nKöszönöm!`,
   },
   {
     id: 'meet-emlekezteto', group: '0 · Találkozó és hívás', label: 'Találkozó-emlékeztető (holnapi/mai)',
@@ -200,7 +200,7 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
     id: 'konzultacio-keres', group: '0 · Találkozó és hívás', label: 'Konzultáció / tanács kérése',
     meta: 'meeting megbeszeles tanacs tanács velemeny vélemény mentoralas talalkozo',
     subject: () => 'Konzultációt kérnék: [téma]',
-    body: () => `Szia [Név]!\n\n[Téma] ügyében szeretném kikérni a véleményedet, a te tapasztalatod itt sokat segítene. Elég lenne egy rövid konzultáció, személyesen vagy online, ahogy neked jobb; kérlek, írj egy időpontot, ami belefér.\n\nElőre is köszönöm a segítséget!`,
+    body: () => `Szia [Név]!\n\nSzeretném kikérni a véleményedet [téma] ügyében, a te tapasztalatod itt sokat segítene. Elég lenne egy rövid konzultáció, személyesen vagy online, ahogy neked jobb; kérlek, írj egy időpontot, ami belefér.\n\nElőre is köszönöm a segítséget!`,
   },
   {
     id: 'spec-talalkozo', group: '0 · Találkozó és hívás', label: 'Specializációs találkozó (Multimédia / Játéktervezés, körlevél)',
@@ -242,19 +242,19 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
     id: 'meet-tobbfos', group: '0 · Találkozó és hívás', label: 'Többfős egyeztetés összehívása (körlevél)',
     meta: 'meeting megbeszeles csoportos korlevel több fős talalkozo egyeztetes',
     subject: () => 'Közös egyeztetés: [téma]',
-    body: () => `Kedves Kollégák!\n\n[Téma] ügyében szeretnék egy közös egyeztetést. Az időpont-javaslatokat lentebb találjátok, kérlek, mindenki jelezze visszafejtésben, melyik felel meg, és a legtöbbeknek jó időpontot rögzítem.\n\nAki nem tud jönni, annak utólag küldök rövid összefoglalót.\n\nKöszönöm!`,
+    body: () => `Kedves Kollégák!\n\nSzeretnék egy közös egyeztetést [téma] ügyében. Az időpont-javaslatokat lentebb találjátok, kérlek, mindenki jelezze visszafejtésben, melyik felel meg, és a legtöbbeknek jó időpontot rögzítem.\n\nAki nem tud jönni, annak utólag küldök rövid összefoglalót.\n\nKöszönöm!`,
   },
   {
     id: 'meet-kulso', group: '0 · Találkozó és hívás', label: 'Egyeztetés külső partnerrel (hivatalosabb)',
     meta: 'meeting megbeszeles partner ceg cég hivatalos talalkozo egyeztetes',
     subject: () => 'Egyeztetés kezdeményezése: [téma], METU Média Design',
-    body: () => `Tisztelt [Név]!\n\nBalogh Áron vagyok, a METU Média Design szak vezetője. [Téma] kapcsán szeretnék Önnel egy rövid egyeztetést, személyesen vagy online, ahogy Önnek kényelmesebb. Időpont-javaslataimat lentebb találja; természetesen szívesen alkalmazkodom az Ön naptárához is.\n\nVálaszát előre is köszönöm!`,
+    body: () => `Tisztelt [Név]!\n\nBalogh Áron vagyok, a METU Média Design szak vezetője. Szeretnék Önnel egy rövid egyeztetést [téma] kapcsán, személyesen vagy online, ahogy Önnek kényelmesebb. Időpont-javaslataimat lentebb találja; természetesen szívesen alkalmazkodom az Ön naptárához is.\n\nVálaszát előre is köszönöm!`,
   },
   {
     id: 'meet-hallgato', group: '0 · Találkozó és hívás', label: 'Hallgatói konzultáció időpontja',
     meta: 'meeting konzultacio konzultáció fogadoora fogadóóra hallgato talalkozo',
     subject: () => 'Konzultációs időpont: [téma]',
-    body: () => `Kedves [Név]!\n\n[Téma] ügyében várlak konzultációra. Az időpont-javaslatokat lentebb találod, kérlek, jelezd, melyik jó neked, és hogy személyesen vagy online (Meet) jönnél.\n\nHa egyik időpont sem megfelelő, írj, keresünk másikat.`,
+    body: () => `Kedves [Név]!\n\nKonzultációra várlak [téma] ügyében. Az időpont-javaslatokat lentebb találod, kérlek, jelezd, melyik jó neked, és hogy személyesen vagy online (Meet) jönnél.\n\nHa egyik időpont sem megfelelő, írj, keresünk másikat.`,
   },
   {
     id: 'hivas-surgos', group: '0 · Találkozó és hívás', label: 'Sürgős hívás kérése',

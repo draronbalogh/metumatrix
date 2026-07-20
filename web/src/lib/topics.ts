@@ -137,6 +137,95 @@ export const paraphrase = (text: string): { text: string; changed: number } => {
 };
 
 export const TOPIC_TEMPLATES: TopicTemplate[] = [
+  // 0. tömb: a legalapabb találkozó- és hívás-szervező levelek. A meeting-sablonok a
+  // postázó Meet-blokkjával együtt élnek: ott adod meg a javasolt időpontokat (több is
+  // lehet, a naptárban halvány "függő" csíkként jelennek meg) és a Google Meet-linket -
+  // a levél végére a meeting-blokk automatikusan bekerül, ezért itt NEM soroljuk fel őket.
+  {
+    id: 'meet-online', group: '0 · Találkozó és hívás', label: 'Online meeting (Google Meet) kezdeményezése',
+    subject: () => 'Online egyeztetés: [téma]',
+    body: () => `Szia [Név]!\n\nSzeretnék veled egy rövid online egyeztetést [téma] ügyében, Google Meeten. Az időpont-javaslatokat és a belépési linket lentebb találod, kérlek, jelezd, melyik felel meg.\n\nHa egyik sem jó, írj nyugodtan másik időpontot.\n\nKöszönöm!`,
+  },
+  {
+    id: 'meet-szemelyes', group: '0 · Találkozó és hívás', label: 'Személyes találkozó kezdeményezése',
+    subject: () => 'Személyes egyeztetés: [téma]',
+    body: () => `Szia [Név]!\n\nJó lenne személyesen egyeztetnünk [téma] ügyében. Az időpont-javaslatokat lentebb találod; helyszínnek a [helyszín, pl. METU Infopark D épület] felelne meg, de rugalmas vagyok.\n\nKérlek, jelezd, melyik időpont jó neked.\n\nKöszönöm!`,
+  },
+  {
+    id: 'meet-hibrid', group: '0 · Találkozó és hívás', label: 'Hibrid meeting kezdeményezése (személyes + online)',
+    subject: () => 'Egyeztetés: [téma] (személyesen vagy online)',
+    body: () => `Szia [Név]!\n\nEgyeztetnék veled [téma] ügyében. A találkozó hibrid: lehet személyesen a [helyszín]-ben, de online, Google Meeten is tudsz csatlakozni, ahogy neked kényelmesebb. Az időpont-javaslatok és a link lentebb.\n\nKérlek, jelezd, melyik időpont és melyik forma felel meg.\n\nKöszönöm!`,
+  },
+  {
+    id: 'hivas-rovid', group: '0 · Találkozó és hívás', label: 'Hívás kérése (rövid)',
+    subject: () => 'Rövid hívás: [téma]',
+    body: () => `Szia [Név]!\n\nEgy rövid telefonos egyeztetés kellene [téma] ügyében. Kérlek, ha lesz egy szabad perced, csörgess meg.\n\nKöszönöm!`,
+  },
+  {
+    id: 'hivas-telefon', group: '0 · Találkozó és hívás', label: 'Hívás kérése telefonszámmal',
+    subject: () => 'Telefonos egyeztetés: [téma]',
+    body: () => `Szia [Név]!\n\n[Téma] ügyében szeretnék veled röviden telefonon egyeztetni. Kérlek, ha lesz időd, hívj fel az alábbi számon: [telefonszám].\n\nHa írod, mikor alkalmas, én is szívesen hívlak.\n\nKöszönöm!`,
+  },
+  {
+    id: 'hivas-idopont', group: '0 · Találkozó és hívás', label: 'Hívás bejelentése adott időpontra',
+    subject: () => 'Felhívlak: [nap] [óra]',
+    body: () => `Szia [Név]!\n\n[Téma] ügyében felhívnálak [nap] [óra] körül. Kérlek, jelezz vissza, ha ez nem alkalmas, és mondj egy jobb időpontot.\n\nKöszönöm!`,
+  },
+  {
+    id: 'meet-emlekezteto', group: '0 · Találkozó és hívás', label: 'Találkozó-emlékeztető (holnapi/mai)',
+    subject: () => 'Emlékeztető: egyeztetésünk [nap] [óra]',
+    body: () => `Szia [Név]!\n\nRövid emlékeztető: [nap] [óra]-kor egyeztetünk [téma] ügyében [helyszín / a lenti Meet-linken]. Ha közbejött valami, kérlek, jelezd időben.\n\nTalálkozunk!`,
+  },
+  {
+    id: 'meet-osszefoglalo', group: '0 · Találkozó és hívás', label: 'Találkozó utáni összefoglaló és következő lépések',
+    subject: () => 'Összefoglaló: [téma] egyeztetés',
+    body: () => `Szia [Név]!\n\nKöszönöm a mai egyeztetést. Röviden összefoglalom, miben maradtunk:\n\n- [megállapodás 1]\n- [megállapodás 2]\n\nKövetkező lépések:\n- [ki, mit, meddig]\n\nKérlek, jelezd, ha valamit másképp értettél, vagy kimaradt valami.`,
+  },
+  {
+    id: 'idopont-valasz', group: '0 · Találkozó és hívás', label: 'Válasz időpont-kérésre (saját javaslatokkal)',
+    subject: () => 'Re: időpont-egyeztetés, [téma]',
+    body: () => `Szia [Név]!\n\nKöszönöm a megkeresést, szívesen egyeztetek. Nekem az alábbi időpontok felelnének meg, kérlek, válassz:\n\n[a javasolt időpontok lentebb]\n\nHa egyik sem jó, mondj nyugodtan mást, igyekszem alkalmazkodni.`,
+  },
+  {
+    id: 'idopont-visszaigazolas', group: '0 · Találkozó és hívás', label: 'Időpont visszaigazolása (fixálás)',
+    subject: () => 'Visszaigazolás: [nap] [óra], [téma]',
+    body: () => `Szia [Név]!\n\nKöszönöm a visszajelzést, akkor rögzítem: [nap] [óra], [helyszín / online, a lenti Meet-linken]. A naptármeghívót küldöm.\n\nHa bármi közbejön, kérlek, jelezd időben. Találkozunk!`,
+  },
+  {
+    id: 'idopont-atrakas', group: '0 · Találkozó és hívás', label: 'Időpont átrakása / lemondása',
+    subject: () => 'Időpont-módosítás: [téma]',
+    body: () => `Szia [Név]!\n\nNe haragudj, a [nap] [óra]-i egyeztetésünk sajnos nem fér bele, közbejött egy halaszthatatlan ügy. Tudnánk új időpontot keresni? Javaslataim lentebb, de a tieidhez is alkalmazkodom.\n\nKöszönöm a megértést!`,
+  },
+  {
+    id: 'meet-ujraegyeztetes', group: '0 · Találkozó és hívás', label: 'Elmaradt találkozó újraegyeztetése',
+    subject: () => 'Új időpont: [téma]',
+    body: () => `Szia [Név]!\n\nAz elmaradt egyeztetésünket szeretném pótolni [téma] ügyében. Az új időpont-javaslatokat lentebb találod, kérlek, jelezd, melyik jó neked.\n\nKöszönöm!`,
+  },
+  {
+    id: 'meet-tobbfos', group: '0 · Találkozó és hívás', label: 'Többfős egyeztetés összehívása (körlevél)',
+    subject: () => 'Közös egyeztetés: [téma]',
+    body: () => `Kedves Kollégák!\n\n[Téma] ügyében szeretnék egy közös egyeztetést. Az időpont-javaslatokat lentebb találjátok, kérlek, mindenki jelezze visszafejtésben, melyik felel meg, és a legtöbbeknek jó időpontot rögzítem.\n\nAki nem tud jönni, annak utólag küldök rövid összefoglalót.\n\nKöszönöm!`,
+  },
+  {
+    id: 'meet-kulso', group: '0 · Találkozó és hívás', label: 'Egyeztetés külső partnerrel (hivatalosabb)',
+    subject: () => 'Egyeztetés kezdeményezése: [téma], METU Média Design',
+    body: () => `Tisztelt [Név]!\n\nBalogh Áron vagyok, a METU Média Design szak vezetője. [Téma] kapcsán szeretnék Önnel egy rövid egyeztetést, személyesen vagy online, ahogy Önnek kényelmesebb. Időpont-javaslataimat lentebb találja; természetesen szívesen alkalmazkodom az Ön naptárához is.\n\nVálaszát előre is köszönöm!`,
+  },
+  {
+    id: 'meet-hallgato', group: '0 · Találkozó és hívás', label: 'Hallgatói konzultáció időpontja',
+    subject: () => 'Konzultációs időpont: [téma]',
+    body: () => `Kedves [Név]!\n\n[Téma] ügyében várlak konzultációra. Az időpont-javaslatokat lentebb találod, kérlek, jelezd, melyik jó neked, és hogy személyesen vagy online (Meet) jönnél.\n\nHa egyik időpont sem megfelelő, írj, keresünk másikat.`,
+  },
+  {
+    id: 'hivas-surgos', group: '0 · Találkozó és hívás', label: 'Sürgős hívás kérése',
+    subject: () => 'Sürgős: kérlek, hívj fel ([téma])',
+    body: () => `Szia [Név]!\n\n[Téma] ügyében sürgősen kellene egyeztetnünk, néhány perc elég. Kérlek, amint tudsz, hívj fel: [telefonszám].\n\nHa nem érsz el, visszahívlak. Köszönöm!`,
+  },
+  {
+    id: 'hivas-visszahivas', group: '0 · Találkozó és hívás', label: 'Kerestelek telefonon (visszahívás kérése)',
+    subject: () => 'Kerestelek telefonon: [téma]',
+    body: () => `Szia [Név]!\n\nMa kerestelek telefonon [téma] ügyében, de nem értelek el. Kérlek, hívj vissza, amikor alkalmas ([telefonszám]), vagy írd meg, mikor hívhatlak én.\n\nKöszönöm!`,
+  },
   // 1. tömb: tematikák és órarend
   {
     id: 'tematika', group: '1 · Tematikák és órarend', label: 'Tematika-leadási emlékeztető (körlevél)',
@@ -877,6 +966,21 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
     id: 'educatio-beosztas', group: '12 · Nyílt nap / Educatio', label: 'Educatio: beosztás és tudnivalók (körlevél)',
     subject: () => 'Educatio kiállítás [év], beosztás és tudnivalók',
     body: (c) => `Kedves Kollégák és Hallgatók!\n\nKöszönöm, hogy részt vesztek az idei Educatio kiállításon és segítitek a szakunk népszerűsítését, a jelenlétetek kulcsfontosságú. A helyszín ${or(c.place, '[helyszín]')}, időpont ${or(c.when, '[dátumok]')}, nyitvatartás [idősáv]; az alábbi beosztás szerint leszünk kint a standnál: [név, idősáv listája]. Kérem a hallgatókat, hogy lehetőség szerint maradjatok kint a vállalt sávban, és ha megérkeztetek, keressétek [kapcsolattartó neve, telefonszáma]-t, aki segít az eligazodásban. Öltözet: [pl. kényelmes, fekete felső], étkezésről: [info].\n\nHa bárkinek kérdése van, engem is hívhattok bármikor. Találkozunk a helyszínen, számítok Rátok!`,
+  },
+  {
+    id: 'felevindito-konferencia', group: '17 · Rendezvények / hallgatói élet', label: 'Félévindító szakos konferencia meghívó (körlevél)',
+    subject: () => 'Meghívó: Média Design félévindító konferencia, [dátum]',
+    body: (c) => `Kedves Kollégák és Hallgatók!\n\nSok szeretettel hívlak Benneteket a Média Design szak félévindító konferenciájára: ${or(c.when, '[dátum, óra]')}, ${or(c.place, '[helyszín]')}. A program: a félév céljai és kiemelt projektjei, a várható események és kiállítások, bemutatkoznak az új oktatók és kurzusok, a végén pedig kötetlen beszélgetés.\n\nA részvételre mindenkit bátorítok, a félév közös tervezése itt indul. Kérlek, jelezzétek, ha nem tudtok jönni.\n\nTalálkozunk!`,
+  },
+  {
+    id: 'evkozi-konferencia', group: '17 · Rendezvények / hallgatói élet', label: 'Évközi szakos konferencia / szakmai nap meghívó (körlevél)',
+    subject: () => 'Meghívó: Média Design szakmai nap, [dátum]',
+    body: (c) => `Kedves Kollégák és Hallgatók!\n\n${or(c.when, '[dátum, óra]')}-kor évközi szakmai napot tartunk (${or(c.place, '[helyszín]')}). A programban: [előadások / workshopok / projektbemutatók], a hallgatói munkák állásának bemutatása és közös szakmai beszélgetés. Vendégünk lesz: [vendég neve, ha van].\n\nA részvétel a szak életének fontos része, számítok Rátok. Kérdés esetén keressetek bátran!`,
+  },
+  {
+    id: 'evindito-esemeny', group: '17 · Rendezvények / hallgatói élet', label: 'Évindító szakos esemény meghívó (körlevél)',
+    subject: () => 'Meghívó: Média Design évindító, [dátum]',
+    body: (c) => `Kedves Kollégák és Hallgatók!\n\nInduljon jól a tanév: évindító szakos eseményt tartunk ${or(c.when, '[dátum, óra]')}-kor, ${or(c.place, '[helyszín]')}. Röviden bemutatjuk az évad terveit (kiállítások, versenyek, projektek, vendégek), köszöntjük az elsősöket, és utána kötetlen ismerkedés következik.\n\nHozzátok a jó kedveteket, a kérdéseiteket és az ötleteiteket is. Kérlek, jelezzétek, ki tud jönni.\n\nTalálkozunk!`,
   },
   {
     id: 'szakest-szervezes', group: '17 · Rendezvények / hallgatói élet', label: 'Szakest: szervezőcsapat összehívása (körlevél)',

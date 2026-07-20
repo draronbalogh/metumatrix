@@ -19,9 +19,10 @@ interface Props {
   onSyncOutlook?: () => void;             // az abalogh@metropolitan.hu Outlook-naptár behúzása (COM)
   onPublishGoogle?: () => void;           // ⇪ minden esemény egyirányú publikálása a Gmail-naptárba
   publishMsg?: string | null;             // a publikálás folyamat-/eredményüzenete
+  onReport?: (monthKey: string) => void;  // 🖨 havi eredmény-riport modál
 }
 
-export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpen, onOpenTask, onOpenPost, onPerson, onSyncOutlook, onPublishGoogle, publishMsg }: Props) {
+export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpen, onOpenTask, onOpenPost, onPerson, onSyncOutlook, onPublishGoogle, publishMsg, onReport }: Props) {
   const [mode, setMode] = useState<'list' | 'cal'>('cal'); // alapból a naptár nyílik
 
   const matches = (e: AgendaEvent) => {
@@ -83,7 +84,7 @@ export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpe
 
 
       {mode === 'cal' ? (
-        <EventsCalendar events={shown} deadlines={deadlines} onEdit={onOpen} onTask={onOpenTask} />
+        <EventsCalendar events={shown} deadlines={deadlines} onEdit={onOpen} onTask={onOpenTask} onReport={onReport} />
       ) : (
         <div className="cc-grid">
           {shown.map((e) => {

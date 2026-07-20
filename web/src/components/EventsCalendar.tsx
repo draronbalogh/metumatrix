@@ -12,6 +12,7 @@ interface Props {
   deadlines: CalDeadline[];
   onEdit: (id: string) => void;
   onTask: (id: string) => void;
+  onReport?: (monthKey: string) => void; // 🖨 havi eredmény-riport (dékáni kör)
 }
 
 const MONTH_NAME = ['január', 'február', 'március', 'április', 'május', 'június', 'július', 'augusztus', 'szeptember', 'október', 'november', 'december'];
@@ -37,7 +38,7 @@ interface MonthRow { e: AgendaEvent; color: string; label: string; long: boolean
 // ennél hosszabb tartomány = háttér-időszak: NEM fest napokat, csak a listában jelenik meg
 const LONG_DAYS = 21;
 
-export default function EventsCalendar({ events, deadlines, onEdit, onTask }: Props) {
+export default function EventsCalendar({ events, deadlines, onEdit, onTask, onReport }: Props) {
   // stabil színkiosztás: a dátumozott események kezdőnap szerint sorban kapják a paletta színeit
   const dated = events.filter((e) => e.day).slice().sort((a, b) => (a.day as string).localeCompare(b.day as string) || a.id.localeCompare(b.id));
   const colorOf: Record<string, string> = {};
@@ -130,7 +131,9 @@ export default function EventsCalendar({ events, deadlines, onEdit, onTask }: Pr
           const marks = dlMarks[k] || {};
           return (
             <section className={`cal-month${rows.length + fuzzy.length + dls.length + dlsFuzzy.length ? ' has-ev' : ''}`} key={k}>
-              <div className="cal-mh">{y}. {MONTH_NAME[m]}</div>
+              <div className="cal-mh">{y}. {MONTH_NAME[m]}
+                {onReport && <button type="button" className="cal-print" title="Havi eredmény-riport a dékáni körnek (Titkárnő fogalmazza, a Postázóba tehető)" onClick={() => onReport(k)}>🖨</button>}
+              </div>
               <div className="cal-days">
                 {WDAY.map((w, i) => <span key={`w${i}`} className="wd">{w}</span>)}
                 {Array.from({ length: firstDow }, (_, i) => <span key={`p${i}`} />)}

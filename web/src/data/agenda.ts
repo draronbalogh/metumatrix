@@ -157,6 +157,7 @@ export interface AgendaEvent {
   extSource?: 'outlook' | null;  // az abalogh@metropolitan.hu Outlook-naptárból importált tükör-esemény
   extId?: string | null;         // az Outlook GlobalAppointmentID (dedup/frissítés a szinkronnál)
   meetSlots?: AgendaMeetSlot[] | null; // függő Meet-időpontjavaslatok (csak mstatus:'tentative' mellett) - a naptár halványan mutatja őket
+  googleEndEventId?: string | null; // hosszú időszaknál (>21 nap) a Google-ba csak KEZDŐ + ZÁRÓ jelölő megy - ez a záró jelölő id-je
 }
 
 // Egy feloldott címzett a kimenő (Levelek-kezdeményezett) levélhez

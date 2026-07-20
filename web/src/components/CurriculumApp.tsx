@@ -22,6 +22,7 @@ import NotifyModal, { NotifyTarget } from './NotifyModal';
 import TopicsView from './TopicsView';
 import LevelWizard from './LevelWizard';
 import OrarendView from './OrarendView';
+import MonthReport from './MonthReport';
 import { TopicTemplate } from '@/lib/topics';
 import type { Handlers, Filter, View, Prog } from '@/lib/buildGraph';
 import { editHeaders } from '@/lib/editkey';
@@ -737,15 +738,24 @@ export default function CurriculumApp() {
       const hh = m ? String(Math.min(23, parseInt(m[1], 10))).padStart(2, '0') : '09';
       const mi = m ? m[2] : '00';
       const he = String(Math.min(23, Number(hh) + 1)).padStart(2, '0');
+      // hosszú időszaknál (>21 nap) a Google-ban csak a KEZDŐ jelölő él ezen az id-n
+      const isLongSpan = !!(e.dayEnd && (Date.parse(e.dayEnd) - Date.parse(e.day)) > 21 * 86400000);
       const startIso = `${e.day}T${hh}:${mi}:00`;
-      const endIso = `${e.dayEnd || e.day}T${he}:${mi}:00`; // többnapos eseménynél a záró napig
+      const endIso = isLongSpan ? `${e.day}T${he}:${mi}:00` : `${e.dayEnd || e.day}T${he}:${mi}:00`; // többnapos eseménynél a záró napig
+      const gSummary = isLongSpan ? `${e.title} - kezdete` : e.title;
       if (e.googleEventId) {
         // meglévő Google-pár: cím/nap/idő/helyszín/leírás/státusz változásra patch (a Meet-link marad)
         if (prev?.day !== e.day || prev?.dayEnd !== e.dayEnd || prev?.when !== e.when || prev?.title !== e.title || prev?.place !== e.place || prev?.note !== e.note || prev?.mstatus !== e.mstatus) {
           void fetch('/api/meet', {
             method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-            body: JSON.stringify({ action: 'update', googleEventId: e.googleEventId, startIso, endIso, summary: e.title, location: e.place ?? '', description: e.note ?? '', tentative: e.mstatus === 'tentative' }),
+            body: JSON.stringify({ action: 'update', googleEventId: e.googleEventId, startIso, endIso, summary: gSummary, location: e.place ?? '', description: e.note ?? '', tentative: e.mstatus === 'tentative' }),
           }).catch(() => { /* a Google-szinkron nem kritikus */ });
+          if (isLongSpan && e.googleEndEventId) {
+            void fetch('/api/meet', {
+              method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+              body: JSON.stringify({ action: 'update', googleEventId: e.googleEndEventId, startIso: `${e.dayEnd}T${hh}:${mi}:00`, endIso: `${e.dayEnd}T${he}:${mi}:00`, summary: `${e.title} - vége`, location: e.place ?? '', description: e.note ?? '', tentative: e.mstatus === 'tentative' }),
+            }).catch(() => { /* nem kritikus */ });
+          }
         }
       } else {
         // még nincs Google-párja: létrehozzuk (Meet-linkkel), és az id/link visszakerül az eseményre
@@ -753,7 +763,7 @@ export default function CurriculumApp() {
           try {
             const res = await fetch('/api/meet', {
               method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-              body: JSON.stringify({ action: 'create', summary: e.title, startIso, endIso, location: e.place || undefined, description: e.note || undefined, attendees: [], sendInvite: false, tentative: e.mstatus === 'tentative' }),
+              body: JSON.stringify({ action: 'create', summary: gSummary, startIso, endIso, location: e.place || undefined, description: e.note || undefined, attendees: [], sendInvite: false, tentative: e.mstatus === 'tentative' }),
             });
             const j = await res.json() as { ok: boolean; unconfigured?: boolean; meetLink?: string; googleEventId?: string };
             if (j.ok && j.googleEventId) {
@@ -781,12 +791,12 @@ export default function CurriculumApp() {
     setEventEdit(null);
     // a törlés a Google-párra is propagálódik (a tömeges Gmail-publikálás miatt már
     // az Outlook-tükörnek is lehet Google-párja - azt is töröljük)
-    if (victim?.googleEventId) {
+    [victim?.googleEventId, victim?.googleEndEventId].filter(Boolean).forEach((gid) => {
       void fetch('/api/meet', {
         method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-        body: JSON.stringify({ action: 'delete', googleEventId: victim.googleEventId }),
+        body: JSON.stringify({ action: 'delete', googleEventId: gid }),
       }).catch(() => { /* a Google-szinkron nem kritikus */ });
-    }
+    });
   }, [commitAgenda]);
   // ON-DEMAND Google Meet egy meglévő eseményhez: /api/meet létrehoz + a linket az eseményre írja.
   // A kezdő óra a when szövegből (ó:pp), különben 9:00; hossz 1 óra. Token nélkül unconfigured.
@@ -1186,6 +1196,31 @@ export default function CurriculumApp() {
     } catch { setSaveMsg('⚠ Az Outlook-naptár olvasása nem sikerült (fut a klasszikus Outlook a gépen?).'); }
     finally { setTitkarBusy(null); window.setTimeout(() => setSaveMsg(null), 9000); }
   }, [commitAgenda]);
+  // 🖨 HAVI RIPORT modál (dékáni kör) + havi emlékeztető-kártya minden hó 28-tól:
+  // ha az adott hónapra még nincs riport-feladat, magas prioritással létrejön
+  const [reportMonth, setReportMonth] = useState<string | null>(null);
+  const reportReminderDone = useRef(false);
+  useEffect(() => {
+    if (!hydrated || !canEdit || reportReminderDone.current) return;
+    const now = new Date();
+    if (now.getDate() < 28) return;
+    reportReminderDone.current = true;
+    const mk = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const marker = `(riport ${mk})`;
+    const cur = agendaRef.current;
+    if (cur.tasks.some((t) => t.title.includes(marker))) return;
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    commitAgenda({
+      ...cur,
+      tasks: [{
+        ...emptyTask(),
+        title: `Havi riport küldése a dékáni körnek ${marker}`,
+        summary: 'Események naptár → a hónap fejlécén 🖨 → Titkárnő megfogalmazása → Küldésre a Postába (Kiss Melinda, Pálfi Szabolcs).',
+        priority: 'high', category: 'Kommunikáció & PR',
+        dueDate: `${mk}-${lastDay}`,
+      }, ...cur.tasks],
+    });
+  }, [hydrated, canEdit, commitAgenda]);
   // ⇪ GMAIL-NAPTÁRBA: minden napra tett esemény (az Outlook-tükrök is) egyirányú
   // publikálása a draronbalogh@gmail.com naptárba - create (Meet nélkül) vagy update.
   // Visszafelé SOHA nem olvasunk: a Gmailben kézzel felvett bejegyzések nem kerülnek ide.
@@ -1204,13 +1239,31 @@ export default function CurriculumApp() {
       const hh = m ? String(Math.min(23, parseInt(m[1], 10))).padStart(2, '0') : '09';
       const mi = m ? m[2] : '00';
       const he = String(Math.min(23, Number(hh) + 1)).padStart(2, '0');
+      // hosszú időszak (>21 nap, pl. szorgalmi időszak): NEM több hetes sáv megy a
+      // Gmailbe, hanem két jelölő - "kezdete" a day-en, "vége" a dayEnd-en
+      const isLong = !!(e.dayEnd && (Date.parse(e.dayEnd) - Date.parse(e.day as string)) > 21 * 86400000);
       const startIso = `${e.day}T${hh}:${mi}:00`;
-      const endIso = `${e.dayEnd || e.day}T${he}:${mi}:00`;
+      const endIso = isLong ? `${e.day}T${he}:${mi}:00` : `${e.dayEnd || e.day}T${he}:${mi}:00`;
+      const summary = isLong ? `${e.title} - kezdete` : e.title;
       try {
+        if (isLong) {
+          // a záró jelölő külön Google-esemény a dayEnd napján
+          const endBody = { summary: `${e.title} - vége`, startIso: `${e.dayEnd}T${hh}:${mi}:00`, endIso: `${e.dayEnd}T${he}:${mi}:00`, location: e.place ?? '', description: e.note ?? '', tentative: e.mstatus === 'tentative' };
+          if (e.googleEndEventId) {
+            await fetch('/api/meet', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify({ action: 'update', googleEventId: e.googleEndEventId, ...endBody }) }).catch(() => { /* nem kritikus */ });
+          } else {
+            const rr = await fetch('/api/meet', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify({ action: 'create', attendees: [], sendInvite: false, noMeet: true, ...endBody }) });
+            const jj = await rr.json() as { ok: boolean; googleEventId?: string };
+            if (jj.ok && jj.googleEventId) {
+              const cur = agendaRef.current;
+              commitAgenda({ ...cur, events: cur.events.map((x) => (x.id === e.id && !x.googleEndEventId ? { ...x, googleEndEventId: jj.googleEventId ?? null } : x)) });
+            }
+          }
+        }
         if (e.googleEventId) {
           const res = await fetch('/api/meet', {
             method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-            body: JSON.stringify({ action: 'update', googleEventId: e.googleEventId, startIso, endIso, summary: e.title, location: e.place ?? '', description: e.note ?? '', tentative: e.mstatus === 'tentative' }),
+            body: JSON.stringify({ action: 'update', googleEventId: e.googleEventId, startIso, endIso, summary, location: e.place ?? '', description: e.note ?? '', tentative: e.mstatus === 'tentative' }),
           });
           const j = await res.json() as { ok: boolean; unconfigured?: boolean };
           if (j.unconfigured) { setPublishMsg('⚠ A Google-naptár nincs beállítva (OAuth).'); return; }
@@ -1218,7 +1271,7 @@ export default function CurriculumApp() {
         } else {
           const res = await fetch('/api/meet', {
             method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-            body: JSON.stringify({ action: 'create', summary: e.title, startIso, endIso, location: e.place || undefined, description: e.note || undefined, attendees: [], sendInvite: false, tentative: e.mstatus === 'tentative', noMeet: true }),
+            body: JSON.stringify({ action: 'create', summary, startIso, endIso, location: e.place || undefined, description: e.note || undefined, attendees: [], sendInvite: false, tentative: e.mstatus === 'tentative', noMeet: true }),
           });
           const j = await res.json() as { ok: boolean; unconfigured?: boolean; googleEventId?: string; meetLink?: string };
           if (j.unconfigured) { setPublishMsg('⚠ A Google-naptár nincs beállítva (OAuth).'); return; }
@@ -1655,6 +1708,7 @@ export default function CurriculumApp() {
               onSyncOutlook={canEdit ? syncOutlookCalendar : undefined}
               onPublishGoogle={canEdit ? publishAllToGoogle : undefined}
               publishMsg={publishMsg}
+              onReport={canEdit ? (mk) => setReportMonth(mk) : undefined}
             />
           ) : view === 'posta' ? (
             <PostaView
@@ -1939,6 +1993,8 @@ export default function CurriculumApp() {
       )}
 
       {introEdit && <IntroModal intro={agenda.intro} onSave={saveIntro} onClose={() => setIntroEdit(false)} />}
+
+      {reportMonth && <MonthReport monthKey={reportMonth} agenda={agenda} onClose={() => setReportMonth(null)} onSaveLetter={saveLetter} />}
 
 
       {notify && (

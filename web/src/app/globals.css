@@ -1984,6 +1984,12 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
   .cc-totals span { font-size: .64rem; }
 }
 
+/* 🖨 havi riport gomb a naptári hónap fejlécében - jobbra, diszkréten */
+.cal-mh { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cal-print { border: 0; background: transparent; cursor: pointer; font-size: .95rem; opacity: .55; padding: 0 2px; }
+.cal-print:hover { opacity: 1; }
+.viewer .cal-print { display: none !important; }
+
 /* ---- Névjegyzék mentés-sor: a globális .mfoot UTÁN kell állnia, hogy felülírja ----
    nincs szürke sáv és óriás alsó margó; desktopon a Mentés gomb a jobb alsó
    mentés-dokk MELLÉ kerül, mobilon a lista alján marad, kis térközzel */

@@ -779,8 +779,9 @@ export default function CurriculumApp() {
         : cur.hiddenExtIds,
     });
     setEventEdit(null);
-    // a törlés a Google-párra is propagálódik (Outlook-tükörnél nincs Google-pár, kihagyjuk)
-    if (victim?.googleEventId && !victim.extSource) {
+    // a törlés a Google-párra is propagálódik (a tömeges Gmail-publikálás miatt már
+    // az Outlook-tükörnek is lehet Google-párja - azt is töröljük)
+    if (victim?.googleEventId) {
       void fetch('/api/meet', {
         method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
         body: JSON.stringify({ action: 'delete', googleEventId: victim.googleEventId }),
@@ -1172,11 +1173,73 @@ export default function CurriculumApp() {
         if (nd && od && nd !== od && t.dueDate === od) return { ...t, dueDate: nd };
         return t;
       });
+      // az Outlookból eltűnt tükör Gmail-példányát is töröljük (ha volt publikálva)
+      oldMirrors.filter((e) => !importedIds.has(e.id) && e.googleEventId).forEach((e) => {
+        void fetch('/api/meet', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+          body: JSON.stringify({ action: 'delete', googleEventId: e.googleEventId }),
+        }).catch(() => { /* nem kritikus */ });
+      });
       const nextEvents = [...cur.events.filter((e) => e.extSource !== 'outlook'), ...imported];
       commitAgenda({ ...cur, tasks: tasksSynced, events: nextEvents });
       setSaveMsg(`✓ Outlook-naptár behúzva: ${added} új, ${updated} frissítve.`);
     } catch { setSaveMsg('⚠ Az Outlook-naptár olvasása nem sikerült (fut a klasszikus Outlook a gépen?).'); }
     finally { setTitkarBusy(null); window.setTimeout(() => setSaveMsg(null), 9000); }
+  }, [commitAgenda]);
+  // ⇪ GMAIL-NAPTÁRBA: minden napra tett esemény (az Outlook-tükrök is) egyirányú
+  // publikálása a draronbalogh@gmail.com naptárba - create (Meet nélkül) vagy update.
+  // Visszafelé SOHA nem olvasunk: a Gmailben kézzel felvett bejegyzések nem kerülnek ide.
+  const [publishMsg, setPublishMsg] = useState<string | null>(null);
+  const publishAllToGoogle = useCallback(async () => {
+    if (!canEditRef.current) return;
+    const evs = agendaRef.current.events;
+    const dated = evs.filter((e) => e.day);
+    const skipped = evs.length - dated.length;
+    let created = 0; let updatedN = 0; let failed = 0;
+    const idPatch = new Map<string, { googleEventId: string; meetLink: string | null }>();
+    setPublishMsg(`⇪ Gmail-naptár: 0/${dated.length}…`);
+    for (let i = 0; i < dated.length; i++) {
+      const e = dated[i];
+      const m = e.when.match(/(\d{1,2})[:.](\d{2})/);
+      const hh = m ? String(Math.min(23, parseInt(m[1], 10))).padStart(2, '0') : '09';
+      const mi = m ? m[2] : '00';
+      const he = String(Math.min(23, Number(hh) + 1)).padStart(2, '0');
+      const startIso = `${e.day}T${hh}:${mi}:00`;
+      const endIso = `${e.dayEnd || e.day}T${he}:${mi}:00`;
+      try {
+        if (e.googleEventId) {
+          const res = await fetch('/api/meet', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+            body: JSON.stringify({ action: 'update', googleEventId: e.googleEventId, startIso, endIso, summary: e.title, location: e.place ?? '', description: e.note ?? '', tentative: e.mstatus === 'tentative' }),
+          });
+          const j = await res.json() as { ok: boolean; unconfigured?: boolean };
+          if (j.unconfigured) { setPublishMsg('⚠ A Google-naptár nincs beállítva (OAuth).'); return; }
+          if (j.ok) updatedN++; else failed++;
+        } else {
+          const res = await fetch('/api/meet', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+            body: JSON.stringify({ action: 'create', summary: e.title, startIso, endIso, location: e.place || undefined, description: e.note || undefined, attendees: [], sendInvite: false, tentative: e.mstatus === 'tentative', noMeet: true }),
+          });
+          const j = await res.json() as { ok: boolean; unconfigured?: boolean; googleEventId?: string; meetLink?: string };
+          if (j.unconfigured) { setPublishMsg('⚠ A Google-naptár nincs beállítva (OAuth).'); return; }
+          if (j.ok && j.googleEventId) { created++; idPatch.set(e.id, { googleEventId: j.googleEventId, meetLink: j.meetLink || null }); } else failed++;
+        }
+      } catch { failed++; }
+      setPublishMsg(`⇪ Gmail-naptár: ${i + 1}/${dated.length}…`);
+    }
+    // az új Google-párok azonosítói visszaíródnak az eseményekre (a következő gomb már frissít)
+    if (idPatch.size) {
+      const cur = agendaRef.current;
+      commitAgenda({
+        ...cur,
+        events: cur.events.map((x) => {
+          const p = idPatch.get(x.id);
+          return p && !x.googleEventId ? { ...x, googleEventId: p.googleEventId, meetLink: x.meetLink ?? p.meetLink } : x;
+        }),
+      });
+    }
+    setPublishMsg(`✓ Gmail-naptár: ${created} új, ${updatedN} frissítve${failed ? `, ${failed} hiba` : ''}${skipped ? ` · ${skipped} dátum nélküli kihagyva` : ''}.`);
+    window.setTimeout(() => setPublishMsg(null), 12000);
   }, [commitAgenda]);
   // opcionális: hordozható másolat letöltése fájlba (pl. másik gépre költöztetéshez)
   const downloadBackup = () => {
@@ -1590,6 +1653,8 @@ export default function CurriculumApp() {
               onOpenPost={(sel) => { if (!canEdit) return; setPostaFocus(sel); setView('posta'); }}
               onPerson={onInstructor}
               onSyncOutlook={canEdit ? syncOutlookCalendar : undefined}
+              onPublishGoogle={canEdit ? publishAllToGoogle : undefined}
+              publishMsg={publishMsg}
             />
           ) : view === 'posta' ? (
             <PostaView

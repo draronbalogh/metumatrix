@@ -67,6 +67,7 @@ export interface CreateMeetOpts {
   attendees?: string[];
   sendInvite?: boolean;   // true: a Google is kikuld .ics meghivot (sendUpdates=all)
   tentative?: boolean;    // egyeztetes alatt (status=tentative)
+  noMeet?: boolean;       // sima naptarbejegyzes Meet-link NELKUL (pl. tomeges publikalas, Outlook-tukrok)
 }
 
 export const createMeetEvent = async (
@@ -75,7 +76,7 @@ export const createMeetEvent = async (
   const token = await refreshAccessToken();
   const c = cfg();
   const tz = o.timeZone ?? 'Europe/Budapest';
-  const body = {
+  const body: Record<string, unknown> = {
     summary: o.summary,
     location: o.location,
     description: o.description,
@@ -83,10 +84,12 @@ export const createMeetEvent = async (
     end: { dateTime: o.endIso, timeZone: tz },
     status: o.tentative ? 'tentative' : 'confirmed',
     attendees: (o.attendees ?? []).map((email) => ({ email })),
-    conferenceData: {
-      createRequest: { requestId: randomUUID(), conferenceSolutionKey: { type: 'hangoutsMeet' } },
-    },
   };
+  if (!o.noMeet) {
+    body.conferenceData = {
+      createRequest: { requestId: randomUUID(), conferenceSolutionKey: { type: 'hangoutsMeet' } },
+    };
+  }
   const sendUpdates = o.sendInvite ? 'all' : 'none';
   const url = `${API_BASE}/calendars/${encodeURIComponent(c.calendarId)}/events?conferenceDataVersion=1&sendUpdates=${sendUpdates}`;
   const r = await fetch(url, {

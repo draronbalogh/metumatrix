@@ -18,6 +18,7 @@ interface CreateBody {
   attendees?: string[];
   sendInvite?: boolean;
   tentative?: boolean;
+  noMeet?: boolean; // sima bejegyzes Meet-link nelkul (tomeges Gmail-publikalas)
 }
 interface UpdateBody {
   action: 'update';

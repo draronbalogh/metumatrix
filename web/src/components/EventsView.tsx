@@ -17,9 +17,11 @@ interface Props {
   onOpenPost: (sel: string) => void;      // ugrás a Postába erre a levélre (válaszra vár / kész válasz)
   onPerson: (name: string) => void;
   onSyncOutlook?: () => void;             // az abalogh@metropolitan.hu Outlook-naptár behúzása (COM)
+  onPublishGoogle?: () => void;           // ⇪ minden esemény egyirányú publikálása a Gmail-naptárba
+  publishMsg?: string | null;             // a publikálás folyamat-/eredményüzenete
 }
 
-export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpen, onOpenTask, onOpenPost, onPerson, onSyncOutlook }: Props) {
+export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpen, onOpenTask, onOpenPost, onPerson, onSyncOutlook, onPublishGoogle, publishMsg }: Props) {
   const [mode, setMode] = useState<'list' | 'cal'>('cal'); // alapból a naptár nyílik
 
   const matches = (e: AgendaEvent) => {
@@ -56,8 +58,9 @@ export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpe
         </div>
         <button className="btn btn--ink ag-add" onClick={onAdd}>+ Új esemény</button>
         {onSyncOutlook && <button className="btn ag-add" onClick={onSyncOutlook} title="A saját (abalogh@metropolitan.hu) Outlook-naptárad időpontjainak behúzása ide (a klasszikus Outlook fusson a gépen). Csak olvas, semmit nem változtat.">🔄 Outlook-naptár</button>}
+        {onPublishGoogle && <button className="btn ag-add" onClick={onPublishGoogle} title="MINDEN itteni esemény (az Outlook-tükrök is) felmásolása a draronbalogh@gmail.com Google-naptárba. Egyirányú: a Gmailben kézzel felvett bejegyzések SOSEM kerülnek be ide.">⇪ Gmail-naptárba</button>}
       </PageHead>
-      <div className="ev-todaybar">📅 Ma: <b>{todayStr}</b></div>
+      <div className="ev-todaybar">📅 Ma: <b>{todayStr}</b>{publishMsg ? <span style={{ marginLeft: 14 }}>{publishMsg}</span> : null}</div>
 
       {instr && (
         <div className="ag-person slim">

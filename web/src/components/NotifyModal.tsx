@@ -437,7 +437,8 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     else {
       applyMeetLink(r.link);
       // a saját naptárba is: egyeztetés alatti tükör-esemény az első javasolt időponttal
-      const first = meetSlots.filter((s) => s.day && s.start)[0];
+      const filledAll = meetSlots.filter((s) => s.day && s.start);
+      const first = filledAll[0];
       if (onSaveEvent && first) {
         const eid = meetEvIdRef.current || `e-${Date.now().toString(36)}`;
         meetEvIdRef.current = eid;
@@ -447,6 +448,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           sort: first.day.slice(0, 7), day: first.day, place: place || null,
           people: [...selected],
           googleEventId: r.googleEventId || null, meetLink: r.link || null, mstatus: 'tentative',
+          meetSlots: filledAll.length > 1 ? filledAll.map((s) => ({ day: s.day, start: s.start || null, end: s.end || null })) : null,
         });
       }
       setMeetMsg(r.link ? '✓ Meet-link kész - a saját naptárba és a Google-naptárba is bekerült (egyeztetés alatt).' : 'Létrejött (link nélkül).');

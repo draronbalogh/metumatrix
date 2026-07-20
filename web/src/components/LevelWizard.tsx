@@ -148,6 +148,7 @@ export default function LevelWizard({ open, onClose, db, teacherNames, agenda, o
       sort: first.day.slice(0, 7), day: first.day, place: place || null,
       people: recipients.map((x) => x.name),
       googleEventId: r.googleEventId || null, meetLink: r.link || null, mstatus: 'tentative',
+      meetSlots: filled.length > 1 ? filled.map((s) => ({ day: s.day, start: s.start || null, end: s.end || null })) : null,
     };
     onSaveEvent(ev);
     setEventId(eid); setMeetLink(r.link); setGoogleEventId(r.googleEventId);

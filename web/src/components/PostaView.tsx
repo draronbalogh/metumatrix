@@ -1188,7 +1188,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                             if (!onSaveEvent) return;
                             if (r.sel.startsWith('e:')) {
                               const ev = agenda.events.find((x) => x.id === r.sel.slice(2));
-                              if (ev) onSaveEvent({ ...ev, googleEventId: ev.googleEventId ?? (info.googleEventId || null), meetLink: ev.meetLink ?? (info.link || null), mstatus: ev.mstatus ?? 'tentative' });
+                              if (ev) onSaveEvent({ ...ev, googleEventId: ev.googleEventId ?? (info.googleEventId || null), meetLink: ev.meetLink ?? (info.link || null), mstatus: ev.mstatus ?? 'tentative', meetSlots: ev.meetSlots ?? (info.slots.length > 1 ? info.slots : null) });
                             } else {
                               const eid = `e-${Date.now().toString(36)}`;
                               onSaveEvent({
@@ -1197,6 +1197,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                                 sort: info.day.slice(0, 7), day: info.day,
                                 people: [r.src.name],
                                 googleEventId: info.googleEventId || null, meetLink: info.link || null, mstatus: 'tentative',
+                                meetSlots: info.slots.length > 1 ? info.slots : null,
                               });
                               const t = agenda.tasks.find((x) => x.id === r.sel.slice(2));
                               if (t && !t.eventId) onLinkTaskEvent?.(t.id, eid);
@@ -1279,6 +1280,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                               sort: info.day.slice(0, 7), day: info.day,
                               people: l.names.filter((n) => !n.includes('@')),
                               googleEventId: info.googleEventId || null, meetLink: info.link || null, mstatus: 'tentative',
+                              meetSlots: info.slots.length > 1 ? info.slots : null,
                             });
                           }}
                         />

@@ -14,7 +14,7 @@ interface Props {
   recipientEmail?: string | null;      // a valasz cimzettje (a felado) - Meet-resztvevo
   onInsert: (text: string) => void;    // a meeting-szoveg hozzafuzese a valaszhoz
   onLink?: (link: string) => void;     // a link felkerul a kartyara is
-  onCreated?: (info: { link: string; googleEventId: string; day: string; start: string; end: string }) => void; // sikeres letrehozas: tukor-esemeny a sajat naptarba
+  onCreated?: (info: { link: string; googleEventId: string; day: string; start: string; end: string; slots: { day: string; start?: string | null; end?: string | null }[] }) => void; // sikeres letrehozas: tukor-esemeny a sajat naptarba (a slots a naptari "fuggo" jeloleshez)
 }
 
 export default function ReplyMeet({ title, recipientEmail, onInsert, onLink, onCreated }: Props) {
@@ -35,8 +35,12 @@ export default function ReplyMeet({ title, recipientEmail, onInsert, onLink, onC
     else if (r.error) setMsg(`Meet hiba: ${r.error}`);
     else {
       setLink(r.link); onLink?.(r.link);
-      const first = slots.filter((s) => s.day && s.start)[0];
-      if (first) onCreated?.({ link: r.link, googleEventId: r.googleEventId, day: first.day, start: first.start ?? '', end: first.end ?? '' });
+      const filled = slots.filter((s) => s.day && s.start);
+      const first = filled[0];
+      if (first) onCreated?.({
+        link: r.link, googleEventId: r.googleEventId, day: first.day, start: first.start ?? '', end: first.end ?? '',
+        slots: filled.map((s) => ({ day: s.day, start: s.start || null, end: s.end || null })),
+      });
       setMsg(r.link ? '✓ Meet-link kész (a naptáradba is bekerült egyeztetés alatti eseményként).' : 'Kész (link nélkül).');
     }
     setBusy(false);

@@ -42,9 +42,9 @@ export default function MonthReport({ monthKey, agenda, onClose, onSaveLetter }:
   const toggle = (id: string) => setOff((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const chosen = items.filter((i) => !off.has(i.id));
   const fallback = useMemo(() => [
-    'Kedves Melinda, kedves Szabolcs!',
+    'Kedves Melinda, kedves Szabi!',
     '',
-    `Rövid összefoglaló a Média Design szak ${y}. ${monthName} havi szakmai eredményeiről:`,
+    `Küldöm a havi riportunkat a Média Designról (${y}. ${monthName}):`,
     '',
     ...chosen.map((i) => `- ${i.label}`),
     '',
@@ -68,7 +68,7 @@ export default function MonthReport({ monthKey, agenda, onClose, onSaveLetter }:
           senderEmail: RECIPIENTS[0].email,
           subject: subjectDefault, gist: null, thread: [], drafts: [], askAllowed: false,
           card: { kind: 'havi eredmény-riport', lines: chosen.map((i) => i.label) },
-          instruction: `Havi mini-riportot írj a dékáni körnek a Média Design szak ${y}. ${monthName} havi EREDMÉNYEIRŐL, a kártya esemény-listájából. A cél bebizonyítani, milyen fontos szakmai és kulturális munka folyik a szakon, és milyen eredményesek a hallgatóink: kiállítás, verseny, előadás, workshop, fesztivál-részvétel, szervezett szakmai program. Felépítés: rövid, büszke, tényszerű felvezető mondat; utána "Kiemelt eredményeink:" alatt a 3 LEGFONTOSABB tétel "- " jellel, mindegyikhez PONTOSAN EGY lelkes, tényszerű mondat, ami az eredményt és a hallgatói/szakmai értéket emeli ki; utána "További szakmai programjaink:" alatt az összes többi tétel ugyanígy "- " jellel és egy-egy mondattal. KIZÁRÓLAG a listából dolgozz, ne találj ki semmit, adminisztratív tételt ne szerepeltess. Zárás: egy mondat arról, hogy kérdés esetén szívesen adunk részleteket.`,
+          instruction: `Havi mini-riportot írj a dékáni körnek a Média Design szak ${y}. ${monthName} havi EREDMÉNYEIRŐL, a kártya esemény-listájából. A cél bebizonyítani, milyen fontos szakmai és kulturális munka folyik a szakon, és milyen eredményesek a hallgatóink: kiállítás, verseny, előadás, workshop, fesztivál-részvétel, szervezett szakmai program. Felépítés PONTOSAN így: megszólítás "Kedves Melinda, kedves Szabi!"; utána EGYETLEN rövid, közvetlen mondat: "Küldöm a havi riportunkat a Média Designról." (vagy nagyon hasonló) - SEMMI hosszabb felvezetés; utána "Kiemelt eredményeink:" alatt a 3 LEGFONTOSABB tétel "- " jellel, mindegyikhez PONTOSAN EGY lelkes, tényszerű mondat, ami az eredményt és a hallgatói/szakmai értéket emeli ki; utána "További szakmai programjaink:" alatt az összes többi tétel ugyanígy "- " jellel és egy-egy mondattal. KIZÁRÓLAG a listából dolgozz, ne találj ki semmit, adminisztratív tételt ne szerepeltess. Zárás: rövid üdvözlés, semmi több.`,
         }),
       });
       const j = await res.json() as { ok?: boolean; subject?: string; body?: string; error?: string };

@@ -61,10 +61,9 @@ export default function TopicsView({ q, letters, composer, onUseTopic, onOpenLet
           <button type="button" className={tab === 'levelek' ? 'is-on' : ''}
             onClick={() => setTab('levelek')}>Mentett levelek ({letters.length})</button>
         </div>
-        {onTitkarno && (
-          <button type="button" className="btn btn--ink" title="Diktált szándékból kész levelet ír a te stílusodban, és a Postába teszi küldésre"
-            onClick={onTitkarno}>🗣 Titkárnő</button>
-        )}
+        {/* A külön Titkárnő-wizard megszűnt (redundáns volt a postázóval): a Titkárnő a
+            szerkesztőben él - „Mit szeretnél?" mező + 🗣 Titkárnő a Postába gomb, EGY
+            címzett-választóval. A régi wizard kód a LevelWizard.tsx-ben marad, de nincs belépője. */}
       </PageHead>
       <div className="tp3">
         <div className="tp-listcol">

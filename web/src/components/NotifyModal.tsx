@@ -712,6 +712,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const [tkBusy, setTkBusy] = useState(false);
   const [tkQ, setTkQ] = useState<string | null>(null);
   const [tkA, setTkA] = useState('');
+  const [tkIntent, setTkIntent] = useState(''); // a felhasználó szabad szándék-szövege (diktálható)
   const titkarno = async (answer?: string | null) => {
     if (!emails.length) { setResult('⚠ Előbb válassz címzettet (Címzettek fül) - a Titkárnő nekik fogalmaz, és nekik teszi a levelet a Postába.'); return; }
     setTkBusy(true); setResult('🗣 Titkárnő fogalmaz…');
@@ -719,7 +720,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       const res = await fetch('/api/compose', {
         method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
         body: JSON.stringify({
-          instruction: `A lenti sablon-vázlatból írj KÉSZ, küldhető magyar levelet. A [szögletes] mezők közül amit a válaszaimból tudsz, tölts ki; ami nem derül ki és nem kritikus, azt gördülékeny fogalmazással hagyd el - kitalálni semmit nem szabad.\nTárgy-vázlat: ${outSubject}\nTörzs-vázlat:\n${outBody}`,
+          instruction: `A lenti sablon-vázlatból írj KÉSZ, küldhető magyar levelet. A [szögletes] mezők közül amit a válaszaimból tudsz, tölts ki; ami nem derül ki és nem kritikus, azt gördülékeny fogalmazással hagyd el - kitalálni semmit nem szabad.${tkIntent.trim() ? `\nA FELHASZNÁLÓ SZÁNDÉKA (ezt dolgozd bele, ez az elsődleges): ${tkIntent.trim()}` : ''}\nTárgy-vázlat: ${outSubject}\nTörzs-vázlat:\n${outBody}`,
           templates: [], recipients: resolveRecips(), sendMode: emails.length === 1 ? 'personal' : 'bcc',
           cardContext: [],
           meeting: meetMode !== 'nincs' ? { slots: meetSlots.filter((s) => s.day).map(slotLabel), place: place || null, meetLink: meetLink || null } : null,
@@ -1199,6 +1200,11 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
         </div>
         <div className="mfoot">
           <button className="btn" onClick={saveLetter} disabled={!subject.trim()}>💾 Levél mentése</button>
+          <div style={{ flexBasis: '100%', display: 'flex', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <textarea value={tkIntent} onChange={(e) => setTkIntent(e.target.value)} rows={2}
+              placeholder="🗣 Mit szeretnél? (kulcsszavakban - diktálhatod is; a Titkárnő ezt dolgozza bele a sablonba)"
+              style={{ flex: '1 1 320px', font: 'inherit', padding: '7px 10px', borderRadius: 8, border: '1px solid var(--line)', resize: 'vertical' }} />
+          </div>
           {tkQ && (
             <div style={{ flexBasis: '100%', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <span style={{ fontWeight: 700 }}>🗣 {tkQ}</span>

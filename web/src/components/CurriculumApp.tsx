@@ -127,6 +127,8 @@ export default function CurriculumApp() {
   const peopleFileOk = useRef(false);
 
   const [view, setView] = useState<ViewId>('map');
+  // app-szintű „Titkárnő fogalmaz" jelző: a nézetváltás/wizard-zárás NE tüntesse el
+  const [titkarBusy, setTitkarBusy] = useState<string | null>(null);
   const [postaFocus, setPostaFocus] = useState<string | null>(null); // a Feladat/Esemény kártyáról a Postába vitt levél (fókusz)
   const [agenda, setAgenda] = useState<Agenda>(DEFAULT_AGENDA);
   const [peopleDB, setPeopleDB] = useState<PeopleDB>(DEFAULT_PEOPLE);
@@ -1442,6 +1444,7 @@ export default function CurriculumApp() {
               senderRules={peopleDB.senderRules}
               onSenderRule={setSenderRule}
               onReply={notifyReply}
+              onBusy={setTitkarBusy}
               onState={setSourceState}
               undo={postaUndo ? { label: postaUndo.label } : null}
               onUndo={undoSourceState}
@@ -1506,10 +1509,17 @@ export default function CurriculumApp() {
             agenda={agenda}
             onSaveLetter={saveLetter}
             onSaveEvent={saveEvent}
+            onBusy={setTitkarBusy}
           />
         </div>
         )}
 
+        {/* App-szintű „Titkárnő fogalmaz" jelző: nézetváltáskor/wizard-záráskor is látszik */}
+        {titkarBusy && (
+          <div role="status" aria-live="polite" style={{ position: 'fixed', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: 'var(--ink)', color: 'var(--paper, #fff)', padding: '7px 16px', borderRadius: 22, fontSize: '.9rem', fontWeight: 600, boxShadow: '0 3px 12px rgba(0,0,0,.28)', maxWidth: '92vw' }}>
+            ⏳ {titkarBusy}
+          </div>
+        )}
         {/* MENTÉS-DOKK a jobb alsó sarokban: desktopon a három gomb, mobilon hamburger-FAB */}
         {canEdit && loadState !== 'loading' && (
           <div className={`savedock${dockOpen ? ' is-open' : ''}`}>

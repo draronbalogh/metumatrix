@@ -25,6 +25,7 @@ interface Props {
   agenda: Agenda;
   onSaveLetter: (l: Letter) => void;      // upsert a letters[]-be (outbox)
   onSaveEvent: (e: AgendaEvent) => void;  // upsert az events[]-be (tentative)
+  onBusy?: (msg: string | null) => void;  // app-szintű „Titkárnő fogalmaz" jelző
 }
 
 type Step = 'intent' | 'assemble' | 'final';
@@ -53,7 +54,7 @@ function relevantContext(agenda: Agenda, intent: string, recipients: LetterRecip
   return cs.sort((a, b) => b.s - a.s).slice(0, 3).map(({ title, lines }) => ({ title, lines }));
 }
 
-export default function LevelWizard({ open, onClose, db, teacherNames, agenda, onSaveLetter, onSaveEvent }: Props) {
+export default function LevelWizard({ open, onClose, db, teacherNames, agenda, onSaveLetter, onSaveEvent, onBusy }: Props) {
   const [mode, setMode] = useState<'voice' | 'write' | null>(null);
   const [step, setStep] = useState<Step>('intent');
   const [intent, setIntent] = useState('');
@@ -157,7 +158,7 @@ export default function LevelWizard({ open, onClose, db, teacherNames, agenda, o
   const compose = async (answer?: string | null) => {
     if (!intent.trim() || busy) return;
     if (!recipients.length) { setErr('Adj meg legalább egy címzettet.'); return; }
-    setBusy(true); setErr(null);
+    setBusy(true); setErr(null); onBusy?.('Titkárnő fogalmaz…');
     try {
       const res = await fetch('/api/compose', {
         method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
@@ -181,7 +182,7 @@ export default function LevelWizard({ open, onClose, db, teacherNames, agenda, o
       setPendingQ(null); setQa(''); setStep('final');
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
-    } finally { setBusy(false); }
+    } finally { setBusy(false); onBusy?.(null); }
   };
 
   // KÉSZ -> Posta: kimenő levél az agendába (outbox)

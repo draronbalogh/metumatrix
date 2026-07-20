@@ -40,6 +40,7 @@ interface Props {
   onSenderRule: (email: string, rule: SenderRule) => void;
   onReply: (sel: string, draft: ReplyDraft, drafts: ReplyDraft[]) => void;
   onState: (sel: string, patch: Partial<AgendaSource>, label: string) => void;
+  onBusy?: (msg: string | null) => void;   // app-szintű „Titkárnő fogalmaz" jelző (nézetváltáskor is látszik)
   undo: { label: string } | null;
   onUndo: () => void;
   onOpenCard: (sel: string) => void;
@@ -56,7 +57,7 @@ const ymdTs = (d?: string | null): number | null =>
 
 const DAY = 86400000;
 
-export default function PostaView({ agenda, footer, senderRules, onSenderRule, onReply, onState, undo, onUndo, onOpenCard, onSaveLetter, onDeleteLetter, onRefresh, focusSel, onFocusConsumed }: Props) {
+export default function PostaView({ agenda, footer, senderRules, onSenderRule, onReply, onBusy, onState, undo, onUndo, onOpenCard, onSaveLetter, onDeleteLetter, onRefresh, focusSel, onFocusConsumed }: Props) {
   const [bank, setBank] = useState<StyleBank | null>(null);
   useEffect(() => {
     fetch('/api/style', { headers: editHeaders() }).then((r) => r.json())
@@ -611,6 +612,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     const items = [...noted];
     setBatchBusy(true); setGenErr(null);
     setBatchProg(`Fogalmazás… (${items.length} levél egyben, kb. fél-egy perc)`);
+    onBusy?.(`Titkárnő fogalmaz… (${items.length} levél)`);
     try {
       const res = await fetch('/api/rephrase-batch', {
         method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
@@ -645,7 +647,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
       setBatchProg(`Kész: ${done} megfogalmazva${missed > 0 ? `, ${missed} kimaradt (a jegyzetük megvan, nyomd újra)` : ''}. A „📋 Másolható válaszok" blokkban vannak.`);
     } catch {
       setBatchProg('⚠ Nem sikerült elindítani a megfogalmazást. A jegyzeteid megmaradtak - próbáld újra.');
-    } finally { setBatchBusy(false); }
+    } finally { setBatchBusy(false); onBusy?.(null); }
   };
 
   const nowIso = () => new Date().toISOString();

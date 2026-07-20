@@ -824,7 +824,17 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   // válaszra-váróra, a nyers jegyzet + a memóriabeli terv törlődik (a mentett Letter
   // megmarad referenciának), és a Titkárnő rögtön EZT a levelet nyitja meg elöl,
   // hangmódban - újra meghallgatható és új válasz adható rá.
-  const backToTitkar = (r: Row) => {
+  const backToTitkar = (r: Row, letter?: Letter | null) => {
+    // el lehet dönteni: a MEGLÉVŐ választ szerkesztem (szöveg megmarad), vagy teljesen ÚJAT írok
+    if (letter) {
+      const keep = window.confirm('A MEGLÉVŐ választ szeretnéd módosítani?\n\nOK: a mostani szöveg megnyílik szerkesztésre (megmarad).\nMégse: teljesen ÚJ választ írsz (a mostani törlődik).');
+      if (keep) {
+        setShowDrafted(true);
+        setReadDraft(r.sel);
+        setEditDraft({ sel: r.sel, subject: letter.subject, body: letter.body });
+        return;
+      }
+    }
     stopSpeak();
     setGen((g) => { const n = { ...g }; delete n[r.sel]; return n; });
     onState(r.sel, { status: 'pending', returned: null, rawReply: null }, 'Vissza a titkárnőnek');
@@ -1148,7 +1158,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                   <button type="button" className="btn btn--hot" disabled={sendingSel === r.sel} title="AZONNALI küldés az Outlookon át (megerősítéssel, nem vonható vissza). Ha van piszkozat, azt küldi." onClick={() => sendNow(r)}>{sendingSel === r.sel ? '⏳ Küldés…' : '✉ Küldés most'}</button>
                   <button type="button" className="btn btn--sched" title="EZT az egy választ a következő hétköznap hajnalára ütemezi (05:40–06:40, random időben). A helyi hajnali feladat küldi ki valódi levélként." onClick={() => scheduleOneDawn(r)}>⏰ Ütemezve</button>
                   <button type="button" className="btn" title="Beillesztettem és elküldtem az Outlookban - lezárás" onClick={() => onState(r.sel, { status: 'replied', repliedAt: nowIso(), returned: null, thread: withOutEntry(r.src, 'megválaszolva (átmásolva az Outlookba)') }, 'Elküldve, lezárva')}>✓ Elküldtem</button>
-                  <button type="button" className="btn" title="Vissza a titkárnőnek: a válasz státusza visszaáll, a Titkárnő rögtön ezt a levelet nyitja hangmódban - újra meghallgathatod és új választ adhatsz rá" onClick={() => backToTitkar(r)}>🗣 Titkárnőnek</button>
+                  <button type="button" className="btn" title="Vissza a titkárnőnek: a válasz státusza visszaáll, a Titkárnő rögtön ezt a levelet nyitja hangmódban - újra meghallgathatod és új választ adhatsz rá" onClick={() => backToTitkar(r, l)}>🗣 Titkárnőnek</button>
                   <button type="button" className="btn" title="Vissza a válaszra várók közé (a Postába, a Titkárnő megnyitása nélkül)" onClick={() => onState(r.sel, { status: 'pending', returned: null }, 'Vissza a Postába')}>↩ Vissza</button>
                 </div>
                 {isRead && l && (
@@ -1175,7 +1185,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                         <div className="po-draft-b">{l.body}</div>
                         <div className="po-readbody-f">
                           <button type="button" className="btn" title="A válasz átírása (tárgy és szöveg) - a módosítás helyben menthető" onClick={() => setEditDraft({ sel: r.sel, subject: l.subject, body: l.body })}>✎ Szerkesztés</button>
-                          <button type="button" className="btn" title="Vissza a titkárnőnek: a válasz státusza visszaáll, a Titkárnő rögtön ezt a levelet nyitja hangmódban - újra meghallgathatod és új választ adhatsz rá" onClick={() => backToTitkar(r)}>🗣 Titkárnőnek</button>
+                          <button type="button" className="btn" title="Vissza a titkárnőnek: a válasz státusza visszaáll, a Titkárnő rögtön ezt a levelet nyitja hangmódban - újra meghallgathatod és új választ adhatsz rá" onClick={() => backToTitkar(r, l)}>🗣 Titkárnőnek</button>
                           <button type="button" className="btn btn--ink" title="A megírt válasz a vágólapra" onClick={() => copyLetter(`d-${r.sel}`, l)}>{copied === `d-${r.sel}` ? '✓ Másolva' : '⧉ Másolás'}</button>
                           <button type="button" className="btn" onClick={() => { setReadDraft(null); setEditDraft(null); }}>▴ Bezár</button>
                         </div>

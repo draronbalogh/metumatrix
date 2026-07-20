@@ -925,8 +925,26 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               <PlaceQuickPick value={place} onPick={(v) => applyPlace(v, true)} />
             </div>
           )}
+          </>)}
+          {tab === 'text' && (<>
+          <div className="f-sec">3 · A levél szövege és küldése</div>
+          {replyChips && replyChips.length > 0 && (
+            <div className="field full">
+              <label>A bot választervei - kattintásra betöltődik, utána szabadon átírható</label>
+              <div className="chipradio">
+                {replyChips.map((v) => (
+                  <button key={v.label} type="button" className="crx c-blue" onClick={() => applyReplyVariant(v)}>{v.label}</button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="field full">
-            <label>Meeting-javaslat a levélben (több időpont is ajánlható)
+            <label>Tárgy</label>
+            <input value={subject} onChange={(e) => setSubject(e.target.value)} />
+            {outSubject !== subject && <div className="nm-outprev">Kimenet: <strong>{outSubject}</strong></div>}
+          </div>
+          <div className="field full">
+            <label>📅 Google Meet időpont(ok) a levélbe (több is ajánlható)
               <a className="nm-bodytoggle nm-meetlink" href="https://meet.google.com/new" target="_blank" rel="noopener noreferrer"
                 title="Új Google Meet indítása új lapon - a létrejött linket másold be ide">▶ Google Meet ↗</a>
             </label>
@@ -951,24 +969,6 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                 )}
               </div>
             )}
-          </div>
-          </>)}
-          {tab === 'text' && (<>
-          <div className="f-sec">3 · A levél szövege és küldése</div>
-          {replyChips && replyChips.length > 0 && (
-            <div className="field full">
-              <label>A bot választervei - kattintásra betöltődik, utána szabadon átírható</label>
-              <div className="chipradio">
-                {replyChips.map((v) => (
-                  <button key={v.label} type="button" className="crx c-blue" onClick={() => applyReplyVariant(v)}>{v.label}</button>
-                ))}
-              </div>
-            </div>
-          )}
-          <div className="field full">
-            <label>Tárgy</label>
-            <input value={subject} onChange={(e) => setSubject(e.target.value)} />
-            {outSubject !== subject && <div className="nm-outprev">Kimenet: <strong>{outSubject}</strong></div>}
           </div>
           <div className="nm-msgrow">
             <div className="nm-side">

@@ -362,6 +362,7 @@ interface TaskProps {
   onSave: (t: AgendaTask) => void;
   onDelete: () => void;
   onNotify?: () => void; // mentés után egyből a levélíró nyílik erre a feladatra
+  onAddEvent?: () => void; // mentés után új, előtöltött esemény nyílik ehhez a feladathoz
   onOpenLetter?: (l: Letter) => void;                              // mentett levél megnyitása a levélíróban
   onLetterStatus?: (id: string, status: 'draft' | 'sent') => void; // vázlat/kiküldve váltás
   onNotifyTopic?: (topicId: string) => void;                       // levélíró nyitása ajánlott sablonnal
@@ -375,7 +376,7 @@ const TASK_TABS: TabDef[] = [
   { id: 'mail', label: 'Levelezés', cls: 'c-green' },
 ];
 
-export function TaskModal({ task, isNew, events, roster, rosterGroups, letters, onSave, onDelete, onNotify, onOpenLetter, onLetterStatus, onNotifyTopic, onClose }: TaskProps) {
+export function TaskModal({ task, isNew, events, roster, rosterGroups, letters, onSave, onDelete, onNotify, onAddEvent, onOpenLetter, onLetterStatus, onNotifyTopic, onClose }: TaskProps) {
   const [d, setD] = useState(() => ({
     title: task.title, summary: task.summary,
     status: task.status as string, priority: task.priority as string, category: task.category ?? '',
@@ -485,6 +486,10 @@ export function TaskModal({ task, isNew, events, roster, rosterGroups, letters, 
               {!d.eventId && eventSugg && (
                 <button type="button" className="chip due-sugg" title="A rendszer a címek egyezése alapján ezt az eseményt javasolja"
                   onClick={() => set('eventId', eventSugg.id)}>⚡ Javaslat: ▤ {eventSugg.title} - összekapcsolás</button>
+              )}
+              {!d.eventId && onAddEvent && (
+                <button type="button" className="btn" title="Menti a feladatot, és új eseményt nyit a feladat adataival - az esemény mentésekor össze lesznek kapcsolva"
+                  onClick={() => { if (!d.title.trim()) return; save(); onAddEvent(); }}>+ Új esemény ehhez a feladathoz</button>
               )}
             </div>
             <div className="f-sec c-green">Tartalom</div>

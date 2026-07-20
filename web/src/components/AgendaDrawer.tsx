@@ -37,6 +37,7 @@ interface Props {
   onTaskStatus?: (id: string, s: TaskStatus) => void; // kész / folyamatban / újranyitás a részletezőből
   onDelete?: () => void; // a tétel törlése innen (a hívó erősít meg)
   onSetStar?: (id: string, star: TaskStar | null) => void; // kézi ⭐ a részletezőből
+  onAddEventFor?: (taskId: string) => void; // új, előtöltött esemény ehhez a feladathoz
 }
 
 const fmtLetter = (iso: string) => iso.slice(0, 16).replace('T', ' ');
@@ -69,7 +70,7 @@ function Sec({ cls, children }: { cls?: string; children: ReactNode }) {
 // egy kiosztott lépés a személy-kártyán - a taskId+ix révén innen is pipálható
 interface PStep { taskId: string; taskTitle: string | null; ix: number; text: string; done: boolean; due: string | null }
 
-export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor, onCreateMeet, onConfirmMeet, meetMsg, onTaskStatus, onDelete, onSetStar }: Props) {
+export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor, onCreateMeet, onConfirmMeet, meetMsg, onTaskStatus, onDelete, onSetStar, onAddEventFor }: Props) {
   const task = det.kind === 'task' ? agenda.tasks.find((t) => t.id === det.id) ?? null : null;
   const event = det.kind === 'event' ? agenda.events.find((e) => e.id === det.id) ?? null : null;
   if (!task && !event) return null;
@@ -186,6 +187,9 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                       <option value="">- esemény hozzákapcsolása -</option>
                       {agenda.events.map((e) => <option key={e.id} value={e.id}>{e.title}</option>)}
                     </select>
+                    {onAddEventFor && (
+                      <button className="btn dr-addtask" onClick={() => onAddEventFor(task.id)}>+ Új esemény ehhez a feladathoz</button>
+                    )}
                   </div>
                 ) : <p className="none">nincs</p>}
               </div>

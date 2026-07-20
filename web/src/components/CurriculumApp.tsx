@@ -709,6 +709,8 @@ export default function CurriculumApp() {
     const cur = agendaRef.current;
     commitAgenda({ ...cur, tasks: cur.tasks.map((t) => (t.id === taskId ? { ...t, dueDate: d, due: null } : t)) });
   }, [commitAgenda]);
+  // feladatból indított új esemény: az esemény mentésekor a kezdeményező feladat rákapcsolódik
+  const pendingTaskLink = useRef<{ taskId: string; eventId: string } | null>(null);
   const saveEvent = useCallback((e: AgendaEvent) => {
     const cur = agendaRef.current;
     const prev = cur.events.find((x) => x.id === e.id);
@@ -717,9 +719,14 @@ export default function CurriculumApp() {
     // (amik eddig pont az esemény napján álltak) automatikusan követik az új napot
     const oldKey = prev?.day ?? prev?.sort ?? null;
     const newKey = e.day ?? e.sort ?? null;
-    const tasks = oldKey && newKey && oldKey !== newKey
+    let tasks = oldKey && newKey && oldKey !== newKey
       ? cur.tasks.map((t) => (t.eventId === e.id && t.dueDate === oldKey ? { ...t, dueDate: newKey } : t))
       : cur.tasks;
+    const pend = pendingTaskLink.current;
+    if (pend && pend.eventId === e.id) {
+      tasks = tasks.map((t) => (t.id === pend.taskId ? { ...t, eventId: e.id, dueDate: t.dueDate ?? e.day ?? e.sort ?? null } : t));
+      pendingTaskLink.current = null;
+    }
     commitAgenda({ ...cur, tasks, events: exists ? cur.events.map((x) => (x.id === e.id ? e : x)) : [...cur.events, e] });
     setEventEdit(null);
     // GOOGLE PUSH - a szabály: amit az app jegyez, azt KI is toljuk a draronbalogh@gmail.com
@@ -871,6 +878,25 @@ export default function CurriculumApp() {
       },
       isNew: true,
     });
+  }, []);
+  // Új esemény egy feladatból (az addTaskForEvent tükörképe): örökli a feladat adatait,
+  // és az esemény MENTÉSEKOR a feladat eventId-je automatikusan rááll (pendingTaskLink).
+  const addEventForTask = useCallback((taskId: string) => {
+    if (!canEditRef.current) return;
+    const t = agendaRef.current.tasks.find((x) => x.id === taskId);
+    if (!t) return;
+    const day = t.dueDate && t.dueDate.length >= 10 ? t.dueDate.slice(0, 10) : null;
+    const e: AgendaEvent = {
+      ...emptyEvent(),
+      title: t.title,
+      owner: t.owner ?? DEFAULT_OWNER,
+      people: [...t.people],
+      day,
+      sort: t.dueDate ? t.dueDate.slice(0, 7) : null,
+      when: fmtEventWhen(day, null, t.dueDate ? t.dueDate.slice(0, 7) : null, null),
+    };
+    pendingTaskLink.current = { taskId, eventId: e.id };
+    setEventEdit({ e, isNew: true });
   }, []);
   // Levél-készítő megnyitása egy feladatból / eseményből - a sablon-szöveget a modál
   // generálja; topicId-vel egy ajánlott témasablon rögtön be is töltődik
@@ -1764,6 +1790,7 @@ export default function CurriculumApp() {
           onConfirmMeet={confirmMeet}
           onTaskStatus={setTaskStatus}
           onSetStar={setTaskStar}
+          onAddEventFor={(tid) => { setAgendaDetails(null); addEventForTask(tid); }}
           onDelete={() => {
             const d = agendaDetails;
             if (!d || !canEditRef.current) return;
@@ -1804,6 +1831,7 @@ export default function CurriculumApp() {
           onSave={saveTask}
           onDelete={() => { if (confirm('Törlöd ezt a feladatot?')) deleteTask(taskEdit.t.id); }}
           onNotify={() => notifyTask(taskEdit.t.id)}
+          onAddEvent={() => addEventForTask(taskEdit.t.id)}
           onOpenLetter={openSavedLetter}
           onLetterStatus={setLetterStatus}
           onNotifyTopic={(tid) => notifyTask(taskEdit.t.id, tid)}
@@ -1827,7 +1855,7 @@ export default function CurriculumApp() {
           onOpenLetter={openSavedLetter}
           onLetterStatus={setLetterStatus}
           onNotifyTopic={(tid) => notifyEvent(eventEdit.e.id, tid)}
-          onClose={() => setEventEdit(null)}
+          onClose={() => { setEventEdit(null); pendingTaskLink.current = null; }}
         />
       )}
 

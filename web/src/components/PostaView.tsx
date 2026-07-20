@@ -7,6 +7,7 @@ import { parseStyleBank, replyVariants, StyleBank } from '@/lib/replies';
 import { suggestTemplatesFor, autoFill, TopicCtx } from '@/lib/topics';
 import { editHeaders } from '@/lib/editkey';
 import PageHead from './PageHead';
+import ReplyMeet from './ReplyMeet';
 
 // POSTA: az Outlook-szinkron által rögzített bejövő levelek, állapotgéppel.
 // Stabil sávok fix sorrendben (egy kártya pontosan EGY sávban, a többi tulajdonság
@@ -1150,6 +1151,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                   <span className="d">{fmtD(r.src.date) || '·'}</span>
                   <span className="n">{r.src.name}</span>
                   <span className="s">„{r.src.subject ?? r.title}"</span>
+                  {r.src.meetLink && <a className="po-badge" href={r.src.meetLink} target="_blank" rel="noopener noreferrer" title="Google Meet belépés">📹 Meet</a>}
                   {l && <button type="button" className="btn" title="A megírt válasz TELJES szövegének megnyitása olvasásra/szerkesztésre (mobilon is)" onClick={() => { setReadDraft(isRead ? null : r.sel); setEditDraft(null); }}>{isRead ? '▴ Bezár' : '👁 Elolvasás'}</button>}
                   {l
                     ? <button type="button" className="btn btn--ink" title="A megírt válasz a vágólapra - illeszd be az Outlook válaszába" onClick={() => copyLetter(`d-${r.sel}`, l)}>{copied === `d-${r.sel}` ? '✓ Másolva' : '⧉ Másolás'}</button>
@@ -1171,6 +1173,12 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                           <label className="po-readedit-l">A válasz szövege</label>
                           <textarea className="po-readedit-b" rows={12} value={editDraft.body} onChange={(e) => setEditDraft((d) => (d ? { ...d, body: e.target.value } : d))} />
                         </div>
+                        <ReplyMeet
+                          title={l.subject}
+                          recipientEmail={r.src.email}
+                          onInsert={(text) => setEditDraft((d) => (d ? { ...d, body: `${d.body.trimEnd()}\n\n${text}` } : d))}
+                          onLink={(link) => onState(r.sel, { meetLink: link }, 'Meet-link a kártyához')}
+                        />
                         <div className="po-readbody-f">
                           <button type="button" className="btn btn--ink" title="A módosítások mentése (a kész válasz felülíródik)" onClick={() => { onSaveLetter?.({ ...l, subject: editDraft.subject.trim() || l.subject, body: editDraft.body.trim() }); setEditDraft(null); }}>💾 Mentés</button>
                           <button type="button" className="btn" title="Módosítások elvetése" onClick={() => setEditDraft(null)}>Mégse</button>

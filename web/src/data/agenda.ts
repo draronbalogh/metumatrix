@@ -22,6 +22,12 @@ export const PRIORITY_ORDER: TaskPriority[] = ['high', 'normal', 'low'];
 export const nextPriority = (p: TaskPriority): TaskPriority =>
   PRIORITY_ORDER[(PRIORITY_ORDER.indexOf(p) + 1) % PRIORITY_ORDER.length];
 
+// Kézi ⭐ felülbírálat a Legfontosabbak sávhoz
+export type TaskStar = 'on' | 'off';
+// Egy javasolt Meet-időpont (a lib/letters MeetSlot-tal mező-kompatibilis, de itt
+// definiálva, hogy az adatmodell ne függjön a levél-libtől)
+export interface AgendaMeetSlot { day: string; start?: string | null; end?: string | null }
+
 // Fix kategória-taxonómia a feladatokhoz (egy kategória / feladat)
 export const TASK_CATEGORIES = [
   'Oktatásszervezés', 'Kurzus & tanterv', 'AI', 'Szoftver & eszköz',
@@ -128,6 +134,8 @@ export interface AgendaTask {
   createdAt: string | null; // létrehozás időpontja (ISO) - dátum szerinti rendezéshez és az ÚJ jelzéshez
   source?: AgendaSource | null; // a kiváltó email feladója (válasz-levélhez)
   meetLink?: string | null; // a feladathoz kötött Google Meet-link (megjelenítéshez)
+  star?: TaskStar | null;   // kézi ⭐ felülbírálat: 'on' = mindig a Legfontosabbak sávban, 'off' = soha; null/hiányzik = automatikus
+  starAt?: string | null;   // a kézi állítás időbélyege (ISO) - az 'off' ez alapján jár le új bejövőnél
 }
 
 export interface AgendaEvent {
@@ -148,6 +156,7 @@ export interface AgendaEvent {
   mstatus?: 'tentative' | 'confirmed' | null; // egyeztetés alatt / véglegesítve
   extSource?: 'outlook' | null;  // az abalogh@metropolitan.hu Outlook-naptárból importált tükör-esemény
   extId?: string | null;         // az Outlook GlobalAppointmentID (dedup/frissítés a szinkronnál)
+  meetSlots?: AgendaMeetSlot[] | null; // függő Meet-időpontjavaslatok (csak mstatus:'tentative' mellett) - a naptár halványan mutatja őket
 }
 
 // Egy feloldott címzett a kimenő (Levelek-kezdeményezett) levélhez
@@ -288,6 +297,48 @@ export const duePrecise = (d?: string | null): boolean => !!d && d.length >= 10;
 // A Posta-lista és a menü-számláló EGYETLEN predikátuma: kire várunk még válaszért.
 export const isAwaiting = (s?: AgendaSource | null): boolean =>
   !!s && !!s.email && !s.shadow && (s.status ?? 'pending') === 'pending';
+
+// ---- Legfontosabbak sáv: számított rang + kézi ⭐ felülbírálat ----
+// A kézi 'off' LEJÁR, ha a levétel óta új bejövő érkezett a szálban
+// (lastInboundAt > starAt) - ilyenkor a számított kiemelés él újra.
+export const starOverride = (t: AgendaTask): TaskStar | null => {
+  if (!t.star) return null;
+  if (t.star === 'off' && t.starAt && t.source?.lastInboundAt && t.source.lastInboundAt > t.starAt) return null;
+  return t.star;
+};
+// pontos határidő ms-ben (ÉÉÉÉ-HH-NN), enélkül null
+export const dueMsOf = (t: AgendaTask): number | null => {
+  const d = t.dueDate;
+  if (!d || d.length < 10) return null;
+  const ms = new Date(Number(d.slice(0, 4)), Number(d.slice(5, 7)) - 1, Number(d.slice(8, 10))).getTime();
+  return Number.isNaN(ms) ? null : ms;
+};
+// a sáv KÉZI FELÜLBÍRÁLAT NÉLKÜLI rangja: kisebb = előrébb; 99 = nincs bent.
+// Levél-ügyek elöl (új válasz kell / válaszra vár / kész válasz), majd közeli határidő, majd magas prioritás.
+export const baseUrgencyRank = (t: AgendaTask, soon: number): number => {
+  if (t.source?.returned) return 0;
+  if (isAwaiting(t.source)) return 1;
+  if (t.source?.status === 'drafted') return 2;
+  const dm = dueMsOf(t);
+  if (dm !== null && dm <= soon) return 3;
+  if (t.priority === 'high') return 4;
+  return 99;
+};
+// a hatályos rang: kézi 'on' → 0 (mindig bent, elöl), hatályos 'off' → 99 (soha), különben számított
+export const urgencyRank = (t: AgendaTask, soon: number): number => {
+  const s = starOverride(t);
+  if (s === 'on') return 0;
+  if (s === 'off') return 99;
+  return baseUrgencyRank(t, soon);
+};
+// a ⭐ gomb következő tárolt értéke: ha az új kívánt állapot megegyezik a számítottal,
+// null tárolódik (nincs felesleges felülbírálat, az automatika él tovább)
+export const nextStarFor = (t: AgendaTask, soon: number): TaskStar | null => {
+  const inBand = urgencyRank(t, soon) < 99;
+  const baseIn = baseUrgencyRank(t, soon) < 99;
+  if (inBand) return baseIn ? 'off' : null;
+  return baseIn ? null : 'on';
+};
 
 // Korábban mentett (régebbi sémájú) adat kiegészítése az új mezőkkel.
 // A steps itt materializálódik az ideas-ból, és az ideas a steps tükre marad -

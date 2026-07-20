@@ -1,10 +1,11 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Agenda, AgendaEvent, AgendaTask, Letter, PRIORITY_LABEL, STATUS_LABEL, TaskStar, TaskStatus, fmtDayHu, fmtDueHu, nextStarFor, taskSteps, stepsDone, urgencyRank } from '@/data/agenda';
+import { Agenda, AgendaEvent, AgendaMeetSlot, AgendaTask, Letter, PRIORITY_LABEL, STATUS_LABEL, TaskStar, TaskStatus, fmtDayHu, fmtDueHu, nextStarFor, taskSteps, stepsDone, urgencyRank } from '@/data/agenda';
 import { PersonKind } from '@/data/people';
 import { suggestEventFor } from '@/lib/linkSuggest';
 import { PersonChip } from './AgendaView';
+import SlotConfirm from './SlotConfirm';
 
 // Feladat / esemény RÉSZLETEZŐ - az „egy kártya mindenhol" elv az agendára:
 // a listában csak tömör, 2 soros kártyák vannak, minden részlet ITT nyílik meg.
@@ -38,6 +39,7 @@ interface Props {
   onDelete?: () => void; // a tétel törlése innen (a hívó erősít meg)
   onSetStar?: (id: string, star: TaskStar | null) => void; // kézi ⭐ a részletezőből
   onAddEventFor?: (taskId: string) => void; // új, előtöltött esemény ehhez a feladathoz
+  onConfirmMeetSlot?: (eventId: string, slot: AgendaMeetSlot) => void; // a választott javaslat véglegesítése
 }
 
 const fmtLetter = (iso: string) => iso.slice(0, 16).replace('T', ' ');
@@ -70,7 +72,7 @@ function Sec({ cls, children }: { cls?: string; children: ReactNode }) {
 // egy kiosztott lépés a személy-kártyán - a taskId+ix révén innen is pipálható
 interface PStep { taskId: string; taskTitle: string | null; ix: number; text: string; done: boolean; due: string | null }
 
-export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor, onCreateMeet, onConfirmMeet, meetMsg, onTaskStatus, onDelete, onSetStar, onAddEventFor }: Props) {
+export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor, onCreateMeet, onConfirmMeet, meetMsg, onTaskStatus, onDelete, onSetStar, onAddEventFor, onConfirmMeetSlot }: Props) {
   const task = det.kind === 'task' ? agenda.tasks.find((t) => t.id === det.id) ?? null : null;
   const event = det.kind === 'event' ? agenda.events.find((e) => e.id === det.id) ?? null : null;
   if (!task && !event) return null;
@@ -166,6 +168,9 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                     {evLinked.meetLink && <a className="btn" href={evLinked.meetLink} target="_blank" rel="noopener noreferrer">📹 Meet</a>}
                     <button className="btn" onClick={() => onOpenEvent(task.eventId as string)}>Megnyitás</button>
                     {canEdit && <button className="dr-unlink" title="Kapcsolat bontása" onClick={() => onLinkEvent(task.id, null)}>✕</button>}
+                    {canEdit && onConfirmMeetSlot && (
+                      <SlotConfirm event={evLinked} onConfirm={(s) => onConfirmMeetSlot(evLinked.id, s)} />
+                    )}
                   </div>
                 ) : canEdit ? (
                   <div className="dr-evpick">
@@ -255,9 +260,12 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                       const emails = [event.owner, ...event.people].filter((n): n is string => !!n).map(emailFor).filter((x): x is string => !!x);
                       window.open(meetUrl(event, [...new Set(emails)]), '_blank', 'noopener');
                     }}>📹 Meet szervezése (kézi)</button>
-                  {event.mstatus === 'tentative' && onConfirmMeet && (
+                  {event.mstatus === 'tentative' && !(event.meetSlots?.length) && onConfirmMeet && (
                     <button className="btn btn--ink" title="Az időpont-egyeztetés lezárása: az esemény véglegessé válik (a dátumot a szerkesztőben állítod, a Google-naptár követi)"
                       onClick={() => onConfirmMeet(event.id)}>✔ Időpont véglegesítése</button>
+                  )}
+                  {onConfirmMeetSlot && (
+                    <SlotConfirm event={event} onConfirm={(s) => onConfirmMeetSlot(event.id, s)} />
                   )}
                   {meetMsg && <span style={{ fontSize: '.82rem', color: 'var(--muted)' }}>{meetMsg}</span>}
                 </div>

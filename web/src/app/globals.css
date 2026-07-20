@@ -657,6 +657,11 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 
 /* ---- Feladatok + Események nézetek ---- */
 .cat-block-head .ag-add { margin-left: auto; align-self: center; flex: none; }
+/* függő (még nem véglegesített) Meet-időpontjavaslat a naptárban: halvány, csíkozott */
+.cal-bar.pending { opacity: .45; background-image: repeating-linear-gradient(45deg, transparent 0 3px, rgba(255, 255, 255, .55) 3px 6px); }
+/* slot-véglegesítő chipsor */
+.slotconfirm { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; flex-basis: 100%; }
+.slotconfirm .sc-h { font-size: .8rem; font-weight: 700; color: var(--ink-2); }
 /* kapcsolt esemény kiemelt blokk a feladat-részletezőben + kattintható esemény-chip a kártyán */
 .dr-evcard { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border: 1px solid var(--line); border-left: 3px solid var(--brand); border-radius: 8px; padding: 8px 10px; background: color-mix(in srgb, var(--brand) 5%, transparent); }
 .dr-evcard-main { flex: 1 1 200px; min-width: 0; display: grid; gap: 2px; text-align: left; border: 0; background: transparent; cursor: pointer; font: inherit; color: var(--ink); }

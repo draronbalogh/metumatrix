@@ -1,13 +1,14 @@
 'use client';
 
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
-import { Agenda, AgendaAttachment, AgendaEvent, AgendaSource, Letter, ReplyDraft, ThreadMsg, addDaysYmd, addWorkdaysYmd, draftsStale, dueTs, duePrecise, emptyEvent, fmtDayHu, fmtDueHu, fmtEventWhen, nextMondayYmd, taskSteps, tomorrowYmd, withOutEntry } from '@/data/agenda';
+import { Agenda, AgendaAttachment, AgendaEvent, AgendaMeetSlot, AgendaSource, Letter, ReplyDraft, ThreadMsg, addDaysYmd, addWorkdaysYmd, draftsStale, dueTs, duePrecise, emptyEvent, fmtDayHu, fmtDueHu, fmtEventWhen, nextMondayYmd, taskSteps, tomorrowYmd, withOutEntry } from '@/data/agenda';
 import { SenderRule, SENDER_RULE_LABEL } from '@/data/people';
 import { parseStyleBank, replyVariants, StyleBank } from '@/lib/replies';
 import { suggestTemplatesFor, autoFill, TopicCtx } from '@/lib/topics';
 import { editHeaders } from '@/lib/editkey';
 import PageHead from './PageHead';
 import ReplyMeet from './ReplyMeet';
+import SlotConfirm from './SlotConfirm';
 
 // POSTA: az Outlook-szinkron által rögzített bejövő levelek, állapotgéppel.
 // Stabil sávok fix sorrendben (egy kártya pontosan EGY sávban, a többi tulajdonság
@@ -43,6 +44,7 @@ interface Props {
   onBusy?: (msg: string | null) => void;   // app-szintű „Titkárnő fogalmaz" jelző (nézetváltáskor is látszik)
   onSaveEvent?: (e: AgendaEvent) => void;  // a Meet-időpont tükör-eseménye a saját naptárba
   onLinkTaskEvent?: (taskId: string, eventId: string | null) => void; // az új Meet-esemény hozzákapcsolása a feladathoz
+  onConfirmMeetSlot?: (eventId: string, slot: AgendaMeetSlot) => void; // függő időpontjavaslat véglegesítése innen
   onEditInComposer?: (l: Letter) => void;  // kimenő levél megnyitása a levélíróban (címzettek is módosíthatók)
   undo: { label: string } | null;
   onUndo: () => void;
@@ -60,7 +62,7 @@ const ymdTs = (d?: string | null): number | null =>
 
 const DAY = 86400000;
 
-export default function PostaView({ agenda, footer, senderRules, onSenderRule, onReply, onBusy, onState, onSaveEvent, onLinkTaskEvent, onEditInComposer, undo, onUndo, onOpenCard, onSaveLetter, onDeleteLetter, onRefresh, focusSel, onFocusConsumed }: Props) {
+export default function PostaView({ agenda, footer, senderRules, onSenderRule, onReply, onBusy, onState, onSaveEvent, onLinkTaskEvent, onConfirmMeetSlot, onEditInComposer, undo, onUndo, onOpenCard, onSaveLetter, onDeleteLetter, onRefresh, focusSel, onFocusConsumed }: Props) {
   const [bank, setBank] = useState<StyleBank | null>(null);
   useEffect(() => {
     fetch('/api/style', { headers: editHeaders() }).then((r) => r.json())
@@ -1204,6 +1206,13 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                             }
                           }}
                         />
+                        {(() => {
+                          // a kártyához kapcsolt függő (tentative + több javaslat) esemény véglegesítése innen
+                          const ev = r.sel.startsWith('e:')
+                            ? agenda.events.find((x) => x.id === r.sel.slice(2))
+                            : (() => { const t = agenda.tasks.find((x) => x.id === r.sel.slice(2)); return t?.eventId ? agenda.events.find((x) => x.id === t.eventId) : undefined; })();
+                          return ev && onConfirmMeetSlot ? <SlotConfirm event={ev} onConfirm={(s) => onConfirmMeetSlot(ev.id, s)} /> : null;
+                        })()}
                         <div className="po-readbody-f">
                           <button type="button" className="btn btn--ink" title="A módosítások mentése (a kész válasz felülíródik)" onClick={() => { onSaveLetter?.({ ...l, subject: editDraft.subject.trim() || l.subject, body: editDraft.body.trim() }); setEditDraft(null); }}>💾 Mentés</button>
                           <button type="button" className="btn" title="Módosítások elvetése" onClick={() => setEditDraft(null)}>Mégse</button>

@@ -826,6 +826,18 @@ export default function CurriculumApp() {
     const e = agendaRef.current.events.find((x) => x.id === eventId);
     if (e) saveEvent({ ...e, mstatus: 'confirmed' });
   }, [saveEvent]);
+  // több javaslatból egy KIVÁLASZTOTT slot véglegesítése: az esemény arra áll át,
+  // a többi javaslat eltűnik; a Google-pár a saveEvent meglévő patch-útján frissül
+  const confirmMeetSlot = useCallback((eventId: string, slot: AgendaMeetSlot) => {
+    if (!canEditRef.current) return;
+    const e = agendaRef.current.events.find((x) => x.id === eventId);
+    if (!e) return;
+    saveEvent({
+      ...e, day: slot.day, dayEnd: null, sort: slot.day.slice(0, 7),
+      when: fmtEventWhen(slot.day, null, slot.day.slice(0, 7), slot.start || null),
+      mstatus: 'confirmed', meetSlots: null,
+    });
+  }, [saveEvent]);
   const saveIntro = useCallback((s: string) => {
     commitAgenda({ ...agendaRef.current, intro: s });
     setIntroEdit(false);
@@ -1590,6 +1602,7 @@ export default function CurriculumApp() {
               onState={setSourceState}
               onSaveEvent={saveEvent}
               onLinkTaskEvent={linkTaskEvent}
+              onConfirmMeetSlot={confirmMeetSlot}
               onEditInComposer={(l) => { openLetterInComposer(l); setView('topics'); }}
               undo={postaUndo ? { label: postaUndo.label } : null}
               onUndo={undoSourceState}
@@ -1791,6 +1804,7 @@ export default function CurriculumApp() {
           onTaskStatus={setTaskStatus}
           onSetStar={setTaskStar}
           onAddEventFor={(tid) => { setAgendaDetails(null); addEventForTask(tid); }}
+          onConfirmMeetSlot={confirmMeetSlot}
           onDelete={() => {
             const d = agendaDetails;
             if (!d || !canEditRef.current) return;

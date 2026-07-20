@@ -31,7 +31,7 @@ const EV_COLORS = ['#d7144b', '#2f6fe0', '#17935f', '#7b3fe4', '#e08b00', '#0e9a
 const mkey = (y: number, m: number) => `${y}-${String(m + 1).padStart(2, '0')}`;
 const parseYMD = (s: string) => new Date(Number(s.slice(0, 4)), Number(s.slice(5, 7)) - 1, Number(s.slice(8, 10)));
 
-interface DayHit { id: string; color: string; featured?: boolean; tip: string; }
+interface DayHit { id: string; color: string; featured?: boolean; pending?: boolean; tip: string; }
 interface MonthRow { e: AgendaEvent; color: string; label: string; long: boolean; }
 
 // ennél hosszabb tartomány = háttér-időszak: NEM fest napokat, csak a listában jelenik meg
@@ -60,7 +60,7 @@ export default function EventsCalendar({ events, deadlines, onEdit, onTask }: Pr
       const k = mkey(cur.getFullYear(), cur.getMonth());
       const day = cur.getDate();
       // hosszú háttér-időszak nem fest napokat - csak a listában szerepel
-      if (!isLong) ((dayHits[k] ||= {})[day] ||= []).push({ id: e.id, color: colorOf[e.id], featured: e.featured, tip: `${e.title} · ${e.when}${e.place ? ` · ${e.place}` : ''}` });
+      if (!isLong) ((dayHits[k] ||= {})[day] ||= []).push({ id: e.id, color: colorOf[e.id], featured: e.featured, pending: e.mstatus === 'tentative' && (e.meetSlots?.length ?? 0) > 0, tip: `${e.title} · ${e.when}${e.place ? ` · ${e.place}` : ''}` });
       if (k !== curMonth) {
         curMonth = k; segStart = day;
         (monthRows[k] ||= []).push({ e, color: colorOf[e.id], label: '', long: isLong });
@@ -73,6 +73,18 @@ export default function EventsCalendar({ events, deadlines, onEdit, onTask }: Pr
       cur.setDate(day + 1);
       guard++;
     }
+  });
+
+  // FÜGGŐ Meet-időpontjavaslatok: a tentative esemény minden TOVÁBBI javasolt napja
+  // halvány csíkot kap - kattintásra ugyanúgy az esemény nyílik
+  events.filter((e) => e.mstatus === 'tentative' && (e.meetSlots?.length ?? 0) > 0).forEach((e) => {
+    (e.meetSlots ?? []).forEach((s) => {
+      if (!s.day || s.day === e.day) return;
+      const k = s.day.slice(0, 7);
+      const dayN = Number(s.day.slice(8, 10));
+      if (!dayN) return;
+      ((dayHits[k] ||= {})[dayN] ||= []).push({ id: e.id, color: colorOf[e.id] ?? '#9aa1ab', pending: true, tip: `⏳ függő időpont-javaslat: ${e.title}${s.start ? ` · ${s.start}${s.end && s.end !== s.start ? `-${s.end}` : ''}` : ''}` });
+    });
   });
 
   // dátum nélküli, de hónapra sorolt (sort) események az adott hónap listájába, szín nélkül
@@ -135,7 +147,7 @@ export default function EventsCalendar({ events, deadlines, onEdit, onTask }: Pr
                         {/* a színcsík interaktív: hoverre kiemelés + azonnali tooltip, kattintásra
                             ugyanúgy a szerkesztő nyílik, mint a hónap alatti soroknál */}
                         {h.slice(0, 4).map((x, ix) => (
-                          <button key={ix} type="button" className={`cal-bar${x.featured ? ' ft' : ''}`}
+                          <button key={ix} type="button" className={`cal-bar${x.featured ? ' ft' : ''}${x.pending ? ' pending' : ''}`}
                             data-tip={x.tip} aria-label={x.tip} style={{ background: x.color }}
                             onMouseEnter={(ev) => {
                               // a tooltip a képernyő szélén nem középre, hanem befelé igazítva nyílik

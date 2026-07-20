@@ -250,7 +250,8 @@ export default function PeopleModal({ teacherNames, db, onSave, onClose, inline,
           {inline && savedMsg && <span className="pm-saved">✓ Mentve - a levélírás körei azonnal frissültek</span>}
           <span className="sp" />
           {!inline && <button className="btn" onClick={onClose}>Mégsem</button>}
-          <button className="btn btn--ink" onClick={() => { save(); if (inline) { setSavedMsg(true); setTimeout(() => setSavedMsg(false), 4000); } }}>💾 Mentés</button>
+          <button className={inline ? 'btn' : 'btn btn--ink'} title={inline ? 'A névjegyzék (kontaktok, csoportok, aláírás) mentése - a jobb oldali ⤓ Mentés a TELJES appról készít pillanatképet' : undefined}
+            onClick={() => { save(); if (inline) { setSavedMsg(true); setTimeout(() => setSavedMsg(false), 4000); } }}>{inline ? '☎ Névjegyzék mentése' : '💾 Mentés'}</button>
         </div>
     </>
   );

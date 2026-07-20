@@ -1990,5 +1990,6 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .pmv .mfoot { position: static; background: transparent; border-top: 0; box-shadow: none; margin: 0; padding: 4px 0 10px; }
 .pmv .pmv-scroll { padding-bottom: 24px; }
 @media (min-width: 721px) {
-  .pmv .mfoot { position: fixed; right: 340px; bottom: 16px; z-index: 61; padding: 0; }
+  .pmv .mfoot { position: fixed; right: 344px; bottom: 14px; z-index: 61; padding: 0; }
+  .pmv .mfoot .btn { box-shadow: 0 6px 20px rgba(16, 17, 20, .24); }
 }

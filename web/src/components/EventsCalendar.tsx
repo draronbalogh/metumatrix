@@ -132,7 +132,7 @@ export default function EventsCalendar({ events, deadlines, onEdit, onTask, onRe
           return (
             <section className={`cal-month${rows.length + fuzzy.length + dls.length + dlsFuzzy.length ? ' has-ev' : ''}`} key={k}>
               <div className="cal-mh">{y}. {MONTH_NAME[m]}
-                {onReport && <button type="button" className="cal-print" title="Havi eredmény-riport a dékáni körnek (Titkárnő fogalmazza, a Postázóba tehető)" onClick={() => onReport(k)}>🖨</button>}
+                {onReport && <button type="button" className="cal-print" title="Havi eredmény-riport a dékáni körnek (Titkárnő fogalmazza, a Postázóba tehető)" onClick={() => onReport(k)}>🖨 Riport</button>}
               </div>
               <div className="cal-days">
                 {WDAY.map((w, i) => <span key={`w${i}`} className="wd">{w}</span>)}

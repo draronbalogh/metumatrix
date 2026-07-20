@@ -1,8 +1,11 @@
 'use client';
 // 🖨 Havi eredmény-riport a dékáni körnek (Kiss Melinda + Pálfi Szabolcs).
-// A hónap szakos eseményeiből (Outlook-tükrök és függő egyeztetések NÉLKÜL) a
-// Titkárnő (helyi claude, /api/rephrase) fogalmaz: top 3 eredmény, majd a többi
-// "- " jellel, egy-egy mondattal. A szöveg másolható és kimenő levélként a Postázóba tehető.
+// CÉL: megmutatni, milyen fontos szakmai-kulturális munka folyik a szakon - ezért
+// CSAK eredmény jellegű tétel megy a levélbe (kiállítás, verseny, előadás, workshop...).
+// Az admin/üzemeltetési tételek (Neptun-leállás, szünet, határidő, vizsgaidőszak stb.)
+// alapból KIPIPÁLATLANOK, és minden tétel kézzel ki-be kapcsolható a listában.
+// A kiválasztottakból a Titkárnő (helyi claude, /api/rephrase) fogalmaz: top 3 + a többi,
+// "- " jellel, egy-egy mondattal. Másolható és kimenő levélként a Postázóba tehető.
 import { useMemo, useState } from 'react';
 import { Agenda, Letter, fmtDayHu } from '@/data/agenda';
 import { editHeaders } from '@/lib/editkey';
@@ -12,6 +15,10 @@ const RECIPIENTS = [
   { name: 'Kiss Melinda', email: 'mkiss@metropolitan.hu', kind: 'I' },
   { name: 'Pálfi Szabolcs', email: 'szpalfi@metropolitan.hu', kind: 'I' },
 ];
+// admin/üzemeltetés/tanügyi menetrend - NEM eredmény, alapból nincs a riportban
+const ADMIN_RX = /neptun|leállás|karbantart|szünet|adminisztr|határidő|regisztrác|beiratkoz|vizsgaidőszak|szorgalmi|pótfelvétel|jegybeírás|órarend|értekezlet|megbeszélés|fogadóóra/i;
+
+interface Item { id: string; label: string; admin: boolean }
 
 export default function MonthReport({ monthKey, agenda, onClose, onSaveLetter }: {
   monthKey: string; agenda: Agenda; onClose: () => void; onSaveLetter: (l: Letter) => void;
@@ -19,23 +26,31 @@ export default function MonthReport({ monthKey, agenda, onClose, onSaveLetter }:
   const y = monthKey.slice(0, 4);
   const monthName = HU_MONTH[Number(monthKey.slice(5, 7)) - 1] ?? monthKey;
   const subjectDefault = `Média Design szak - havi beszámoló (${y}. ${monthName})`;
-  // a hónap bemutatható eseményei: saját szakos tételek, egyeztetés/tükör nélkül
-  const lines = useMemo(() => agenda.events
+  // a hónap tételei: saját szakos események, tükör/függő egyeztetés nélkül
+  const items = useMemo<Item[]>(() => agenda.events
     .filter((e) => (e.day ? e.day.slice(0, 7) === monthKey : e.sort === monthKey))
     .filter((e) => e.extSource !== 'outlook' && e.mstatus !== 'tentative' && !/egyeztet/i.test(e.title))
     .sort((a, b) => (a.day ?? `${monthKey}-99`).localeCompare(b.day ?? `${monthKey}-99`))
-    .map((e) => `${e.day ? fmtDayHu(e.day) : 'a hónap folyamán'} - ${e.title}${e.place ? ` (${e.place})` : ''}${e.note ? ` · ${e.note.slice(0, 140)}` : ''}`),
+    .map((e) => ({
+      id: e.id,
+      label: `${e.day ? fmtDayHu(e.day) : 'a hónap folyamán'} - ${e.title}${e.place ? ` (${e.place})` : ''}${e.note ? ` · ${e.note.slice(0, 140)}` : ''}`,
+      admin: ADMIN_RX.test(`${e.title} ${e.note ?? ''}`),
+    })),
   [agenda.events, monthKey]);
+  // kezdő kijelölés: minden NEM-admin tétel bepipálva
+  const [off, setOff] = useState<Set<string>>(() => new Set(items.filter((i) => i.admin).map((i) => i.id)));
+  const toggle = (id: string) => setOff((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const chosen = items.filter((i) => !off.has(i.id));
   const fallback = useMemo(() => [
     'Kedves Melinda, kedves Szabolcs!',
     '',
-    `Rövid összefoglaló a Média Design szak ${y}. ${monthName} havi eredményeiről:`,
+    `Rövid összefoglaló a Média Design szak ${y}. ${monthName} havi szakmai eredményeiről:`,
     '',
-    ...lines.map((l) => `- ${l}`),
+    ...chosen.map((i) => `- ${i.label}`),
     '',
     'Üdvözlettel:',
     'Balogh Áron',
-  ].join('\n'), [lines, y, monthName]);
+  ].join('\n'), [chosen, y, monthName]);
   const [subject, setSubject] = useState(subjectDefault);
   const [body, setBody] = useState('');
   const [busy, setBusy] = useState(false);
@@ -43,7 +58,7 @@ export default function MonthReport({ monthKey, agenda, onClose, onSaveLetter }:
   const [copied, setCopied] = useState(false);
 
   const generate = async () => {
-    if (!lines.length) { setMsg('Ebben a hónapban nincs bemutatható szakos esemény.'); return; }
+    if (!chosen.length) { setMsg('Nincs bepipált tétel - jelölj ki legalább egyet.'); return; }
     setBusy(true); setMsg('Titkárnő fogalmaz…');
     try {
       const res = await fetch('/api/rephrase', {
@@ -52,8 +67,8 @@ export default function MonthReport({ monthKey, agenda, onClose, onSaveLetter }:
           senderName: 'Kiss Melinda és Pálfi Szabolcs (dékáni kör)',
           senderEmail: RECIPIENTS[0].email,
           subject: subjectDefault, gist: null, thread: [], drafts: [], askAllowed: false,
-          card: { kind: 'havi eredmény-riport', lines },
-          instruction: `Havi mini-riportot írj a dékáni körnek a Média Design szak ${y}. ${monthName} havi eredményeiről, a kártya esemény-listájából. A cél megmutatni, milyen eredményes a szak és a hallgatóink: kiállítás, verseny, előadás, szakmai program, szervezett esemény. Felépítés: rövid, büszke, tényszerű felvezető mondat; utána "Kiemelt eredményeink:" alatt a 3 LEGFONTOSABB esemény "- " jellel, mindegyikhez PONTOSAN EGY lelkes, tényszerű mondat; utána "További szakmai programjaink:" alatt az összes többi esemény ugyanígy "- " jellel és egy-egy mondattal. Személyes egyeztetést, adminisztratív tételt NE szerepeltess. Ne találj ki eseményt, csak a listából dolgozz. Zárás: egy mondat arról, hogy kérdés esetén szívesen adunk részleteket.`,
+          card: { kind: 'havi eredmény-riport', lines: chosen.map((i) => i.label) },
+          instruction: `Havi mini-riportot írj a dékáni körnek a Média Design szak ${y}. ${monthName} havi EREDMÉNYEIRŐL, a kártya esemény-listájából. A cél bebizonyítani, milyen fontos szakmai és kulturális munka folyik a szakon, és milyen eredményesek a hallgatóink: kiállítás, verseny, előadás, workshop, fesztivál-részvétel, szervezett szakmai program. Felépítés: rövid, büszke, tényszerű felvezető mondat; utána "Kiemelt eredményeink:" alatt a 3 LEGFONTOSABB tétel "- " jellel, mindegyikhez PONTOSAN EGY lelkes, tényszerű mondat, ami az eredményt és a hallgatói/szakmai értéket emeli ki; utána "További szakmai programjaink:" alatt az összes többi tétel ugyanígy "- " jellel és egy-egy mondattal. KIZÁRÓLAG a listából dolgozz, ne találj ki semmit, adminisztratív tételt ne szerepeltess. Zárás: egy mondat arról, hogy kérdés esetén szívesen adunk részleteket.`,
         }),
       });
       const j = await res.json() as { ok?: boolean; subject?: string; body?: string; error?: string };
@@ -80,10 +95,19 @@ export default function MonthReport({ monthKey, agenda, onClose, onSaveLetter }:
         <h3>🖨 Havi riport - {y}. {monthName}</h3>
         <div className="f" style={{ display: 'grid', gap: 10 }}>
           <div className="field full">
-            <label>A hónap bemutatható eseményei ({lines.length}) - ebből dolgozik a Titkárnő</label>
-            {lines.length === 0
-              ? <div className="se-empty">Nincs bemutatható szakos esemény ebben a hónapban.</div>
-              : <ul style={{ margin: 0, paddingLeft: 18, fontSize: '.88rem' }}>{lines.map((l, i) => <li key={i}>{l}</li>)}</ul>}
+            <label>Mi kerüljön a riportba? ({chosen.length}/{items.length} kijelölve) - az admin jellegű tételek alapból kimaradnak, pipával teszed be/ki őket</label>
+            {items.length === 0
+              ? <div className="se-empty">Nincs szakos esemény ebben a hónapban.</div>
+              : (
+                <div style={{ display: 'grid', gap: 4 }}>
+                  {items.map((i) => (
+                    <label key={i.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: '.88rem', opacity: off.has(i.id) ? .5 : 1, cursor: 'pointer' }}>
+                      <input type="checkbox" checked={!off.has(i.id)} onChange={() => toggle(i.id)} style={{ marginTop: 3 }} />
+                      <span>{i.label}{i.admin ? ' · (admin jellegű)' : ''}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
           </div>
           <div className="field full">
             <label>Tárgy</label>
@@ -91,13 +115,13 @@ export default function MonthReport({ monthKey, agenda, onClose, onSaveLetter }:
           </div>
           <div className="field full">
             <label>A levél - címzettek: {RECIPIENTS.map((r) => r.name).join(', ')}</label>
-            <textarea rows={14} value={body} onChange={(e) => setBody(e.target.value)}
-              placeholder={'Nyomd meg a „Titkárnő megfogalmazása" gombot, vagy írd kézzel.'} style={{ font: 'inherit', width: '100%' }} />
+            <textarea rows={12} value={body} onChange={(e) => setBody(e.target.value)}
+              placeholder={'Pipáld ki a listát, majd „Titkárnő megfogalmazása" - vagy írd kézzel.'} style={{ font: 'inherit', width: '100%' }} />
           </div>
           {msg && <p style={{ margin: 0, fontSize: '.85rem', color: 'var(--muted)' }}>{msg}</p>}
         </div>
         <div className="mfoot">
-          <button className="btn btn--ink" disabled={busy || !lines.length} onClick={generate}>{busy ? '⏳ Fogalmaz…' : '🗣 Titkárnő megfogalmazása'}</button>
+          <button className="btn btn--ink" disabled={busy || !chosen.length} onClick={generate}>{busy ? '⏳ Fogalmaz…' : '🗣 Titkárnő megfogalmazása'}</button>
           <button className="btn" disabled={!body.trim()} onClick={() => { void navigator.clipboard?.writeText(`${subject}\n\n${body}`); setCopied(true); setTimeout(() => setCopied(false), 2500); }}>{copied ? '✓ Másolva' : '⧉ Másolás'}</button>
           <button className="btn" disabled={!body.trim()} onClick={toOutbox}>✉ Küldésre a Postába</button>
           <span className="sp" />

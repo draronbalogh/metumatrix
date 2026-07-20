@@ -670,6 +670,13 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .agc-meta .evbtn { border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; background: transparent; cursor: pointer; font: inherit; font-size: .78rem; }
 .agc-meta .evbtn:hover, .ag-toprow .evbtn:hover { border-color: var(--brand); color: var(--brand-text); }
 .ag-toprow .evbtn { border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; background: transparent; cursor: pointer; font: inherit; font-size: .74rem; color: var(--muted); flex: none; }
+/* mobil lebegő + gomb (Feladatok/Események): a fejléc-gomb kicsi és lecsúszhat - ez mindig kéznél van;
+   a mentés-dokk FAB-ja fölé kerül (az bottom 14px-en áll) */
+.ag-fab { display: none; }
+@media (max-width: 720px) {
+  .ag-fab { display: flex; align-items: center; justify-content: center; position: fixed; right: 14px; bottom: calc(72px + env(safe-area-inset-bottom)); width: 52px; height: 52px; border-radius: 50%; border: 0; background: var(--ink); color: var(--paper, #fff); font-size: 1.8rem; font-weight: 700; z-index: 55; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); cursor: pointer; }
+}
+.viewer .ag-fab { display: none !important; }
 /* Meet-sor az esemény-szerkesztőben (link + másolás gomb) */
 .ev-meetrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0; }
 /* kézi ⭐ kapcsoló a kártyán és a Legfontosabbak sávban */

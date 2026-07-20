@@ -267,6 +267,7 @@ export default function AgendaView({ agenda, q, instr, taught, letterStats, onAd
           </div>
         </section>
       )}
+      <button type="button" className="ag-fab" title="Új feladat" onClick={onAdd}>+</button>
     </main>
   );
 }

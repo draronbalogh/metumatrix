@@ -107,6 +107,7 @@ export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpe
           })}
         </div>
       )}
+      <button type="button" className="ag-fab" title="Új esemény" onClick={onAdd}>+</button>
     </main>
   );
 }

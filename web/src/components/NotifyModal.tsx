@@ -663,7 +663,9 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   // névből (email) + egyedi címekből oldjuk fel; az app-aláírást (buildFooter) KIVESSZÜK a
   // törzsből, mert az Outlook-aláírást a küldő-script adja hozzá (különben dupla lenne).
   const sendToOutbox = () => {
-    if (!emails.length || !outSubject.trim()) return;
+    // némán nem csinálunk semmit: ha hiányzik valami, MEGMONDJUK, mi kell még
+    if (!emails.length) { setResult('⚠ Nincs email-címre feloldható címzett. A Címzettek fülön válassz valakit (vagy adj meg egyedi email-címet), utána mehet a Postába.'); return; }
+    if (!outSubject.trim()) { setResult('⚠ Hiányzik a tárgy. Írj tárgyat, és mehet a Postába.'); return; }
     const recips = [
       ...selected.map((n) => ({ name: n, email: emailOf(db, n) ?? '', kind: roster.find((r) => r.name === n)?.kind ?? '' })).filter((r) => !!r.email),
       ...adhoc.map((e) => ({ name: e, email: e, kind: 'egyedi' })),
@@ -1148,8 +1150,8 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
         </div>
         <div className="mfoot">
           <button className="btn" onClick={saveLetter} disabled={!subject.trim()}>💾 Levél mentése</button>
-          <button className="btn btn--ink" onClick={sendToOutbox} disabled={!emails.length || !subject.trim()}
-            title="A levél a Posta „Kimenő” listájába kerül; onnan a „Küldés most”-tal küldöd el (jó ékezet + logó)">✉ Küldésre a Postába ({emails.length})</button>
+          <button className="btn btn--ink" onClick={sendToOutbox}
+            title="A levél a Posta „Kimenő” listájába kerül; onnan a „Küldés most”-tal küldöd el (jó ékezet + logó). Ha hiányzik címzett vagy tárgy, itt írja ki, mi kell még.">✉ Küldésre a Postába ({emails.length})</button>
           <span className="sp" />
           {!inline && <button className="btn" onClick={onClose}>Bezárás</button>}
           {configured && (

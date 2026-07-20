@@ -156,27 +156,17 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
           {task && (
             <>
               <div className="dr-field">
-                <h4>Határidő</h4>
-                <p className={task.dueDate || task.due ? '' : 'none'}>
-                  {task.dueDate ? `📅 ${fmtDueHu(task.dueDate)}` : task.due || 'nincs megadva'}
-                </p>
-                {canEdit && !task.dueDate && evDay && (
-                  <button className="chip due-sugg" title="A kapcsolt esemény napjának átvétele határidőnek"
-                    onClick={() => onSetDue(task.id, evDay)}>⚑ Átveszem az esemény idejét: {fmtDueHu(evDay)}</button>
-                )}
-                {dueAfterEvent && (
-                  <p className="dr-warn">⚠ A határidő a kapcsolt esemény napja ({fmtDueHu(evLinked?.day)}) utánra esik.
-                    {canEdit && evDay && <button className="dr-link" onClick={() => onSetDue(task.id, evDay)}> Igazítás az eseményhez</button>}
-                  </p>
-                )}
-              </div>
-              <div className="dr-field">
                 <h4>Kapcsolt esemény</h4>
-                {task.eventId && evTitle ? (
-                  <p className="dr-evrow">
-                    <button className="dr-link" onClick={() => onOpenEvent(task.eventId as string)}>▤ {evTitle}</button>
+                {task.eventId && evLinked ? (
+                  <div className="dr-evcard">
+                    <button className="dr-evcard-main" onClick={() => onOpenEvent(task.eventId as string)} title="Az esemény részletezőjének megnyitása">
+                      <span className="t">▤ {evLinked.title}</span>
+                      <span className="m">🕑 {evLinked.day ? fmtDayHu(evLinked.day) : evLinked.when}{evLinked.place ? ` · 📍 ${evLinked.place}` : ''}{evLinked.mstatus === 'tentative' ? ' · egyeztetés alatt' : ''}</span>
+                    </button>
+                    {evLinked.meetLink && <a className="btn" href={evLinked.meetLink} target="_blank" rel="noopener noreferrer">📹 Meet</a>}
+                    <button className="btn" onClick={() => onOpenEvent(task.eventId as string)}>Megnyitás</button>
                     {canEdit && <button className="dr-unlink" title="Kapcsolat bontása" onClick={() => onLinkEvent(task.id, null)}>✕</button>}
-                  </p>
+                  </div>
                 ) : canEdit ? (
                   <div className="dr-evpick">
                     {evSugg && (
@@ -192,6 +182,21 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                     )}
                   </div>
                 ) : <p className="none">nincs</p>}
+              </div>
+              <div className="dr-field">
+                <h4>Határidő</h4>
+                <p className={task.dueDate || task.due ? '' : 'none'}>
+                  {task.dueDate ? `📅 ${fmtDueHu(task.dueDate)}` : task.due || 'nincs megadva'}
+                </p>
+                {canEdit && !task.dueDate && evDay && (
+                  <button className="chip due-sugg" title="A kapcsolt esemény napjának átvétele határidőnek"
+                    onClick={() => onSetDue(task.id, evDay)}>⚑ Átveszem az esemény idejét: {fmtDueHu(evDay)}</button>
+                )}
+                {dueAfterEvent && (
+                  <p className="dr-warn">⚠ A határidő a kapcsolt esemény napja ({fmtDueHu(evLinked?.day)}) utánra esik.
+                    {canEdit && evDay && <button className="dr-link" onClick={() => onSetDue(task.id, evDay)}> Igazítás az eseményhez</button>}
+                  </p>
+                )}
               </div>
               {task.summary && <div className="dr-field"><h4>Rövid összefoglaló</h4><p>{task.summary}</p></div>}
               {task.source && (

@@ -84,7 +84,7 @@ export default function AgendaView({ agenda, q, instr, taught, letterStats, onAd
       || prioRank(a.priority) - prioRank(b.priority)
       || a.title.localeCompare(b.title, 'hu'))
     .slice(0, 8);
-  const eventTitle = (id: string | null) => (id ? agenda.events.find((e) => e.id === id)?.title ?? null : null);
+  const eventOf = (id: string | null) => (id ? agenda.events.find((e) => e.id === id) ?? null : null);
   const personEvents = instr ? agenda.events.filter((e) => eventHasPerson(e, instr)) : [];
 
   // a szűrősorhoz: a jelen lévő kategóriák (a névszűrőn átment feladatokból)
@@ -194,6 +194,10 @@ export default function AgendaView({ agenda, q, instr, taught, letterStats, onAd
                     {(t.dueDate || t.due) && <span className={`b${r === 3 ? ' hot' : ''}`}>📅 {t.dueDate ? fmtDueHu(t.dueDate) : t.due}</span>}
                     {t.priority === 'high' && <span className="b prio">⚑</span>}
                   </button>
+                  {(() => { const ev = eventOf(t.eventId); return ev ? (
+                    <button type="button" className="evbtn" title={`Kapcsolt esemény: ${ev.title}`}
+                      onClick={() => onOpenEvent(ev.id)}>▤ {ev.day ? fmtDayHu(ev.day) : ev.title}</button>
+                  ) : null; })()}
                 </div>
               );
             })}
@@ -233,7 +237,10 @@ export default function AgendaView({ agenda, q, instr, taught, letterStats, onAd
                   {isAwaiting(t.source) && <button type="button" className="m hot mbtn" title="Levél érkezett - ugrás a Postába, választervekkel (Titkárnő, küldés)" onClick={(e) => { e.stopPropagation(); onOpenPost(`t:${t.id}`); }}>✉ válaszra vár{t.source?.returned ? ' (új)' : ''}</button>}
                   {t.source?.status === 'drafted' && <button type="button" className="m warn mbtn" title="Megírt válasz - ugrás a Postába (másolható/küldhető)" onClick={(e) => { e.stopPropagation(); onOpenPost(`t:${t.id}`); }}>✉ válasz kész</button>}
                   {t.status === 'doing' && <span className="m doing">▶ folyamatban</span>}
-                  {t.eventId && eventTitle(t.eventId) && <span className="m ev">▤ {eventTitle(t.eventId)}</span>}
+                  {(() => { const ev = eventOf(t.eventId); return ev ? (
+                    <button type="button" className="m ev evbtn" title={`Kapcsolt esemény megnyitása: ${ev.title}`}
+                      onClick={(e) => { e.stopPropagation(); onOpenEvent(ev.id); }}>▤ {ev.title}{ev.day ? ` · ${fmtDayHu(ev.day)}` : ''}</button>
+                  ) : null; })()}
                 </div>
               </article>
               );
@@ -253,7 +260,7 @@ export default function AgendaView({ agenda, q, instr, taught, letterStats, onAd
                   <span className="nm">{t.title}</span>
                   {t.category && <span className="cat">{t.category}</span>}
                   {(t.people.length > 0 || t.owner) && <span className="pp">{[t.owner, ...t.people].filter(Boolean).join(', ')}</span>}
-                  {t.eventId && eventTitle(t.eventId) && <span className="evt">▤ {eventTitle(t.eventId)}</span>}
+                  {t.eventId && eventOf(t.eventId) && <span className="evt">▤ {eventOf(t.eventId)?.title}</span>}
                 </button>
               </div>
             ))}

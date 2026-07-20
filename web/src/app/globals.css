@@ -657,6 +657,14 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 
 /* ---- Feladatok + Események nézetek ---- */
 .cat-block-head .ag-add { margin-left: auto; align-self: center; flex: none; }
+/* kapcsolt esemény kiemelt blokk a feladat-részletezőben + kattintható esemény-chip a kártyán */
+.dr-evcard { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border: 1px solid var(--line); border-left: 3px solid var(--brand); border-radius: 8px; padding: 8px 10px; background: color-mix(in srgb, var(--brand) 5%, transparent); }
+.dr-evcard-main { flex: 1 1 200px; min-width: 0; display: grid; gap: 2px; text-align: left; border: 0; background: transparent; cursor: pointer; font: inherit; color: var(--ink); }
+.dr-evcard-main .t { font-weight: 700; }
+.dr-evcard-main .m { font-size: .8rem; color: var(--muted); }
+.agc-meta .evbtn { border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; background: transparent; cursor: pointer; font: inherit; font-size: .78rem; }
+.agc-meta .evbtn:hover, .ag-toprow .evbtn:hover { border-color: var(--brand); color: var(--brand-text); }
+.ag-toprow .evbtn { border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; background: transparent; cursor: pointer; font: inherit; font-size: .74rem; color: var(--muted); flex: none; }
 /* Meet-sor az esemény-szerkesztőben (link + másolás gomb) */
 .ev-meetrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0; }
 /* kézi ⭐ kapcsoló a kártyán és a Legfontosabbak sávban */

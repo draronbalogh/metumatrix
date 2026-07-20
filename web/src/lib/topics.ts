@@ -209,6 +209,12 @@ export const TOPIC_TEMPLATES: TopicTemplate[] = [
     body: () => `Kedves [Multimédia / Játéktervezés] specializációsok!\n\nSpecializációs találkozót tartunk [téma: a félév projektjei / a specializáció irányai / aktuális feladatok] ügyében. A találkozó [személyes / online / hibrid] formában lesz, az időpont-javaslatokat (és online forma esetén a Meet-linket) lentebb találjátok.\n\nKérlek, mindenki jelezze, melyik időpont felel meg. A specializáció minden oktatóját és hallgatóját várom, a közös irányokról itt döntünk.\n\nTalálkozunk!`,
   },
   {
+    id: 'betegseg-tavollet', group: '0 · Találkozó és hívás', label: 'Betegség / távollét - sürgős esetben a szakasszisztens',
+    meta: 'beteg betegseg tavollet távollét out of office ooo szabadsag szabadság helyettes asszisztens nem elerheto elérhető',
+    subject: () => 'Átmeneti távollét - sürgős esetben helyettes',
+    body: () => `Kedves [Név]!\n\nKöszönöm a leveled. Betegség miatt átmenetileg nem tudok érdemben válaszolni, amint felépültem, jelentkezem.\n\nSürgős ügyben kérlek, keresd a szakasszisztensünket: [név], [email], [telefon].\n\nMegértésedet köszönöm!`,
+  },
+  {
     id: 'idopont-valasz', group: '0 · Találkozó és hívás', label: 'Válasz időpont-kérésre (saját javaslatokkal)',
     meta: 'meeting megbeszeles idopontfoglalas időpontfoglalás booking talalkozo egyeztetes',
     subject: () => 'Re: időpont-egyeztetés, [téma]',

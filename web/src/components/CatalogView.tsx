@@ -86,6 +86,10 @@ export default function CatalogView({ data, filter, view, onDetails, onEdit, onA
           else groups.push({ g, items: [it] });
         });
 
+        // aktív szűrésnél a találat nélküli félév-blokk (fejléc + oktatók) egészében rejtve -
+        // keresésnél csak a TÉNYLEGES találatok látszanak, nem az üres vázak
+        if (shown.length === 0 && (c.courses.length > 0 || filter.q)) return null;
+
         return (
           <section className="cc-section" key={ci}>
             <div className="cc-head">
@@ -111,8 +115,6 @@ export default function CatalogView({ data, filter, view, onDetails, onEdit, onA
                 <span>Ehhez a félévhez még nincs feltöltve tárgy.</span>
                 <button onClick={() => onAdd(ci)}>+ Tárgy felvétele</button>
               </div>
-            ) : shown.length === 0 ? (
-              <div className="cc-empty"><span>Nincs a szűrőnek megfelelő tárgy.</span></div>
             ) : (
               groups.map(({ g, items }) => (
                 <div key={g}>

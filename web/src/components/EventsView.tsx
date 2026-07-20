@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Agenda, AgendaEvent, eventHasPerson, fmtDayHu, taskHasPerson, isAwaiting } from '@/data/agenda';
+import { Agenda, AgendaEvent, eventHasPerson, fmtDayHu, placeIcon, taskHasPerson, isAwaiting } from '@/data/agenda';
 import EventsCalendar, { CalDeadline } from './EventsCalendar';
 import { familyName } from './AgendaView';
 import PageHead from './PageHead';
@@ -56,9 +56,11 @@ export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpe
           <button className={mode === 'list' ? 'is-on' : ''} onClick={() => setMode('list')}>≡ Lista</button>
           <button className={mode === 'cal' ? 'is-on' : ''} onClick={() => setMode('cal')}>▦ Naptár</button>
         </div>
-        <button className="btn btn--ink ag-add" onClick={onAdd}>+ Új esemény</button>
-        {onSyncOutlook && <button className="btn ag-add" onClick={onSyncOutlook} title="A saját (abalogh@metropolitan.hu) Outlook-naptárad időpontjainak behúzása ide (a klasszikus Outlook fusson a gépen). Csak olvas, semmit nem változtat.">🔄 Outlook-naptár</button>}
-        {onPublishGoogle && <button className="btn ag-add" onClick={onPublishGoogle} title="MINDEN itteni esemény (az Outlook-tükrök is) felmásolása a draronbalogh@gmail.com Google-naptárba. Egyirányú: a Gmailben kézzel felvett bejegyzések SOSEM kerülnek be ide.">⇪ Gmail-naptárba</button>}
+        <div className="ag-actions">
+          <button className="btn btn--ink ag-add" onClick={onAdd}>+ Új esemény</button>
+          {onSyncOutlook && <button className="btn" onClick={onSyncOutlook} title="A saját (abalogh@metropolitan.hu) Outlook-naptárad időpontjainak behúzása ide (a klasszikus Outlook fusson a gépen). Csak olvas, semmit nem változtat.">🔄 Outlook-naptár</button>}
+          {onPublishGoogle && <button className="btn" onClick={onPublishGoogle} title="MINDEN itteni esemény (az Outlook-tükrök is) felmásolása a draronbalogh@gmail.com Google-naptárba. Egyirányú: a Gmailben kézzel felvett bejegyzések SOSEM kerülnek be ide.">⇪ Gmail-naptárba</button>}
+        </div>
       </PageHead>
       <div className="ev-todaybar">📅 Ma: <b>{todayStr}</b>{publishMsg ? <span style={{ marginLeft: 14 }}>{publishMsg}</span> : null}</div>
 
@@ -96,7 +98,7 @@ export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpe
                 </div>
                 <div className="agc-meta noindent">
                   <span className="m">🕑 {e.day ? `${fmtDayHu(e.day)}${e.dayEnd ? ` – ${fmtDayHu(e.dayEnd)}` : ''}` : e.when}</span>
-                  {e.place && <span className="m">📍 {e.place}</span>}
+                  {e.place && <span className="m">{placeIcon(e.place)} {e.place}</span>}
                   {e.owner && <span className="m">👤 {familyName(e.owner)}{e.people.length > 0 ? ` +${e.people.length}` : ''}</span>}
                   {e.meetLink && <a className="m" href={e.meetLink} target="_blank" rel="noopener noreferrer" title="Google Meet belépés" onClick={(ev) => ev.stopPropagation()}>📹 Meet</a>}
                   {linked.length > 0 && <span className={`m${doneN === linked.length ? ' ok' : ''}`}>▤ {doneN}/{linked.length} feladat</span>}

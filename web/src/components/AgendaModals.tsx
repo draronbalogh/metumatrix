@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { AgendaEvent, AgendaMeetSlot, AgendaTask, Letter, STATUS_LABEL, TaskStar, TaskStatus, TaskStep, PRIORITY_LABEL, TaskPriority, TASK_CATEGORIES, taskSteps, stepsDone, fmtDueHu, fmtEventWhen } from '@/data/agenda';
+import { AgendaEvent, AgendaMeetSlot, AgendaTask, Letter, STATUS_LABEL, TaskStar, TaskStatus, TaskStep, PRIORITY_LABEL, TaskPriority, TASK_CATEGORIES, placeIcon, taskSteps, stepsDone, fmtDueHu, fmtEventWhen } from '@/data/agenda';
 import { RosterEntry, RosterGroups, PersonKind, KIND_LABEL } from '@/data/people';
 import { suggestTemplatesFor } from '@/lib/topics';
 import { suggestEventFor } from '@/lib/linkSuggest';
@@ -637,7 +637,7 @@ export function EventModal({ event, isNew, roster, rosterGroups, tasks, letters,
         <h3>{d.title.trim() || (isNew ? 'Új esemény' : 'Esemény szerkesztése')}</h3>
         <div className="mt-sum">
           <button type="button" className="mt-chip" title="Időpont - az Alap fülön" onClick={() => setTab('alap')}>🕑 {whenOut}</button>
-          {d.place.trim() !== '' && <button type="button" className="mt-chip" title="Helyszín - az Alap fülön" onClick={() => setTab('alap')}>📍 {d.place.trim()}</button>}
+          {d.place.trim() !== '' && <button type="button" className="mt-chip" title="Helyszín - az Alap fülön" onClick={() => setTab('alap')}>{placeIcon(d.place)} {d.place.trim()}</button>}
           <button type="button" className="mt-chip" title="Az esemény feladatai" onClick={() => setTab('tasks')}>▤ {linked.length} feladat</button>
           <button type="button" className="mt-chip" title="Felelős és résztvevők" onClick={() => setTab('people')}>👥 {(d.owner ? 1 : 0) + people.length} fő</button>
           <button type="button" className="mt-chip" title="Kapcsolt levelek" onClick={() => setTab('mail')}>✉ {letters?.length ?? 0} levél</button>

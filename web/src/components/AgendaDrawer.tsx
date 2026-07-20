@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Agenda, AgendaEvent, AgendaMeetSlot, AgendaTask, Letter, PRIORITY_LABEL, STATUS_LABEL, TaskStar, TaskStatus, fmtDayHu, fmtDueHu, nextStarFor, taskSteps, stepsDone, urgencyRank } from '@/data/agenda';
+import { Agenda, AgendaEvent, AgendaMeetSlot, AgendaTask, Letter, PRIORITY_LABEL, STATUS_LABEL, TaskStar, TaskStatus, fmtDayHu, fmtDueHu, nextStarFor, placeIcon, taskSteps, stepsDone, urgencyRank } from '@/data/agenda';
 import { PersonKind } from '@/data/people';
 import { suggestEventFor } from '@/lib/linkSuggest';
 import { PersonChip } from './AgendaView';
@@ -163,7 +163,7 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                   <div className="dr-evcard">
                     <button className="dr-evcard-main" onClick={() => onOpenEvent(task.eventId as string)} title="Az esemény részletezőjének megnyitása">
                       <span className="t">▤ {evLinked.title}</span>
-                      <span className="m">🕑 {evLinked.day ? fmtDayHu(evLinked.day) : evLinked.when}{evLinked.place ? ` · 📍 ${evLinked.place}` : ''}{evLinked.mstatus === 'tentative' ? ' · egyeztetés alatt' : ''}</span>
+                      <span className="m">🕑 {evLinked.day ? fmtDayHu(evLinked.day) : evLinked.when}{evLinked.place ? ` · ${placeIcon(evLinked.place)} ${evLinked.place}` : ''}{evLinked.mstatus === 'tentative' ? ' · egyeztetés alatt' : ''}</span>
                     </button>
                     {evLinked.meetLink && <a className="btn" href={evLinked.meetLink} target="_blank" rel="noopener noreferrer">📹 Meet</a>}
                     <button className="btn" onClick={() => onOpenEvent(task.eventId as string)}>Megnyitás</button>
@@ -241,7 +241,7 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
               {event.extSource === 'outlook' && (
                 <p className="dr-warn">⛓ Az abalogh@metropolitan.hu Outlook-naptár tükre - a szinkron frissíti, a módosítás az Outlookban történjen. Meet-et saját (nem tükör) eseményhez készíts.</p>
               )}
-              {event.place && <div className="dr-field"><h4>Helyszín</h4><p>📍 {event.place}</p></div>}
+              {event.place && <div className="dr-field"><h4>Helyszín</h4><p>{placeIcon(event.place)} {event.place}</p></div>}
               {event.note && <div className="dr-field"><h4>Leírás</h4><p>{event.note}</p></div>}
               {event.meetLink && (
                 <div className="dr-field">

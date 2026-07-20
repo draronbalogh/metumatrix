@@ -670,6 +670,11 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 .agc-meta .evbtn { border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; background: transparent; cursor: pointer; font: inherit; font-size: .78rem; }
 .agc-meta .evbtn:hover, .ag-toprow .evbtn:hover { border-color: var(--brand); color: var(--brand-text); }
 .ag-toprow .evbtn { border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; background: transparent; cursor: pointer; font: inherit; font-size: .74rem; color: var(--muted); flex: none; }
+/* az Események fejléc-gombjai (Új esemény + Outlook + Gmail) egy jobbra igazított csoportban */
+.cat-block-head .ag-actions { margin-left: 8px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; align-items: center; flex: none; }
+@media (max-width: 720px) {
+  .cat-block-head .ag-actions { width: 100%; margin-left: 0; }
+}
 /* mobil lebegő + gomb (Feladatok/Események): a fejléc-gomb kicsi és lecsúszhat - ez mindig kéznél van;
    a mentés-dokk FAB-ja fölé kerül (az bottom 14px-en áll) */
 .ag-fab { display: none; }
@@ -1977,4 +1982,13 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
   .cc-totals div { display: flex; align-items: baseline; gap: 3px; text-align: left; }
   .cc-totals b { display: inline; font-size: .92rem; }
   .cc-totals span { font-size: .64rem; }
+}
+
+/* ---- Névjegyzék mentés-sor: a globális .mfoot UTÁN kell állnia, hogy felülírja ----
+   nincs szürke sáv és óriás alsó margó; desktopon a Mentés gomb a jobb alsó
+   mentés-dokk MELLÉ kerül, mobilon a lista alján marad, kis térközzel */
+.pmv .mfoot { position: static; background: transparent; border-top: 0; box-shadow: none; margin: 0; padding: 4px 0 10px; }
+.pmv .pmv-scroll { padding-bottom: 24px; }
+@media (min-width: 721px) {
+  .pmv .mfoot { position: fixed; right: 340px; bottom: 16px; z-index: 61; padding: 0; }
 }

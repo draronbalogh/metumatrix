@@ -294,6 +294,11 @@ export const dueTs = (d?: string | null): number | null => {
 };
 export const duePrecise = (d?: string | null): boolean => !!d && d.length >= 10;
 
+// Helyszín-ikon: online meetinghez kamera, fizikai helyhez térkép-tű - az online
+// egyeztetést SOHA nem jelöljük tűvel/pinnel (user-döntés, 2026-07-20)
+export const placeIcon = (p?: string | null): string =>
+  (p && p.trim().toLowerCase().startsWith('online') ? '📹' : '📍');
+
 // A Posta-lista és a menü-számláló EGYETLEN predikátuma: kire várunk még válaszért.
 export const isAwaiting = (s?: AgendaSource | null): boolean =>
   !!s && !!s.email && !s.shadow && (s.status ?? 'pending') === 'pending';

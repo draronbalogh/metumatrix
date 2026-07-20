@@ -195,14 +195,17 @@ export default function AgendaView({ agenda, q, instr, taught, letterStats, onAd
             {important.map((t) => {
               const r = urgencyRank(t, soon);
               return (
-                <button key={t.id} type="button" className={`ag-toprow prio-${t.priority}`} onClick={() => onOpen(t.id)} title="Feladat megnyitása">
-                  <span className="tt">{isNewTask(t) && <span className="ag-new">ÚJ</span>}{t.title}</span>
-                  {t.source?.returned ? <span className="b hot">✉ új válasz kell</span>
-                    : isAwaiting(t.source) ? <span className="b hot">✉ válaszra vár</span>
-                    : t.source?.status === 'drafted' ? <span className="b warn">✉ válasz kész</span> : null}
-                  {(t.dueDate || t.due) && <span className={`b${r === 3 ? ' hot' : ''}`}>📅 {t.dueDate ? fmtDueHu(t.dueDate) : t.due}</span>}
-                  {t.priority === 'high' && <span className="b prio">⚑</span>}
-                </button>
+                <div key={t.id} className={`ag-toprow prio-${t.priority}`}>
+                  <button type="button" className="ag-check" title="Kész - pipa" onClick={() => onToggleDone(t.id)} />
+                  <button type="button" className="ag-toprow-open" onClick={() => onOpen(t.id)} title="Feladat megnyitása">
+                    <span className="tt">{isNewTask(t) && <span className="ag-new">ÚJ</span>}{t.title}</span>
+                    {t.source?.returned ? <span className="b hot">✉ új válasz kell</span>
+                      : isAwaiting(t.source) ? <span className="b hot">✉ válaszra vár</span>
+                      : t.source?.status === 'drafted' ? <span className="b warn">✉ válasz kész</span> : null}
+                    {(t.dueDate || t.due) && <span className={`b${r === 3 ? ' hot' : ''}`}>📅 {t.dueDate ? fmtDueHu(t.dueDate) : t.due}</span>}
+                    {t.priority === 'high' && <span className="b prio">⚑</span>}
+                  </button>
+                </div>
               );
             })}
           </div>

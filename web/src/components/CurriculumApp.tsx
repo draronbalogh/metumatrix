@@ -13,7 +13,7 @@ import AgendaDrawer, { AgendaDetailsRef } from './AgendaDrawer';
 import ITView from './ITView';
 import DocsView from './DocsView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
-import { Agenda, AgendaEvent, AgendaSource, AgendaTask, DEFAULT_AGENDA, Letter, ReplyDraft, emptyEvent, emptyTask, fmtDayHu, isAwaiting, mergeAgendaDocs, nextPriority, normalizeAgenda, taskSteps, withOutEntry } from '@/data/agenda';
+import { Agenda, AgendaEvent, AgendaSource, AgendaTask, DEFAULT_AGENDA, Letter, ReplyDraft, TaskStatus, emptyEvent, emptyTask, fmtDayHu, isAwaiting, mergeAgendaDocs, nextPriority, normalizeAgenda, taskSteps, withOutEntry } from '@/data/agenda';
 import { DEFAULT_PEOPLE, PeopleDB, PersonKind, RosterGroups, SenderRule, activeStudentNames, buildCanonicalNames, buildFooter, buildRoster, normalizePeople, emailOf, studentStatusNames, teacherStatusNames } from '@/data/people';
 import PostaView from './PostaView';
 import { normName, normTitle } from '@/lib/normalize';
@@ -613,6 +613,12 @@ export default function CurriculumApp() {
     if (!canEditRef.current) return;
     const cur = agendaRef.current;
     commitAgenda({ ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, status: x.status === 'done' ? 'todo' : 'done' } : x)) });
+  }, [commitAgenda]);
+  // státusz beállítása a részletezőből (✓ Kész / ▶ Folyamatban / ↩ Újranyitás)
+  const setTaskStatus = useCallback((id: string, s: TaskStatus) => {
+    if (!canEditRef.current) return;
+    const cur = agendaRef.current;
+    commitAgenda({ ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, status: s } : x)) });
   }, [commitAgenda]);
   const toggleDoing = useCallback((id: string) => {
     if (!canEditRef.current) return;
@@ -1679,6 +1685,7 @@ export default function CurriculumApp() {
           onAddTaskFor={(eid) => { setAgendaDetails(null); addTaskForEvent(eid); }}
           onCreateMeet={createMeetForEvent}
           onConfirmMeet={confirmMeet}
+          onTaskStatus={setTaskStatus}
           meetMsg={meetMsg}
         />
       )}

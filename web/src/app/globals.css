@@ -893,6 +893,8 @@ html[data-theme='dark'] .pb.p { color: var(--yellow-deep); }
 .ag-cardtop .cc-name { flex: 1; padding-right: 22px; }
 .ag-check { flex: none; width: 22px; height: 22px; margin-top: 1px; border: 2px solid var(--line-2); border-radius: 6px; background: var(--card); cursor: pointer; display: grid; place-items: center; font-size: .8rem; font-weight: 900; color: #fff; line-height: 1; }
 .ag-check:hover { border-color: var(--g0); }
+/* üres négyzetként nehéz felismerni: hoverre halvány pipa jelzi, mire való */
+.ag-check:not(.is-on):hover::before { content: '✓'; color: var(--g0); }
 .ag-check.is-on { background: var(--g0); border-color: var(--g0); }
 
 .ag-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 9px 0 2px; }
@@ -1839,7 +1841,10 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .ag-toprow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; width: 100%; text-align: left; padding: 8px 12px; border: 1px solid var(--line); border-left: 3px solid var(--brand); border-radius: 9px; background: var(--card); font: inherit; font-size: .85rem; color: var(--ink); cursor: pointer; }
 .ag-toprow:hover { border-color: color-mix(in srgb, var(--hot) 40%, var(--line)); background: color-mix(in srgb, var(--hot) 5%, var(--card)); }
 .ag-toprow.prio-high { border-left-color: var(--hot); }
-.ag-toprow .tt { flex: 1; min-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+/* a sor belseje: pipa + megnyitó gomb (gomb-a-gombban érvénytelen lenne) */
+.ag-toprow-open { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+.ag-toprow .ag-check { width: 19px; height: 19px; margin: 0; }
+.ag-toprow .tt, .ag-toprow-open .tt { flex: 1; min-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
 .ag-toprow .b { flex: none; font-size: .72rem; font-weight: 700; color: var(--ink-2); white-space: nowrap; }
 .ag-toprow .b.hot, .ag-toprow .b.prio { color: var(--hot); }
 .ag-toprow .b.warn { color: color-mix(in srgb, var(--yellow-deep) 75%, var(--ink)); }

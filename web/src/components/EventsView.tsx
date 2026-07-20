@@ -14,10 +14,11 @@ interface Props {
   onAdd: () => void;
   onOpen: (id: string) => void;           // az esemény RÉSZLETEZŐJE (drawer) - innen nyílik minden más
   onOpenTask: (id: string) => void;       // a naptárban jelölt feladat-határidő → a feladat részletezője
+  onOpenPost: (sel: string) => void;      // ugrás a Postába erre a levélre (válaszra vár / kész válasz)
   onPerson: (name: string) => void;
 }
 
-export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpen, onOpenTask, onPerson }: Props) {
+export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpen, onOpenTask, onOpenPost, onPerson }: Props) {
   const [mode, setMode] = useState<'list' | 'cal'>('cal'); // alapból a naptár nyílik
 
   const matches = (e: AgendaEvent) => {
@@ -92,10 +93,12 @@ export default function EventsView({ agenda, q, instr, letterStats, onAdd, onOpe
                   <span className="m">🕑 {e.day ? `${fmtDayHu(e.day)}${e.dayEnd ? ` – ${fmtDayHu(e.dayEnd)}` : ''}` : e.when}</span>
                   {e.place && <span className="m">📍 {e.place}</span>}
                   {e.owner && <span className="m">👤 {familyName(e.owner)}{e.people.length > 0 ? ` +${e.people.length}` : ''}</span>}
+                  {e.meetLink && <a className="m" href={e.meetLink} target="_blank" rel="noopener noreferrer" title="Google Meet belépés" onClick={(ev) => ev.stopPropagation()}>📹 Meet</a>}
                   {linked.length > 0 && <span className={`m${doneN === linked.length ? ' ok' : ''}`}>▤ {doneN}/{linked.length} feladat</span>}
                   {ls && <span className={`m${ls.drafts ? ' warn' : ''}`}>✉ {ls.n}</span>}
-                  {isAwaiting(e.source) && <span className="m hot" title="Levél érkezett, válaszra vár - a Postában elintézhető (választervekkel)">✉ válaszra vár{e.source?.returned ? ' (új)' : ''}</span>}
-                  {e.source?.status === 'drafted' && <span className="m warn" title="Megírt válasz készen áll - a Postából másolható/küldhető">✉ válasz kész</span>}
+                  {(e.source?.attachments?.length ?? 0) > 0 && <span className="m" title="A levélnek van melléklete - a Postában megnyitható">📎 {e.source?.attachments?.length}</span>}
+                  {isAwaiting(e.source) && <button type="button" className="m hot mbtn" title="Levél érkezett - ugrás a Postába, választervekkel (Titkárnő, küldés)" onClick={(ev) => { ev.stopPropagation(); onOpenPost(`e:${e.id}`); }}>✉ válaszra vár{e.source?.returned ? ' (új)' : ''}</button>}
+                  {e.source?.status === 'drafted' && <button type="button" className="m warn mbtn" title="Megírt válasz - ugrás a Postába (másolható/küldhető)" onClick={(ev) => { ev.stopPropagation(); onOpenPost(`e:${e.id}`); }}>✉ válasz kész</button>}
                 </div>
               </article>
             );

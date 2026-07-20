@@ -16,6 +16,7 @@ interface Props {
   letterStats: Record<string, { n: number; drafts: number }>; // tétel-id → kapcsolt levelek száma / vázlatok
   onAdd: () => void;
   onOpen: (id: string) => void;        // a feladat RÉSZLETEZŐJE (drawer) - innen nyílik minden más
+  onOpenPost: (sel: string) => void;   // ugrás a Postába erre a levélre (válaszra vár / kész válasz)
   onEditIntro: () => void;
   onPerson: (name: string) => void;    // név-szűrő ki/be
   onToggleDone: (id: string) => void;  // pipa: kész / nem kész
@@ -50,7 +51,27 @@ const createdKey = (t: AgendaTask): number => {
 export const isNewTask = (t: AgendaTask): boolean =>
   !!t.createdAt && Date.now() - Date.parse(t.createdAt) < 72 * 3600 * 1000;
 
-export default function AgendaView({ agenda, q, instr, taught, letterStats, onAdd, onOpen, onEditIntro, onPerson, onToggleDone, onCyclePriority }: Props) {
+const DAY_MS = 86400000;
+// pontos határidő ms-ben (dueDate ÉÉÉÉ-HH-NN), enélkül null
+const dueMsOf = (t: AgendaTask): number | null => {
+  const d = t.dueDate;
+  if (!d || d.length < 10) return null;
+  const ms = new Date(Number(d.slice(0, 4)), Number(d.slice(5, 7)) - 1, Number(d.slice(8, 10))).getTime();
+  return Number.isNaN(ms) ? null : ms;
+};
+// „fontossági" rang a Legfontosabbak sávhoz: kisebb = előrébb; 99 = nem kiemelt.
+// Levél-ügyek elöl (új válasz kell / válaszra vár / kész válasz), majd közeli határidő, majd magas prioritás.
+const urgencyRank = (t: AgendaTask, soon: number): number => {
+  if (t.source?.returned) return 0;
+  if (isAwaiting(t.source)) return 1;
+  if (t.source?.status === 'drafted') return 2;
+  const dm = dueMsOf(t);
+  if (dm !== null && dm <= soon) return 3;
+  if (t.priority === 'high') return 4;
+  return 99;
+};
+
+export default function AgendaView({ agenda, q, instr, taught, letterStats, onAdd, onOpen, onOpenPost, onEditIntro, onPerson, onToggleDone, onCyclePriority }: Props) {
   const [groupBy, setGroupBy] = useState<GroupBy>('newest');
   const [catFilter, setCatFilter] = useState('');
 
@@ -66,6 +87,16 @@ export default function AgendaView({ agenda, q, instr, taught, letterStats, onAd
   const shown = agenda.tasks.filter(matches);
   const open = shown.filter((t) => t.status !== 'done');
   const done = shown.filter((t) => t.status === 'done');
+  // LEGFONTOSABBAK: a nyitott feladatok közül a levél-ügyek + közeli határidő + magas
+  // prioritás, egy tömör sávban elöl (a szűrők érvényesülnek, mert az `open`-ből dolgozik)
+  const soon = Date.now() + 7 * DAY_MS;
+  const important = open
+    .filter((t) => urgencyRank(t, soon) < 99)
+    .sort((a, b) => urgencyRank(a, soon) - urgencyRank(b, soon)
+      || (a.dueDate || 'zzz').localeCompare(b.dueDate || 'zzz')
+      || prioRank(a.priority) - prioRank(b.priority)
+      || a.title.localeCompare(b.title, 'hu'))
+    .slice(0, 8);
   const eventTitle = (id: string | null) => (id ? agenda.events.find((e) => e.id === id)?.title ?? null : null);
   const personEvents = instr ? agenda.events.filter((e) => eventHasPerson(e, instr)) : [];
 
@@ -157,6 +188,27 @@ export default function AgendaView({ agenda, q, instr, taught, letterStats, onAd
         </div>
       )}
 
+      {important.length > 0 && (
+        <section className="cc-section ag-top">
+          <div className="cc-grp ag-grp ag-top-h">⭐ Legfontosabbak · {important.length}</div>
+          <div className="ag-toplist">
+            {important.map((t) => {
+              const r = urgencyRank(t, soon);
+              return (
+                <button key={t.id} type="button" className={`ag-toprow prio-${t.priority}`} onClick={() => onOpen(t.id)} title="Feladat megnyitása">
+                  <span className="tt">{isNewTask(t) && <span className="ag-new">ÚJ</span>}{t.title}</span>
+                  {t.source?.returned ? <span className="b hot">✉ új válasz kell</span>
+                    : isAwaiting(t.source) ? <span className="b hot">✉ válaszra vár</span>
+                    : t.source?.status === 'drafted' ? <span className="b warn">✉ válasz kész</span> : null}
+                  {(t.dueDate || t.due) && <span className={`b${r === 3 ? ' hot' : ''}`}>📅 {t.dueDate ? fmtDueHu(t.dueDate) : t.due}</span>}
+                  {t.priority === 'high' && <span className="b prio">⚑</span>}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {sections.map((sec) => (
         <section className="cc-section" key={sec.key}>
           <div className={`cc-grp ag-grp ${sec.cls}`}>{sec.label} · {sec.items.length}</div>
@@ -179,10 +231,12 @@ export default function AgendaView({ agenda, q, instr, taught, letterStats, onAd
                 <div className="agc-meta">
                   {(t.dueDate || t.due) && <span className="m">📅 {t.dueDate ? fmtDueHu(t.dueDate) : t.due}</span>}
                   {t.owner && <span className="m">👤 {familyName(t.owner)}{t.people.length > 0 ? ` +${t.people.length}` : ''}</span>}
+                  {(t.meetLink || t.source?.meetLink) && <a className="m" href={(t.meetLink || t.source?.meetLink) as string} target="_blank" rel="noopener noreferrer" title="Google Meet belépés" onClick={(ev) => ev.stopPropagation()}>📹 Meet</a>}
                   {steps.length > 0 && <span className={`m${doneN === steps.length ? ' ok' : ''}`}>☑ {doneN}/{steps.length}</span>}
                   {ls && <span className={`m${ls.drafts ? ' warn' : ''}`}>✉ {ls.n}</span>}
-                  {isAwaiting(t.source) && <span className="m hot" title="Levél érkezett, válaszra vár - a Postában elintézhető (választervekkel)">✉ válaszra vár{t.source?.returned ? ' (új)' : ''}</span>}
-                  {t.source?.status === 'drafted' && <span className="m warn" title="Megírt válasz készen áll - a Postából másolható/küldhető">✉ válasz kész</span>}
+                  {(t.source?.attachments?.length ?? 0) > 0 && <span className="m" title="A levélnek van melléklete - a Postában megnyitható">📎 {t.source?.attachments?.length}</span>}
+                  {isAwaiting(t.source) && <button type="button" className="m hot mbtn" title="Levél érkezett - ugrás a Postába, választervekkel (Titkárnő, küldés)" onClick={(e) => { e.stopPropagation(); onOpenPost(`t:${t.id}`); }}>✉ válaszra vár{t.source?.returned ? ' (új)' : ''}</button>}
+                  {t.source?.status === 'drafted' && <button type="button" className="m warn mbtn" title="Megírt válasz - ugrás a Postába (másolható/küldhető)" onClick={(e) => { e.stopPropagation(); onOpenPost(`t:${t.id}`); }}>✉ válasz kész</button>}
                   {t.status === 'doing' && <span className="m doing">▶ folyamatban</span>}
                   {t.eventId && eventTitle(t.eventId) && <span className="m ev">▤ {eventTitle(t.eventId)}</span>}
                 </div>

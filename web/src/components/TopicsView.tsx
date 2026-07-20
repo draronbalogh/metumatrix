@@ -100,7 +100,7 @@ export default function TopicsView({ q, letters, composer, onUseTopic, onOpenLet
                   <button key={l.id} type="button" aria-pressed={selL === l.id}
                     className={`tp-item${selL === l.id ? ' is-on' : ''}`} onClick={() => pickL(l)}>
                     <span className="s">{l.subject || '(tárgy nélkül)'}</span>
-                    <span className="d">{fmtDate(l.createdAt)} · {(l.status ?? 'draft') === 'sent' ? '✓ kiküldve' : '✎ vázlat'} · {lKind(l)}{targetTitle(l) ? `: ${targetTitle(l)}` : ''} · {l.names.length} címzett</span>
+                    <span className="d">{fmtDate(l.createdAt)} · {(l.status ?? 'draft') === 'sent' ? '✓ kiküldve' : l.status === 'outbox' ? '📤 kimenő (a Postában)' : '✎ vázlat'} · {lKind(l)}{targetTitle(l) ? `: ${targetTitle(l)}` : ''} · {l.names.length} címzett</span>
                   </button>
                 ))}
               </>

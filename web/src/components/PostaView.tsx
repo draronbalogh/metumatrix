@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
-import { Agenda, AgendaAttachment, AgendaSource, Letter, ReplyDraft, ThreadMsg, addDaysYmd, addWorkdaysYmd, draftsStale, dueTs, duePrecise, fmtDayHu, fmtDueHu, nextMondayYmd, taskSteps, tomorrowYmd, withOutEntry } from '@/data/agenda';
+import { Agenda, AgendaAttachment, AgendaEvent, AgendaSource, Letter, ReplyDraft, ThreadMsg, addDaysYmd, addWorkdaysYmd, draftsStale, dueTs, duePrecise, emptyEvent, fmtDayHu, fmtDueHu, fmtEventWhen, nextMondayYmd, taskSteps, tomorrowYmd, withOutEntry } from '@/data/agenda';
 import { SenderRule, SENDER_RULE_LABEL } from '@/data/people';
 import { parseStyleBank, replyVariants, StyleBank } from '@/lib/replies';
 import { suggestTemplatesFor, autoFill, TopicCtx } from '@/lib/topics';
@@ -41,6 +41,9 @@ interface Props {
   onReply: (sel: string, draft: ReplyDraft, drafts: ReplyDraft[]) => void;
   onState: (sel: string, patch: Partial<AgendaSource>, label: string) => void;
   onBusy?: (msg: string | null) => void;   // app-szintű „Titkárnő fogalmaz" jelző (nézetváltáskor is látszik)
+  onSaveEvent?: (e: AgendaEvent) => void;  // a Meet-időpont tükör-eseménye a saját naptárba
+  onLinkTaskEvent?: (taskId: string, eventId: string | null) => void; // az új Meet-esemény hozzákapcsolása a feladathoz
+  onEditInComposer?: (l: Letter) => void;  // kimenő levél megnyitása a levélíróban (címzettek is módosíthatók)
   undo: { label: string } | null;
   onUndo: () => void;
   onOpenCard: (sel: string) => void;
@@ -57,7 +60,7 @@ const ymdTs = (d?: string | null): number | null =>
 
 const DAY = 86400000;
 
-export default function PostaView({ agenda, footer, senderRules, onSenderRule, onReply, onBusy, onState, undo, onUndo, onOpenCard, onSaveLetter, onDeleteLetter, onRefresh, focusSel, onFocusConsumed }: Props) {
+export default function PostaView({ agenda, footer, senderRules, onSenderRule, onReply, onBusy, onState, onSaveEvent, onLinkTaskEvent, onEditInComposer, undo, onUndo, onOpenCard, onSaveLetter, onDeleteLetter, onRefresh, focusSel, onFocusConsumed }: Props) {
   const [bank, setBank] = useState<StyleBank | null>(null);
   useEffect(() => {
     fetch('/api/style', { headers: editHeaders() }).then((r) => r.json())
@@ -1180,6 +1183,25 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                           recipientEmail={r.src.email}
                           onInsert={(text) => setEditDraft((d) => (d ? { ...d, body: `${d.body.trimEnd()}\n\n${text}` } : d))}
                           onLink={(link) => onState(r.sel, { meetLink: link }, 'Meet-link a kártyához')}
+                          onCreated={(info) => {
+                            // a saját naptárba is: esemény-kártyánál rákötjük, feladatnál tükör-esemény + kapcsolás
+                            if (!onSaveEvent) return;
+                            if (r.sel.startsWith('e:')) {
+                              const ev = agenda.events.find((x) => x.id === r.sel.slice(2));
+                              if (ev) onSaveEvent({ ...ev, googleEventId: ev.googleEventId ?? (info.googleEventId || null), meetLink: ev.meetLink ?? (info.link || null), mstatus: ev.mstatus ?? 'tentative' });
+                            } else {
+                              const eid = `e-${Date.now().toString(36)}`;
+                              onSaveEvent({
+                                ...emptyEvent(), id: eid, title: l.subject,
+                                when: `${fmtEventWhen(info.day, null, info.day.slice(0, 7), info.start || null)} (egyeztetés alatt)`,
+                                sort: info.day.slice(0, 7), day: info.day,
+                                people: [r.src.name],
+                                googleEventId: info.googleEventId || null, meetLink: info.link || null, mstatus: 'tentative',
+                              });
+                              const t = agenda.tasks.find((x) => x.id === r.sel.slice(2));
+                              if (t && !t.eventId) onLinkTaskEvent?.(t.id, eid);
+                            }
+                          }}
                         />
                         <div className="po-readbody-f">
                           <button type="button" className="btn btn--ink" title="A módosítások mentése (a kész válasz felülíródik)" onClick={() => { onSaveLetter?.({ ...l, subject: editDraft.subject.trim() || l.subject, body: editDraft.body.trim() }); setEditDraft(null); }}>💾 Mentés</button>
@@ -1230,7 +1252,8 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                     ? <span className="po-schedtime" title="Ütemezett hajnali küldés">⏰ {fmtDawn(l.scheduledFor)} <button type="button" className="btn" title="Ütemezés visszavonása" onClick={() => unscheduleOutbound(l)}>✕</button></span>
                     : <button type="button" className="btn btn--sched" title="A következő hétköznap hajnalára ütemezi (05:40–06:40, szórtan)" onClick={() => scheduleOutbound(l)}>⏰ Ütemezve</button>}
                   <button type="button" className="btn" title="Elküldtem - lezárás" onClick={() => markOutboundSent(l)}>✓ Elküldtem</button>
-                  <button type="button" className="btn" title="A kimenő levél elvetése" onClick={() => onDeleteLetter?.(l.id)}>🗑</button>
+                  {onEditInComposer && <button type="button" className="btn" title="Megnyitás a levélíróban - ott a címzettek és a küldési mód is módosítható; a „Küldésre a Postába” ugyanezt a levelet frissíti (nem duplikál)" onClick={() => onEditInComposer(l)}>▤ Levélíróba</button>}
+                  <button type="button" className="btn" title="A kimenő levél elvetése (megerősítéssel)" onClick={() => { if (confirm(`Elveted ezt a kimenő levelet?\n\n„${l.subject}"`)) onDeleteLetter?.(l.id); }}>🗑</button>
                 </div>
                 {isRead && (
                   <div className="po-readbody">
@@ -1242,6 +1265,23 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                           <label className="po-readedit-l">A levél szövege</label>
                           <textarea className="po-readedit-b" rows={12} value={editOut.body} onChange={(e) => setEditOut((d) => (d ? { ...d, body: e.target.value } : d))} />
                         </div>
+                        <ReplyMeet
+                          title={editOut.subject || l.subject}
+                          recipientEmail={l.recipients?.[0]?.email ?? null}
+                          onInsert={(text) => setEditOut((d) => (d ? { ...d, body: `${d.body.trimEnd()}\n\n${text}` } : d))}
+                          onLink={(link) => onSaveLetter?.({ ...l, meetLink: link || undefined })}
+                          onCreated={(info) => {
+                            if (!onSaveEvent) return;
+                            const eid = `e-${Date.now().toString(36)}`;
+                            onSaveEvent({
+                              ...emptyEvent(), id: eid, title: editOut.subject || l.subject,
+                              when: `${fmtEventWhen(info.day, null, info.day.slice(0, 7), info.start || null)} (egyeztetés alatt)`,
+                              sort: info.day.slice(0, 7), day: info.day,
+                              people: l.names.filter((n) => !n.includes('@')),
+                              googleEventId: info.googleEventId || null, meetLink: info.link || null, mstatus: 'tentative',
+                            });
+                          }}
+                        />
                         <div className="po-readbody-f">
                           <button type="button" className="btn btn--ink" title="A módosítások mentése" onClick={() => { onSaveLetter?.({ ...l, subject: editOut.subject.trim() || l.subject, body: editOut.body.trim() }); setEditOut(null); }}>💾 Mentés</button>
                           <button type="button" className="btn" onClick={() => setEditOut(null)}>Mégse</button>

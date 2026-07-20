@@ -13,7 +13,7 @@ import AgendaDrawer, { AgendaDetailsRef } from './AgendaDrawer';
 import ITView from './ITView';
 import DocsView from './DocsView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
-import { Agenda, AgendaEvent, AgendaSource, AgendaTask, DEFAULT_AGENDA, Letter, ReplyDraft, TaskStatus, emptyEvent, emptyTask, fmtDayHu, isAwaiting, mergeAgendaDocs, nextPriority, normalizeAgenda, taskSteps, withOutEntry } from '@/data/agenda';
+import { Agenda, AgendaEvent, AgendaSource, AgendaTask, DEFAULT_AGENDA, Letter, ReplyDraft, TaskStatus, addDaysYmd, emptyEvent, emptyTask, fmtDayHu, isAwaiting, mergeAgendaDocs, nextPriority, normalizeAgenda, taskSteps, withOutEntry } from '@/data/agenda';
 import { DEFAULT_PEOPLE, PeopleDB, PersonKind, RosterGroups, SenderRule, activeStudentNames, buildCanonicalNames, buildFooter, buildRoster, normalizePeople, emailOf, studentStatusNames, teacherStatusNames } from '@/data/people';
 import PostaView from './PostaView';
 import { normName, normTitle } from '@/lib/normalize';
@@ -620,11 +620,6 @@ export default function CurriculumApp() {
     const cur = agendaRef.current;
     commitAgenda({ ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, status: s } : x)) });
   }, [commitAgenda]);
-  const toggleDoing = useCallback((id: string) => {
-    if (!canEditRef.current) return;
-    const cur = agendaRef.current;
-    commitAgenda({ ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, status: x.status === 'doing' ? 'todo' : 'doing' } : x)) });
-  }, [commitAgenda]);
   const cyclePriority = useCallback((id: string) => {
     if (!canEditRef.current) return;
     const cur = agendaRef.current;
@@ -721,30 +716,63 @@ export default function CurriculumApp() {
       : cur.tasks;
     commitAgenda({ ...cur, tasks, events: exists ? cur.events.map((x) => (x.id === e.id ? e : x)) : [...cur.events, e] });
     setEventEdit(null);
-    // Google Meet szinkron: ha az eseményhez van kapcsolt Google-esemény és változott a
-    // nap/idő (pl. időpont-véglegesítés a válaszok után), a Google-naptárt is átállítjuk.
-    // A Meet-link marad (a /api/meet update nem írja felül a conferenceData-t). Token nélkül
-    // az /api/meet unconfigured-et ad, így ez ártalmatlanul elhal.
-    if (e.googleEventId && e.day && (prev?.day !== e.day || prev?.when !== e.when)) {
+    // GOOGLE PUSH - a szabály: amit az app jegyez, azt KI is toljuk a draronbalogh@gmail.com
+    // naptárba. Kivétel az Outlook-tükör (extSource): az Outlook CSAK forrás, sosem push-oljuk.
+    // Token nélkül a /api/meet unconfigured-et ad, így minden ág ártalmatlanul elhal.
+    if (!e.extSource && e.day) {
       const m = e.when.match(/(\d{1,2})[:.](\d{2})/);
       const hh = m ? String(Math.min(23, parseInt(m[1], 10))).padStart(2, '0') : '09';
       const mi = m ? m[2] : '00';
       const he = String(Math.min(23, Number(hh) + 1)).padStart(2, '0');
-      void fetch('/api/meet', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-        body: JSON.stringify({ action: 'update', googleEventId: e.googleEventId, startIso: `${e.day}T${hh}:${mi}:00`, endIso: `${e.day}T${he}:${mi}:00` }),
-      }).catch(() => { /* a Meet-szinkron nem kritikus */ });
+      const startIso = `${e.day}T${hh}:${mi}:00`;
+      const endIso = `${e.dayEnd || e.day}T${he}:${mi}:00`; // többnapos eseménynél a záró napig
+      if (e.googleEventId) {
+        // meglévő Google-pár: cím/nap/idő/helyszín/leírás/státusz változásra patch (a Meet-link marad)
+        if (prev?.day !== e.day || prev?.dayEnd !== e.dayEnd || prev?.when !== e.when || prev?.title !== e.title || prev?.place !== e.place || prev?.note !== e.note || prev?.mstatus !== e.mstatus) {
+          void fetch('/api/meet', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+            body: JSON.stringify({ action: 'update', googleEventId: e.googleEventId, startIso, endIso, summary: e.title, location: e.place ?? '', description: e.note ?? '', tentative: e.mstatus === 'tentative' }),
+          }).catch(() => { /* a Google-szinkron nem kritikus */ });
+        }
+      } else {
+        // még nincs Google-párja: létrehozzuk (Meet-linkkel), és az id/link visszakerül az eseményre
+        void (async () => {
+          try {
+            const res = await fetch('/api/meet', {
+              method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+              body: JSON.stringify({ action: 'create', summary: e.title, startIso, endIso, location: e.place || undefined, description: e.note || undefined, attendees: [], sendInvite: false, tentative: e.mstatus === 'tentative' }),
+            });
+            const j = await res.json() as { ok: boolean; unconfigured?: boolean; meetLink?: string; googleEventId?: string };
+            if (j.ok && j.googleEventId) {
+              const cur2 = agendaRef.current;
+              commitAgenda({ ...cur2, events: cur2.events.map((x) => (x.id === e.id && !x.googleEventId ? { ...x, googleEventId: j.googleEventId ?? null, meetLink: x.meetLink ?? (j.meetLink || null) } : x)) });
+            }
+          } catch { /* a Google-szinkron nem kritikus */ }
+        })();
+      }
     }
   }, [commitAgenda]);
   const deleteEvent = useCallback((id: string) => {
     const cur = agendaRef.current;
-    // a törölt eseményre mutató feladat-hivatkozásokat is leválasztjuk
+    const victim = cur.events.find((x) => x.id === id);
+    // a törölt eseményre mutató feladat-hivatkozásokat is leválasztjuk;
+    // Outlook-tükörnél tombstone, hogy a következő szinkron ne hozza vissza
     commitAgenda({
       ...cur,
       events: cur.events.filter((x) => x.id !== id),
       tasks: cur.tasks.map((t) => (t.eventId === id ? { ...t, eventId: null } : t)),
+      hiddenExtIds: victim?.extSource === 'outlook' && victim.extId
+        ? [...(cur.hiddenExtIds ?? []), victim.extId]
+        : cur.hiddenExtIds,
     });
     setEventEdit(null);
+    // a törlés a Google-párra is propagálódik (Outlook-tükörnél nincs Google-pár, kihagyjuk)
+    if (victim?.googleEventId && !victim.extSource) {
+      void fetch('/api/meet', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+        body: JSON.stringify({ action: 'delete', googleEventId: victim.googleEventId }),
+      }).catch(() => { /* a Google-szinkron nem kritikus */ });
+    }
   }, [commitAgenda]);
   // ON-DEMAND Google Meet egy meglévő eseményhez: /api/meet létrehoz + a linket az eseményre írja.
   // A kezdő óra a when szövegből (ó:pp), különben 9:00; hossz 1 óra. Token nélkül unconfigured.
@@ -752,7 +780,15 @@ export default function CurriculumApp() {
   const createMeetForEvent = useCallback(async (eventId: string) => {
     const e = agendaRef.current.events.find((x) => x.id === eventId);
     if (!e) return;
+    if (e.extSource === 'outlook') { setMeetMsg('Ez az Outlook-naptár tükre - Meet-et saját (nem tükör) eseményhez készíts.'); return; }
     if (!e.day) { setMeetMsg('Előbb adj meg egy napot az eseménynek.'); return; }
+    // ha már van Google-párja, az újat nem duplikáljuk mellé: a régit előbb töröljük
+    if (e.googleEventId) {
+      void fetch('/api/meet', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+        body: JSON.stringify({ action: 'delete', googleEventId: e.googleEventId }),
+      }).catch(() => { /* nem kritikus */ });
+    }
     const emails = [e.owner, ...e.people].filter((n): n is string => !!n).map((n) => emailOf(peopleRef.current, n)).filter((x): x is string => !!x);
     const m = e.when.match(/(\d{1,2})[:.](\d{2})/);
     const hh = m ? String(Math.min(23, parseInt(m[1], 10))).padStart(2, '0') : '09';
@@ -762,12 +798,12 @@ export default function CurriculumApp() {
     try {
       const res = await fetch('/api/meet', {
         method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-        body: JSON.stringify({ action: 'create', summary: e.title, startIso: `${e.day}T${hh}:${mi}:00`, endIso: `${e.day}T${he}:${mi}:00`, location: e.place || undefined, attendees: [...new Set(emails)], tentative: false }),
+        body: JSON.stringify({ action: 'create', summary: e.title, startIso: `${e.day}T${hh}:${mi}:00`, endIso: `${e.day}T${he}:${mi}:00`, location: e.place || undefined, attendees: [...new Set(emails)], tentative: e.mstatus === 'tentative' }),
       });
       const j = await res.json() as { ok: boolean; unconfigured?: boolean; meetLink?: string; googleEventId?: string; error?: string };
       if (j.unconfigured) { setMeetMsg('A Google Meet még nincs beállítva (OAuth). A kézi „Meet szervezése" addig is működik.'); return; }
       if (!j.ok) { setMeetMsg(`Meet hiba: ${j.error ?? 'ismeretlen'}`); return; }
-      saveEvent({ ...e, googleEventId: j.googleEventId ?? e.googleEventId ?? null, meetLink: j.meetLink ?? null });
+      saveEvent({ ...e, googleEventId: j.googleEventId ?? e.googleEventId ?? null, meetLink: j.meetLink ?? e.meetLink ?? null });
       setMeetMsg(j.meetLink ? '✓ Meet-link kész.' : 'Kész (link nélkül).');
     } catch { setMeetMsg('A Meet-szolgáltatás nem elérhető.'); }
   }, [saveEvent]);
@@ -1044,27 +1080,56 @@ export default function CurriculumApp() {
       if (!j.ok || !j.events) { setSaveMsg(`⚠ Outlook-naptár: ${j.error ?? 'nem sikerült'}`); window.setTimeout(() => setSaveMsg(null), 9000); return; }
       const cur = agendaRef.current;
       const prevByExt = new Map(cur.events.filter((e) => e.extId).map((e) => [e.extId as string, e]));
+      // rövid, stabil azonosító a tükör-eseménynek; a kulcs az Outlook-id + kezdés EGYÜTT,
+      // mert ismétlődő eseménynél a GlobalAppointmentID minden előfordulásra AZONOS
+      const hash36 = (s: string) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h.toString(36); };
+      // az appban korábban törölt tükröket (tombstone) NEM hozzuk vissza
+      const hidden = new Set(cur.hiddenExtIds ?? []);
       let added = 0; let updated = 0;
-      const imported: AgendaEvent[] = j.events.filter((o) => o.subject && o.start).map((o) => {
-        const day = o.start.slice(0, 10);
-        const hhmm = o.start.slice(11, 16);
-        const prev = prevByExt.get(o.id);
-        if (prev) updated++; else added++;
-        return {
-          ...(prev ?? emptyEvent()),
-          id: prev?.id ?? `ox-${o.id.slice(-18)}`,
-          title: o.subject,
-          when: o.allDay ? fmtDayHu(day) : `${fmtDayHu(day)} ${hhmm}`,
-          sort: day.slice(0, 7), day, dayEnd: null,
-          place: o.location || null,
-          owner: o.organizer || null,
-          note: o.gist || null,
-          mstatus: 'confirmed' as const,
-          extSource: 'outlook' as const, extId: o.id,
-        };
+      const imported: AgendaEvent[] = j.events
+        .filter((o) => o.subject && o.start && !hidden.has(`${o.id}|${o.start}`))
+        .map((o) => {
+          const day = o.start.slice(0, 10);
+          const hhmm = o.start.slice(11, 16);
+          const extKey = `${o.id}|${o.start}`;
+          const prev = prevByExt.get(extKey);
+          if (prev) updated++; else added++;
+          // többnapos esemény záró napja: egész napos eseménynél az Outlook End kizáró (másnap 0:00)
+          const endDay = o.end ? o.end.slice(0, 10) : null;
+          let dayEnd: string | null = null;
+          if (endDay && endDay > day) {
+            const d2 = o.allDay ? addDaysYmd(endDay, -1) : endDay;
+            if (d2 > day) dayEnd = d2;
+          }
+          return {
+            ...(prev ?? emptyEvent()),
+            id: prev?.id ?? `ox-${hash36(extKey)}`,
+            title: o.subject,
+            when: o.allDay ? fmtDayHu(day) : `${fmtDayHu(day)} ${hhmm}`,
+            sort: day.slice(0, 7), day, dayEnd,
+            place: o.location || null,
+            owner: o.organizer || null,
+            note: o.gist || null,
+            mstatus: 'confirmed' as const,
+            extSource: 'outlook' as const, extId: extKey,
+          };
+        });
+      // tengely-szinkron a tükrökre is: az Outlookban odébb tett nap követése a kapcsolt
+      // feladat-határidőkben; az Outlookból eltűnt tükörre mutató task.eventId leválasztása
+      const importedIds = new Set(imported.map((e) => e.id));
+      const oldMirrors = cur.events.filter((e) => e.extSource === 'outlook');
+      const removedIds = new Set(oldMirrors.filter((e) => !importedIds.has(e.id)).map((e) => e.id));
+      const newDayById = new Map(imported.map((e) => [e.id, e.day]));
+      const oldDayById = new Map(oldMirrors.map((e) => [e.id, e.day]));
+      const tasksSynced = cur.tasks.map((t) => {
+        if (!t.eventId) return t;
+        if (removedIds.has(t.eventId)) return { ...t, eventId: null };
+        const nd = newDayById.get(t.eventId); const od = oldDayById.get(t.eventId);
+        if (nd && od && nd !== od && t.dueDate === od) return { ...t, dueDate: nd };
+        return t;
       });
       const nextEvents = [...cur.events.filter((e) => e.extSource !== 'outlook'), ...imported];
-      commitAgenda({ ...cur, events: nextEvents });
+      commitAgenda({ ...cur, tasks: tasksSynced, events: nextEvents });
       setSaveMsg(`✓ Outlook-naptár behúzva: ${added} új, ${updated} frissítve.`);
     } catch { setSaveMsg('⚠ Az Outlook-naptár olvasása nem sikerült (fut a klasszikus Outlook a gépen?).'); }
     finally { setTitkarBusy(null); window.setTimeout(() => setSaveMsg(null), 9000); }
@@ -1489,6 +1554,9 @@ export default function CurriculumApp() {
               onReply={notifyReply}
               onBusy={setTitkarBusy}
               onState={setSourceState}
+              onSaveEvent={saveEvent}
+              onLinkTaskEvent={linkTaskEvent}
+              onEditInComposer={(l) => { openLetterInComposer(l); setView('topics'); }}
               undo={postaUndo ? { label: postaUndo.label } : null}
               onUndo={undoSourceState}
               onOpenCard={(sel) => setAgendaDetails({ kind: sel.startsWith('t:') ? 'task' : 'event', id: sel.slice(2) })}
@@ -1539,6 +1607,7 @@ export default function CurriculumApp() {
                   onSaveLetter={saveLetter}
                   onDeleteLetter={deleteLetter}
                   onLetterStatus={setLetterStatus}
+                  onSaveEvent={saveEvent}
                   onClose={() => { /* beágyazva nincs bezárás */ }}
                 />
               )}
@@ -1686,6 +1755,13 @@ export default function CurriculumApp() {
           onCreateMeet={createMeetForEvent}
           onConfirmMeet={confirmMeet}
           onTaskStatus={setTaskStatus}
+          onDelete={() => {
+            const d = agendaDetails;
+            if (!d || !canEditRef.current) return;
+            if (!confirm(d.kind === 'task' ? 'Törlöd ezt a feladatot?' : 'Törlöd ezt az eseményt?')) return;
+            if (d.kind === 'task') deleteTask(d.id); else deleteEvent(d.id);
+            setAgendaDetails(null);
+          }}
           meetMsg={meetMsg}
         />
       )}
@@ -1763,6 +1839,7 @@ export default function CurriculumApp() {
           onSaveLetter={saveLetter}
           onDeleteLetter={deleteLetter}
           onLetterStatus={setLetterStatus}
+          onSaveEvent={saveEvent}
           onPlaceChange={notify.targetType === 'event' && notify.targetId ? (p: string) => {
             const cur = agendaRef.current;
             commitAgenda({ ...cur, events: cur.events.map((ev) => (ev.id === notify.targetId ? { ...ev, place: p.trim() || null } : ev)) });

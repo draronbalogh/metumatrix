@@ -178,6 +178,7 @@ export interface Agenda {
   events: AgendaEvent[];
   letters: Letter[];
   topicLinks: Record<string, string>; // témasablon-id → 'e:<esemény-id>' / 't:<feladat-id>' rögzített kapcsolat
+  hiddenExtIds?: string[]; // az appban törölt Outlook-tükör események kulcsai - a szinkron nem hozza vissza őket
 }
 
 // Új feladat/esemény alapértelmezett felelőse
@@ -364,7 +365,7 @@ export const normalizeAgenda = (a: Partial<Agenda>): Agenda => {
     }
     return { ...e, people: e.people ?? [], day: e.day ?? null, dayEnd: e.dayEnd ?? null, featured: e.featured ?? false, source, note: withProvenance(e.note, provenance) };
   });
-  return { intro: a.intro ?? DEFAULT_AGENDA.intro, tasks, events, letters: a.letters ?? [], topicLinks: a.topicLinks ?? {} };
+  return { intro: a.intro ?? DEFAULT_AGENDA.intro, tasks, events, letters: a.letters ?? [], topicLinks: a.topicLinks ?? {}, hiddenExtIds: a.hiddenExtIds ?? [] };
 };
 
 // Három-utas összefésülés 409-es ütközés után: tételszinten a HELYBEN módosított
@@ -398,6 +399,7 @@ export const mergeAgendaDocs = (base: Agenda | null, local: Agenda, remote: Agen
     events: mergeList(b.events, local.events, remote.events),
     letters: mergeList(b.letters ?? [], local.letters ?? [], remote.letters ?? []),
     topicLinks: JSON.stringify(local.topicLinks) !== JSON.stringify(b.topicLinks) ? local.topicLinks : remote.topicLinks,
+    hiddenExtIds: JSON.stringify(local.hiddenExtIds ?? []) !== JSON.stringify(b.hiddenExtIds ?? []) ? (local.hiddenExtIds ?? []) : (remote.hiddenExtIds ?? []),
   };
 };
 

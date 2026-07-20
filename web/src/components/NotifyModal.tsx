@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AgendaEvent, AgendaTask, Letter, fmtDueHu } from '@/data/agenda';
+import { AgendaEvent, AgendaTask, Letter, emptyEvent, fmtDueHu, fmtEventWhen } from '@/data/agenda';
 import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster, formerTeacherNames, teacherStatusNames, studentOrganizerNames, studentStatusNames, studentCohorts, cohortNames, SIGNATURE_SEPARATOR } from '@/data/people';
 import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, LetterKind, MeetingMode, MeetingPlan, MeetSlot } from '@/lib/letters';
 import GrowArea from './GrowArea';
@@ -139,6 +139,7 @@ interface Props {
   topicLinks?: Record<string, string>; // rögzített sablon→naptár kapcsolatok (UID szerint, 100% determinisztikus)
   onLinkTopic?: (topicId: string, sel: string | null) => void; // kapcsolat rögzítése / törlése
   onMarkReplied?: (sel: string) => void; // Válaszolandó tétel megválaszoltnak jelölése ('t:id' / 'e:id')
+  onSaveEvent?: (e: AgendaEvent) => void; // a Meet-időpont(ok) tükör-eseménye a saját naptárba
 }
 
 
@@ -162,7 +163,7 @@ const norm = normText;
 
 // Levél-készítő: sablonból generált szöveg + 3 numerikus másolás-gomb (Outlookba illesztéshez).
 // A küldés (Brevo/SMTP) opcionális - csak akkor jelenik meg, ha a szerveren be van állítva.
-export default function NotifyModal({ target, teacherNames, db, letters, onSaveLetter, onDeleteLetter, onLetterStatus, onPlaceChange, onSourceChange, onClose, inline, topicReq, letterReq, ctxEvents, ctxTasks, topicLinks, onLinkTopic, onMarkReplied }: Props) {
+export default function NotifyModal({ target, teacherNames, db, letters, onSaveLetter, onDeleteLetter, onLetterStatus, onPlaceChange, onSourceChange, onClose, inline, topicReq, letterReq, ctxEvents, ctxTasks, topicLinks, onLinkTopic, onMarkReplied, onSaveEvent }: Props) {
   const ui0 = useMemo(loadUi, []);
   const [kind, setKind] = useState<LetterKind>(ui0.kind);
   const [sigOn, setSigOn] = useState(ui0.sigOn); // hivatalos aláírás a levélben
@@ -180,6 +181,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const [meetLink, setMeetLink] = useState('');
   const [meetBusy, setMeetBusy] = useState(false);
   const [meetMsg, setMeetMsg] = useState<string | null>(null);
+  const meetEvIdRef = useRef(''); // a saját naptárba tett tükör-esemény id-je (ismételt gombnyomás nem duplikál)
   const [selected, setSelected] = useState<string[]>(() => [...new Set(target.names)]);
   const [adhoc, setAdhoc] = useState<string[]>([]); // egyedi email-címzettek (pl. a levél feladója)
   const [rq, setRq] = useState(''); // névszűrő a névsorhoz
@@ -432,7 +434,23 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     });
     if (r.unconfigured) setMeetMsg('A Google Meet még nincs beállítva - a linket kézzel is beillesztheted (▶ Google Meet ↗).');
     else if (r.error) setMeetMsg(`Meet hiba: ${r.error}`);
-    else { applyMeetLink(r.link); setMeetMsg(r.link ? '✓ Meet-link létrejött (a naptárban egyeztetés alatti eseményként).' : 'Létrejött (link nélkül).'); }
+    else {
+      applyMeetLink(r.link);
+      // a saját naptárba is: egyeztetés alatti tükör-esemény az első javasolt időponttal
+      const first = meetSlots.filter((s) => s.day && s.start)[0];
+      if (onSaveEvent && first) {
+        const eid = meetEvIdRef.current || `e-${Date.now().toString(36)}`;
+        meetEvIdRef.current = eid;
+        onSaveEvent({
+          ...emptyEvent(), id: eid, title: outSubject.trim() || 'METU egyeztetés',
+          when: `${fmtEventWhen(first.day, null, first.day.slice(0, 7), first.start ?? null)} (egyeztetés alatt)`,
+          sort: first.day.slice(0, 7), day: first.day, place: place || null,
+          people: [...selected],
+          googleEventId: r.googleEventId || null, meetLink: r.link || null, mstatus: 'tentative',
+        });
+      }
+      setMeetMsg(r.link ? '✓ Meet-link kész - a saját naptárba és a Google-naptárba is bekerült (egyeztetés alatt).' : 'Létrejött (link nélkül).');
+    }
     setMeetBusy(false);
   };
 
@@ -651,9 +669,13 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     let bodyForSend = outBody.replace(/\r\n/g, '\n').trimEnd();
     const fTrim = buildFooter(db, sigOn, linksOn).trim();
     if (fTrim && bodyForSend.endsWith(fTrim)) bodyForSend = bodyForSend.slice(0, bodyForSend.length - fTrim.length).trimEnd();
+    // ha egy MÁR a Kimenőben álló levelet töltöttél be és küldesz újra, ugyanazt a
+    // bejegyzést írjuk felül - különben duplikátum állna a Postában (kétszeres küldés!)
+    const loaded = loadedLetterRef.current ? letters.find((x) => x.id === loadedLetterRef.current) : null;
+    const reuse = loaded && loaded.status === 'outbox' ? loaded : null;
     onSaveLetter({
-      id: `l-${Date.now().toString(36)}`,
-      createdAt: new Date().toISOString(),
+      id: reuse?.id ?? `l-${Date.now().toString(36)}`,
+      createdAt: reuse?.createdAt ?? new Date().toISOString(),
       targetType: target.targetType,
       targetId: target.targetId,
       subject: outSubject.trim(), body: bodyForSend, names: [...selected, ...adhoc],

@@ -1891,6 +1891,11 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .dr-steps .ag-smeta { flex: none; }
 .dr-task, .dr-letter { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--card); border-radius: 9px; padding: 7px 10px; margin-bottom: 6px; cursor: pointer; font-size: .85rem; color: var(--ink); }
 .dr-task:hover { border-color: var(--g1); }
+/* a sor belseje: pipa + megnyitó gomb (a sor maga már nem gomb) */
+.dr-task-open { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+.dr-task .ag-check { width: 18px; height: 18px; margin: 0; flex: none; }
+.dr-task-open .t { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dr-task-open .m { flex: none; font-size: .72rem; color: var(--ink-2); white-space: nowrap; }
 .dr-letter:hover { border-color: var(--g0); }
 .dr-task .dot { width: 9px; height: 9px; border-radius: 999px; background: var(--muted); flex: none; }
 .dr-task.st-done .dot { background: var(--g0); }

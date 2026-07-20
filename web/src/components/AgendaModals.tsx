@@ -411,9 +411,13 @@ export function TaskModal({ task, isNew, events, roster, rosterGroups, letters, 
       dueDate: d.dueDate.trim() || null,
       people,
       eventId: d.eventId || null,
+      // a source-csomag (Posta-állapot, szál, választervek) NEM veszhet el a szerkesztéskor:
+      // csak a név/email írható át, minden más mező (status, thread, replies, gist...) megmarad
       source: d.srcName.trim() || d.srcEmail.trim()
-        ? { name: d.srcName.trim(), email: d.srcEmail.trim(), subject: task.source?.subject ?? null }
-        : null,
+        ? (task.source
+          ? { ...task.source, name: d.srcName.trim(), email: d.srcEmail.trim() }
+          : { name: d.srcName.trim(), email: d.srcEmail.trim(), subject: null })
+        : task.source ?? null,
     });
   };
   const saveAndNotify = () => { if (!d.title.trim() || !onNotify) return; save(); onNotify(); };

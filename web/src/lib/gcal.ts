@@ -104,6 +104,7 @@ export interface UpdateMeetPatch {
   endIso?: string;
   summary?: string;
   description?: string;
+  location?: string;
   timeZone?: string;
   tentative?: boolean;
 }
@@ -119,6 +120,7 @@ export const updateMeetEvent = async (
   const body: Record<string, unknown> = {};
   if (patch.summary !== undefined) body.summary = patch.summary;
   if (patch.description !== undefined) body.description = patch.description;
+  if (patch.location !== undefined) body.location = patch.location;
   if (patch.startIso) body.start = { dateTime: patch.startIso, timeZone: tz };
   if (patch.endIso) body.end = { dateTime: patch.endIso, timeZone: tz };
   if (patch.tentative !== undefined) body.status = patch.tentative ? 'tentative' : 'confirmed';
@@ -131,4 +133,14 @@ export const updateMeetEvent = async (
   if (!r.ok) throw new Error(`event patch ${r.status}: ${(await r.text()).slice(0, 300)}`);
   const e = (await r.json()) as EventResp;
   return { googleEventId: e.id, meetLink: extractMeet(e) };
+};
+
+// torles: az app-esemeny torlesenek propagalasa a Google-naptarba.
+// 404/410 = a Google-oldalon mar nincs meg - az is siker.
+export const deleteMeetEvent = async (googleEventId: string): Promise<void> => {
+  const token = await refreshAccessToken();
+  const c = cfg();
+  const url = `${API_BASE}/calendars/${encodeURIComponent(c.calendarId)}/events/${encodeURIComponent(googleEventId)}`;
+  const r = await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+  if (!r.ok && r.status !== 404 && r.status !== 410) throw new Error(`event delete ${r.status}: ${(await r.text()).slice(0, 200)}`);
 };

@@ -35,6 +35,7 @@ interface Props {
   onConfirmMeet?: (eventId: string) => void;  // időpont-egyeztetés lezárása (tentative -> confirmed)
   meetMsg?: string | null;                     // a Meet-készítés visszajelzése
   onTaskStatus?: (id: string, s: TaskStatus) => void; // kész / folyamatban / újranyitás a részletezőből
+  onDelete?: () => void; // a tétel törlése innen (a hívó erősít meg)
 }
 
 const fmtLetter = (iso: string) => iso.slice(0, 16).replace('T', ' ');
@@ -67,7 +68,7 @@ function Sec({ cls, children }: { cls?: string; children: ReactNode }) {
 // egy kiosztott lépés a személy-kártyán - a taskId+ix révén innen is pipálható
 interface PStep { taskId: string; taskTitle: string | null; ix: number; text: string; done: boolean; due: string | null }
 
-export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor, onCreateMeet, onConfirmMeet, meetMsg, onTaskStatus }: Props) {
+export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor, onCreateMeet, onConfirmMeet, meetMsg, onTaskStatus, onDelete }: Props) {
   const task = det.kind === 'task' ? agenda.tasks.find((t) => t.id === det.id) ?? null : null;
   const event = det.kind === 'event' ? agenda.events.find((e) => e.id === det.id) ?? null : null;
   if (!task && !event) return null;
@@ -136,6 +137,7 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                   <button className="btn" title={task.status === 'doing' ? 'Vissza teendőre' : 'Megjelölés folyamatban lévőnek'} onClick={() => onTaskStatus(task.id, task.status === 'doing' ? 'todo' : 'doing')}>{task.status === 'doing' ? '⏸ Nem folyamatban' : '▶ Folyamatban'}</button>
                 </>)}
             {canEdit && <button className="btn btn--ink" onClick={onEdit}>✎ Szerkesztés</button>}
+            {canEdit && onDelete && <button className="btn btn--danger" onClick={onDelete}>Törlés</button>}
             <button className="btn" onClick={onClose}>✕ Bezárás</button>
           </div>
         </div>
@@ -213,6 +215,9 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                 <h4>Időpont</h4>
                 <p>🕑 {event.day ? `${fmtDayHu(event.day)}${event.dayEnd ? ` – ${fmtDayHu(event.dayEnd)}` : ''} · ` : ''}{event.when}</p>
               </div>
+              {event.extSource === 'outlook' && (
+                <p className="dr-warn">⛓ Az abalogh@metropolitan.hu Outlook-naptár tükre - a szinkron frissíti, a módosítás az Outlookban történjen. Meet-et saját (nem tükör) eseményhez készíts.</p>
+              )}
               {event.place && <div className="dr-field"><h4>Helyszín</h4><p>📍 {event.place}</p></div>}
               {event.note && <div className="dr-field"><h4>Leírás</h4><p>{event.note}</p></div>}
               {event.meetLink && (
@@ -221,7 +226,7 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                   <p><a href={event.meetLink} target="_blank" rel="noopener noreferrer">📹 Belépés a meetre</a>{event.mstatus === 'tentative' ? ' · egyeztetés alatt' : ''}</p>
                 </div>
               )}
-              {canEdit && (
+              {canEdit && event.extSource !== 'outlook' && (
                 <div className="dr-field" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                   {onCreateMeet && (
                     <button className="btn btn--ink" title="Automatikusan létrehoz egy Google Meet-linket ehhez az eseményhez, és beírja ide (a résztvevők vendégként)"
@@ -250,11 +255,17 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
               {linked.map((t) => {
                 const st = taskSteps(t);
                 return (
-                  <button key={t.id} className={`dr-task st-${t.status}`} onClick={() => onOpenTask(t.id)} title="A feladat részletei">
-                    <span className="dot" />
-                    <span className="t">{t.title}</span>
-                    <span className="m">{st.length > 0 ? `☑ ${stepsDone(t)}/${st.length}` : ''}{t.dueDate ? ` · 📅 ${fmtDueHu(t.dueDate)}` : ''}</span>
-                  </button>
+                  <div key={t.id} className={`dr-task st-${t.status}`}>
+                    {canEdit && onTaskStatus && (
+                      <button className={`ag-check${t.status === 'done' ? ' is-on' : ''}`} title={t.status === 'done' ? 'Visszaállítás nyitottra' : 'Kész - pipa'}
+                        onClick={() => onTaskStatus(t.id, t.status === 'done' ? 'todo' : 'done')}>{t.status === 'done' ? '✓' : ''}</button>
+                    )}
+                    <button className="dr-task-open" onClick={() => onOpenTask(t.id)} title="A feladat részletei">
+                      <span className="dot" />
+                      <span className="t">{t.title}</span>
+                      <span className="m">{st.length > 0 ? `☑ ${stepsDone(t)}/${st.length}` : ''}{t.dueDate ? ` · 📅 ${fmtDueHu(t.dueDate)}` : ''}</span>
+                    </button>
+                  </div>
                 );
               })}
               {canEdit && <button className="btn dr-addtask" onClick={() => onAddTaskFor(event.id)}>+ Új feladat ehhez az eseményhez</button>}

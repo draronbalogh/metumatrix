@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { canWrite, writeDenied } from '@/lib/editauth';
-import { gcalConfigured, createMeetEvent, updateMeetEvent } from '@/lib/gcal';
+import { gcalConfigured, createMeetEvent, updateMeetEvent, deleteMeetEvent } from '@/lib/gcal';
 
 // Meet-esemeny letrehozas/frissites a Google Calendaron (METU ESEMENYEK naptar).
 // Token nelkul { ok:false, unconfigured:true } - a kliens ezt kezeli (nem hiba).
@@ -29,7 +29,11 @@ interface UpdateBody {
   timeZone?: string;
   tentative?: boolean;
 }
-type MeetBody = CreateBody | UpdateBody;
+interface DeleteBody {
+  action: 'delete';
+  googleEventId: string;
+}
+type MeetBody = CreateBody | UpdateBody | DeleteBody;
 
 export async function POST(req: Request) {
   if (!canWrite(req)) return writeDenied();
@@ -54,6 +58,13 @@ export async function POST(req: Request) {
       }
       const r = await updateMeetEvent(b.googleEventId, b);
       return NextResponse.json({ ok: true, ...r });
+    }
+    if (b.action === 'delete') {
+      if (!b.googleEventId) {
+        return NextResponse.json({ ok: false, error: 'hianyzo googleEventId' }, { status: 400 });
+      }
+      await deleteMeetEvent(b.googleEventId);
+      return NextResponse.json({ ok: true, deleted: true });
     }
     return NextResponse.json({ ok: false, error: 'ismeretlen action' }, { status: 400 });
   } catch (e) {

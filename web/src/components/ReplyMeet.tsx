@@ -14,9 +14,10 @@ interface Props {
   recipientEmail?: string | null;      // a valasz cimzettje (a felado) - Meet-resztvevo
   onInsert: (text: string) => void;    // a meeting-szoveg hozzafuzese a valaszhoz
   onLink?: (link: string) => void;     // a link felkerul a kartyara is
+  onCreated?: (info: { link: string; googleEventId: string; day: string; start: string; end: string }) => void; // sikeres letrehozas: tukor-esemeny a sajat naptarba
 }
 
-export default function ReplyMeet({ title, recipientEmail, onInsert, onLink }: Props) {
+export default function ReplyMeet({ title, recipientEmail, onInsert, onLink, onCreated }: Props) {
   const [mode, setMode] = useState<MeetingMode | 'nincs'>('nincs');
   const [slots, setSlots] = useState<MeetSlot[]>([{ day: '', start: '', end: '' }]);
   const [link, setLink] = useState('');
@@ -32,7 +33,12 @@ export default function ReplyMeet({ title, recipientEmail, onInsert, onLink }: P
     });
     if (r.unconfigured) setMsg('A Google Meet nincs beállítva - a linket kézzel is beillesztheted (▶ Google Meet ↗).');
     else if (r.error) setMsg(`Meet hiba: ${r.error}`);
-    else { setLink(r.link); onLink?.(r.link); setMsg(r.link ? '✓ Meet-link kész (a naptáradba is bekerült egyeztetés alatti eseményként).' : 'Kész (link nélkül).'); }
+    else {
+      setLink(r.link); onLink?.(r.link);
+      const first = slots.filter((s) => s.day && s.start)[0];
+      if (first) onCreated?.({ link: r.link, googleEventId: r.googleEventId, day: first.day, start: first.start ?? '', end: first.end ?? '' });
+      setMsg(r.link ? '✓ Meet-link kész (a naptáradba is bekerült egyeztetés alatti eseményként).' : 'Kész (link nélkül).');
+    }
     setBusy(false);
   };
 

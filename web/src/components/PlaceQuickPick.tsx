@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 
-// Helyszín-gyorskitöltő: az esemény vagy a METU-n van, vagy külső helyszínen.
+// Helyszín-gyorskitöltő: az esemény a METU-n van, online (Google Meet) vagy külső helyszínen.
 // METU: "METU, Infopark D épület, 212, 225" épül a chipekből (több terem is választható).
+// Online: a helyszín "Online (Google Meet)" - a Meet-linket a mentéskori Google-push adja.
 // Külső helyszín: a chipek eltűnnek, az egyedi cím a szöveges mezőbe írható.
 export const PLACE_BUILDINGS = ['D épület', 'I épület'];
 export const PLACE_ROOMS = ['212', '225', '236', '203', '207', 'nagy előadó'];
+export const PLACE_ONLINE = 'Online (Google Meet)';
 const METU_PREFIX = 'METU, Infopark';
 
 // meglévő "METU, Infopark D épület, 212, 225" érték visszafejtése a chipek kezdőállapotához
@@ -19,7 +21,8 @@ const parseValue = (v?: string): { b: string; rooms: string[] } => {
 };
 
 export default function PlaceQuickPick({ value, onPick }: { value?: string; onPick: (place: string) => void }) {
-  const [mode, setMode] = useState<'metu' | 'kulso'>(() => (!value || value.startsWith('METU') ? 'metu' : 'kulso'));
+  const [mode, setMode] = useState<'metu' | 'online' | 'kulso'>(() =>
+    value?.startsWith('Online') ? 'online' : (!value || value.startsWith('METU') ? 'metu' : 'kulso'));
   const [b, setB] = useState(() => parseValue(value).b);
   const [rooms, setRooms] = useState<string[]>(() => parseValue(value).rooms);
 
@@ -41,8 +44,10 @@ export default function PlaceQuickPick({ value, onPick }: { value?: string; onPi
   return (
     <div className="place-quick">
       <button type="button" className={`chip${mode === 'metu' ? ' is-on' : ''}`} onClick={() => setMode('metu')}>METU</button>
+      <button type="button" className={`chip${mode === 'online' ? ' is-on' : ''}`}
+        onClick={() => { setMode('online'); onPick(PLACE_ONLINE); }}>Online (Meet)</button>
       <button type="button" className={`chip${mode === 'kulso' ? ' is-on' : ''}`}
-        onClick={() => { setMode('kulso'); if (value && value.startsWith('METU')) onPick(''); }}>Külső helyszín</button>
+        onClick={() => { setMode('kulso'); if (value && (value.startsWith('METU') || value.startsWith('Online'))) onPick(''); }}>Külső helyszín</button>
       {mode === 'metu' && (
         <>
           <span className="pq-sep" />

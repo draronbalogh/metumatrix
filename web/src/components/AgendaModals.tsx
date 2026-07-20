@@ -7,6 +7,8 @@ import { suggestTemplatesFor } from '@/lib/topics';
 import { suggestEventFor } from '@/lib/linkSuggest';
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
+import MeetSlots from './MeetSlots';
+import { MeetSlot } from '@/lib/letters';
 
 function useEsc(onClose: () => void) {
   useEffect(() => {
@@ -575,6 +577,11 @@ export function EventModal({ event, isNew, roster, rosterGroups, tasks, letters,
   const [featured, setFeaturedRaw] = useState(event.featured);
   const [people, setPeopleRaw] = useState<string[]>(event.people);
   const [tab, setTab] = useState('alap');
+  // több javasolt Meet-időpont: mentéskor az esemény meetSlots mezőjébe kerülnek,
+  // az esemény "egyeztetés alatt" (tentative) lesz, a naptár halványan jelöli őket
+  const [meetSlots, setMeetSlotsRaw] = useState<MeetSlot[]>(() =>
+    (event.meetSlots ?? []).map((s) => ({ day: s.day, start: s.start ?? '', end: s.end ?? '' })));
+  const [slotsOpen, setSlotsOpen] = useState(() => (event.meetSlots?.length ?? 0) > 0);
   const dirty = useRef(false);
   const tryClose = () => { if (dirty.current && !confirm('Elmentetlen módosítások vannak. Bezárod mentés nélkül?')) return; onClose(); };
   useEsc(tryClose);
@@ -582,6 +589,7 @@ export function EventModal({ event, isNew, roster, rosterGroups, tasks, letters,
   const setMode = (m: 'none' | 'month' | 'day') => { dirty.current = true; setModeRaw(m); };
   const setPeople = (names: string[]) => { dirty.current = true; setPeopleRaw(names); };
   const togglePerson = (name: string) => { dirty.current = true; setPeopleRaw((p) => (p.includes(name) ? p.filter((n) => n !== name) : [...p, name])); };
+  const setMeetSlots = (s: MeetSlot[]) => { dirty.current = true; setMeetSlotsRaw(s); };
   const effDay = mode === 'day' ? d.day.trim() : '';
   const effEnd = mode === 'day' && effDay && d.dayEnd.trim() > effDay ? d.dayEnd.trim() : null;
   const effMonth = mode === 'month' ? d.month.trim() : '';
@@ -592,18 +600,27 @@ export function EventModal({ event, isNew, roster, rosterGroups, tasks, letters,
   const save = () => {
     if (!d.title.trim()) return;
     dirty.current = false;
+    // a kitöltött időpontjavaslatok; kézi nap híján az első javaslat napja horgonyozza az eseményt
+    const cleanSlots: AgendaMeetSlot[] = meetSlots.filter((s) => s.day).map((s) => ({ day: s.day, start: s.start || null, end: s.end || null }));
+    const slotDay = cleanSlots.length ? cleanSlots[0].day : null;
+    const outDay = effDay || slotDay || null;
+    const outWhen = mode !== 'none' || !slotDay
+      ? whenOut
+      : `${fmtEventWhen(slotDay, null, slotDay.slice(0, 7), cleanSlots[0].start ?? null)} (egyeztetés alatt)`;
     onSave({
       ...event,
       title: d.title.trim(),
-      when: whenOut,
-      sort: effDay ? effDay.slice(0, 7) : (effMonth || null),
-      day: effDay || null,
+      when: outWhen,
+      sort: outDay ? outDay.slice(0, 7) : (effMonth || null),
+      day: outDay,
       dayEnd: effEnd,
       featured,
       note: d.note.trim() || null,
       place: d.place.trim() || null,
       owner: d.owner.trim() || null,
       people,
+      meetSlots: cleanSlots.length ? cleanSlots : null,
+      mstatus: cleanSlots.length ? 'tentative' : event.mstatus ?? null,
     });
   };
   const saveAndNotify = () => { if (!d.title.trim() || !onNotify) return; save(); onNotify(); };
@@ -670,6 +687,25 @@ export function EventModal({ event, isNew, roster, rosterGroups, tasks, letters,
               <label>Helyszín</label>
               <input value={d.place} onChange={(e) => set('place', e.target.value)} placeholder="pl. METU, Infopark D épület, 212 vagy külső cím" />
               <PlaceQuickPick value={d.place} onPick={(v) => set('place', v)} />
+            </div>
+            <div className="field full">
+              <label>Google Meet</label>
+              {event.meetLink ? (
+                <p className="ev-meetrow">
+                  <a href={event.meetLink} target="_blank" rel="noopener noreferrer">📹 Belépés a meetre</a>
+                  <button type="button" className="btn" onClick={() => { void navigator.clipboard?.writeText(event.meetLink as string); }}>⧉ Link másolása</button>
+                  {event.mstatus === 'tentative' && <span> · egyeztetés alatt</span>}
+                </p>
+              ) : (
+                <div className="se-empty">Mentéskor automatikusan készül Google-naptár-pár Meet-linkkel (napra tett eseménynél) - a link mentés után itt és a részletezőben látszik.</div>
+              )}
+            </div>
+            <div className="field full">
+              <button type="button" className="btn" onClick={() => setSlotsOpen((o) => !o)}>📹 Javasolt időpontok - több opció {slotsOpen ? '▴' : '▾'}</button>
+              {slotsOpen && (<>
+                <MeetSlots slots={meetSlots.length ? meetSlots : [{ day: '', start: '', end: '' }]} onSlots={setMeetSlots} />
+                <div className="due-preview">A kitöltött javaslatok a naptárban halvány, „függő" csíkként jelennek meg. Véglegesítéskor (részletező vagy Posta) a választott lesz az esemény időpontja.</div>
+              </>)}
             </div>
             <div className="f-sec c-green">Leírás</div>
             <div className="field full">

@@ -34,7 +34,7 @@ export default function TopicsView({ q, letters, composer, onUseTopic, onOpenLet
   const toggleGroup = (g: string) => setOpenGroups((s) => { const n = new Set(s); if (n.has(g)) n.delete(g); else n.add(g); return n; });
 
   // teljes szövegű keresőindex (cím + csoport + tárgy + törzs), ékezet-függetlenül
-  const index = useMemo(() => new Map(TOPIC_TEMPLATES.map((t) => [t.id, norm(`${t.label} ${t.group} ${t.subject(CTX)} ${t.body(CTX)}`)])), []);
+  const index = useMemo(() => new Map(TOPIC_TEMPLATES.map((t) => [t.id, norm(`${t.label} ${t.group} ${t.meta ?? ''} ${t.subject(CTX)} ${t.body(CTX)}`)])), []);
   const tList = useMemo(() => TOPIC_TEMPLATES.filter((t) =>
     !q.trim() || (index.get(t.id) as string).includes(norm(q))
   ), [q, index]);

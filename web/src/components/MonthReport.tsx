@@ -99,11 +99,11 @@ export default function MonthReport({ monthKey, agenda, onClose, onSaveLetter }:
             {items.length === 0
               ? <div className="se-empty">Nincs szakos esemény ebben a hónapban.</div>
               : (
-                <div style={{ display: 'grid', gap: 4 }}>
+                <div className="mr-list">
                   {items.map((i) => (
-                    <label key={i.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: '.88rem', opacity: off.has(i.id) ? .5 : 1, cursor: 'pointer' }}>
-                      <input type="checkbox" checked={!off.has(i.id)} onChange={() => toggle(i.id)} style={{ marginTop: 3 }} />
-                      <span>{i.label}{i.admin ? ' · (admin jellegű)' : ''}</span>
+                    <label key={i.id} className={`mr-item${off.has(i.id) ? ' is-off' : ''}`}>
+                      <input type="checkbox" checked={!off.has(i.id)} onChange={() => toggle(i.id)} />
+                      <span>{i.label}{i.admin ? <em className="adm"> · admin jellegű</em> : null}</span>
                     </label>
                   ))}
                 </div>

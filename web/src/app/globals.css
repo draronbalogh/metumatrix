@@ -1999,3 +1999,11 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
   .pmv .mfoot { position: fixed; right: 344px; bottom: 14px; z-index: 61; padding: 0; }
   .pmv .mfoot .btn { box-shadow: 0 6px 20px rgba(16, 17, 20, .24); }
 }
+
+/* ---- 🖨 havi riport: tétel-lista - a globális form-label (NAGYBETŰS) és a
+   teljes szélességű input-stílus itt SEMLEGESÍTVE, normál olvasható sorok ---- */
+.mr-list { display: grid; gap: 6px; }
+.mr-list .mr-item { display: flex; gap: 9px; align-items: flex-start; text-align: left; cursor: pointer; font-size: .89rem; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--ink); line-height: 1.45; margin: 0; }
+.mr-list .mr-item input[type="checkbox"] { width: auto; flex: none; margin: 3px 0 0; padding: 0; border: 0; box-shadow: none; accent-color: var(--hot); }
+.mr-list .mr-item.is-off { opacity: .55; }
+.mr-list .mr-item .adm { font-style: normal; color: var(--muted); font-size: .78rem; }

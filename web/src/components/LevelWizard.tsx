@@ -6,7 +6,10 @@ import { PeopleDB } from '@/data/people';
 import { resolveRecipients, suggestSendMode } from '@/lib/recipients';
 import { matchTemplates, TemplateMatch } from '@/lib/topics';
 import { editHeaders } from '@/lib/editkey';
+import { MeetSlot } from '@/lib/letters';
+import { slotLabel, createMeet } from '@/lib/meet';
 import RecipientPicker from './RecipientPicker';
+import MeetSlots from './MeetSlots';
 
 // LEVELEK TITKÁRNŐ (kimenő): diktált szándékból sablon-alapú, Áron-hangú VÉGLEGES levél,
 // feladat/esemény-szinkronban, opcionális Google Meet-tel. A kész levél a Posta küldés-
@@ -25,7 +28,6 @@ interface Props {
 }
 
 type Step = 'intent' | 'assemble' | 'final';
-interface Slot { day: string; start: string; end: string }
 
 const norm = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
@@ -51,12 +53,6 @@ function relevantContext(agenda: Agenda, intent: string, recipients: LetterRecip
   return cs.sort((a, b) => b.s - a.s).slice(0, 3).map(({ title, lines }) => ({ title, lines }));
 }
 
-const slotLabel = (s: Slot): string => {
-  if (!s.day) return '';
-  const d = `${s.day.slice(0, 4)}. ${Number(s.day.slice(5, 7))}. ${Number(s.day.slice(8, 10))}.`;
-  return `${d}${s.start ? ` ${s.start}` : ''}${s.end ? `-${s.end}` : ''}`;
-};
-
 export default function LevelWizard({ open, onClose, db, teacherNames, agenda, onSaveLetter, onSaveEvent }: Props) {
   const [mode, setMode] = useState<'voice' | 'write' | null>(null);
   const [step, setStep] = useState<Step>('intent');
@@ -70,7 +66,7 @@ export default function LevelWizard({ open, onClose, db, teacherNames, agenda, o
   // időpont-szervezés
   const [meetingOn, setMeetingOn] = useState(false);
   const [evTitle, setEvTitle] = useState('');
-  const [slots, setSlots] = useState<Slot[]>([{ day: '', start: '', end: '' }]);
+  const [slots, setSlots] = useState<MeetSlot[]>([{ day: '', start: '', end: '' }]);
   const [place, setPlace] = useState('');
   const [sendGoogleInvite, setSendGoogleInvite] = useState(false);
   const [meetLink, setMeetLink] = useState('');
@@ -129,11 +125,7 @@ export default function LevelWizard({ open, onClose, db, teacherNames, agenda, o
     if (m === 'voice') speak('Mondd el, mit szeretnél, kinek és miről írjak levelet.');
   };
 
-  const setSlot = (i: number, patch: Partial<Slot>) => setSlots((s) => s.map((x, j) => (j === i ? { ...x, ...patch } : x)));
-  const addSlot = () => setSlots((s) => (s.length >= 3 ? s : [...s, { day: '', start: '', end: '' }]));
-  const removeSlot = (i: number) => setSlots((s) => (s.length <= 1 ? s : s.filter((_, j) => j !== i)));
-
-  // ELŐZETES esemény + Meet: /api/meet create (tentative), majd az esemény az agendába
+  // ELŐZETES esemény + Meet: a közös createMeet (tentative), majd az esemény az agendába
   const createTentative = async () => {
     const filled = slots.filter((s) => s.day && s.start);
     if (!filled.length) { setMeetMsg('Adj meg legalább egy időpontot (nap + kezdés).'); return; }
@@ -141,36 +133,23 @@ export default function LevelWizard({ open, onClose, db, teacherNames, agenda, o
     const title = evTitle.trim() || intent.trim().split('\n')[0].slice(0, 60) || 'METU egyeztetés';
     setMeetBusy(true); setMeetMsg(null);
     const eid = eventId || `e-${Date.now().toString(36)}`;
-    let link = ''; let gid = '';
-    try {
-      const startIso = `${first.day}T${first.start}:00`;
-      const endIso = `${first.day}T${(first.end || first.start)}:00`;
-      const res = await fetch('/api/meet', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-        body: JSON.stringify({
-          action: 'create', summary: title, startIso, endIso,
-          location: place || undefined, attendees: recipients.map((r) => r.email),
-          sendInvite: sendGoogleInvite, tentative: true,
-          description: `METU Media Design egyeztetés. Javasolt időpontok:\n${filled.map(slotLabel).join('\n')}`,
-        }),
-      });
-      const j = await res.json() as { ok: boolean; unconfigured?: boolean; meetLink?: string; googleEventId?: string; error?: string };
-      if (j.unconfigured) setMeetMsg('A Google Meet még nincs beállítva - az esemény link nélkül jön létre, a link a beállítás után pótolható.');
-      else if (!j.ok) setMeetMsg(`Meet hiba: ${j.error ?? 'ismeretlen'} - az esemény link nélkül jön létre.`);
-      else { link = j.meetLink ?? ''; gid = j.googleEventId ?? ''; setMeetMsg(link ? 'Meet-link létrejött.' : 'Az esemény létrejött (link nélkül).'); }
-    } catch {
-      setMeetMsg('A Meet-szolgáltatás nem elérhető - az esemény link nélkül jön létre.');
-    }
+    const r = await createMeet({
+      title, slots, place: place || undefined,
+      attendees: recipients.map((x) => x.email), sendInvite: sendGoogleInvite, headers: editHeaders(),
+    });
+    if (r.unconfigured) setMeetMsg('A Google Meet még nincs beállítva - az esemény link nélkül jön létre, a link a beállítás után pótolható.');
+    else if (r.error) setMeetMsg(`Meet hiba: ${r.error} - az esemény link nélkül jön létre.`);
+    else setMeetMsg(r.link ? 'Meet-link létrejött.' : 'Az esemény létrejött (link nélkül).');
     // az app naptárába a tentative esemény (a link akkor is bekerül, ha van)
     const ev: AgendaEvent = {
       ...emptyEvent(), id: eid, title,
       when: `${fmtEventWhen(first.day, null, first.day.slice(0, 7), first.start)} (egyeztetés alatt)`,
       sort: first.day.slice(0, 7), day: first.day, place: place || null,
-      people: recipients.map((r) => r.name),
-      googleEventId: gid || null, meetLink: link || null, mstatus: 'tentative',
+      people: recipients.map((x) => x.name),
+      googleEventId: r.googleEventId || null, meetLink: r.link || null, mstatus: 'tentative',
     };
     onSaveEvent(ev);
-    setEventId(eid); setMeetLink(link); setGoogleEventId(gid);
+    setEventId(eid); setMeetLink(r.link); setGoogleEventId(r.googleEventId);
     setMeetBusy(false);
   };
 
@@ -307,19 +286,7 @@ export default function LevelWizard({ open, onClose, db, teacherNames, agenda, o
                       <div style={{ display: 'grid', gap: 8, padding: 10, border: `1px solid ${st.line}`, borderRadius: 10 }}>
                         <input value={evTitle} onChange={(e) => setEvTitle(e.target.value)} placeholder="Az esemény rövid címe (pl. Félévindító értekezlet)"
                           style={{ padding: 8, borderRadius: 8, border: `1px solid ${st.line}`, font: 'inherit', color: st.ink, background: 'var(--paper, #fff)' }} />
-                        {slots.map((s, i) => (
-                          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                            <span style={{ color: st.muted, fontSize: '.8rem', width: 60 }}>{i + 1}. javaslat</span>
-                            <input type="date" value={s.day} onChange={(e) => setSlot(i, { day: e.target.value })} style={{ font: 'inherit' }} />
-                            <input type="time" value={s.start} onChange={(e) => setSlot(i, { start: e.target.value })} style={{ font: 'inherit' }} />
-                            <span>-</span>
-                            <input type="time" value={s.end} onChange={(e) => setSlot(i, { end: e.target.value })} style={{ font: 'inherit' }} />
-                            {slots.length > 1 && <button type="button" className="btn" onClick={() => removeSlot(i)}>✕</button>}
-                          </div>
-                        ))}
-                        {slots.length < 3 && <button type="button" className="btn" style={{ justifySelf: 'start' }} onClick={addSlot}>+ Időpont-javaslat</button>}
-                        <input value={place} onChange={(e) => setPlace(e.target.value)} placeholder="Helyszín (pl. Infopark D, vagy online)"
-                          style={{ padding: 8, borderRadius: 8, border: `1px solid ${st.line}`, font: 'inherit', color: st.ink, background: 'var(--paper, #fff)' }} />
+                        <MeetSlots slots={slots} onSlots={setSlots} place={place} onPlace={setPlace} />
                         <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.85rem', color: st.muted }}>
                           <input type="checkbox" checked={sendGoogleInvite} onChange={(e) => setSendGoogleInvite(e.target.checked)} /> A Google is küldjön naptár-meghívót (.ics)
                         </label>

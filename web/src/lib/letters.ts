@@ -220,24 +220,26 @@ function taskFacts(t: AgendaTask): string {
 // ---- meeting-javaslat a levélben ----
 
 export type MeetingMode = 'online' | 'szemelyes' | 'hibrid';
+export interface MeetSlot { day: string; start?: string; end?: string } // day: ÉÉÉÉ-HH-NN, start/end: ÓÓ:PP
 export interface MeetingPlan {
   mode: MeetingMode;
-  date?: string; // ÉÉÉÉ-HH-NN
-  time?: string; // ÓÓ:PP
-  link?: string; // Meet-link; üresen hagyva a levélben kitöltendő hely marad
+  slots?: MeetSlot[]; // egy vagy több javasolt időpont; több esetén a levél felsorolja
+  link?: string;      // egy közös Meet-link; üresen hagyva a levélben kitöltendő hely marad
 }
 
 const HU_MONTHS = ['január', 'február', 'március', 'április', 'május', 'június', 'július', 'augusztus', 'szeptember', 'október', 'november', 'december'];
-const fmtMeetDate = (m: MeetingPlan): string | null => {
-  if (!m.date) return null;
-  const [y, mo, d] = m.date.split('-');
+const fmtSlot = (s: MeetSlot): string | null => {
+  if (!s?.day) return null;
+  const [y, mo, d] = s.day.split('-');
   const month = HU_MONTHS[parseInt(mo, 10) - 1] ?? mo;
-  return `${y}. ${month} ${parseInt(d, 10)}.${m.time ? ` ${m.time}` : ''}`;
+  const t = s.start ? ` ${s.start}${s.end && s.end !== s.start ? `-${s.end}` : ''}` : '';
+  return `${y}. ${month} ${parseInt(d, 10)}.${t}`;
 };
 
 function meetingBlock(m: MeetingPlan): string {
-  const dt = fmtMeetDate(m);
-  const tail = dt ? `: ${dt}` : '';
+  const fmts = (m.slots ?? []).map(fmtSlot).filter((x): x is string => !!x);
+  const single = fmts.length === 1 ? fmts[0] : null;
+  const tail = single ? `: ${single}` : '';
   const propose = m.mode === 'online'
     ? pickAvoid([
         `Online meetinget javasolnék hozzá${tail}.`,
@@ -255,6 +257,10 @@ function meetingBlock(m: MeetingPlan): string {
           `Az egyeztetés hibrid formában lesz, helyben és online is várunk${tail}.`,
         ], 'meet.hibrid');
   const lines = [propose];
+  if (fmts.length > 1) {
+    lines.push('Javasolt időpontok, kérlek jelezd, melyik felel meg:');
+    fmts.forEach((f) => lines.push(`- ${f}`));
+  }
   if (m.mode !== 'szemelyes') lines.push(`Link: ${noDash((m.link || '').trim())}`);
   return lines.join('\n');
 }

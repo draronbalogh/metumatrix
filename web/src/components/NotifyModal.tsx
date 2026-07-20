@@ -3,11 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AgendaEvent, AgendaTask, Letter, fmtDueHu } from '@/data/agenda';
 import { PeopleDB, PersonKind, KIND_LABEL, emailOf, buildFooter, buildRoster, formerTeacherNames, teacherStatusNames, studentOrganizerNames, studentStatusNames, studentCohorts, cohortNames, SIGNATURE_SEPARATOR } from '@/data/people';
-import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, LetterKind, MeetingMode, MeetingPlan } from '@/lib/letters';
+import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, LetterKind, MeetingMode, MeetingPlan, MeetSlot } from '@/lib/letters';
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
+import MeetSlots from './MeetSlots';
 import { ModalTabs, TabDef } from './AgendaModals';
 import { editHeaders } from '@/lib/editkey';
+import { createMeet } from '@/lib/meet';
 import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate, autoFill, fmtDay, paraphrase, normText, LINK_STOP } from '@/lib/topics';
 import type { ReplyDraft } from '@/data/agenda';
 
@@ -172,11 +174,12 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const [place, setPlace] = useState(target.event?.place ?? '');
   const [bodyDirty, setBodyDirty] = useState(false);
   const [selSteps, setSelSteps] = useState<string[]>([]); // a levélbe kerülő lépések (üres = nincs lista)
-  // meeting-javaslat a levélben: nincs / online / személyes / hibrid + időpont + link
+  // meeting-javaslat a levélben: nincs / online / személyes / hibrid + TÖBB javasolt időpont + link
   const [meetMode, setMeetMode] = useState<MeetingMode | 'nincs'>('nincs');
-  const [meetDate, setMeetDate] = useState('');
-  const [meetTime, setMeetTime] = useState('');
+  const [meetSlots, setMeetSlots] = useState<MeetSlot[]>([{ day: '', start: '', end: '' }]);
   const [meetLink, setMeetLink] = useState('');
+  const [meetBusy, setMeetBusy] = useState(false);
+  const [meetMsg, setMeetMsg] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>(() => [...new Set(target.names)]);
   const [adhoc, setAdhoc] = useState<string[]>([]); // egyedi email-címzettek (pl. a levél feladója)
   const [rq, setRq] = useState(''); // névszűrő a névsorhoz
@@ -404,7 +407,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
     const p = (placeOverride ?? place).trim();
     const ev = target.event ? { ...target.event, place: p || null } : target.event;
     const meet = meetOverride !== undefined ? meetOverride
-      : (meetMode === 'nincs' ? null : { mode: meetMode, date: meetDate, time: meetTime, link: meetLink });
+      : (meetMode === 'nincs' ? null : { mode: meetMode, slots: meetSlots, link: meetLink });
     const gen = buildLetter(k, { type: target.targetType, event: ev, task: target.task, source: src }, buildFooter(db, sigOverride ?? sigOn, linksOverride ?? linksOn), stepsOverride ?? selSteps, meet, audience, recipient);
     setSubject(gen.subject);
     setBody(gen.body);
@@ -413,9 +416,24 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   };
 
   // meeting-beállítás változása: ha a levél nincs kézzel átírva, azonnal újragenerálunk
-  const applyMeet = (mode: MeetingMode | 'nincs', date: string, time: string, link: string) => {
-    setMeetMode(mode); setMeetDate(date); setMeetTime(time); setMeetLink(link);
-    if (!bodyDirty) regenerate(kind, undefined, undefined, undefined, mode === 'nincs' ? null : { mode, date, time, link });
+  const regenMeet = (mode: MeetingMode | 'nincs', slots: MeetSlot[], link: string) => {
+    if (!bodyDirty) regenerate(kind, undefined, undefined, undefined, mode === 'nincs' ? null : { mode, slots, link });
+  };
+  const applyMeetMode = (mode: MeetingMode | 'nincs') => { setMeetMode(mode); regenMeet(mode, meetSlots, meetLink); };
+  const applyMeetSlots = (slots: MeetSlot[]) => { setMeetSlots(slots); regenMeet(meetMode, slots, meetLink); };
+  const applyMeetLink = (link: string) => { setMeetLink(link); regenMeet(meetMode, meetSlots, link); };
+  // EGY közös Meet-link a több javasolt időhöz (előzetes, egyeztetés alatti Google-esemény); a link a levélbe
+  const createMeetPosta = async () => {
+    if (meetSlots.every((s) => !s.day || !s.start)) { setMeetMsg('Adj meg legalább egy időpontot (nap + kezdés).'); return; }
+    setMeetBusy(true); setMeetMsg(null);
+    const r = await createMeet({
+      title: outSubject.trim() || 'METU egyeztetés', slots: meetSlots, place: place || undefined,
+      attendees: emails, sendInvite: false, headers: editHeaders(),
+    });
+    if (r.unconfigured) setMeetMsg('A Google Meet még nincs beállítva - a linket kézzel is beillesztheted (▶ Google Meet ↗).');
+    else if (r.error) setMeetMsg(`Meet hiba: ${r.error}`);
+    else { applyMeetLink(r.link); setMeetMsg(r.link ? '✓ Meet-link létrejött (a naptárban egyeztetés alatti eseményként).' : 'Létrejött (link nélkül).'); }
+    setMeetBusy(false);
   };
 
   // kézi szerkesztés védelme: felülírás előtt rákérdezünk
@@ -641,6 +659,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       subject: outSubject.trim(), body: bodyForSend, names: [...selected, ...adhoc],
       status: 'outbox', dir: 'out', recipients: recips,
       sendMode: recips.length === 1 ? 'personal' : 'bcc',
+      meetLink: meetLink || undefined,
     });
     setResult('✓ A levél a Posta „Kimenő" listájába került. Onnan a „Küldés most”-tal küldheted el (jó ékezet + logó).');
   };
@@ -907,23 +926,28 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             </div>
           )}
           <div className="field full">
-            <label>Meeting-javaslat a levélben
+            <label>Meeting-javaslat a levélben (több időpont is ajánlható)
               <a className="nm-bodytoggle nm-meetlink" href="https://meet.google.com/new" target="_blank" rel="noopener noreferrer"
                 title="Új Google Meet indítása új lapon - a létrejött linket másold be ide">▶ Google Meet ↗</a>
             </label>
             <div className="chipradio">
               {([['nincs', 'Nincs'], ['online', 'Online'], ['szemelyes', 'Személyes'], ['hibrid', 'Hibrid']] as const).map(([id, label]) => (
                 <button type="button" key={id} aria-pressed={meetMode === id} className={`crx c-green${meetMode === id ? ' is-on' : ''}`}
-                  onClick={() => applyMeet(id, meetDate, meetTime, meetLink)}>{label}</button>
+                  onClick={() => applyMeetMode(id)}>{label}</button>
               ))}
             </div>
             {meetMode !== 'nincs' && (
-              <div className="nm-meetrow">
-                <input type="date" value={meetDate} onChange={(e) => applyMeet(meetMode, e.target.value, meetTime, meetLink)} title="A meeting napja" />
-                <input type="time" value={meetTime} onChange={(e) => applyMeet(meetMode, meetDate, e.target.value, meetLink)} title="A meeting időpontja" />
+              <div style={{ display: 'grid', gap: 8, marginTop: 8 }}>
+                <MeetSlots slots={meetSlots} onSlots={applyMeetSlots}
+                  link={meetMode !== 'szemelyes' ? meetLink : undefined}
+                  onLink={meetMode !== 'szemelyes' ? applyMeetLink : undefined} />
                 {meetMode !== 'szemelyes' && (
-                  <input className="nm-meeturl" value={meetLink} placeholder="Meet-link (üresen hagyva a levélben kitöltendő hely marad)"
-                    onChange={(e) => applyMeet(meetMode, meetDate, meetTime, e.target.value)} />
+                  <div>
+                    <button type="button" className="btn btn--ink" disabled={meetBusy || !emails.length} onClick={createMeetPosta}>
+                      {meetBusy ? 'Létrehozás…' : '🔗 Meet-link készítése'}
+                    </button>
+                    {meetMsg && <p style={{ margin: '6px 0 0', fontSize: '.82rem', color: 'var(--muted)' }}>{meetMsg}</p>}
+                  </div>
                 )}
               </div>
             )}

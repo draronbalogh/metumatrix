@@ -227,10 +227,11 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
         method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
         body: JSON.stringify({ sendId: r.sel.slice(2) }),
       });
-      const j = await res.json() as { ok: boolean; sent?: boolean; comError?: boolean };
+      const j = await res.json() as { ok: boolean; sent?: boolean; marked?: boolean; comError?: boolean };
       if (j.comError) setPushMsg('⚠ A klasszikus Outlook nem elérhető COM-on. Nyisd meg (Go to classic Outlook), és próbáld újra.');
       else if (j.ok && j.sent) {
-        onState(r.sel, { status: 'replied', repliedAt: nowIso(), returned: null, thread: withOutEntry(r.src, 'elküldve (Küldés most)') }, 'Elküldve');
+        if (j.marked) onRefresh?.(); // a szerver már lezárta (mark-sent) - elég frissíteni
+        else onState(r.sel, { status: 'replied', repliedAt: nowIso(), returned: null, thread: withOutEntry(r.src, 'elküldve (Küldés most)') }, 'Elküldve');
         setPushMsg(`✓ Elküldve: ${r.src.name}.`);
       } else setPushMsg('⚠ A küldés nem sikerült (nincs piszkozat vagy eredeti levél?). Nézd meg az Outlookban.');
     } catch {
@@ -720,9 +721,9 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     setOutBusy(`s-${l.id}`); setPushMsg(`Küldés folyamatban: ${recipSummary(l)}…`);
     try {
       const res = await fetch('/api/outlook-drafts', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify({ outboundSendId: l.id }) });
-      const j = await res.json() as { ok: boolean; sent?: boolean; comError?: boolean };
+      const j = await res.json() as { ok: boolean; sent?: boolean; marked?: boolean; comError?: boolean };
       if (j.comError) setPushMsg('⚠ A klasszikus Outlook nem elérhető COM-on. Nyisd meg (Go to classic Outlook), és próbáld újra.');
-      else if (j.ok && j.sent) { onSaveLetter?.({ ...l, status: 'sent' }); setPushMsg(`✓ Elküldve: ${recipSummary(l)}.`); }
+      else if (j.ok && j.sent) { if (j.marked) onRefresh?.(); else onSaveLetter?.({ ...l, status: 'sent' }); setPushMsg(`✓ Elküldve: ${recipSummary(l)}.`); }
       else setPushMsg('⚠ A küldés nem sikerült (nincs piszkozat / címzett?). Nézd meg az Outlookot.');
     } catch { setPushMsg('⚠ Nem sikerült elindítani a küldést (fut a dev-szerver és a klasszikus Outlook?).'); }
     finally { setOutBusy(null); }

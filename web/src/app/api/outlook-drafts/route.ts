@@ -122,7 +122,8 @@ export async function POST(req: Request) {
     } catch { /* a napló nem kritikus */ }
     const sent = /SENT=1/.test(out);
     const comError = /COM HIBA/i.test(out);
-    return NextResponse.json({ ok: sent && !comError && code === 0, sent, comError, output: out });
+    const marked = /MARKED=1/.test(out); // a ps1 már a szerveren lezárta a kártyát/levelet
+    return NextResponse.json({ ok: sent && !comError && code === 0, sent, marked, comError, output: out });
   }
 
   // KIMENŐ (Titkárnő) PISZKOZAT-ÁG: egy kezdeményezett levél -> Outlook Piszkozatok
@@ -144,7 +145,8 @@ export async function POST(req: Request) {
     try { await fs.mkdir(LOG.replace(/[\\/][^\\/]+$/, ''), { recursive: true }); await fs.appendFile(LOG, `\n==== ${new Date().toISOString()} (OUTBOUND-SEND ${outboundSendId}, exit=${code}) ====\n${out}\n`, 'utf8'); } catch { /* ignore */ }
     const sent = /SENT=1/.test(out);
     const comError = /COM HIBA/i.test(out);
-    return NextResponse.json({ ok: sent && !comError && code === 0, sent, comError, output: out });
+    const marked = /MARKED=1/.test(out); // a ps1 már a szerveren lezárta a kártyát/levelet
+    return NextResponse.json({ ok: sent && !comError && code === 0, sent, marked, comError, output: out });
   }
 
   // KIMENŐ MIND PISZKOZAT-ÁG: az összes kimenő levél -> Piszkozatok.

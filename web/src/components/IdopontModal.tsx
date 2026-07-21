@@ -156,7 +156,7 @@ export default function IdopontModal({ seed, db, teacherNames, tasks, onLinkTask
     <div className="ovl" onMouseDown={(e) => { if (e.target === e.currentTarget && !busy) onClose(); }}>
       <div className="modal modal--tabs">
         <h3>📅 Időpont küldése</h3>
-        <div className="f" style={{ display: 'grid', gap: 10 }}>
+        <form className="f" onSubmit={(e) => e.preventDefault()}>
           <div className="field full">
             <label>Miről egyeztetnétek? - ez lesz az esemény és a levél témája (diktálhatod is)</label>
             <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="pl. BA3 féléves tematika átbeszélése" />
@@ -195,8 +195,8 @@ export default function IdopontModal({ seed, db, teacherNames, tasks, onLinkTask
             <label>Mikor? - több javaslatot is adhatsz, a naptárban halvány csíkként jelennek meg a visszaigazolásig</label>
             <MeetSlots slots={slots} onSlots={setSlots} />
           </div>
-          {msg && <p style={{ margin: 0, fontSize: '.85rem', color: 'var(--muted)' }}>{msg}</p>}
-        </div>
+          {msg && <div className="field full"><p style={{ margin: 0, fontSize: '.88rem', color: msg.startsWith('⚠') ? 'var(--hot)' : 'var(--muted)' }}>{msg}</p></div>}
+        </form>
         <div className="mfoot">
           <span style={{ fontSize: '.8rem', color: 'var(--muted)' }}>A Mehet után: levél a Posta Kimenőbe + naptár-esemény + feladatkártya{mode !== 'szemelyes' ? ' + Meet-link' : ''} - a küldés a Postából a te kezedben marad.</span>
           <span className="sp" />

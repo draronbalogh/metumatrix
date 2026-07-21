@@ -89,7 +89,8 @@ export async function POST(req: Request) {
     const sentIds = [...out.matchAll(/SENT_ID=(\S+)/g)].map((m) => m[1]);
     const mm = out.match(/SENTALL=(\d+)\s+FAILED=(\d+)/);
     const comError = /COM HIBA/i.test(out);
-    return NextResponse.json({ ok: !comError && code === 0, sentAll: true, sent: mm ? Number(mm[1]) : sentIds.length, failed: mm ? Number(mm[2]) : 0, sentIds, comError, output: out });
+    const marked = /SENDALL_MARKED=1/.test(out); // a ps1 már a szerveren replied-re tette őket
+    return NextResponse.json({ ok: !comError && code === 0, sentAll: true, sent: mm ? Number(mm[1]) : sentIds.length, failed: mm ? Number(mm[2]) : 0, sentIds, marked, comError, output: out });
   }
 
   // KÜLDÉS-ÁG: egy konkrét kártya elküldése (a UI „Küldés most" gombja). Csak whitelistelt

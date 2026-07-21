@@ -241,7 +241,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   const [sendAllBusy, setSendAllBusy] = useState(false);
   const sendAllNow = async () => {
     if (sendAllBusy) return;
-    const n = lanes.drafted.length;
+    const n = plainDrafts.length; // csak a NEM ütemezettek - a hajnalra időzítettet a hajnali feladat küldi
     if (n === 0) return;
     if (!window.confirm(`Biztosan ELKÜLDÖD MOST mind a ${n} kész választ az Outlookon át?\n\nEz azonnal elküldi mindet, és nem vonható vissza.`)) return;
     setSendAllBusy(true); setPushMsg(`Mind küldése folyamatban (${n})…`);
@@ -250,11 +250,17 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
         method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
         body: JSON.stringify({ sendAll: true }),
       });
-      const j = await res.json() as { ok: boolean; sent?: number; failed?: number; sentIds?: string[]; comError?: boolean };
+      const j = await res.json() as { ok: boolean; sent?: number; failed?: number; sentIds?: string[]; marked?: boolean; comError?: boolean };
       if (j.comError) { setPushMsg('⚠ A klasszikus Outlook nem elérhető COM-on. Nyisd meg (Go to classic Outlook), és próbáld újra.'); return; }
       const ids = j.sentIds ?? [];
-      for (const r of lanes.drafted) {
-        if (ids.includes(r.sel.slice(2))) onState(r.sel, { status: 'replied', repliedAt: nowIso(), returned: null, thread: withOutEntry(r.src, 'elküldve (Mind küldése)') }, 'Elküldve');
+      if (j.marked) {
+        // a küldő script már a SZERVEREN replied-re tette őket (mark-sent) - elég frissíteni,
+        // így akkor is lezáródnak, ha ez a lap közben elaludt volna
+        onRefresh?.();
+      } else {
+        for (const r of lanes.drafted) {
+          if (ids.includes(r.sel.slice(2))) onState(r.sel, { status: 'replied', repliedAt: nowIso(), returned: null, thread: withOutEntry(r.src, 'elküldve (Mind küldése)') }, 'Elküldve');
+        }
       }
       setPushMsg(`✓ Elküldve: ${j.sent ?? ids.length}${j.failed ? `, ${j.failed} sikertelen (nézd meg az Outlookban)` : ''}.`);
     } catch {

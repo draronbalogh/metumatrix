@@ -2014,6 +2014,8 @@ export default function CurriculumApp() {
 
       {idopont && (
         <IdopontModal seed={idopont} db={peopleDB} teacherNames={teacherNames}
+          tasks={agenda.tasks.map((t) => ({ id: t.id, title: t.title, status: t.status }))}
+          onLinkTaskEvent={linkTaskEvent}
           onSaveEvent={saveEvent} onSaveTask={saveTask} onSaveLetter={saveLetter} onBusy={setTitkarBusy}
           onClose={() => setIdopont(null)}
           onDone={(jump) => { setIdopont(null); if (jump) { setPostaFocus(null); setView('posta'); } }} />

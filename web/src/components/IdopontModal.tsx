@@ -5,8 +5,9 @@
 // (több javaslatnál halvány "függő" csíkok), kapcsolt feladatkártya (ha nincs, létrejön),
 // Titkárnő-levél a Posta Kimenő listájába. CSUPA meglévő alkatrészből: RecipientPicker,
 // MeetSlots, lib/meet (createMeet/meetingText/slotLabel), /api/compose, saveEvent/saveLetter.
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AgendaEvent, AgendaTask, Letter, emptyEvent, emptyTask, fmtEventWhen } from '@/data/agenda';
+import { normTitle } from '@/lib/normalize';
 import { PeopleDB } from '@/data/people';
 import { MeetSlot, MeetingMode } from '@/lib/letters';
 import { createMeet, meetingText, slotLabel } from '@/lib/meet';
@@ -27,6 +28,8 @@ interface Props {
   seed: IdopontSeed;
   db: PeopleDB;
   teacherNames: string[];
+  tasks: Pick<AgendaTask, 'id' | 'title' | 'status'>[]; // meglévő kártyák a téma-egyeztetéshez (egy folyamat = egy kártya!)
+  onLinkTaskEvent: (taskId: string, eventId: string | null) => void;
   onSaveEvent: (e: AgendaEvent) => void;
   onSaveTask: (t: AgendaTask) => void;
   onSaveLetter: (l: Letter) => void;
@@ -35,8 +38,26 @@ interface Props {
   onClose: () => void;
 }
 
-export default function IdopontModal({ seed, db, teacherNames, onSaveEvent, onSaveTask, onSaveLetter, onBusy, onDone, onClose }: Props) {
+export default function IdopontModal({ seed, db, teacherNames, tasks, onLinkTaskEvent, onSaveEvent, onSaveTask, onSaveLetter, onBusy, onDone, onClose }: Props) {
   const [topic, setTopic] = useState(seed.topic ?? '');
+  // EGY FOLYAMAT = EGY KÁRTYA: a téma alapján élőben keressük a meglévő nyitott kártyát;
+  // a legjobb találat automatikusan kapcsolódik (láthatóan), új kártya csak enélkül készül
+  const [linkTask, setLinkTask] = useState<string | null>(seed.taskId ?? null);
+  const touchedLink = useRef(false);
+  const matches = useMemo(() => {
+    if (seed.taskId || normTitle(topic).length < 4) return [];
+    const words = normTitle(topic).split(/\s+/).filter((w) => w.length >= 3);
+    if (!words.length) return [];
+    return tasks.filter((t) => t.status !== 'done')
+      .map((t) => ({ t, sc: words.filter((w) => normTitle(t.title).includes(w)).length }))
+      .filter((x) => x.sc > 0)
+      .sort((a, b) => b.sc - a.sc)
+      .slice(0, 3);
+  }, [topic, seed.taskId, tasks]);
+  useEffect(() => {
+    if (seed.taskId || touchedLink.current) return;
+    setLinkTask(matches[0]?.t.id ?? null);
+  }, [matches, seed.taskId]);
   const [selected, setSelected] = useState<string[]>(seed.names ?? []);
   const [adhoc, setAdhoc] = useState<string[]>(seed.emails ?? []);
   const [mode, setMode] = useState<MeetingMode>('online');
@@ -84,8 +105,12 @@ export default function IdopontModal({ seed, db, teacherNames, onSaveEvent, onSa
         meetSlots: filled.length > 1 ? filled.map((s) => ({ day: s.day, start: s.start || null, end: s.end || null })) : null,
       };
       onSaveEvent(ev);
-      // 3) feladatkártya: meglévőhöz kapcsolás, különben ÚJ kártya az egyeztetésnek
-      if (!seed.taskId) {
+      // 3) feladatkártya: MEGLÉVŐHÖZ kapcsolás (kártyáról nyitva vagy téma-találatnál),
+      // új kártya CSAK akkor, ha az ügynek tényleg nincs még kártyája
+      const targetTask = seed.taskId ?? linkTask;
+      if (targetTask) {
+        onLinkTaskEvent(targetTask, ev.id);
+      } else {
         onSaveTask({
           ...emptyTask(), title: topic.trim(), eventId: ev.id,
           dueDate: first.day, people: [...selected],
@@ -135,6 +160,17 @@ export default function IdopontModal({ seed, db, teacherNames, onSaveEvent, onSa
           <div className="field full">
             <label>Miről egyeztetnétek? - ez lesz az esemény és a levél témája (diktálhatod is)</label>
             <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="pl. BA3 féléves tematika átbeszélése" />
+            {!seed.taskId && matches.length > 0 && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}>
+                <span style={{ fontSize: '.78rem', fontWeight: 700, color: 'var(--ink-2)' }}>Meglévő kártya ehhez az ügyhöz:</span>
+                {matches.map(({ t }) => (
+                  <button key={t.id} type="button" className={`chip${linkTask === t.id ? ' is-on' : ''}`}
+                    title={linkTask === t.id ? 'Ehhez a kártyához kapcsolódik - kattints a leválasztáshoz' : 'Ehhez a meglévő kártyához kapcsolom (nem készül új)'}
+                    onClick={() => { touchedLink.current = true; setLinkTask((v) => (v === t.id ? null : t.id)); }}>▤ {t.title}</button>
+                ))}
+                <span style={{ fontSize: '.78rem', color: 'var(--muted)' }}>{linkTask ? 'ehhez kapcsolom, NEM készül új kártya' : 'nincs kijelölve: ÚJ kártya készül'}</span>
+              </div>
+            )}
           </div>
           <div className="field full">
             <label>Kinek?</label>

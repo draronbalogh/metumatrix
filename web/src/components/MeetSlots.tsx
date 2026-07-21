@@ -26,7 +26,7 @@ export default function MeetSlots({ slots, onSlots, place = '', onPlace, link = 
   return (
     <div style={{ display: 'grid', gap: 8 }}>
       {slots.map((s, i) => (
-        <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div key={i} className="ms-row" style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
           <span style={{ color: 'var(--muted)', fontSize: '.8rem', width: 62 }}>{i + 1}. időpont</span>
           <input type="date" value={s.day} onChange={(e) => setSlot(i, { day: e.target.value })} style={{ font: 'inherit' }} />
           <input type="time" value={s.start ?? ''} onChange={(e) => setSlot(i, { start: e.target.value })} style={{ font: 'inherit' }} title="Kezdés" />

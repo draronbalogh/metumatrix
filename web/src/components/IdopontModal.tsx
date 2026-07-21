@@ -154,7 +154,7 @@ export default function IdopontModal({ seed, db, teacherNames, tasks, onLinkTask
 
   return (
     <div className="ovl" onMouseDown={(e) => { if (e.target === e.currentTarget && !busy) onClose(); }}>
-      <div className="modal modal--tabs">
+      <div className="modal modal--idopont">
         <h3>📅 Időpont küldése</h3>
         <form className="f" onSubmit={(e) => e.preventDefault()}>
           <div className="field full">
@@ -196,6 +196,9 @@ export default function IdopontModal({ seed, db, teacherNames, tasks, onLinkTask
             <MeetSlots slots={slots} onSlots={setSlots} />
           </div>
           {msg && <div className="field full"><p style={{ margin: 0, fontSize: '.88rem', color: msg.startsWith('⚠') ? 'var(--hot)' : 'var(--muted)' }}>{msg}</p></div>}
+          <div className="field full">
+            <button type="button" className="btn btn--ink ip-go" disabled={busy} onClick={() => { void go(); }}>{busy ? '⏳ Készül…' : '📅 Mehet - levél + naptár + kártya'}</button>
+          </div>
         </form>
         <div className="mfoot">
           <span style={{ fontSize: '.8rem', color: 'var(--muted)' }}>A Mehet után: levél a Posta Kimenőbe + naptár-esemény + feladatkártya{mode !== 'szemelyes' ? ' + Meet-link' : ''} - a küldés a Postából a te kezedben marad.</span>

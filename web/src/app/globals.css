@@ -657,6 +657,17 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 
 /* ---- Feladatok + Események nézetek ---- */
 .cat-block-head .ag-add { margin-left: auto; align-self: center; flex: none; }
+/* Meet-időpont sor KOMPAKTAN: nap + kezdés + vége EGY sorban (a globális
+   teljes-szélességű input-szabályt itt felülírjuk) - minden slot-szerkesztőre érvényes */
+.ms-row input[type="date"] { width: 150px !important; flex: none; }
+.ms-row input[type="time"] { width: 94px !important; flex: none; }
+/* 📅 Időpont-modál: fül nélküli, a gombsor mindig elérhető (kijelző-biztonsági ráhagyással) */
+.modal--idopont { height: 100dvh; }
+.modal--idopont .mfoot { padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+.ip-go { display: none; }
+@media (max-width: 720px) {
+  .ip-go { display: block; width: 100%; padding: 12px; font-size: 1rem; }
+}
 /* Posta: Outlook-őrszem figyelmeztető sáv (a klasszikus Outlook nem fut) */
 .po-oldown { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; border: 1px solid var(--hot); border-left-width: 4px; border-radius: 8px; padding: 9px 12px; margin: 0 0 14px; font-size: .88rem; background: color-mix(in srgb, var(--hot) 6%, transparent); }
 /* függő (még nem véglegesített) Meet-időpontjavaslat a naptárban: halvány, csíkozott */

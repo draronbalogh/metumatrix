@@ -184,7 +184,15 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const [meetMsg, setMeetMsg] = useState<string | null>(null);
   const meetEvIdRef = useRef(''); // a saját naptárba tett tükör-esemény id-je (ismételt gombnyomás nem duplikál)
   const [selected, setSelected] = useState<string[]>(() => [...new Set(target.names)]);
-  const [adhoc, setAdhoc] = useState<string[]>([]); // egyedi email-címzettek (pl. a levél feladója)
+  // egyedi email-címzettek - ALAPBÓL a kártya levelezőpartnere (a feladó + a cc-k):
+  // akivel eddig leveleztél az ügyben, az legyen kiválasztva, a többit hozzáadod
+  const [adhoc, setAdhoc] = useState<string[]>(() => {
+    const s0 = target.source;
+    const base: string[] = [];
+    if (s0?.email) base.push(s0.email);
+    (s0?.cc ?? []).forEach((c) => { if (c && !base.includes(c)) base.push(c); });
+    return base;
+  });
   const [rq, setRq] = useState(''); // névszűrő a névsorhoz
   // a levél feladója: a kártyáról jön, de itt helyben is megadható (vissza is mentjük a kártyára)
   const [src, setSrc] = useState(target.source ?? null);
@@ -1199,24 +1207,25 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
           )}
           {result && <div aria-live="polite" className={`nm-result${result.startsWith('✓') ? ' ok' : ' err'}`}>{result}</div>}
         </div>
-        <div className="mfoot">
-          <button className="btn" onClick={saveLetter} disabled={!subject.trim()}>💾 Levél mentése</button>
-          <div style={{ flexBasis: '100%', display: 'flex', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-            <textarea value={tkIntent} onChange={(e) => setTkIntent(e.target.value)} rows={2}
-              placeholder="🗣 Mit szeretnél? (kulcsszavakban - diktálhatod is; a Titkárnő ezt dolgozza bele a sablonba)"
-              style={{ flex: '1 1 320px', font: 'inherit', padding: '7px 10px', borderRadius: 8, border: '1px solid var(--line)', resize: 'vertical' }} />
-          </div>
+        {/* 🗣 TITKÁRNŐ-SÁV: külön, teljes szélességű blokk a gombsor FELETT - mobilon is
+            elérhető, nem nyomódik össze a gombok közé */}
+        <div className="nm-titkar">
+          <textarea value={tkIntent} onChange={(e) => setTkIntent(e.target.value)} rows={2}
+            placeholder="🗣 Mit szeretnél? (kulcsszavakban - diktálhatod is; a Titkárnő ezt dolgozza bele a sablonba)" />
           {tkQ && (
-            <div style={{ flexBasis: '100%', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <span style={{ fontWeight: 700 }}>🗣 {tkQ}</span>
-              <input value={tkA} onChange={(e) => setTkA(e.target.value)} style={{ flex: '1 1 200px', font: 'inherit', padding: '6px 9px', borderRadius: 8, border: '1px solid var(--line)' }}
+            <div className="nm-titkar-q">
+              <span className="q">🗣 {tkQ}</span>
+              <input value={tkA} onChange={(e) => setTkA(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void titkarno(tkA); } }} placeholder="a válaszod a Titkárnőnek…" />
               <button type="button" className="btn btn--ink" disabled={tkBusy} onClick={() => { void titkarno(tkA); }}>Válasz</button>
               <button type="button" className="btn" disabled={tkBusy} onClick={() => { void titkarno(null); }} title="A kérdést kihagyom, fogalmazza meg enélkül">Kihagyom</button>
             </div>
           )}
-          <button className="btn" disabled={tkBusy} onClick={() => { void titkarno(); }}
+          <button className="btn btn--ink nm-titkar-go" disabled={tkBusy} onClick={() => { void titkarno(); }}
             title="A Titkárnő a sablon-vázlatból kész levelet fogalmaz (ha kritikus adat hiányzik, egy kérdést feltesz), és a levelet magától a Posta Kimenő listájába teszi - a küldés ott is a te kezedben marad">{tkBusy ? '⏳ Titkárnő fogalmaz…' : '🗣 Titkárnő a Postába'}</button>
+        </div>
+        <div className="mfoot">
+          <button className="btn" onClick={saveLetter} disabled={!subject.trim()}>💾 Levél mentése</button>
           <button className="btn btn--ink" onClick={() => sendToOutbox()}
             title="A levél a Posta „Kimenő” listájába kerül; onnan a „Küldés most”-tal küldöd el (jó ékezet + logó). Ha hiányzik címzett vagy tárgy, itt írja ki, mi kell még.">✉ Küldésre a Postába ({emails.length})</button>
           <span className="sp" />

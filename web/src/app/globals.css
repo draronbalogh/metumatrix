@@ -675,6 +675,17 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 @media (max-width: 720px) {
   .cat-block-head .ag-actions { width: 100%; margin-left: 0; }
 }
+/* 🗣 Titkárnő-sáv a postázó gombsora FELETT: saját, teljes szélességű blokk,
+   mobilon sem nyomódik a gombok közé */
+.nm-titkar { display: grid; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--brand) 4%, transparent); }
+.nm-titkar textarea { width: 100%; font: inherit; padding: 8px 11px; border-radius: 8px; border: 1px solid var(--line); resize: vertical; background: var(--card); color: var(--ink); }
+.nm-titkar-q { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.nm-titkar-q .q { font-weight: 700; }
+.nm-titkar-q input { flex: 1 1 180px; font: inherit; padding: 6px 9px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+.nm-titkar-go { justify-self: end; }
+@media (max-width: 720px) {
+  .nm-titkar-go { justify-self: stretch; }
+}
 /* mobil lebegő + gomb (Feladatok/Események): a fejléc-gomb kicsi és lecsúszhat - ez mindig kéznél van;
    a mentés-dokk FAB-ja fölé kerül (az bottom 14px-en áll) */
 .ag-fab { display: none; }

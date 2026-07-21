@@ -187,10 +187,10 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   // egyedi email-címzettek - ALAPBÓL a kártya levelezőpartnere (a feladó + a cc-k):
   // akivel eddig leveleztél az ügyben, az legyen kiválasztva, a többit hozzáadod
   const [adhoc, setAdhoc] = useState<string[]>(() => {
-    const s0 = target.source;
+    const s0 = target.source as { email?: string | null; cc?: string[] | null } | null;
     const base: string[] = [];
     if (s0?.email) base.push(s0.email);
-    (s0?.cc ?? []).forEach((c) => { if (c && !base.includes(c)) base.push(c); });
+    (s0?.cc ?? []).forEach((c: string) => { if (c && !base.includes(c)) base.push(c); });
     return base;
   });
   const [rq, setRq] = useState(''); // névszűrő a névsorhoz

@@ -657,6 +657,8 @@ html[data-theme='dark'] .react-flow__controls-button path { fill: var(--ink); }
 
 /* ---- Feladatok + Események nézetek ---- */
 .cat-block-head .ag-add { margin-left: auto; align-self: center; flex: none; }
+/* Posta: Outlook-őrszem figyelmeztető sáv (a klasszikus Outlook nem fut) */
+.po-oldown { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; border: 1px solid var(--hot); border-left-width: 4px; border-radius: 8px; padding: 9px 12px; margin: 0 0 14px; font-size: .88rem; background: color-mix(in srgb, var(--hot) 6%, transparent); }
 /* függő (még nem véglegesített) Meet-időpontjavaslat a naptárban: halvány, csíkozott */
 .cal-bar.pending { opacity: .45; background-image: repeating-linear-gradient(45deg, transparent 0 3px, rgba(255, 255, 255, .55) 3px 6px); }
 /* slot-véglegesítő chipsor */

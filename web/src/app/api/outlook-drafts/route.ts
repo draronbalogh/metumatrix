@@ -19,6 +19,17 @@ const runPs = (extra: string[]): Promise<{ out: string; code: number }> => new P
     (err, stdout, stderr) => resolve({ out: `${stdout || ''}${stderr ? `\n${stderr}` : ''}`.trim(), code: err ? (typeof (err as { code?: number }).code === 'number' ? (err as { code: number }).code : 1) : 0 }));
 });
 
+// GET: gyors állapot-ellenőrzés COM nélkül - fut-e a klasszikus Outlook a gépen.
+// A Posta betöltéskor hívja, és figyelmeztető sávot mutat, ha nem fut.
+export async function GET(req: Request) {
+  if (!canWrite(req)) return writeDenied();
+  const running = await new Promise<boolean>((resolve) => {
+    execFile('tasklist', ['/FI', 'IMAGENAME eq OUTLOOK.EXE', '/FO', 'CSV', '/NH'], { windowsHide: true, timeout: 15000 },
+      (e, so) => resolve(/OUTLOOK\.EXE/i.test(String(so || ''))));
+  });
+  return NextResponse.json({ ok: true, outlookRunning: running });
+}
+
 export async function POST(req: Request) {
   if (!canWrite(req)) return writeDenied();
   const dry = new URL(req.url).searchParams.get('dry') === '1';
@@ -33,7 +44,14 @@ export async function POST(req: Request) {
   let outboundSendId: string | null = null;   // egy Titkárnő-levél azonnali küldése
   let outboundAll = false;                     // az összes kimenő levél piszkozata
   try {
-    const b = await req.json() as { sendId?: unknown; sendAll?: unknown; draftId?: unknown; testDefer?: unknown; checkSent?: unknown; outboundId?: unknown; outboundSendId?: unknown; outboundAll?: unknown };
+    const b = await req.json() as { sendId?: unknown; sendAll?: unknown; draftId?: unknown; testDefer?: unknown; checkSent?: unknown; outboundId?: unknown; outboundSendId?: unknown; outboundAll?: unknown; startOutlook?: unknown };
+    // kézi Outlook-indítás a Posta figyelmeztető sávjából (nem-emelt szinten, COM nélkül)
+    if (b?.startOutlook === true) {
+      await new Promise<void>((resolve) => {
+        execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', 'Start-Process outlook.exe -WindowStyle Minimized'], { windowsHide: true, timeout: 20000 }, () => resolve());
+      });
+      return NextResponse.json({ ok: true, started: true });
+    }
     if (typeof b?.sendId === 'string' && b.sendId.trim()) sendId = b.sendId.trim();
     if (b?.sendAll === true) sendAll = true;
     if (typeof b?.draftId === 'string' && b.draftId.trim()) draftId = b.draftId.trim();

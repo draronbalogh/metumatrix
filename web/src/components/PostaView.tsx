@@ -239,6 +239,30 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   };
   // MIND küldése egyben (megerősítéssel): minden kész választ elküld, a sikeres kártyákat lezárja
   const [sendAllBusy, setSendAllBusy] = useState(false);
+  // OUTLOOK-ŐRSZEM: betöltéskor megnézzük, fut-e a klasszikus Outlook a gépen; ha nem,
+  // figyelmeztető sáv + egykattintásos indítás (a küldő script amúgy is auto-indít)
+  const [olDown, setOlDown] = useState(false);
+  const [olStarting, setOlStarting] = useState(false);
+  useEffect(() => {
+    let stop = false;
+    void fetch('/api/outlook-drafts', { headers: editHeaders() })
+      .then((r) => r.json())
+      .then((j: { ok?: boolean; outlookRunning?: boolean }) => { if (!stop && j.ok) setOlDown(j.outlookRunning === false); })
+      .catch(() => { /* a jelzősáv nem kritikus */ });
+    return () => { stop = true; };
+  }, []);
+  const startOutlook = async () => {
+    setOlStarting(true);
+    try {
+      await fetch('/api/outlook-drafts', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify({ startOutlook: true }) });
+      for (let i = 0; i < 12; i++) {
+        await new Promise((r) => setTimeout(r, 5000));
+        const j = await fetch('/api/outlook-drafts', { headers: editHeaders() }).then((r) => r.json()) as { outlookRunning?: boolean };
+        if (j.outlookRunning) { setOlDown(false); break; }
+      }
+    } catch { /* marad a sáv */ }
+    finally { setOlStarting(false); }
+  };
   const sendAllNow = async () => {
     if (sendAllBusy) return;
     const n = plainDrafts.length; // csak a NEM ütemezettek - a hajnalra időzítettet a hajnali feladat küldi
@@ -1080,6 +1104,13 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   return (
     <main className="catalog postav">
       <PageHead title="Posta" sub="Válaszra váró bejövő levelek · a választerveket az éjszakai/napközbeni szinkron írja elő" />
+      {olDown && (
+        <div className="po-oldown">
+          ⚠ A klasszikus Outlook most NEM fut az asztali gépen - küldeni és piszkozatot készíteni csak vele lehet.
+          A küldés-gombok megnyomásakor a rendszer magától megpróbálja elindítani, de kézzel is indíthatod:
+          <button type="button" className="btn btn--ink" disabled={olStarting} onClick={() => { void startOutlook(); }}>{olStarting ? '⏳ Indítás…' : '▶ Outlook indítása'}</button>
+        </div>
+      )}
       {/* brífing-sáv: sávonkénti darabszámok + a két munka-mód */}
       <div className="po-brief">
         <span className="pill">{pendingAll.length} válaszra vár</span>

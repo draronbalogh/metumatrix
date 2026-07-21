@@ -1794,7 +1794,7 @@ export default function CurriculumApp() {
 
         {/* App-szintű „Titkárnő fogalmaz" jelző: nézetváltáskor/wizard-záráskor is látszik */}
         {titkarBusy && (
-          <div role="status" aria-live="polite" style={{ position: 'fixed', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: 'var(--ink)', color: 'var(--paper, #fff)', padding: '7px 16px', borderRadius: 22, fontSize: '.9rem', fontWeight: 600, boxShadow: '0 3px 12px rgba(0,0,0,.28)', maxWidth: '92vw' }}>
+          <div role="status" aria-live="polite" style={{ position: 'fixed', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: 'var(--ink)', color: 'var(--paper, #fff)', padding: '7px 16px', borderRadius: 12, fontSize: '.9rem', fontWeight: 600, boxShadow: '0 3px 12px rgba(0,0,0,.28)', maxWidth: '92vw', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             ⏳ {titkarBusy}
           </div>
         )}

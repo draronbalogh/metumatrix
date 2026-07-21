@@ -25,8 +25,10 @@ export default function CatalogView({ data, filter, view, onDetails, onEdit, onA
   const [sem, setSem] = useState(0);
   const matches = (x: Course) => {
     if (filter.q) {
-      const s = filter.q.toLowerCase();
-      if (!(x.name.toLowerCase().includes(s) || (x.specialization || '').toLowerCase().includes(s) || (x.instructors || '').toLowerCase().includes(s) || catList(x).some((k) => k.includes(s)) || x.keywords.some((k) => k.toLowerCase().includes(s)) || x.software.some((k) => k.toLowerCase().includes(s)))) return false;
+      // vesszővel elválasztva TÖBB keresőszó is adható (pl. "Kaiser, Berkes") - bármelyik találata elég
+      const terms = filter.q.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean);
+      const hit = (s: string) => x.name.toLowerCase().includes(s) || (x.specialization || '').toLowerCase().includes(s) || (x.instructors || '').toLowerCase().includes(s) || catList(x).some((k) => k.includes(s)) || x.keywords.some((k) => k.toLowerCase().includes(s)) || x.software.some((k) => k.toLowerCase().includes(s));
+      if (terms.length && !terms.some(hit)) return false;
     }
     if (filter.spec && specShort(x.specialization) !== filter.spec) return false;
     if (filter.ctype && x.courseType !== filter.ctype) return false;

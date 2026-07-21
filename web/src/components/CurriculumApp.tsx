@@ -1586,14 +1586,14 @@ export default function CurriculumApp() {
             <button className={`editonly${view === 'posta' ? ' is-on' : ''}`} title="Bejövő levelek: válaszra váró feladók, előre megírt választervekkel"
               onClick={() => { if (!canEdit) return; setView('posta'); }}>Posta{postaCount > 0 ? ` · ${postaCount}` : ''}</button>
             <button className={`editonly${view === 'topics' ? ' is-on' : ''}`} onClick={() => { if (!canEdit) return; setView('topics'); }}>Levelek</button>
-            <button className="editonly" title="Időpont küldése EGY űrlapon: kinek + miről + mikor + hol - a rendszer intézi a levelet (Posta), a naptárat, a feladatkártyát és a Meet-linket"
-              onClick={() => { if (canEdit) setIdopont({}); }}>📅 Időpont</button>
             <button className={`editonly${view === 'people' ? ' is-on' : ''}`} title="Elérhetőségek: oktatók, hallgatók, intézményi / alumni / opponens / piaci kapcsolatok"
               onClick={() => { if (!canEdit) return; setView('people'); }}>Névjegyzék</button>
             <button className={view === 'it' ? 'is-on' : ''} title="IT és szoftverek: az Infopark termeiben telepített szoftverek" onClick={() => setView('it')}>IT</button>
             <button className={`editonly${view === 'docs' ? ' is-on' : ''}`} title="Belső útmutatók: Zoom, oktatói segédletek, tréning - csak szerkesztő módban"
               onClick={() => { if (!canEdit) return; setView('docs'); }}>Segédletek</button>
             <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>Órarend</button>
+            <button className="editonly" title="Időpont küldése EGY űrlapon: kinek + miről + mikor + hol - a rendszer intézi a levelet (Posta), a naptárat, a feladatkártyát és a Meet-linket"
+              onClick={() => { if (canEdit) setIdopont({}); }}>📅 Időpont</button>
           </div>
           <span className="search-wrap">
             <input className="search search--corner" type="search" name="app-kereses" autoComplete="off" enterKeyHint="search"

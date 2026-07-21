@@ -61,8 +61,10 @@ export function buildGraph(data: Curriculum, filter: Filter, h: Handlers, view: 
   const filterActive = !!(filter.q || filter.spec || filter.ctype || filter.instr || filter.cat);
   const matches = (c: Course) => {
     if (filter.q) {
-      const s = filter.q.toLowerCase();
-      if (!(c.name.toLowerCase().includes(s) || (c.specialization || '').toLowerCase().includes(s) || (c.instructors || '').toLowerCase().includes(s) || catList(c).some((k) => k.includes(s)) || c.keywords.some((k) => k.toLowerCase().includes(s)) || c.software.some((k) => k.toLowerCase().includes(s)))) return false;
+      // vesszővel elválasztva TÖBB keresőszó is adható (pl. "Kaiser, Berkes") - bármelyik találata elég
+      const terms = filter.q.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean);
+      const hit = (s: string) => c.name.toLowerCase().includes(s) || (c.specialization || '').toLowerCase().includes(s) || (c.instructors || '').toLowerCase().includes(s) || catList(c).some((k) => k.includes(s)) || c.keywords.some((k) => k.toLowerCase().includes(s)) || c.software.some((k) => k.toLowerCase().includes(s));
+      if (terms.length && !terms.some(hit)) return false;
     }
     if (filter.spec && specShort(c.specialization) !== filter.spec) return false;
     if (filter.ctype && c.courseType !== filter.ctype) return false;

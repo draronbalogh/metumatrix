@@ -160,15 +160,26 @@ export default function IdopontModal({ seed, db, teacherNames, tasks, onLinkTask
           <div className="field full">
             <label>Miről egyeztetnétek? - ez lesz az esemény és a levél témája (diktálhatod is)</label>
             <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="pl. BA3 féléves tematika átbeszélése" />
-            {!seed.taskId && matches.length > 0 && (
+            {seed.taskId && (
+              <p style={{ margin: '4px 0 0', fontSize: '.82rem', color: 'var(--ink-2)' }}>▤ Ehhez a kártyához kapcsolódik: <strong>{seed.topic}</strong></p>
+            )}
+            {!seed.taskId && (
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}>
-                <span style={{ fontSize: '.78rem', fontWeight: 700, color: 'var(--ink-2)' }}>Meglévő kártya ehhez az ügyhöz:</span>
-                {matches.map(({ t }) => (
-                  <button key={t.id} type="button" className={`chip${linkTask === t.id ? ' is-on' : ''}`}
-                    title={linkTask === t.id ? 'Ehhez a kártyához kapcsolódik - kattints a leválasztáshoz' : 'Ehhez a meglévő kártyához kapcsolom (nem készül új)'}
-                    onClick={() => { touchedLink.current = true; setLinkTask((v) => (v === t.id ? null : t.id)); }}>▤ {t.title}</button>
-                ))}
-                <span style={{ fontSize: '.78rem', color: 'var(--muted)' }}>{linkTask ? 'ehhez kapcsolom, NEM készül új kártya' : 'nincs kijelölve: ÚJ kártya készül'}</span>
+                {matches.length > 0 && (<>
+                  <span style={{ fontSize: '.78rem', fontWeight: 700, color: 'var(--ink-2)' }}>Meglévő kártya ehhez az ügyhöz:</span>
+                  {matches.map(({ t }) => (
+                    <button key={t.id} type="button" className={`chip${linkTask === t.id ? ' is-on' : ''}`}
+                      title={linkTask === t.id ? 'Ehhez a kártyához kapcsolódik - kattints a leválasztáshoz' : 'Ehhez a meglévő kártyához kapcsolom (nem készül új)'}
+                      onClick={() => { touchedLink.current = true; setLinkTask((v) => (v === t.id ? null : t.id)); }}>▤ {t.title}</button>
+                  ))}
+                </>)}
+                {/* teljes lista is: bármelyik nyitott kártya kiválasztható, nem csak a javaslatok */}
+                <select value={linkTask ?? ''} style={{ maxWidth: '100%' }}
+                  onChange={(e) => { touchedLink.current = true; setLinkTask(e.target.value || null); }}>
+                  <option value="">- vagy válassz kártyát a teljes listából (üresen: új kártya készül) -</option>
+                  {tasks.filter((t) => t.status !== 'done').map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+                </select>
+                <span style={{ fontSize: '.78rem', color: linkTask ? 'var(--ink-2)' : 'var(--muted)', fontWeight: linkTask ? 700 : 400 }}>{linkTask ? '▤ ehhez kapcsolom, NEM készül új kártya' : 'nincs kijelölve: ÚJ kártya készül'}</span>
               </div>
             )}
           </div>

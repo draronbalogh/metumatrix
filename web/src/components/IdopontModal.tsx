@@ -50,11 +50,17 @@ export default function IdopontModal({ seed, db, teacherNames, onSaveEvent, onSa
     ...selected.map((n) => ({ name: n, email: emailOf(db, n) ?? '', kind: 'nev' })).filter((r) => !!r.email),
     ...adhoc.map((e) => ({ name: e, email: e, kind: 'egyedi' })),
   ];
+  // akinek nincs email-címe a Névjegyzékben, az kimarad - ezt LÁTHATÓAN jelezzük
+  const unresolved = selected.filter((n) => !emailOf(db, n));
   const filled = slots.filter((s) => s.day && s.start);
-  const ready = topic.trim() && recipients.length > 0 && filled.length > 0;
+  const dayOnly = slots.filter((s) => s.day && !s.start).length;
 
   const go = async () => {
-    if (!ready || busy) return;
+    if (busy) return;
+    // SOHA nem némán: pontosan megmondjuk, mi hiányzik még
+    if (!topic.trim()) { setMsg('⚠ Add meg, miről egyeztetnétek (első mező) - ez lesz a levél és az esemény témája.'); return; }
+    if (!recipients.length) { setMsg(unresolved.length ? `⚠ A kiválasztottaknak nincs email-címük a Névjegyzékben (${unresolved.join(', ')}) - válassz mást, vagy adj meg egyedi email-címet.` : '⚠ Válassz legalább egy címzettet.'); return; }
+    if (!filled.length) { setMsg(dayOnly ? '⚠ Az időponthoz a KEZDÉS ÓRA is kell (a nap mellett) - így tud naptár-bejegyzés és Meet készülni.' : '⚠ Adj meg legalább egy időpontot (nap + kezdés).'); return; }
     setBusy(true); onBusy?.('📅 Időpont-egyeztetés összeállítása…');
     try {
       const first = filled[0];
@@ -64,7 +70,8 @@ export default function IdopontModal({ seed, db, teacherNames, onSaveEvent, onSa
       if (mode !== 'szemelyes') {
         setMsg('Meet-link készítése…');
         const r = await createMeet({ title: topic.trim(), slots, place: effPlace, attendees: recipients.map((x) => x.email), sendInvite: false, headers: editHeaders() });
-        if (r.error) setMsg(`Meet-link nem készült (${r.error}) - az egyeztetés enélkül megy tovább.`);
+        if (r.unconfigured) setMsg('⚠ A Google-naptár nincs beállítva (OAuth token) - a levél Meet-link NÉLKÜL megy, a linket utólag pótolhatod a kártyáról.');
+        else if (r.error) setMsg(`⚠ Meet-link nem készült (${r.error}) - az egyeztetés enélkül megy tovább.`);
         link = r.link; gid = r.googleEventId;
       }
       // 2) tentative esemény a naptárba (több javaslatnál függő csíkok)
@@ -133,6 +140,9 @@ export default function IdopontModal({ seed, db, teacherNames, onSaveEvent, onSa
             <label>Kinek?</label>
             <RecipientPicker teacherNames={teacherNames} db={db} selected={selected} adhoc={adhoc}
               onChange={(s, a) => { setSelected(s); setAdhoc(a); }} />
+            {unresolved.length > 0 && (
+              <p style={{ margin: '4px 0 0', fontSize: '.82rem', color: 'var(--hot)' }}>Nincs email a Névjegyzékben (kimarad a küldésből): {unresolved.join(', ')}</p>
+            )}
           </div>
           <div className="field full">
             <label>Hogyan?</label>
@@ -155,7 +165,7 @@ export default function IdopontModal({ seed, db, teacherNames, onSaveEvent, onSa
           <span style={{ fontSize: '.8rem', color: 'var(--muted)' }}>A Mehet után: levél a Posta Kimenőbe + naptár-esemény + feladatkártya{mode !== 'szemelyes' ? ' + Meet-link' : ''} - a küldés a Postából a te kezedben marad.</span>
           <span className="sp" />
           <button className="btn" disabled={busy} onClick={onClose}>Mégsem</button>
-          <button className="btn btn--ink" disabled={!ready || busy} onClick={() => { void go(); }}>{busy ? '⏳ Készül…' : '📅 Mehet'}</button>
+          <button className="btn btn--ink" disabled={busy} onClick={() => { void go(); }}>{busy ? '⏳ Készül…' : '📅 Mehet'}</button>
         </div>
       </div>
     </div>

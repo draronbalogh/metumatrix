@@ -1767,6 +1767,7 @@ export default function CurriculumApp() {
                   topicLinks={agenda.topicLinks}
                   onLinkTopic={linkTopic}
                   onMarkReplied={markReplied}
+                  onBusy={setTitkarBusy}
                   teacherNames={teacherNames}
                   db={peopleDB}
                   letters={(agenda.letters || []).filter((l) => l.targetId === null)}
@@ -2005,6 +2006,7 @@ export default function CurriculumApp() {
           topicLinks={agenda.topicLinks}
           onLinkTopic={linkTopic}
           onMarkReplied={markReplied}
+          onBusy={setTitkarBusy}
           teacherNames={teacherNames}
           db={peopleDB}
           letters={(agenda.letters || []).filter((l) => l.targetId === notify.targetId)}

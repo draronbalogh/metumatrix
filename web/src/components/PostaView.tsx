@@ -245,6 +245,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     if (n === 0) return;
     if (!window.confirm(`Biztosan ELKÜLDÖD MOST mind a ${n} kész választ az Outlookon át?\n\nEz azonnal elküldi mindet, és nem vonható vissza.`)) return;
     setSendAllBusy(true); setPushMsg(`Mind küldése folyamatban (${n})…`);
+    onBusy?.(`✉ Mind küldése folyamatban (${n} levél, levelenként ~8 mp) - nyugodtan válthatsz nézetet`);
     try {
       const res = await fetch('/api/outlook-drafts', {
         method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
@@ -265,7 +266,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
       setPushMsg(`✓ Elküldve: ${j.sent ?? ids.length}${j.failed ? `, ${j.failed} sikertelen (nézd meg az Outlookban)` : ''}.`);
     } catch {
       setPushMsg('⚠ Nem sikerült elindítani a küldést (fut a dev-szerver és a klasszikus Outlook?).');
-    } finally { setSendAllBusy(false); }
+    } finally { setSendAllBusy(false); onBusy?.(null); }
   };
   // MAI levelek beolvasása most: elindítja a helyi szinkront, majd POLLOZZA az állapotot
   // (fut-e még / hány levél), és élő folyamatjelzőt mutat (eltelt idő + kész-eredmény).

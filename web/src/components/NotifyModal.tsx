@@ -139,6 +139,7 @@ interface Props {
   topicLinks?: Record<string, string>; // rögzített sablon→naptár kapcsolatok (UID szerint, 100% determinisztikus)
   onLinkTopic?: (topicId: string, sel: string | null) => void; // kapcsolat rögzítése / törlése
   onMarkReplied?: (sel: string) => void; // Válaszolandó tétel megválaszoltnak jelölése ('t:id' / 'e:id')
+  onBusy?: (msg: string | null) => void; // app-szintű folyamat-jelző (nézetváltáskor is látszik)
   onSaveEvent?: (e: AgendaEvent) => void; // a Meet-időpont(ok) tükör-eseménye a saját naptárba
 }
 
@@ -163,7 +164,7 @@ const norm = normText;
 
 // Levél-készítő: sablonból generált szöveg + 3 numerikus másolás-gomb (Outlookba illesztéshez).
 // A küldés (Brevo/SMTP) opcionális - csak akkor jelenik meg, ha a szerveren be van állítva.
-export default function NotifyModal({ target, teacherNames, db, letters, onSaveLetter, onDeleteLetter, onLetterStatus, onPlaceChange, onSourceChange, onClose, inline, topicReq, letterReq, ctxEvents, ctxTasks, topicLinks, onLinkTopic, onMarkReplied, onSaveEvent }: Props) {
+export default function NotifyModal({ target, teacherNames, db, letters, onSaveLetter, onDeleteLetter, onLetterStatus, onPlaceChange, onSourceChange, onClose, inline, topicReq, letterReq, ctxEvents, ctxTasks, topicLinks, onLinkTopic, onMarkReplied, onSaveEvent, onBusy }: Props) {
   const ui0 = useMemo(loadUi, []);
   const [kind, setKind] = useState<LetterKind>(ui0.kind);
   const [sigOn, setSigOn] = useState(ui0.sigOn); // hivatalos aláírás a levélben
@@ -715,7 +716,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const [tkIntent, setTkIntent] = useState(''); // a felhasználó szabad szándék-szövege (diktálható)
   const titkarno = async (answer?: string | null) => {
     if (!emails.length) { setResult('⚠ Előbb válassz címzettet (Címzettek fül) - a Titkárnő nekik fogalmaz, és nekik teszi a levelet a Postába.'); return; }
-    setTkBusy(true); setResult('🗣 Titkárnő fogalmaz…');
+    setTkBusy(true); setResult('🗣 Titkárnő fogalmaz…'); onBusy?.('Titkárnő fogalmaz… (postázó)');
     try {
       const res = await fetch('/api/compose', {
         method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
@@ -737,7 +738,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       setSubject(subj); setBody(j.body); setBodyDirty(true); setTkQ(null); setTkA('');
       sendToOutbox({ subject: subj, body: j.body });
     } catch (e) { setResult(`⚠ Titkárnő-hiba: ${e instanceof Error ? e.message : String(e)}`); }
-    finally { setTkBusy(false); }
+    finally { setTkBusy(false); onBusy?.(null); }
   };
 
   const loadLetter = (l: Letter) => {

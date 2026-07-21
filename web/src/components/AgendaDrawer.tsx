@@ -39,6 +39,7 @@ interface Props {
   onDelete?: () => void; // a tétel törlése innen (a hívó erősít meg)
   onSetStar?: (id: string, star: TaskStar | null) => void; // kézi ⭐ a részletezőből
   onAddEventFor?: (taskId: string) => void; // új, előtöltött esemény ehhez a feladathoz
+  onIdopont?: (taskId: string) => void; // 📅 központi Időpont küldése, a kártya adataival előtöltve
   onConfirmMeetSlot?: (eventId: string, slot: AgendaMeetSlot) => void; // a választott javaslat véglegesítése
 }
 
@@ -72,7 +73,7 @@ function Sec({ cls, children }: { cls?: string; children: ReactNode }) {
 // egy kiosztott lépés a személy-kártyán - a taskId+ix révén innen is pipálható
 interface PStep { taskId: string; taskTitle: string | null; ix: number; text: string; done: boolean; due: string | null }
 
-export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor, onCreateMeet, onConfirmMeet, meetMsg, onTaskStatus, onDelete, onSetStar, onAddEventFor, onConfirmMeetSlot }: Props) {
+export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor, onCreateMeet, onConfirmMeet, meetMsg, onTaskStatus, onDelete, onSetStar, onAddEventFor, onIdopont, onConfirmMeetSlot }: Props) {
   const task = det.kind === 'task' ? agenda.tasks.find((t) => t.id === det.id) ?? null : null;
   const event = det.kind === 'event' ? agenda.events.find((e) => e.id === det.id) ?? null : null;
   if (!task && !event) return null;
@@ -148,6 +149,10 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                   onClick={() => onSetStar(task.id, nextStarFor(task, soon))}>{inBand ? '⭐ Legfontosabb' : '☆ Kiemelés'}</button>
               );
             })()}
+            {canEdit && task && onIdopont && (
+              <button className="btn" title="Időpont küldése ehhez az ügyhöz: kinek + mikor + hol, egy űrlapon - levél, naptár, Meet automatikusan"
+                onClick={() => onIdopont(task.id)}>📅 Időpont</button>
+            )}
             {canEdit && <button className="btn btn--ink" onClick={onEdit}>✎ Szerkesztés</button>}
             {canEdit && onDelete && <button className="btn btn--danger" onClick={onDelete}>Törlés</button>}
             <button className="btn" onClick={onClose}>✕ Bezárás</button>

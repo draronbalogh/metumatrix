@@ -23,6 +23,7 @@ import TopicsView from './TopicsView';
 import LevelWizard from './LevelWizard';
 import OrarendView from './OrarendView';
 import MonthReport from './MonthReport';
+import IdopontModal, { IdopontSeed } from './IdopontModal';
 import { TopicTemplate } from '@/lib/topics';
 import type { Handlers, Filter, View, Prog } from '@/lib/buildGraph';
 import { editHeaders } from '@/lib/editkey';
@@ -1199,6 +1200,8 @@ export default function CurriculumApp() {
   // 🖨 HAVI RIPORT modál (dékáni kör) + havi emlékeztető-kártya minden hó 28-tól:
   // ha az adott hónapra még nincs riport-feladat, magas prioritással létrejön
   const [reportMonth, setReportMonth] = useState<string | null>(null);
+  // 📅 KÖZPONTI Időpont küldése - minden nézetből elérhető, egy űrlap intéz mindent
+  const [idopont, setIdopont] = useState<IdopontSeed | null>(null);
   const reportReminderDone = useRef(false);
   useEffect(() => {
     if (!hydrated || !canEdit || reportReminderDone.current) return;
@@ -1583,6 +1586,8 @@ export default function CurriculumApp() {
             <button className={`editonly${view === 'posta' ? ' is-on' : ''}`} title="Bejövő levelek: válaszra váró feladók, előre megírt választervekkel"
               onClick={() => { if (!canEdit) return; setView('posta'); }}>Posta{postaCount > 0 ? ` · ${postaCount}` : ''}</button>
             <button className={`editonly${view === 'topics' ? ' is-on' : ''}`} onClick={() => { if (!canEdit) return; setView('topics'); }}>Levelek</button>
+            <button className="editonly" title="Időpont küldése EGY űrlapon: kinek + miről + mikor + hol - a rendszer intézi a levelet (Posta), a naptárat, a feladatkártyát és a Meet-linket"
+              onClick={() => { if (canEdit) setIdopont({}); }}>📅 Időpont</button>
             <button className={`editonly${view === 'people' ? ' is-on' : ''}`} title="Elérhetőségek: oktatók, hallgatók, intézményi / alumni / opponens / piaci kapcsolatok"
               onClick={() => { if (!canEdit) return; setView('people'); }}>Névjegyzék</button>
             <button className={view === 'it' ? 'is-on' : ''} title="IT és szoftverek: az Infopark termeiben telepített szoftverek" onClick={() => setView('it')}>IT</button>
@@ -1924,6 +1929,16 @@ export default function CurriculumApp() {
           onTaskStatus={setTaskStatus}
           onSetStar={setTaskStar}
           onAddEventFor={(tid) => { setAgendaDetails(null); addEventForTask(tid); }}
+          onIdopont={(tid) => {
+            const t = agendaRef.current.tasks.find((x) => x.id === tid);
+            if (!t) return;
+            setAgendaDetails(null);
+            setIdopont({
+              taskId: tid, topic: t.title,
+              names: [t.owner, ...t.people].filter((n): n is string => !!n && n !== DEFAULT_OWNER),
+              emails: t.source?.email ? [t.source.email, ...(t.source.cc ?? [])] : [],
+            });
+          }}
           onConfirmMeetSlot={confirmMeetSlot}
           onDelete={() => {
             const d = agendaDetails;
@@ -1996,6 +2011,13 @@ export default function CurriculumApp() {
       {introEdit && <IntroModal intro={agenda.intro} onSave={saveIntro} onClose={() => setIntroEdit(false)} />}
 
       {reportMonth && <MonthReport monthKey={reportMonth} agenda={agenda} onClose={() => setReportMonth(null)} onSaveLetter={saveLetter} />}
+
+      {idopont && (
+        <IdopontModal seed={idopont} db={peopleDB} teacherNames={teacherNames}
+          onSaveEvent={saveEvent} onSaveTask={saveTask} onSaveLetter={saveLetter} onBusy={setTitkarBusy}
+          onClose={() => setIdopont(null)}
+          onDone={(jump) => { setIdopont(null); if (jump) { setPostaFocus(null); setView('posta'); } }} />
+      )}
 
 
       {notify && (

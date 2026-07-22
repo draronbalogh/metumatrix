@@ -20,6 +20,7 @@ const FILES: Record<string, string> = {
   'teremhasznalat-mkk.pdf': 'application/pdf',
   'mtmt-tutorial-2026.pptx': PPTX,
   'rendszerhasznalati-trening.pptx': PPTX,
+  'etikai-kodex-metu-2021.pdf': 'application/pdf',
 };
 
 export const dynamic = 'force-dynamic';

@@ -2032,3 +2032,10 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .mr-list .mr-item input[type="checkbox"] { width: auto; flex: none; margin: 3px 0 0; padding: 0; border: 0; box-shadow: none; accent-color: var(--hot); }
 .mr-list .mr-item.is-off { opacity: .55; }
 .mr-list .mr-item .adm { font-style: normal; color: var(--muted); font-size: .78rem; }
+
+/* Segédletek: dokumentum-kivonat gazdagabb szekciói (Etikai Kódex) */
+.it-doc-sum .doc-sec { margin: 12px 0 4px; font-size: .74rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--brand-text); border-left: 3px solid var(--brand); padding-left: 8px; }
+.it-doc-sum .doc-note { margin: 6px 0; font-size: .82rem; line-height: 1.5; color: var(--ink-2); background: color-mix(in srgb, var(--brand) 5%, transparent); border-radius: 8px; padding: 8px 10px; }
+.it-doc-sum .doc-situ { list-style: none; padding: 0; margin: 6px 0; display: grid; gap: 8px; }
+.it-doc-sum .doc-situ > li { font-size: .85rem; line-height: 1.5; border-left: 2px solid var(--line); padding-left: 10px; }
+.it-doc-sum .doc-situ > li strong { color: var(--ink); }

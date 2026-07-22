@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { getEditKey } from '@/lib/editkey';
 import PageHead from './PageHead';
 
@@ -62,7 +62,7 @@ const QUICK_LINKS: QuickLinkGroup[] = [
   {
     cim: 'Szak és social',
     links: [
-      { ic: '🌐', t: 'metumediadesign.hu', d: 'szakos honlap', href: 'https://www.metumediadesign.hu' },
+      { ic: '🌐', t: 'metumediadesign.hu', d: 'szakos honlap', href: 'https://metumediadesign.hu/' },
       { ic: '💬', t: 'Discord - szakos szerver', href: 'https://discord.gg/KrmxpDS5T' },
       { ic: '👥', t: 'Facebook-csoport', href: 'https://www.facebook.com/groups/metumediadesign' },
       { ic: '📘', t: 'Facebook-oldal', href: 'https://www.facebook.com/metumediadesign' },
@@ -85,6 +85,13 @@ const QUICK_LINKS: QuickLinkGroup[] = [
       { ic: '🎙', t: 'Hangstúdió foglalás', d: 'hapongor@gmail.com', href: 'mailto:hapongor@gmail.com' },
       { ic: '🎬', t: 'TV stúdió foglalás', d: 'infop.tvstudio@metropolitan.hu', href: 'mailto:infop.tvstudio@metropolitan.hu' },
       { ic: '🏫', t: 'Teremügyek', d: 'terem@metropolitan.hu', href: 'mailto:terem@metropolitan.hu' },
+    ],
+  },
+  {
+    cim: 'Segítség, jólét',
+    links: [
+      { ic: '💚', t: 'Életviteli tanácsadás', d: 'zaklatás, teher, krízis', href: 'https://www.metropolitan.hu/hu/eletviteli-tanacsadas' },
+      { ic: '🧑‍⚕️', t: 'Életviteli Központ', d: 'Szabó Gábor · gszabo@metropolitan.hu', href: 'mailto:gszabo@metropolitan.hu' },
     ],
   },
 ];
@@ -217,11 +224,106 @@ const GROUPS: DocGroup[] = [
       },
     ],
   },
+  {
+    cim: '⚖️ Jog és etika',
+    docs: [
+      {
+        f: 'etikai-kodex-metu-2021.pdf', icon: '⚖️', title: 'METU Etikai Kódex (hatályos 2021. 09. 01-től)',
+        desc: 'Az egyetem etikai szabályzata + gyakorlati kivonat: mit kell tudnia a szakvezetőnek, a fiatal oktatóknak, a hallgatóknak, és mit tegyél a tipikus hallgatói helyzetekben.',
+        kivonat: (
+          <>
+            <p className="doc-note"><strong>Fontos elérhetőség.</strong> Zaklatás, megfélemlítés, pszichológiai teher: Életviteli Tanácsadó Központ, <P name="Szabó Gábor" /> pszichológus, <L href="mailto:gszabo@metropolitan.hu">gszabo@metropolitan.hu</L>. Segítségkérés / életviteli tanácsadás: <L href="https://www.metropolitan.hu/hu/eletviteli-tanacsadas">metropolitan.hu/hu/eletviteli-tanacsadas</L>. Etikai eljárást a főtitkár rendel el; bejelentés a rektorhoz / főtitkárhoz / szervezeti egység vezetőjéhez / az Életviteli Központ vezetőjéhez tehető, a tudomásszerzéstől 30 napon (legfeljebb az esettől 90 napon) belül. Névtelen bejelentésre nem indul eljárás.</p>
+
+            <p className="doc-sec">1 · A SZAKVEZETŐNEK (a legfontosabbak)</p>
+            <ol>
+              <li><strong>Konzultáció csak hivatalos helyen.</strong> Hallgatóval személyes megbeszélés/konzultáció kizárólag az egyetem kijelölt helyszínén; ettől eltérni csak rendkívül indokolt esetben, a tanszék-/intézetvezető ELŐZETES ÍRÁSBELI hozzájárulásával lehet (22/m, 25 pont).</li>
+              <li><strong>Összeférhetetlenség jelzése.</strong> Rokon/barát/konfliktusban álló, vagy oktató-hallgató párkapcsolat esetén nem szabad vizsgáztatni/értékelni: jelezni kell a közvetlen vezetőnek, aki más vizsgáztatót jelöl ki. A vezetőt szigorú titoktartás köti (23, 25).</li>
+              <li><strong>Számonkérés tisztasága.</strong> A vizsgakövetelményt a félév elején közzé kell tenni; csak a meghirdetett tananyag kérhető számon (súlyos vétség másképp). Szóbelin a vizsgázón kívül másnak is jelen kell lennie. Elfogult oktató nem vizsgáztathat. Az érdemjegy név szerint nem lehet nyilvános (34).</li>
+              <li><strong>Kötelezővé tett saját mű / anyagi haszon.</strong> Etikai vétség saját művet szakmai indok nélkül kötelezővé tenni, vagy a számonkérést anyagi haszonszerzéssel összekötni (34/c-d).</li>
+              <li><strong>Vezetői magatartás.</strong> Ne használd ki az alá-fölérendeltséget magáncélra; biztosítsd az esélyegyenlőséget és a nyilvánosságot; a problémák belső megoldását segítsd elő; ne tüntesd fel rossz színben a beosztottakat (6-9).</li>
+              <li><strong>Panasz továbbítása.</strong> Ha hozzád fordulnak, a hatáskörödbe nem tartozó ügyben mondd meg, ki jár el; zaklatási bejelentést az Életviteli Központ felé irányíts, és őrizd meg a bizonyítékokat (18, 68-70).</li>
+            </ol>
+
+            <p className="doc-sec">2 · A FIATAL / KEZDŐ OKTATÓKNAK, LEKTOROKNAK</p>
+            <ol>
+              <li><strong>Tanár, nem haver.</strong> A hallgatókkal a felelősségteljes szereped szerint alakítsd a kapcsolatot; a magánéletet különítsd el az oktatói tevékenységtől; a hallgató magánéletét tartsd tiszteletben (22/h-k).</li>
+              <li><strong>Nincs közös bulizás mint tanár-diák viszony.</strong> A tanulmányokon kívüli élethelyzetben (szórakozás) is tilos a zaklatás, megfélemlítés, a nyugalom megzavarása; a viccnek szánt, személyre menő megjegyzés is zaklatás lehet (55, 67, 74).</li>
+              <li><strong>Csak hivatalos helyen konzultálj</strong> hallgatóval (lásd fent) - kávézó, lakás, közösségi tér NEM az, vezetői írásos engedély nélkül.</li>
+              <li><strong>Pontosság, felkészülés.</strong> Az órát magad tartsd meg, időben kezdd/fejezd be, az alkalomhoz illő öltözetben, felkészülten; a meghirdetett tananyagot add le, a változásról tájékoztass (32).</li>
+              <li><strong>Kommunikáció.</strong> Érthető, választékos, példamutató; a hallgató emberi méltóságát és jogait tartsd tiszteletben, vedd figyelembe egyéni képességét (32/f-g).</li>
+              <li><strong>Semmilyen előny.</strong> Jó jegyért/pozícióért ne kérj, ne fogadj el anyagi, szexuális vagy más szolgáltatást; hallgatót magáncélra ne dolgoztass (5/g, 22/l).</li>
+            </ol>
+
+            <p className="doc-sec">3 · A HALLGATÓK ETIKAI KÓDEXE (röviden)</p>
+            <ol>
+              <li><strong>Tisztességes teljesítés.</strong> Önálló munka, meg nem engedett segédeszköz és külső segítség nélkül; vizsgán tilos a tankönyv, jegyzet, mobil, a feladatsor lefotózása (52-53).</li>
+              <li><strong>Hivatkozás, plágium tilalma.</strong> Más gondolatát hivatkozással; a megjelölés nélküli átemelés (netről, más dolgozatából) plágium (50).</li>
+              <li><strong>Egymás segítése, nem akadályozása.</strong> Tilos más munkáját megrongálni, visszatartani, adatait törölni; tilos a becsületes társakat hátráltatni (54).</li>
+              <li><strong>Képmás- és személyiségi jog.</strong> Kép- vagy hangfelvétel készítése és megosztása csak az érintett hozzájárulásával (51).</li>
+              <li><strong>Tisztelet mindenhol.</strong> Órán és tanulmányon kívül (buli, sport) is tilos a zaklatás, megfélemlítés, rendbontás; a véleménynyilvánítás (pl. oktatóértékelés) legyen tisztességes, elfogulatlan (55-56).</li>
+              <li><strong>Megjelenés, alkalmazkodás.</strong> Felkészülten, az alkalomhoz illő ruhában; a külföldi hallgatók alkalmazkodnak a hazai normákhoz (48, 57).</li>
+            </ol>
+
+            <p className="doc-sec">4 · SZITUÁCIÓK - mit tegyél szakvezetőként</p>
+            <p className="doc-note">A kódex szerint az elsődleges út mindig a <strong>belső, békés megoldás</strong> (5/j, 8). Formális etikai eljárás csak akkor, ha a probléma etikai vétség, és a beszélgetés nem oldja meg. A szakmai-tartalmi kifogás (nem tetszik az óra/tantárgy) NEM etikai ügy - azt tartalmi és képzési úton kezeld.</p>
+            <ul className="doc-situ">
+              <li><strong>„Beszól, problémázik, akadékoskodik az órán."</strong> → Higgadtan, méltóságát tiszteletben tartva reagálj; négyszemközti beszélgetésre hívd (hivatalos helyen). A kódex tőled is, tőle is kölcsönös tiszteletet vár (4, 62). A rendbontás, mások nyugalmának megzavarása a hallgató oldalán etikai vétség lehet (55).</li>
+              <li><strong>„Fizetős egyetem vagyunk, a fizető jogán követelőzik."</strong> → A fizetés a képzésre jogosít, nem az etikai/tanulmányi szabályok felrúgására. Az Egyetem és a hallgató viszonyát szerződés szabályozza, amit MINDKÉT félnek tisztelnie kell (Alapelvek 6). Térítsd vissza a kérdést a konkrét, kezelhető problémára.</li>
+              <li><strong>„Nem elégedett az órával, többet várt tőle."</strong> → Ez tartalmi visszajelzés, nem etikai ügy. Kérd konkrétan, mi hiányzott; hivatalos csatorna az oktatói munka hallgatói véleményezése (56). Ha jogos, tartalmi korrekció; ha elvárás-eltérés, tisztázd a tantárgy kereteit.</li>
+              <li><strong>„Nem tetszik neki az oktató."</strong> → Különítsd el: személyes ellenszenv vagy konkrét sérelem? Ha nincs normasértés, tartalmi/kommunikációs egyeztetés. Ha az oktató részéről bántó, megalázó bánásmód történt, az etikai ügy (lásd lent).</li>
+              <li><strong>„Nem megfelelő neki a tantárgy / a képzés struktúrája."</strong> → Képzésfejlesztési, nem etikai kérdés. Vedd fel a visszajelzést, tereld a megfelelő fórumra (tantárgyfelelős, szakvezetés); a kódex a döntések megalapozottságát és a képviseltek megkérdezését várja el (11-13).</li>
+              <li><strong>„Az oktató leordította / leszidta / megbántotta az órán."</strong> → Ez potenciálisan etikai vétség: az oktató nem értékelheti bántóan a hallgatót, tiszteletlen magatartás tilos (22/a-b, 62). Hallgasd meg mindkét felet négyszemközt, dokumentálj; ha megalapozott, első lépés a beszélgetés és elvárás-tisztázás az oktatóval, súlyosabb esetben etikai bejelentés a főtitkár felé.</li>
+              <li><strong>„Az oktató külön hívta, kellemetlen/szexuális színezetű volt a helyzet."</strong> → Ez a zaklatás gyanúja, kiemelt ügy. NE bagatellizáld: irányítsd az Életviteli Tanácsadó Központhoz (<P name="Szabó Gábor" />, <L href="mailto:gszabo@metropolitan.hu">gszabo@metropolitan.hu</L>), őrizzétek meg a bizonyítékokat (dátum, hely, tanúk, üzenetek). Az Egyetem a jóhiszemű bejelentőt védi (66-72). A konzultáció-hivatalos-helyen szabály megsértése önmagában is jelzés (22/m).</li>
+              <li><strong>„Feszültséget, túlterheltséget érez a hallgató."</strong> → Emberséggel: kérdezd meg, mi nyomja; a kódex az egészséges környezetet és a méltóság védelmét célozza (Alapelvek 8). Ajánld fel az Életviteli Tanácsadó Központot (<L href="https://www.metropolitan.hu/hu/eletviteli-tanacsadas">életviteli tanácsadás</L>). A tananyag terjedelménél a kreditértéket és a párhuzamos terhelést figyelembe kell venni (34/b) - ha rendszerszintű a túlterhelés, az képzésfejlesztési teendő.</li>
+              <li><strong>„A hallgató panaszt akar tenni egy oktatóra."</strong> → Mondd el a rendes utat: bejelentés a rektorhoz / főtitkárhoz / szervezeti egység vezetőjéhez / Életviteli Központhoz, a tudomásszerzéstől 30 (max. 90) napon belül, konkrétan (név, hely, idő, körülmény, bizonyíték); névtelen bejelentésre nem indul eljárás; a bejelentő adatait bizalmasan kezelik (97-100).</li>
+              <li><strong>„Diszkriminációt érez (nem, származás, vallás, fogyatékosság, életkor stb.)."</strong> → Súlyos etikai vétség a közvetlen és közvetett hátrányos megkülönböztetés is (63-65). Ugyanaz a bejelentési út, a bizonyítékok megőrzésével.</li>
+            </ul>
+            <p className="doc-note"><strong>Aranyszabály (Alapelvek 2, 9-10):</strong> úgy bánj mindenkivel, ahogy elvárnád, hogy veled bánjanak; mindenki panasszal élhet, ha jogsérelmet érez; és pártatlan eljárás nélkül senkit nem szabad elítélni - a másik oktató jogait is tartsd tiszteletben, amíg a tények tisztázódnak. A teljes szabályzat a fenti PDF-ben.</p>
+          </>
+        ),
+      },
+    ],
+  },
 ];
 
 const norm = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
+// „Napi indítás": a rendszeresen használt felületek EGY kattintással. Az OUTLOOK kerül
+// előtérbe (utoljára nyílik + fókusz), a többi csak új háttér-lapon nyílik meg.
+const DAILY_OUTLOOK = 'https://outlook.cloud.microsoft/mail/';
+const DAILY_OTHERS = [
+  'https://neptunweb1.metropolitan.hu/',   // Neptun
+  'https://coospace.metropolitan.hu/',     // CooSpace
+  'https://discord.gg/KrmxpDS5T',          // Discord - szakos szerver
+  'https://metumediadesign.hu/',           // szak weboldala
+];
 export default function DocsView({ q }: { q: string }) {
+  const [copied, setCopied] = useState<string | null>(null);
+  const [linkNote, setLinkNote] = useState<string | null>(null);
+  // Foglalás/kontakt tétel: kattintásra az email-cím a VÁGÓLAPRA (a mailto helyett)
+  const copyEmail = async (email: string) => {
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopied(email);
+      window.setTimeout(() => setCopied((c) => (c === email ? null : c)), 1600);
+    } catch { if (typeof window !== 'undefined') window.location.href = `mailto:${email}`; } // régi böngésző: marad a levélíró
+  };
+  // 🚀 Napi indítás: előbb a többi felület (Neptun, CooSpace, Discord, szak weboldal), és az
+  // OUTLOOK UTOLJÁRA + fókusz -> ez lesz az aktív, elöl látszó lap. Ha a böngésző blokkolja a
+  // többszörös lapnyitást, jelezzük (egyszer engedélyezni kell a felugró ablakokat).
+  const openDaily = () => {
+    if (typeof window === 'undefined') return;
+    let blocked = 0;
+    DAILY_OTHERS.forEach((u) => {
+      const w = window.open(u, '_blank');
+      if (w) { try { w.opener = null; } catch { /* ignore */ } } else blocked++;
+    });
+    const ol = window.open(DAILY_OUTLOOK, '_blank'); // UTOLJÁRA -> aktív lap
+    if (ol) { try { ol.opener = null; ol.focus(); } catch { /* ignore */ } } else blocked++;
+    setLinkNote(blocked > 0
+      ? 'A böngésző letiltotta a többszörös lapnyitást. Engedélyezd a felugró ablakokat ennek az oldalnak (a címsor jobb szélén a blokkolt-ablak ikon → „Mindig engedélyezze"), majd kattints újra a 🚀-ra.'
+      : null);
+  };
   const k = getEditKey();
   const docHref = (f: string) => `/api/docs?f=${f}${k ? `&k=${encodeURIComponent(k)}` : ''}`;
   const nq = norm(q);
@@ -239,22 +341,39 @@ export default function DocsView({ q }: { q: string }) {
       {/* jobb oldali sáv: a leggyakrabban használt linkek - mobilon a tartalom ELŐTT, kompakt pill-ekként */}
       <aside className="doc-links">
         <div className="dl-title">Gyakori linkek</div>
+        {linkNote && <div className="dl-note">{linkNote}</div>}
         {QUICK_LINKS.map((g) => (
           <div key={g.cim} className="dl-group">
-            <div className="dl-h">{g.cim}</div>
+            <div className="dl-h">{g.cim}{g.cim === 'Rendszerek' && <button type="button" className="dl-openall" title="Napi indítás: az Outlook előtérbe kerül, a Neptun, CooSpace, Discord és a szak weboldala pedig új lapokon nyílik meg" onClick={openDaily}>🚀</button>}</div>
             <div className="dl-list">
-              {g.links.map((l) => (
-                <a key={l.href} className="dl-link" href={l.href}
-                  target={l.href.startsWith('mailto:') ? undefined : '_blank'} rel="noreferrer"
-                  title={l.d ? `${l.t} - ${l.d}` : l.t}>
-                  <span className="dl-ic">{l.ic}</span>
-                  <span className="dl-body">
-                    <span className="dl-t">{l.t}</span>
-                    {l.d && <span className="dl-d">{l.d}</span>}
-                  </span>
-                  <span className="dl-open">↗</span>
-                </a>
-              ))}
+              {g.links.map((l) => {
+                // Foglalás/kontakt (mailto): kattintásra az email-cím a vágólapra, nem levélíró nyílik
+                if (l.href.startsWith('mailto:')) {
+                  const email = l.href.slice(7);
+                  return (
+                    <button key={l.href} type="button" className="dl-link dl-link--copy"
+                      title={`Kattints az email-cím másolásához: ${email}`} onClick={() => copyEmail(email)}>
+                      <span className="dl-ic">{l.ic}</span>
+                      <span className="dl-body">
+                        <span className="dl-t">{l.t}{copied === email && <em className="dl-copied"> ✓ másolva</em>}</span>
+                        {l.d && <span className="dl-d">{l.d}</span>}
+                      </span>
+                      <span className="dl-open">{copied === email ? '✓' : '⧉'}</span>
+                    </button>
+                  );
+                }
+                return (
+                  <a key={l.href} className="dl-link" href={l.href} target="_blank" rel="noreferrer"
+                    title={l.d ? `${l.t} - ${l.d}` : l.t}>
+                    <span className="dl-ic">{l.ic}</span>
+                    <span className="dl-body">
+                      <span className="dl-t">{l.t}</span>
+                      {l.d && <span className="dl-d">{l.d}</span>}
+                    </span>
+                    <span className="dl-open">↗</span>
+                  </a>
+                );
+              })}
             </div>
           </div>
         ))}

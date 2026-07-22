@@ -749,12 +749,12 @@ export default function CurriculumApp() {
         if (prev?.day !== e.day || prev?.dayEnd !== e.dayEnd || prev?.when !== e.when || prev?.title !== e.title || prev?.place !== e.place || prev?.note !== e.note || prev?.mstatus !== e.mstatus) {
           void fetch('/api/meet', {
             method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-            body: JSON.stringify({ action: 'update', googleEventId: e.googleEventId, startIso, endIso, summary: gSummary, location: e.place ?? '', description: e.note ?? '', tentative: e.mstatus === 'tentative' }),
+            body: JSON.stringify({ action: 'update', googleEventId: e.googleEventId, startIso, endIso, summary: gSummary, location: e.place ?? '', description: '', tentative: e.mstatus === 'tentative' }),
           }).catch(() => { /* a Google-szinkron nem kritikus */ });
           if (isLongSpan && e.googleEndEventId) {
             void fetch('/api/meet', {
               method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-              body: JSON.stringify({ action: 'update', googleEventId: e.googleEndEventId, startIso: `${e.dayEnd}T${hh}:${mi}:00`, endIso: `${e.dayEnd}T${he}:${mi}:00`, summary: `${e.title} - vége`, location: e.place ?? '', description: e.note ?? '', tentative: e.mstatus === 'tentative' }),
+              body: JSON.stringify({ action: 'update', googleEventId: e.googleEndEventId, startIso: `${e.dayEnd}T${hh}:${mi}:00`, endIso: `${e.dayEnd}T${he}:${mi}:00`, summary: `${e.title} - vége`, location: e.place ?? '', description: '', tentative: e.mstatus === 'tentative' }),
             }).catch(() => { /* nem kritikus */ });
           }
         }
@@ -764,7 +764,7 @@ export default function CurriculumApp() {
           try {
             const res = await fetch('/api/meet', {
               method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-              body: JSON.stringify({ action: 'create', summary: gSummary, startIso, endIso, location: e.place || undefined, description: e.note || undefined, attendees: [], sendInvite: false, tentative: e.mstatus === 'tentative' }),
+              body: JSON.stringify({ action: 'create', summary: gSummary, startIso, endIso, location: e.place || undefined, description: undefined, attendees: [], sendInvite: false, tentative: e.mstatus === 'tentative' }),
             });
             const j = await res.json() as { ok: boolean; unconfigured?: boolean; meetLink?: string; googleEventId?: string };
             if (j.ok && j.googleEventId) {
@@ -823,7 +823,9 @@ export default function CurriculumApp() {
     try {
       const res = await fetch('/api/meet', {
         method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-        body: JSON.stringify({ action: 'create', summary: e.title, startIso: `${e.day}T${hh}:${mi}:00`, endIso: `${e.day}T${he}:${mi}:00`, location: e.place || undefined, attendees: [...new Set(emails)], tentative: e.mstatus === 'tentative' }),
+        // résztvevőt NEM adunk a Google-eseményhez (kéretlen értesítést kaphatnának) -
+        // a meghívást a levél viszi, a link ott van; a Google csak a saját naptárad
+        body: JSON.stringify({ action: 'create', summary: e.title, startIso: `${e.day}T${hh}:${mi}:00`, endIso: `${e.day}T${he}:${mi}:00`, location: e.place || undefined, attendees: [], tentative: e.mstatus === 'tentative' }),
       });
       const j = await res.json() as { ok: boolean; unconfigured?: boolean; meetLink?: string; googleEventId?: string; error?: string };
       if (j.unconfigured) { setMeetMsg('A Google Meet még nincs beállítva (OAuth). A kézi „Meet szervezése" addig is működik.'); return; }
@@ -1251,7 +1253,7 @@ export default function CurriculumApp() {
       try {
         if (isLong) {
           // a záró jelölő külön Google-esemény a dayEnd napján
-          const endBody = { summary: `${e.title} - vége`, startIso: `${e.dayEnd}T${hh}:${mi}:00`, endIso: `${e.dayEnd}T${he}:${mi}:00`, location: e.place ?? '', description: e.note ?? '', tentative: e.mstatus === 'tentative' };
+          const endBody = { summary: `${e.title} - vége`, startIso: `${e.dayEnd}T${hh}:${mi}:00`, endIso: `${e.dayEnd}T${he}:${mi}:00`, location: e.place ?? '', description: '', tentative: e.mstatus === 'tentative' };
           if (e.googleEndEventId) {
             await fetch('/api/meet', { method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() }, body: JSON.stringify({ action: 'update', googleEventId: e.googleEndEventId, ...endBody }) }).catch(() => { /* nem kritikus */ });
           } else {
@@ -1266,7 +1268,7 @@ export default function CurriculumApp() {
         if (e.googleEventId) {
           const res = await fetch('/api/meet', {
             method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-            body: JSON.stringify({ action: 'update', googleEventId: e.googleEventId, startIso, endIso, summary, location: e.place ?? '', description: e.note ?? '', tentative: e.mstatus === 'tentative' }),
+            body: JSON.stringify({ action: 'update', googleEventId: e.googleEventId, startIso, endIso, summary, location: e.place ?? '', description: '', tentative: e.mstatus === 'tentative' }),
           });
           const j = await res.json() as { ok: boolean; unconfigured?: boolean };
           if (j.unconfigured) { setPublishMsg('⚠ A Google-naptár nincs beállítva (OAuth).'); return; }
@@ -1274,7 +1276,7 @@ export default function CurriculumApp() {
         } else {
           const res = await fetch('/api/meet', {
             method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-            body: JSON.stringify({ action: 'create', summary, startIso, endIso, location: e.place || undefined, description: e.note || undefined, attendees: [], sendInvite: false, tentative: e.mstatus === 'tentative', noMeet: true }),
+            body: JSON.stringify({ action: 'create', summary, startIso, endIso, location: e.place || undefined, description: undefined, attendees: [], sendInvite: false, tentative: e.mstatus === 'tentative', noMeet: true }),
           });
           const j = await res.json() as { ok: boolean; unconfigured?: boolean; googleEventId?: string; meetLink?: string };
           if (j.unconfigured) { setPublishMsg('⚠ A Google-naptár nincs beállítva (OAuth).'); return; }
@@ -1933,8 +1935,10 @@ export default function CurriculumApp() {
             const t = agendaRef.current.tasks.find((x) => x.id === tid);
             if (!t) return;
             setAgendaDetails(null);
+            // KÁRTYÁRÓL nyitva CSAK a címzettek jönnek át - a téma/tartalom ÜRES, te diktálod
+            // (2026-07-22 tanulság: a kártya belső jegyzetei kéretlenül a meghívóba folytak)
             setIdopont({
-              taskId: tid, topic: t.title,
+              taskId: tid, topic: '', linkedTitle: t.title,
               names: [t.owner, ...t.people].filter((n): n is string => !!n && n !== DEFAULT_OWNER),
               emails: t.source?.email ? [t.source.email, ...(t.source.cc ?? [])] : [],
             });

@@ -56,7 +56,11 @@ export async function createMeet(opts: {
       headers: { 'Content-Type': 'application/json', ...(opts.headers ?? {}) },
       body: JSON.stringify({
         action: 'create', summary: opts.title, startIso, endIso,
-        location: opts.place || undefined, attendees: opts.attendees,
+        // RÉSZTVEVŐT csak KIFEJEZETT meghívó-kérésnél adunk a Google-eseményhez:
+        // enélkül a Google a Gmail-es címzetteknél akkor is megjelenítheti/jelezheti az
+        // eseményt, ha sendInvite false (2026-07-22 tanulság - kéretlen értesítés ment ki).
+        // A meghívást a LEVÉL viszi; a Google-esemény a saját naptárad bejegyzése.
+        location: opts.place || undefined, attendees: opts.sendInvite ? opts.attendees : [],
         sendInvite: !!opts.sendInvite, tentative: true,
         description: `METU Media Design egyeztetés. Javasolt időpontok:\n${filled.map(slotLabel).join('\n')}`,
       }),

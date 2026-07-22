@@ -110,6 +110,7 @@ export interface UpdateMeetPatch {
   location?: string;
   timeZone?: string;
   tentative?: boolean;
+  clearAttendees?: boolean; // a resztvevok ELTAVOLITASA a Google-esemenyrol (szivargas-takaritas)
 }
 
 // atutemezes/veglegesites: a conferenceData-t NEM irjuk felul, igy a Meet-link marad
@@ -127,6 +128,7 @@ export const updateMeetEvent = async (
   if (patch.startIso) body.start = { dateTime: patch.startIso, timeZone: tz };
   if (patch.endIso) body.end = { dateTime: patch.endIso, timeZone: tz };
   if (patch.tentative !== undefined) body.status = patch.tentative ? 'tentative' : 'confirmed';
+  if (patch.clearAttendees) body.attendees = [];
   const url = `${API_BASE}/calendars/${encodeURIComponent(c.calendarId)}/events/${encodeURIComponent(googleEventId)}?conferenceDataVersion=1`;
   const r = await fetch(url, {
     method: 'PATCH',

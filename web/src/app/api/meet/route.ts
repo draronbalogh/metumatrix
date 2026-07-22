@@ -29,6 +29,7 @@ interface UpdateBody {
   description?: string;
   timeZone?: string;
   tentative?: boolean;
+  clearAttendees?: boolean; // résztvevők eltávolítása (szivárgás-takarítás)
 }
 interface DeleteBody {
   action: 'delete';

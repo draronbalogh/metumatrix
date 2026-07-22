@@ -180,7 +180,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   const draftLetters = useMemo(() => new Set(draftBySel.keys()), [draftBySel]);
   const [showDrafted, setShowDrafted] = useState(true); // a másolható blokk alapból NYITVA (aktív teendő)
   const [readDraft, setReadDraft] = useState<string | null>(null); // melyik kész válasz TELJES szövege van kinyitva (mobil olvasás)
-  const [editDraft, setEditDraft] = useState<{ sel: string; subject: string; body: string } | null>(null); // kész válasz helyben szerkesztése
+  const [editDraft, setEditDraft] = useState<{ sel: string; subject: string; body: string; cc: string } | null>(null); // kész válasz helyben szerkesztése (cc: vesszős email-lista)
   // Outlook-vázlatok készítése a klasszikus Outlookon át (COM), a nem-emelt dev-szerverről
   const [pushBusy, setPushBusy] = useState(false);
   const [pushMsg, setPushMsg] = useState<string | null>(null);
@@ -220,7 +220,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   const [sendingSel, setSendingSel] = useState<string | null>(null);
   const sendNow = async (r: Row) => {
     if (sendingSel) return;
-    if (!window.confirm(`Biztosan ELKÜLDÖD most?\n\nCímzett: ${r.src.name}\nTárgy: „${r.src.subject ?? r.title}"\n\nEz azonnal elküldi az Outlookból, és nem vonható vissza.`)) return;
+    if (!window.confirm(`Biztosan ELKÜLDÖD most?\n\nCímzett (To): ${r.src.name} <${r.src.email}>${(r.src.cc?.length ?? 0) > 0 ? `\nMásolat (CC, ${r.src.cc?.length}): ${(r.src.cc ?? []).join(', ')}` : '\nMásolat: nincs - csak a feladó kapja'}\nTárgy: „${r.src.subject ?? r.title}"\n\nEz azonnal elküldi az Outlookból, és nem vonható vissza.`)) return;
     setSendingSel(r.sel); setPushMsg(`Küldés folyamatban: ${r.src.name}…`);
     try {
       const res = await fetch('/api/outlook-drafts', {
@@ -871,7 +871,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
       if (keep) {
         setShowDrafted(true);
         setReadDraft(r.sel);
-        setEditDraft({ sel: r.sel, subject: letter.subject, body: letter.body });
+        setEditDraft({ sel: r.sel, subject: letter.subject, body: letter.body, cc: (r.src.cc ?? []).join(', ') });
         return;
       }
     }
@@ -1214,6 +1214,11 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                     {editing ? (
                       <>
                         <div className="po-readedit">
+                          <label className="po-readedit-l">Címzett (To) - a levél feladója, ez fix</label>
+                          <input className="po-readedit-s" value={`${r.src.name} <${r.src.email}>`} readOnly disabled />
+                          <label className="po-readedit-l">Másolat (CC) - vesszővel elválasztott email-címek; törölhetsz, hozzáadhatsz</label>
+                          <input className="po-readedit-s" value={editDraft.cc} placeholder="(nincs másolat - csak a feladó kapja)"
+                            onChange={(e) => setEditDraft((d) => (d ? { ...d, cc: e.target.value } : d))} />
                           <label className="po-readedit-l">Tárgy</label>
                           <input className="po-readedit-s" value={editDraft.subject} onChange={(e) => setEditDraft((d) => (d ? { ...d, subject: e.target.value } : d))} />
                           <label className="po-readedit-l">A válasz szövege</label>
@@ -1253,7 +1258,13 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                           return ev && onConfirmMeetSlot ? <SlotConfirm event={ev} onConfirm={(s) => onConfirmMeetSlot(ev.id, s)} /> : null;
                         })()}
                         <div className="po-readbody-f">
-                          <button type="button" className="btn btn--ink" title="A módosítások mentése (a kész válasz felülíródik)" onClick={() => { onSaveLetter?.({ ...l, subject: editDraft.subject.trim() || l.subject, body: editDraft.body.trim() }); setEditDraft(null); }}>💾 Mentés</button>
+                          <button type="button" className="btn btn--ink" title="A módosítások mentése (a kész válasz és a címzett-lista felülíródik)" onClick={() => {
+                            onSaveLetter?.({ ...l, subject: editDraft.subject.trim() || l.subject, body: editDraft.body.trim() });
+                            // a CC-lista a kártya source-ára íródik - a küldő script PONTOSAN ennek a listának küld
+                            const cc = editDraft.cc.split(/[,;]/).map((x) => x.trim()).filter((x) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x));
+                            onState(r.sel, { cc }, 'Címzettek frissítve');
+                            setEditDraft(null);
+                          }}>💾 Mentés</button>
                           <button type="button" className="btn" title="Módosítások elvetése" onClick={() => setEditDraft(null)}>Mégse</button>
                         </div>
                       </>
@@ -1261,11 +1272,13 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                       <>
                         <div className="po-readbody-h">
                           <span className="s2">„{l.subject}"</span>
-                          <span className="to">→ {r.src.name}{(r.src.cc?.length ?? 0) > 0 ? ` · +${r.src.cc?.length} másolat` : ''}</span>
+                          <span className="to" title={`To: ${r.src.email}${(r.src.cc?.length ?? 0) > 0 ? ` · CC: ${(r.src.cc ?? []).join(', ')}` : ''}`}>
+                            → <strong>{r.src.name}</strong> &lt;{r.src.email}&gt;{(r.src.cc?.length ?? 0) > 0 ? ` · CC (${r.src.cc?.length}): ${(r.src.cc ?? []).join(', ')}` : ' · nincs másolat, csak ő kapja'}
+                          </span>
                         </div>
                         <div className="po-draft-b">{l.body}</div>
                         <div className="po-readbody-f">
-                          <button type="button" className="btn" title="A válasz átírása (tárgy és szöveg) - a módosítás helyben menthető" onClick={() => setEditDraft({ sel: r.sel, subject: l.subject, body: l.body })}>✎ Szerkesztés</button>
+                          <button type="button" className="btn" title="A válasz átírása (tárgy, szöveg ÉS címzettek) - a módosítás helyben menthető" onClick={() => setEditDraft({ sel: r.sel, subject: l.subject, body: l.body, cc: (r.src.cc ?? []).join(', ') })}>✎ Szerkesztés</button>
                           <button type="button" className="btn" title="Vissza a titkárnőnek: a válasz státusza visszaáll, a Titkárnő rögtön ezt a levelet nyitja hangmódban - újra meghallgathatod és új választ adhatsz rá" onClick={() => backToTitkar(r, l)}>🗣 Titkárnőnek</button>
                           <button type="button" className="btn btn--ink" title="A megírt válasz a vágólapra" onClick={() => copyLetter(`d-${r.sel}`, l)}>{copied === `d-${r.sel}` ? '✓ Másolva' : '⧉ Másolás'}</button>
                           <button type="button" className="btn" onClick={() => { setReadDraft(null); setEditDraft(null); }}>▴ Bezár</button>

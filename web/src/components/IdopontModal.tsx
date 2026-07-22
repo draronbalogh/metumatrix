@@ -19,7 +19,9 @@ import { PLACE_ONLINE } from './PlaceQuickPick';
 
 export interface IdopontSeed {
   taskId?: string | null;   // meglévő feladatról nyitva: ehhez kapcsolódik az esemény
-  topic?: string;           // előtöltött téma (pl. a kártya címe)
+  linkedTitle?: string;     // a kapcsolt kártya címe - CSAK kijelzésre (a téma NEM töltődik elő!)
+  topic?: string;           // előtöltött téma - kártyáról nyitva SZÁNDÉKOSAN üres (2026-07-22:
+                            // a kártya belső jegyzetei/címe ne folyjanak bele a meghívóba)
   names?: string[];         // előtöltött címzett-nevek
   emails?: string[];        // előtöltött egyedi email-címzettek (pl. a kártya feladója)
 }
@@ -161,7 +163,7 @@ export default function IdopontModal({ seed, db, teacherNames, tasks, onLinkTask
             <label>Miről egyeztetnétek? - ez lesz az esemény és a levél témája (diktálhatod is)</label>
             <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="pl. BA3 féléves tematika átbeszélése" />
             {seed.taskId && (
-              <p style={{ margin: '4px 0 0', fontSize: '.82rem', color: 'var(--ink-2)' }}>▤ Ehhez a kártyához kapcsolódik: <strong>{seed.topic}</strong></p>
+              <p style={{ margin: '4px 0 0', fontSize: '.82rem', color: 'var(--ink-2)' }}>▤ Ehhez a kártyához kapcsolódik: <strong>{seed.linkedTitle ?? '(kártya)'}</strong> · a címzettek átjöttek, a témát és a tartalmat te adod (diktálhatod) - a kártya jegyzetei NEM kerülnek a meghívóba.</p>
             )}
             {!seed.taskId && (
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}>

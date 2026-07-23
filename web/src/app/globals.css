@@ -2100,3 +2100,8 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 /* TELJES eredeti level a Postaban (2026-07-23): a gist melletti lenyithato teljes szoveg */
 .po-fullmail { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
 .po-fullbody { flex-basis: 100%; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: .88rem; line-height: 1.55; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 4px 0 0; }
+
+/* FELOLVASASI TEMPO chipek (2026-07-23): 1,5 / 1,75 / 2 / 2,3 - alap 1,75 */
+.po-speed { display: inline-flex; gap: 4px; align-items: center; }
+.po-speed-b { padding: 3px 9px; font-size: .74rem; font-weight: 700; font-family: var(--ff); color: var(--ink-2); background: var(--card); border: 1px solid var(--line); border-radius: 999px; cursor: pointer; }
+.po-speed-b.is-on { background: var(--hot); border-color: var(--hot); color: #fff; }

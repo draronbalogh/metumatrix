@@ -94,6 +94,24 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   const [speakKind, setSpeakKind] = useState<'short' | 'full' | null>(null); // melyik gomb szól épp
   useEffect(() => { if (!speaking) setSpeakKind(null); }, [speaking]);
   const speakSeq = useRef(0); // elavult onend-ek kiszűrése (cancel is end-et lő Chrome-ban)
+  // felolvasási tempó (2026-07-23 user-kérés): 1,5 / 1,75 / 2 / 2,3 - alapból 1,75;
+  // a választás megmarad (látható kapcsoló, nem rejtett állapot)
+  const SPEAK_RATES = [1.5, 1.75, 2, 2.3];
+  const [speakRate, setSpeakRate] = useState<number>(() => {
+    try { const v = Number(localStorage.getItem('md-speak-rate')); if (SPEAK_RATES.includes(v)) return v; } catch { /* privát mód */ }
+    return 1.75;
+  });
+  const speakRateRef = useRef(speakRate);
+  speakRateRef.current = speakRate;
+  const pickRate = (v: number) => { setSpeakRate(v); try { localStorage.setItem('md-speak-rate', String(v)); } catch { /* ignore */ } };
+  const rateChips = (
+    <span className="po-speed" title="Felolvasási tempó - a következő felolvasástól érvényes">
+      {SPEAK_RATES.map((v) => (
+        <button key={v} type="button" className={`po-speed-b${speakRate === v ? ' is-on' : ''}`}
+          onClick={() => pickRate(v)}>{String(v).replace('.', ',')}×</button>
+      ))}
+    </span>
+  );
   const taRef = useRef<HTMLTextAreaElement | null>(null); // a wizard válaszmezője - ide fókuszálunk
   useEffect(() => () => { if (typeof window !== 'undefined') window.speechSynthesis?.cancel(); }, []);
 
@@ -543,7 +561,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
       parts.forEach((p, i) => {
         const u = new SpeechSynthesisUtterance(p);
         u.lang = 'hu-HU';
-        u.rate = 1.5; // a felhasználó kérése: másfeles tempó
+        u.rate = speakRateRef.current; // választható tempó (1,5 / 1,75 / 2 / 2,3), alap 1,75
         if (hu) u.voice = hu;
         const finish = () => { if (seq !== speakSeq.current) return; if (i === parts.length - 1) { setSpeaking(false); onDone?.(); } };
         u.onend = finish;
@@ -841,6 +859,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                   onClick={() => { if (fullBody?.sel === r.sel) setFullBody(null); else void loadFullBody(r); }}>{fullBody?.sel === r.sel ? '▴ Teljes levél elrejtése' : '📄 Teljes eredeti levél'}</button>
                 <button type="button" className="btn" title="A teljes eredeti levél felolvasása"
                   onClick={() => { void (async () => { if (speaking) { stopSpeak(); return; } const t = fullBody?.sel === r.sel && !fullBody.text.startsWith('⚠') ? fullBody.text : await loadFullBody(r); if (t) { setSpeakKind('full'); speakText(t); } })(); }}>{speaking && speakKind === 'full' ? '⏹ Állj' : '🔊 Eredeti felolvasása'}</button>
+                {rateChips}
                 {fullBody?.sel === r.sel && <pre className="po-fullbody">{fullBody.text}</pre>}
               </div>
             )}
@@ -1067,12 +1086,12 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
               </div>
             )}
             <div className="po-wiz-toolrow">
-              <button type="button" className="btn" title="Rövid felolvasás: feladó, tárgy, összegzés (1.5x tempó)"
+              <button type="button" className="btn" title="Rövid felolvasás: feladó, tárgy, összegzés (választható tempó)"
                 onClick={() => { if (speaking) { stopSpeak(); return; } setSpeakKind('short'); speakText(letterText(r), titkarMode === 'voice' ? () => setWizStep('answer') : undefined); }}>
                 {speaking && speakKind === 'short' ? '⏹ Állj' : '🔊 Felolvasás'}
               </button>
               {thread.length > 0 && (
-                <button type="button" className="btn" title="A teljes szál felolvasása időrendben, az első levéltől az összegzésig (1.5x tempó)"
+                <button type="button" className="btn" title="A teljes szál felolvasása időrendben, az első levéltől az összegzésig (választható tempó)"
                   onClick={() => { if (speaking) { stopSpeak(); return; } setSpeakKind('full'); speakText(threadText(r), titkarMode === 'voice' ? () => setWizStep('answer') : undefined); }}>
                   {speaking && speakKind === 'full' ? '⏹ Állj' : '🧵 Teljes szál felolvasása'}
                 </button>
@@ -1083,6 +1102,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                   📄 Eredeti levél felolvasása
                 </button>
               )}
+              {rateChips}
               {r.src.bodyFile && fullBody?.sel === r.sel && <pre className="po-fullbody">{fullBody.text}</pre>}
               <button type="button" className="po-card" title={r.sel.startsWith('t:') ? 'A levélből készült FELADAT megnyitása' : 'A levélhez tartozó ESEMÉNY megnyitása'} onClick={() => onOpenCard(r.sel)}>▤ {r.sel.startsWith('t:') ? 'Feladat' : 'Esemény'}: {r.title}</button>
             </div>

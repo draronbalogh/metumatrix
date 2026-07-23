@@ -55,6 +55,6 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log('1) Ha nem nyilik meg magatol, nyisd meg ezt a bongeszoben (a balogh.aron@gmail.com fiokkal):\n', authUrl, '\n');
+  console.log('1) Ha nem nyilik meg magatol, nyisd meg ezt a bongeszoben (a draronbalogh@gmail.com fiokkal):\n', authUrl, '\n');
   exec(`start "" "${authUrl}"`, () => {});
 });

@@ -13,7 +13,9 @@ import AgendaDrawer, { AgendaDetailsRef } from './AgendaDrawer';
 import ITView from './ITView';
 import DocsView from './DocsView';
 import { EventModal, IntroModal, TaskModal } from './AgendaModals';
-import { Agenda, AgendaEvent, AgendaMeetSlot, AgendaSource, AgendaTask, DEFAULT_AGENDA, DEFAULT_OWNER, Letter, ReplyDraft, TaskStar, TaskStatus, addDaysYmd, emptyEvent, emptyTask, fmtDayHu, fmtEventWhen, isAwaiting, mergeAgendaDocs, nextPriority, normalizeAgenda, taskSteps, withOutEntry } from '@/data/agenda';
+import { Agenda, AgendaEvent, AgendaMeetSlot, AgendaSource, AgendaTask, DEFAULT_AGENDA, DEFAULT_OWNER, Letter, LetterRecipient, ReplyDraft, TaskStar, TaskStatus, addDaysYmd, emptyEvent, emptyTask, fmtDayHu, fmtEventWhen, isAwaiting, mergeAgendaDocs, nextPriority, normalizeAgenda, taskSteps, withOutEntry } from '@/data/agenda';
+import { composeMeetingLetter } from '@/lib/meetingLetter';
+import type { MeetSlot, MeetingMode } from '@/lib/letters';
 import { DEFAULT_PEOPLE, PeopleDB, PersonKind, RosterGroups, SenderRule, activeStudentNames, buildCanonicalNames, buildFooter, buildRoster, normalizePeople, emailOf, studentStatusNames, teacherStatusNames } from '@/data/people';
 import PostaView from './PostaView';
 import { normName, normTitle } from '@/lib/normalize';
@@ -131,6 +133,21 @@ export default function CurriculumApp() {
   const [view, setView] = useState<ViewId>('map');
   // app-szintű „Titkárnő fogalmaz" jelző: a nézetváltás/wizard-zárás NE tüntesse el
   const [titkarBusy, setTitkarBusy] = useState<string | null>(null);
+  // név -> Névjegyzék-kategória (T/H/...) ref-tükre: a korai callbackek (eventLetterRecipients)
+  // futásidőben olvassák, a kindOf memo lentebb tölti fel minden rendernél
+  const kindOfRef = useRef<Record<string, PersonKind>>({});
+  // POSTÁZÓ HUB (2026-07-22): az EGYETLEN levél-felület - 📨 Posta lista + ➕ Új levél · Sablontár
+  // fülekkel; a Posta menüpontból normál nézet, más nézet felett balról beúszó fly-in panel.
+  const [postaTab, setPostaTab] = useState<'lista' | 'ir'>('lista');
+  const [postaPanel, setPostaPanel] = useState(false);
+  // nyitott fly-in alatt a háttér-oldal NEM görgethet (mobilon a görgetés "átvérzett"
+  // a panel mögé, és beragadásnak tűnt) - záráskor visszaáll
+  useEffect(() => {
+    if (!postaPanel) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [postaPanel]);
   const [postaFocus, setPostaFocus] = useState<string | null>(null); // a Feladat/Esemény kártyáról a Postába vitt levél (fókusz)
   const [agenda, setAgenda] = useState<Agenda>(DEFAULT_AGENDA);
   const [peopleDB, setPeopleDB] = useState<PeopleDB>(DEFAULT_PEOPLE);
@@ -158,7 +175,6 @@ export default function CurriculumApp() {
   const [agendaDetails, setAgendaDetails] = useState<AgendaDetailsRef | null>(null); // feladat/esemény részletező
   const [introEdit, setIntroEdit] = useState(false);
   const [peopleEdit, setPeopleEdit] = useState(false);
-  const [notify, setNotify] = useState<NotifyTarget | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   // mobilon a főmenü vízszintesen görgethető - nézetváltáskor az aktív fül beúszik a képbe
   const navRef = useRef<HTMLDivElement>(null);
@@ -251,9 +267,8 @@ export default function CurriculumApp() {
     try { localStorage.setItem(THEME_KEY, JSON.stringify({ t: next, p: themePeriodId(new Date()) })); } catch { /* ignore */ }
     return next;
   });
-  // TELJES KÉPERNYŐ: gomb a téma-váltó mellett + mobilon az első érintésre automatikusan
-  // belép (betöltéskor a böngésző tiltja a kérés nélküli fullscreent - csak felhasználói
-  // gesztusból hívható). iPhone Safari nem támogatja a Fullscreen API-t → a gomb rejtve.
+  // TELJES KÉPERNYŐ: kizárólag a fejléc-gombbal (kézzel) - automatikus belépés nincs.
+  // iPhone Safari nem támogatja a Fullscreen API-t → a gomb rejtve.
   const [isFs, setIsFs] = useState(false);
   const [fsSupported, setFsSupported] = useState(false);
   useEffect(() => {
@@ -276,22 +291,9 @@ export default function CurriculumApp() {
     if (t.tagName === 'TEXTAREA' || t.isContentEditable) return true;
     return t.tagName === 'INPUT' && !/^(button|checkbox|radio|range|submit|reset|file|color)$/i.test((t as HTMLInputElement).type);
   };
-  useEffect(() => {
-    if (window.innerWidth > 720) return;
-    if (!fsSupportedNow()) return;
-    let done = false;
-    const onFirst = (e: Event) => {
-      if (done) return;
-      if (isTypable(e.target)) return; // szövegmezőbe koppintásra NEM lépünk be (fekete IME-mód)
-      done = true; // laponként csak EGYSZER - ha a felhasználó kilép, nem erőltetjük újra
-      enterFs();
-      window.removeEventListener('touchend', onFirst);
-      window.removeEventListener('click', onFirst);
-    };
-    window.addEventListener('touchend', onFirst, { passive: true });
-    window.addEventListener('click', onFirst);
-    return () => { window.removeEventListener('touchend', onFirst); window.removeEventListener('click', onFirst); };
-  }, []);
+  // Az AUTOMATIKUS mobil-fullscreen (első érintésre) MEGSZŰNT (2026-07-22 user-kérés:
+  // egy feladat-kártyára koppintva váratlanul teljes képernyőre váltott). Teljes képernyő
+  // CSAK kézzel, a fejléc-gombbal.
   // ANDROID FULLSCREEN + BILLENTYŰZET ÜTKÖZÉS: teljes képernyőben a billentyűzet a
   // saját, rendszer-témájú (akár fekete) „extract" szerkesztőjét rajzolja a lap fölé
   // (autofill/bankkártya-csíkkal), a bevitt szöveg nem látszik. Érintőképernyőn ezért
@@ -345,13 +347,30 @@ export default function CurriculumApp() {
     sp.set('view', v);
     return `${window.location.pathname}?${sp.toString()}`;
   };
+  // a Next.js App Router BELSŐ history-állapotát (__PRIVATE_NEXTJS_INTERNALS_TREE) meg KELL
+  // őrizni: ha a saját {v} állapotunk felülírja, a vissza-gomb az érintett bejegyzésnél
+  // TELJES újratöltést vált ki (2026-07-22 hibajelzés: "mintha újraindulna az oldal")
+  const histPush = (v: ViewId) => window.history.pushState({ ...(window.history.state ?? {}), v }, '', urlWithView(v));
+  const histReplace = (v: ViewId) => window.history.replaceState({ ...(window.history.state ?? {}), v }, '', urlWithView(v));
   useEffect(() => {
     if (histFromPop.current) { histFromPop.current = false; return; }
-    if (histReplaceNext.current) { histReplaceNext.current = false; window.history.replaceState({ v: view }, '', urlWithView(view)); return; }
-    window.history.pushState({ v: view }, '', urlWithView(view));
-  }, [view]);
-  const overlaysRef = useRef({ catMenu: false, editor: false, taskEdit: false, eventEdit: false, notify: false, introEdit: false, peopleEdit: false, loadOpen: false, agDetails: false, details: false });
-  overlaysRef.current = { catMenu: !!catMenu, editor: !!editor, taskEdit: !!taskEdit, eventEdit: !!eventEdit, notify: !!notify, introEdit, peopleEdit, loadOpen, agDetails: !!agendaDetails, details: !!details };
+    if (histReplaceNext.current) {
+      histReplaceNext.current = false;
+      // ALAP + ŐRSZEM bejegyzés: közvetlen nézet-mélylinknél (pl. ?view=tasks) is legyen
+      // mire visszalépni az appon BELÜL - enélkül az első "vissza" kilépett az oldalról,
+      // és újratöltéskor a Mátrixon találta magát a felhasználó (2026-07-22 hibajelzés).
+      // Az alap a URL SZERINTI nézetet kapja (nem a mount-pillanat 'map'-jét), különben
+      // a második "vissza" a Mátrixra ugrott volna.
+      const urlV = new URLSearchParams(window.location.search).get('view');
+      const baseV = urlV && (VIEW_ORDER as readonly string[]).includes(urlV) ? (urlV as ViewId) : view;
+      histReplace(baseV);
+      histPush(baseV);
+      return;
+    }
+    histPush(view);
+  }, [view]); // eslint-disable-line react-hooks/exhaustive-deps
+  const overlaysRef = useRef({ catMenu: false, editor: false, taskEdit: false, eventEdit: false, introEdit: false, peopleEdit: false, loadOpen: false, agDetails: false, details: false, postaPanel: false });
+  overlaysRef.current = { catMenu: !!catMenu, editor: !!editor, taskEdit: !!taskEdit, eventEdit: !!eventEdit, introEdit, peopleEdit, loadOpen, agDetails: !!agendaDetails, details: !!details, postaPanel };
   useEffect(() => {
     const onPop = (e: PopStateEvent) => {
       const o = overlaysRef.current;
@@ -359,7 +378,7 @@ export default function CurriculumApp() {
       else if (o.editor) setEditor(null);
       else if (o.taskEdit) setTaskEdit(null);
       else if (o.eventEdit) setEventEdit(null);
-      else if (o.notify) setNotify(null);
+      else if (o.postaPanel) setPostaPanel(false);
       else if (o.introEdit) setIntroEdit(false);
       else if (o.peopleEdit) setPeopleEdit(false);
       else if (o.loadOpen) setLoadOpen(false);
@@ -370,12 +389,18 @@ export default function CurriculumApp() {
         let v = st?.v ?? new URLSearchParams(window.location.search).get('view') ?? 'map';
         if (!(VIEW_ORDER as readonly string[]).includes(v)) v = 'map';
         if (EDITONLY_VIEWS.includes(v as ViewId) && !canEditRef.current) v = 'map';
-        histFromPop.current = true;
-        setView(v as ViewId);
+        if (v !== viewRef.current) {
+          histFromPop.current = true;
+          setView(v as ViewId);
+        } else {
+          // az alap-bejegyzés alá értünk (ugyanaz a nézet): maradunk, a bejegyzést visszatoljuk -
+          // az app nem lép ki és nem "indul újra" a vissza-gombtól
+          histPush(viewRef.current);
+        }
         return;
       }
       // réteg-zárás után a bejegyzést visszatoljuk, hogy a nézet ne változzon
-      window.history.pushState({ v: viewRef.current }, '', urlWithView(viewRef.current));
+      histPush(viewRef.current);
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
@@ -840,8 +865,43 @@ export default function CurriculumApp() {
     const e = agendaRef.current.events.find((x) => x.id === eventId);
     if (e) saveEvent({ ...e, mstatus: 'confirmed' });
   }, [saveEvent]);
-  // több javaslatból egy KIVÁLASZTOTT slot véglegesítése: az esemény arra áll át,
-  // a többi javaslat eltűnik; a Google-pár a saveEvent meglévő patch-útján frissül
+  // Egy esemény levél-címzettjei: elsődlegesen az eseményhez már kiment levél címzett-köre
+  // (garantáltan ugyanaz a kör, akit meghívtál), tartalékként a résztvevő-nevek a
+  // Névjegyzékből feloldva (Áron kiszűrve) + a kiváltó levél feladója és cc-je.
+  const eventLetterRecipients = useCallback((e: AgendaEvent): LetterRecipient[] => {
+    const prevLetter = [...(agendaRef.current.letters || [])].reverse()
+      .find((l) => l.targetId === e.id && l.dir === 'out' && (l.recipients?.length ?? 0) > 0);
+    if (prevLetter?.recipients?.length) return prevLetter.recipients;
+    const out: LetterRecipient[] = [];
+    [e.owner, ...e.people].filter((n): n is string => !!n && n !== DEFAULT_OWNER).forEach((n) => {
+      const em = emailOf(peopleRef.current, n);
+      if (em && !out.some((r) => r.email === em)) out.push({ name: n, email: em, kind: kindOfRef.current[n] ?? 'nev' });
+    });
+    if (e.source?.email && !out.some((r) => r.email === e.source?.email)) {
+      out.push({ name: e.source.name, email: e.source.email, kind: 'egyedi' });
+    }
+    (e.source?.cc ?? []).forEach((cc) => { if (!out.some((r) => r.email === cc)) out.push({ name: cc, email: cc, kind: 'egyedi' }); });
+    return out;
+  }, []);
+  // az esemény időpontja levél-slotként: a when szövegből olvassuk az óra:perc(-óra:perc) részt
+  const slotOfEvent = (e: AgendaEvent): MeetSlot => {
+    const m = e.when.match(/(\d{1,2})[:.](\d{2})(?:\s*-\s*(\d{1,2})[:.](\d{2}))?/);
+    return {
+      day: e.day ?? '',
+      start: m ? `${m[1].padStart(2, '0')}:${m[2]}` : '',
+      end: m?.[3] ? `${m[3].padStart(2, '0')}:${m[4]}` : '',
+    };
+  };
+  const modeOfEvent = (e: AgendaEvent): MeetingMode => {
+    const p = (e.place ?? '').trim().toLowerCase();
+    if (p.includes('online') && !p.startsWith('online')) return 'hibrid';
+    if (p.startsWith('online') || (!p && e.meetLink)) return 'online';
+    return e.meetLink ? 'hibrid' : 'szemelyes';
+  };
+  // több javaslatból egy KIVÁLASZTOTT slot véglegesítése: az esemény arra áll át, a többi
+  // javaslat eltűnik; a Google-pár a saveEvent patch-útján frissül, MAJD a résztvevők is
+  // felkerülnek a Google-eseményre .ics meghívóval (user-döntés 2026-07-22: fixnél mindig
+  // Google-meghívó is) - végül nem-blokkoló felajánlás: visszaigazoló levél a Postába.
   const confirmMeetSlot = useCallback((eventId: string, slot: AgendaMeetSlot) => {
     if (!canEditRef.current) return;
     const e = agendaRef.current.events.find((x) => x.id === eventId);
@@ -851,7 +911,50 @@ export default function CurriculumApp() {
       when: fmtEventWhen(slot.day, null, slot.day.slice(0, 7), slot.start || null),
       mstatus: 'confirmed', meetSlots: null,
     });
-  }, [saveEvent]);
+    const recips = eventLetterRecipients(e);
+    if (e.googleEventId && recips.length) {
+      // a meghívó-patch a VÉGLEGES időkkel megy (ne fusson versenyt a saveEvent patch-ével)
+      const sh = (slot.start || '09:00').padStart(5, '0');
+      const eh = slot.end && slot.end !== slot.start ? slot.end.padStart(5, '0') : `${String(Math.min(23, parseInt(sh, 10) + 1)).padStart(2, '0')}${sh.slice(2)}`;
+      void fetch('/api/meet', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+        body: JSON.stringify({
+          action: 'update', googleEventId: e.googleEventId,
+          startIso: `${slot.day}T${sh}:00`, endIso: `${slot.day}T${eh}:00`, tentative: false,
+          attendees: recips.map((r) => r.email), sendInvite: true,
+        }),
+      }).catch(() => { /* a Google-szinkron nem kritikus */ });
+    }
+    setConfirmOffer({ eventId, title: e.title, state: 'offer' });
+  }, [saveEvent, eventLetterRecipients]);
+  // a véglegesítés utáni felajánlás-sáv állapota (visszaigazoló levél a Postába)
+  const [confirmOffer, setConfirmOffer] = useState<{ eventId: string; title: string; state: 'offer' | 'busy' | 'done' | 'err'; msg?: string } | null>(null);
+  // 📝 Kimenet + lezárás: a diktált meeting-eredmény 1-2 mondatos összefoglalóként a kártya
+  // összefoglalójára kerül (hibánál a NYERS szöveg - a diktátum sosem vész el), opcionális lezárással.
+  const recordOutcome = useCallback(async (taskId: string, text: string, close: boolean) => {
+    if (!canEditRef.current || !text.trim()) return;
+    setTitkarBusy('📝 Kimenet rögzítése a kártyára…');
+    let summary = text.trim();
+    try {
+      const t = agendaRef.current.tasks.find((x) => x.id === taskId);
+      const res = await fetch('/api/summarize', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+        body: JSON.stringify({ text: summary, title: t?.title ?? null }),
+      });
+      const j = await res.json() as { ok: boolean; summary?: string };
+      if (j.ok && j.summary) summary = j.summary;
+    } catch { /* a nyers szöveg marad */ }
+    const now = new Date();
+    const stamp = `${now.getFullYear()}. ${String(now.getMonth() + 1).padStart(2, '0')}. ${String(now.getDate()).padStart(2, '0')}.`;
+    const cur = agendaRef.current;
+    commitAgenda({
+      ...cur,
+      tasks: cur.tasks.map((x) => (x.id === taskId
+        ? { ...x, summary: `${x.summary ? `${x.summary.trimEnd()}\n` : ''}Kimenet (${stamp}): ${summary}`, status: close ? 'done' : x.status }
+        : x)),
+    });
+    setTitkarBusy(null);
+  }, [commitAgenda]);
   const saveIntro = useCallback((s: string) => {
     commitAgenda({ ...agendaRef.current, intro: s });
     setIntroEdit(false);
@@ -924,44 +1027,65 @@ export default function CurriculumApp() {
     pendingTaskLink.current = { taskId, eventId: e.id };
     setEventEdit({ e, isNew: true });
   }, []);
-  // Levél-készítő megnyitása egy feladatból / eseményből - a sablon-szöveget a modál
+  // MINDEN levélírás a Postázóban (2026-07-22, telefonon IS): a hub beágyazott szerkesztője
+  // nyílik (➕ Új levél fül, más nézetből fly-in panellel); a régi külön modál megszűnt,
+  // mobilon a szerkesztő a fül tetején van, alatta a sablontár.
+  const [inlineTarget, setInlineTarget] = useState<NotifyTarget>({ targetType: null, targetId: null, task: null, event: null, names: [], steps: [], source: null });
+  const [inlineKey, setInlineKey] = useState(0); // új cél = friss beágyazott szerkesztő (remount)
+  const openComposerFor = useCallback((target: NotifyTarget) => {
+    setInlineTarget(target);
+    setInlineKey((n) => n + 1);
+    setPostaTab('ir');
+    if (viewRef.current !== 'posta') setPostaPanel(true);
+  }, []);
+  // Levél-készítő megnyitása egy feladatból / eseményből - a sablon-szöveget a szerkesztő
   // generálja; topicId-vel egy ajánlott témasablon rögtön be is töltődik
   const notifyTask = useCallback((id: string, topicId?: string) => {
     if (!canEditRef.current) return;
     const t = agendaRef.current.tasks.find((x) => x.id === id);
     if (!t) return;
-    setNotify({ targetType: 'task', targetId: t.id, task: t, event: null, names: [t.owner, ...t.people].filter((n): n is string => !!n), steps: taskSteps(t).map((s) => s.text).filter(Boolean), source: t.source ?? null, topicId: topicId ?? null });
-  }, []);
+    // Áron (DEFAULT_OWNER) SOSEM címzett a saját levelében - ha a kártya felelőse ő,
+    // az előtöltésből kimarad (különben "Kedves Áron!" levelet írt magának, 2026-07-23)
+    openComposerFor({ targetType: 'task', targetId: t.id, task: t, event: null, names: [t.owner, ...t.people].filter((n): n is string => !!n && n !== DEFAULT_OWNER), steps: taskSteps(t).map((s) => s.text).filter(Boolean), source: t.source ?? null, topicId: topicId ?? null });
+  }, [openComposerFor]);
   const notifyEvent = useCallback((id: string, topicId?: string) => {
     if (!canEditRef.current) return;
     const e = agendaRef.current.events.find((x) => x.id === id);
     if (!e) return;
     // az eseményhez kötött feladatok lépései is választhatók a levélbe
     const steps = agendaRef.current.tasks.filter((t) => t.eventId === e.id).flatMap((t) => taskSteps(t).map((s) => s.text)).filter(Boolean);
-    setNotify({ targetType: 'event', targetId: e.id, event: e, task: null, names: [e.owner, ...e.people].filter((n): n is string => !!n), steps, source: e.source ?? null, topicId: topicId ?? null });
+    openComposerFor({ targetType: 'event', targetId: e.id, event: e, task: null, names: [e.owner, ...e.people].filter((n): n is string => !!n && n !== DEFAULT_OWNER), steps, source: e.source ?? null, topicId: topicId ?? null });
+  }, [openComposerFor]);
+  // ugrás a Posta listájára EGY kártya levelére fókuszálva (jelvény-katt, okos routing) -
+  // a fület IS állítja (különben a fókusz a rejtett lista-fülben veszett el, 2026-07-22 bug)
+  const jumpToPosta = useCallback((sel: string) => {
+    if (!canEditRef.current) return;
+    setPostaTab('lista');
+    setPostaFocus(sel);
+    if (viewRef.current !== 'posta') setPostaPanel(true);
   }, []);
-  // válasz a Postából: a kiválasztott bot-tervezet a levélíróba töltve, a feladó
-  // (és levélszálnál a szál minden résztvevője) címzettként, a tétel kapcsolva
-  const notifyReply = useCallback((sel: string, draft: ReplyDraft, drafts: ReplyDraft[]) => {
+  // 📮 POSTA egy kártyáról (2026-07-22): EGY gomb, okos útvonal - ha a kártyának válaszra
+  // váró bejövője / kész válasza van, a Posta listája nyílik RÁ fókuszálva; különben az
+  // Új levél szerkesztő, a kártya címzettjeivel előtöltve. Más nézetből fly-in panelként.
+  const openPostaForCard = useCallback((kind: 'task' | 'event', id: string) => {
     if (!canEditRef.current) return;
     const cur = agendaRef.current;
-    const isTask = sel.startsWith('t:');
-    const t = isTask ? cur.tasks.find((x) => x.id === sel.slice(2)) ?? null : null;
-    const e = !isTask ? cur.events.find((x) => x.id === sel.slice(2)) ?? null : null;
-    const src = (t?.source ?? e?.source) ?? null;
-    if (!src) return;
-    setNotify({
-      targetType: isTask ? 'task' : 'event', targetId: sel.slice(2), task: t, event: e,
-      names: [], steps: t ? taskSteps(t).map((s) => s.text).filter(Boolean) : [],
-      source: src,
-      preload: { subject: draft.subject, body: draft.body, names: [src.email, ...(src.cc ?? [])] },
-      replyDrafts: drafts, replySel: sel,
-    });
-  }, [peopleDB]);
-  // levélírás a Levelek nézetből: kártya nélkül, a kiválasztott sablon előtöltve
-  const composeFromTopic = useCallback((t: TopicTemplate) => {
-    setNotify({ targetType: null, targetId: null, task: null, event: null, names: [], steps: [], source: null, topicId: t.id });
-  }, []);
+    const item = kind === 'task' ? cur.tasks.find((x) => x.id === id) : cur.events.find((x) => x.id === id);
+    const src = item?.source;
+    if (src && (isAwaiting(src) || src.status === 'drafted' || src.shadow)) {
+      // iker-kártyánál (feladat+esemény ugyanabból a levélből) a Posta-sor a FELADATON él -
+      // az esemény árnyék-forrása esetén a feladat sorára fókuszálunk
+      let sel = `${kind === 'task' ? 't' : 'e'}:${id}`;
+      if (kind === 'event' && src.shadow) {
+        const twin = cur.tasks.find((t) => t.eventId === id && t.source?.email === src.email);
+        if (twin) sel = `t:${twin.id}`;
+      }
+      setPostaTab('lista');
+      setPostaFocus(sel);
+      if (viewRef.current !== 'posta') setPostaPanel(true);
+    } else if (kind === 'task') notifyTask(id);
+    else notifyEvent(id);
+  }, [notifyTask, notifyEvent]);
   // a Levelek nézet BEÁGYAZOTT szerkesztője: széles kijelzőn ide töltődnek a
   // sablonok / mentett levelek; mobilon (nincs hely a 3. oszlopnak) modál nyílik
   const [topicReq, setTopicReq] = useState<{ t: TopicTemplate; n: number } | null>(null);
@@ -970,26 +1094,25 @@ export default function CurriculumApp() {
   // töltött beállításai (sablonfajta, aláírás) SSR-ben nem elérhetők (hydration)
   const [booted, setBooted] = useState(false);
   useEffect(() => { setBooted(true); }, []);
-  const [titkarOpen, setTitkarOpen] = useState(false); // 🗣 Titkárnő wizard a Levelekben
-  const inlineTarget = useMemo<NotifyTarget>(() => ({ targetType: null, targetId: null, task: null, event: null, names: [], steps: [], source: null }), []);
-  const isWide = () => typeof window !== 'undefined' && window.matchMedia('(min-width: 721px)').matches;
+  const [titkarOpen, setTitkarOpen] = useState(false); // 🗣 Titkárnő wizard (diktálás) a hubból
+  // sablon-kattintás: a hub ÉLŐ szerkesztőjébe töltődik (a megkezdett cél/címzettek maradnak)
   const useTopicInComposer = useCallback((t: TopicTemplate) => {
-    if (isWide()) setTopicReq({ t, n: Date.now() });
-    else composeFromTopic(t);
-  }, [composeFromTopic]);
-  // mentett levél megnyitása a Levelek nézetből: ha megvan a kártyája, annak
-  // kontextusában (lépések, feladó, mentett levelek listája), különben önállóan
+    setTopicReq({ t, n: Date.now() });
+    setPostaTab('ir');
+  }, []);
+  // mentett levél megnyitása: ha megvan a kártyája, annak kontextusában
+  // (lépések, feladó, mentett levelek listája), különben önállóan
   const openSavedLetter = useCallback((l: Letter) => {
     const cur = agendaRef.current;
     const preload = { subject: l.subject, body: l.body, names: l.names, letterId: l.id };
     const t = l.targetType === 'task' ? cur.tasks.find((x) => x.id === l.targetId) : null;
     const e = l.targetType === 'event' ? cur.events.find((x) => x.id === l.targetId) : null;
-    if (t) setNotify({ targetType: 'task', targetId: t.id, task: t, event: null, names: [], steps: taskSteps(t).map((s) => s.text).filter(Boolean), source: t.source ?? null, preload });
+    if (t) openComposerFor({ targetType: 'task', targetId: t.id, task: t, event: null, names: [], steps: taskSteps(t).map((s) => s.text).filter(Boolean), source: t.source ?? null, preload });
     else if (e) {
       const steps = cur.tasks.filter((x) => x.eventId === e.id).flatMap((x) => taskSteps(x).map((s) => s.text)).filter(Boolean);
-      setNotify({ targetType: 'event', targetId: e.id, event: e, task: null, names: [], steps, source: e.source ?? null, preload });
-    } else setNotify({ targetType: null, targetId: null, task: null, event: null, names: [], steps: [], source: null, preload });
-  }, []);
+      openComposerFor({ targetType: 'event', targetId: e.id, event: e, task: null, names: [], steps, source: e.source ?? null, preload });
+    } else openComposerFor({ targetType: null, targetId: null, task: null, event: null, names: [], steps: [], source: null, preload });
+  }, [openComposerFor]);
   // sablon→naptár kapcsolat rögzítése UID szerint (a fájlba is lementve)
   const linkTopic = useCallback((topicId: string, sel: string | null) => {
     if (!canEditRef.current) return;
@@ -1007,10 +1130,10 @@ export default function CurriculumApp() {
     return null;
   }, []);
   const openLetterInComposer = useCallback((l: Letter) => {
-    if (isWide()) setLetterReq({ l, n: Date.now() });
-    else openSavedLetter(l);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [openSavedLetter]);
+    setLetterReq({ l, n: Date.now() });
+    setPostaTab('ir');
+    if (viewRef.current !== 'posta') setPostaPanel(true);
+  }, []);
   // mentett levelek kezelése (a levelek az agenda részei, az automentés viszi fájlba)
   const saveLetter = useCallback((l: Letter) => {
     const cur = agendaRef.current;
@@ -1031,6 +1154,55 @@ export default function CurriculumApp() {
     const cur = agendaRef.current;
     commitAgenda({ ...cur, letters: (cur.letters || []).map((l) => (l.id === id ? { ...l, status } : l)) });
   }, [commitAgenda]);
+  // ✔ véglegesítés utáni felajánlás: visszaigazoló levél a Postába ("rögzítettem, itt a link")
+  const sendConfirmLetter = useCallback(async () => {
+    const off = confirmOffer;
+    if (!off) return;
+    const e = agendaRef.current.events.find((x) => x.id === off.eventId);
+    if (!e || !e.day) { setConfirmOffer(null); return; }
+    const recips = eventLetterRecipients(e);
+    if (!recips.length) { setConfirmOffer({ ...off, state: 'err', msg: 'Nincs email-címmel feloldható címzett ehhez az eseményhez.' }); return; }
+    setConfirmOffer({ ...off, state: 'busy' });
+    try {
+      const letter = await composeMeetingLetter({
+        kind: 'confirm', topic: e.title, description: null,
+        mode: modeOfEvent(e), slots: [slotOfEvent(e)], fixed: true,
+        place: e.place, meetLink: e.meetLink, recipients: recips, targetId: e.id,
+      });
+      saveLetter(letter);
+      setConfirmOffer({ ...off, state: 'done' });
+      window.setTimeout(() => setConfirmOffer((o) => (o && o.eventId === off.eventId && o.state === 'done' ? null : o)), 7000);
+    } catch (err) {
+      setConfirmOffer({ ...off, state: 'err', msg: `A levél nem készült el: ${err instanceof Error ? err.message : String(err)}` });
+    }
+  }, [confirmOffer, eventLetterRecipients, saveLetter]);
+  // ✉ Meghívó-levél egy MEGLÉVŐ eseményről (drawer-gomb): cím + idő + hely + Meet-link a
+  // résztvevőknek, a Titkárnő fogalmazza, a Posta Kimenőbe kerül. Tentative eseménynél a
+  // javaslat-hangnem megy (a slotokkal), véglegesnél meghívó-hangnem.
+  const inviteLetterForEvent = useCallback(async (eventId: string) => {
+    if (!canEditRef.current) return;
+    const e = agendaRef.current.events.find((x) => x.id === eventId);
+    if (!e) return;
+    if (!e.day) { setMeetMsg('Előbb adj napot az eseménynek (✎ Szerkesztés) - a meghívóhoz időpont kell.'); return; }
+    const recips = eventLetterRecipients(e);
+    const missing = [e.owner, ...e.people].filter((n): n is string => !!n && n !== DEFAULT_OWNER && !emailOf(peopleRef.current, n));
+    if (!recips.length) { setMeetMsg(`Nincs email-címmel feloldható résztvevő${missing.length ? ` (${missing.join(', ')})` : ''} - a ✉ Új levél gombbal kézzel adhatsz címzettet.`); return; }
+    setMeetMsg('✉ Meghívó-levél készül…');
+    setTitkarBusy('🗣 Titkárnő fogalmazza a meghívó-levelet…');
+    try {
+      const tentative = e.mstatus === 'tentative';
+      const slots: MeetSlot[] = tentative && e.meetSlots?.length
+        ? e.meetSlots.map((s) => ({ day: s.day, start: s.start ?? '', end: s.end ?? '' }))
+        : [slotOfEvent(e)];
+      const letter = await composeMeetingLetter({
+        kind: 'invite', topic: e.title, description: null,
+        mode: modeOfEvent(e), slots, fixed: !tentative,
+        place: e.place, meetLink: e.meetLink, recipients: recips, targetId: e.id,
+      });
+      saveLetter(letter);
+      setMeetMsg(`✉ Meghívó-levél a Posta Kimenőben (${recips.length} címzett${missing.length ? `; email nélkül kimaradt: ${missing.join(', ')}` : ''}).`);
+    } finally { setTitkarBusy(null); }
+  }, [eventLetterRecipients, saveLetter]);
   // ✉ jelzés a kártyákon: tételenkénti levélszám + hány vázlat vár még kiküldésre
   const letterStats = useMemo(() => {
     const m: Record<string, { n: number; drafts: number }> = {};
@@ -1519,6 +1691,8 @@ export default function CurriculumApp() {
     roster.forEach((r) => { if (!m[r.name]) m[r.name] = r.kind; });
     return m;
   }, [roster]);
+  // ref-tükör a korábban definiált callbackeknek (eventLetterRecipients) - futásidőben olvassák
+  kindOfRef.current = kindOf;
   // a név-szűrőre illesztett személy tanított tárgyai (a Feladatok nézet összegzőjéhez)
   const taught = useMemo(() => {
     if (!instr) return [];
@@ -1585,9 +1759,8 @@ export default function CurriculumApp() {
             <button className={view === 'catalog' ? 'is-on' : ''} onClick={() => setView('catalog')}>Katalógus</button>
             <button className={view === 'tasks' ? 'is-on' : ''} onClick={() => setView('tasks')}>Feladatok</button>
             <button className={view === 'events' ? 'is-on' : ''} onClick={() => setView('events')}>Események</button>
-            <button className={`editonly${view === 'posta' ? ' is-on' : ''}`} title="Bejövő levelek: válaszra váró feladók, előre megírt választervekkel"
-              onClick={() => { if (!canEdit) return; setView('posta'); }}>Posta{postaCount > 0 ? ` · ${postaCount}` : ''}</button>
-            <button className={`editonly${view === 'topics' ? ' is-on' : ''}`} onClick={() => { if (!canEdit) return; setView('topics'); }}>Levelek</button>
+            <button className={`editonly${view === 'posta' ? ' is-on' : ''}`} title="A Postázó: bejövő levelek választervekkel + új levél írása sablontárral - minden levél-ügy egy helyen"
+              onClick={() => { if (!canEdit) return; setPostaPanel(false); setView('posta'); }}>Posta{postaCount > 0 ? ` · ${postaCount}` : ''}</button>
             <button className={`editonly${view === 'people' ? ' is-on' : ''}`} title="Elérhetőségek: oktatók, hallgatók, intézményi / alumni / opponens / piaci kapcsolatok"
               onClick={() => { if (!canEdit) return; setView('people'); }}>Névjegyzék</button>
             <button className={view === 'it' ? 'is-on' : ''} title="IT és szoftverek: az Infopark termeiben telepített szoftverek" onClick={() => setView('it')}>IT</button>
@@ -1599,7 +1772,7 @@ export default function CurriculumApp() {
           </div>
           <span className="search-wrap">
             <input className="search search--corner" type="search" name="app-kereses" autoComplete="off" enterKeyHint="search"
-              placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : view === 'people' ? 'Keresés a névjegyzékben…' : view === 'orarend' ? 'Keresés az órarendben…' : view === 'it' ? 'Keresés szoftverre, teremre…' : view === 'docs' ? 'Keresés a segédletekben…' : view === 'topics' ? 'Keresés a sablonokban és levelekben…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />
+              placeholder={isCurr ? 'Keresés tárgyra, oktatóra…' : view === 'people' ? 'Keresés a névjegyzékben…' : view === 'orarend' ? 'Keresés az órarendben…' : view === 'it' ? 'Keresés szoftverre, teremre…' : view === 'docs' ? 'Keresés a segédletekben…' : view === 'posta' ? 'Keresés a sablonokban és levelekben…' : 'Keresés…'} value={q} onChange={(e) => setQ(e.target.value)} />
             {q && <button type="button" className="search-clear" title="Keresés törlése" onClick={() => setQ('')}>✕</button>}
           </span>
           <div className="toolbar-break" />
@@ -1696,7 +1869,7 @@ export default function CurriculumApp() {
               agenda={agenda} q={q} instr={instr} taught={taught} letterStats={letterStats}
               onAdd={() => { if (!canEdit) return; setTaskEdit({ t: emptyTask(), isNew: true }); }}
               onOpen={(id) => setAgendaDetails({ kind: 'task', id })}
-              onOpenPost={(sel) => { if (!canEdit) return; setPostaFocus(sel); setView('posta'); }}
+              onOpenPost={jumpToPosta}
               onEditIntro={() => { if (!canEdit) return; setIntroEdit(true); }}
               onPerson={onInstructor}
               onToggleDone={toggleDone}
@@ -1710,34 +1883,12 @@ export default function CurriculumApp() {
               onAdd={() => { if (!canEdit) return; setEventEdit({ e: emptyEvent(), isNew: true }); }}
               onOpen={(id) => setAgendaDetails({ kind: 'event', id })}
               onOpenTask={(id) => setAgendaDetails({ kind: 'task', id })}
-              onOpenPost={(sel) => { if (!canEdit) return; setPostaFocus(sel); setView('posta'); }}
+              onOpenPost={jumpToPosta}
               onPerson={onInstructor}
               onSyncOutlook={canEdit ? syncOutlookCalendar : undefined}
               onPublishGoogle={canEdit ? publishAllToGoogle : undefined}
               publishMsg={publishMsg}
               onReport={canEdit ? (mk) => setReportMonth(mk) : undefined}
-            />
-          ) : view === 'posta' ? (
-            <PostaView
-              agenda={agenda}
-              footer={buildFooter(peopleDB, false)}
-              senderRules={peopleDB.senderRules}
-              onSenderRule={setSenderRule}
-              onReply={notifyReply}
-              onBusy={setTitkarBusy}
-              onState={setSourceState}
-              onSaveEvent={saveEvent}
-              onLinkTaskEvent={linkTaskEvent}
-              onConfirmMeetSlot={confirmMeetSlot}
-              onEditInComposer={(l) => { openLetterInComposer(l); setView('topics'); }}
-              undo={postaUndo ? { label: postaUndo.label } : null}
-              onUndo={undoSourceState}
-              onOpenCard={(sel) => setAgendaDetails({ kind: sel.startsWith('t:') ? 'task' : 'event', id: sel.slice(2) })}
-              onSaveLetter={saveLetter}
-              onDeleteLetter={deleteLetter}
-              onRefresh={() => setLoadN((n) => n + 1)}
-              focusSel={postaFocus}
-              onFocusConsumed={() => setPostaFocus(null)}
             />
           ) : view === 'people' ? (
             // csak betöltött adattal mountolunk: a PeopleModal szerkesztőként mount-kor
@@ -1753,39 +1904,77 @@ export default function CurriculumApp() {
           ) : view === 'docs' ? (
             <DocsView q={q} />
           ) : null}
-          {/* A Levelek nézet mindig mountolva marad (csak elrejtjük), hogy a beágyazott
-              szerkesztőben írt piszkozat nézetváltáskor NE vesszen el. */}
-          <div className="view-pane" style={{ display: view === 'topics' ? 'block' : 'none' }}>
-            <TopicsView
-              q={q}
-              letters={agenda.letters || []}
-              onUseTopic={useTopicInComposer}
-              onOpenLetter={openLetterInComposer}
-              targetTitle={letterTargetTitle}
-              onTitkarno={() => { if (canEdit) setTitkarOpen(true); }}
-              composer={booted && (
-                <NotifyModal
-                  inline
-                  target={inlineTarget}
-                  topicReq={topicReq}
-                  letterReq={letterReq}
-                  ctxEvents={agenda.events}
-                  ctxTasks={agenda.tasks}
-                  topicLinks={agenda.topicLinks}
-                  onLinkTopic={linkTopic}
-                  onMarkReplied={markReplied}
-                  onBusy={setTitkarBusy}
-                  teacherNames={teacherNames}
-                  db={peopleDB}
-                  letters={(agenda.letters || []).filter((l) => l.targetId === null)}
-                  onSaveLetter={saveLetter}
-                  onDeleteLetter={deleteLetter}
-                  onLetterStatus={setLetterStatus}
-                  onSaveEvent={saveEvent}
-                  onClose={() => { /* beágyazva nincs bezárás */ }}
-                />
-              )}
-            />
+          {/* POSTÁZÓ HUB - az EGYETLEN levél-felület (2026-07-22): 📨 Posta lista + ➕ Új levél ·
+              Sablontár fülek. MINDIG mountolva marad (a megkezdett piszkozat nézetváltáskor nem
+              vész el); a Posta menüből normál nézet, MÁS nézet felett balról beúszó fly-in panel
+              (a kártyák ✉ gombjai ide nyitnak, a hátteret scrim takarja, ✕ / háttér-katt zár). */}
+          {postaPanel && view !== 'posta' && <div className="drawer-scrim posta-scrim" onClick={() => setPostaPanel(false)} />}
+          <div className={`view-pane posta-hub${postaPanel && view !== 'posta' ? ' posta-hub--fly' : ''}`}
+            style={{ display: view === 'posta' || postaPanel ? 'block' : 'none' }}>
+            {canEdit && (
+              <div className="wrap posta-tabs">
+                <div className="viewtoggle ag-mode">
+                  <button type="button" className={postaTab === 'lista' ? 'is-on' : ''} onClick={() => setPostaTab('lista')}>📨 Posta{postaCount > 0 ? ` · ${postaCount}` : ''}</button>
+                  <button type="button" className={postaTab === 'ir' ? 'is-on' : ''} title="Új levél írása: sablontár, villámgyors kitöltés, Titkárnő-fogalmazás" onClick={() => setPostaTab('ir')}>➕ Új levél · Sablontár</button>
+                </div>
+                {postaPanel && view !== 'posta' && <button type="button" className="btn posta-fly-close" onClick={() => setPostaPanel(false)}>✕ Bezárás</button>}
+              </div>
+            )}
+            <div style={{ display: postaTab === 'lista' ? 'block' : 'none' }}>
+              <PostaView
+                agenda={agenda}
+                footer={buildFooter(peopleDB, false)}
+                senderRules={peopleDB.senderRules}
+                onSenderRule={setSenderRule}
+                onBusy={setTitkarBusy}
+                onState={setSourceState}
+                onSaveEvent={saveEvent}
+                onLinkTaskEvent={linkTaskEvent}
+                onConfirmMeetSlot={confirmMeetSlot}
+                onEditInComposer={openLetterInComposer}
+                undo={postaUndo ? { label: postaUndo.label } : null}
+                onUndo={undoSourceState}
+                onOpenCard={(sel) => { setPostaPanel(false); setAgendaDetails({ kind: sel.startsWith('t:') ? 'task' : 'event', id: sel.slice(2) }); }}
+                onSaveLetter={saveLetter}
+                onDeleteLetter={deleteLetter}
+                onRefresh={() => setLoadN((n) => n + 1)}
+                focusSel={postaFocus}
+                onFocusConsumed={() => setPostaFocus(null)}
+              />
+            </div>
+            <div style={{ display: postaTab === 'ir' ? 'block' : 'none' }}>
+              <TopicsView
+                q={q}
+                letters={agenda.letters || []}
+                onUseTopic={useTopicInComposer}
+                onOpenLetter={openLetterInComposer}
+                targetTitle={letterTargetTitle}
+                onTitkarno={() => { if (canEdit) setTitkarOpen(true); }}
+                composer={booted && (
+                  <NotifyModal
+                    key={inlineKey}
+                    inline
+                    target={inlineTarget}
+                    topicReq={topicReq}
+                    letterReq={letterReq}
+                    ctxEvents={agenda.events}
+                    ctxTasks={agenda.tasks}
+                    topicLinks={agenda.topicLinks}
+                    onLinkTopic={linkTopic}
+                    onMarkReplied={markReplied}
+                    onBusy={setTitkarBusy}
+                    teacherNames={teacherNames}
+                    db={peopleDB}
+                    letters={(agenda.letters || []).filter((l) => l.targetId === (inlineTarget.targetId ?? null))}
+                    onSaveLetter={saveLetter}
+                    onDeleteLetter={deleteLetter}
+                    onLetterStatus={setLetterStatus}
+                    onSaveEvent={saveEvent}
+                    onClose={() => { /* beágyazva nincs bezárás */ }}
+                  />
+                )}
+              />
+            </div>
           </div>
           <LevelWizard
             open={titkarOpen}
@@ -1804,6 +1993,22 @@ export default function CurriculumApp() {
         {titkarBusy && (
           <div role="status" aria-live="polite" style={{ position: 'fixed', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: 'var(--ink)', color: 'var(--paper, #fff)', padding: '7px 16px', borderRadius: 12, fontSize: '.9rem', fontWeight: 600, boxShadow: '0 3px 12px rgba(0,0,0,.28)', maxWidth: '92vw', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             ⏳ {titkarBusy}
+          </div>
+        )}
+        {/* ✔ időpont-véglegesítés utáni felajánlás: visszaigazoló levél a Postába (nem blokkol) */}
+        {confirmOffer && (
+          <div role="status" aria-live="polite" style={{ position: 'fixed', top: titkarBusy ? 52 : 10, left: '50%', transform: 'translateX(-50%)', zIndex: 9998, background: 'var(--ink)', color: 'var(--paper, #fff)', padding: '8px 14px', borderRadius: 12, fontSize: '.88rem', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', maxWidth: '94vw', boxShadow: '0 3px 12px rgba(0,0,0,.28)' }}>
+            {confirmOffer.state === 'offer' && (<>
+              <span>✔ Időpont rögzítve: {confirmOffer.title}</span>
+              <button className="btn" onClick={() => { void sendConfirmLetter(); }}>✉ Visszaigazoló levél a Postába</button>
+              <button className="btn" onClick={() => setConfirmOffer(null)}>Most nem</button>
+            </>)}
+            {confirmOffer.state === 'busy' && <span>🗣 Titkárnő fogalmazza a visszaigazoló levelet…</span>}
+            {confirmOffer.state === 'done' && <span>✓ Visszaigazoló levél a Posta Kimenőben - a küldés onnan a te kezedben.</span>}
+            {confirmOffer.state === 'err' && (<>
+              <span>⚠ {confirmOffer.msg}</span>
+              <button className="btn" onClick={() => setConfirmOffer(null)}>Bezárás</button>
+            </>)}
           </div>
         )}
         {/* MENTÉS-DOKK a jobb alsó sarokban: desktopon a három gomb, mobilon hamburger-FAB */}
@@ -1924,10 +2129,13 @@ export default function CurriculumApp() {
           onSetDue={setTaskDue}
           onPerson={(n) => { setAgendaDetails(null); onInstructor(n); }}
           onNotify={() => { if (agendaDetails.kind === 'task') notifyTask(agendaDetails.id); else notifyEvent(agendaDetails.id); }}
+          onPosta={() => { const d = agendaDetails; setAgendaDetails(null); if (d) openPostaForCard(d.kind, d.id); }}
           onOpenLetter={openSavedLetter}
           onAddTaskFor={(eid) => { setAgendaDetails(null); addTaskForEvent(eid); }}
           onCreateMeet={createMeetForEvent}
           onConfirmMeet={confirmMeet}
+          onInviteLetter={(eid) => { void inviteLetterForEvent(eid); }}
+          onOutcome={(tid, text, close) => { void recordOutcome(tid, text, close); }}
           onTaskStatus={setTaskStatus}
           onSetStar={setTaskStar}
           onAddEventFor={(tid) => { setAgendaDetails(null); addEventForTask(tid); }}
@@ -2022,38 +2230,12 @@ export default function CurriculumApp() {
           onLinkTaskEvent={linkTaskEvent}
           onSaveEvent={saveEvent} onSaveTask={saveTask} onSaveLetter={saveLetter} onBusy={setTitkarBusy}
           onClose={() => setIdopont(null)}
-          onDone={(jump) => { setIdopont(null); if (jump) { setPostaFocus(null); setView('posta'); } }} />
+          onDone={(jump) => { setIdopont(null); if (jump) { setPostaFocus(null); setPostaTab('lista'); setView('posta'); } }} />
       )}
 
 
-      {notify && (
-        <NotifyModal
-          target={notify}
-          ctxEvents={agenda.events}
-          ctxTasks={agenda.tasks}
-          topicLinks={agenda.topicLinks}
-          onLinkTopic={linkTopic}
-          onMarkReplied={markReplied}
-          onBusy={setTitkarBusy}
-          teacherNames={teacherNames}
-          db={peopleDB}
-          letters={(agenda.letters || []).filter((l) => l.targetId === notify.targetId)}
-          onSaveLetter={saveLetter}
-          onDeleteLetter={deleteLetter}
-          onLetterStatus={setLetterStatus}
-          onSaveEvent={saveEvent}
-          onPlaceChange={notify.targetType === 'event' && notify.targetId ? (p: string) => {
-            const cur = agendaRef.current;
-            commitAgenda({ ...cur, events: cur.events.map((ev) => (ev.id === notify.targetId ? { ...ev, place: p.trim() || null } : ev)) });
-          } : undefined}
-          onSourceChange={notify.targetId ? (s) => {
-            const cur = agendaRef.current;
-            if (notify.targetType === 'task') commitAgenda({ ...cur, tasks: cur.tasks.map((t) => (t.id === notify.targetId ? { ...t, source: s } : t)) });
-            else if (notify.targetType === 'event') commitAgenda({ ...cur, events: cur.events.map((ev) => (ev.id === notify.targetId ? { ...ev, source: s } : ev)) });
-          } : undefined}
-          onClose={() => setNotify(null)}
-        />
-      )}
+      {/* A régi teljes képernyős levelező-modál MEGSZŰNT (2026-07-22): minden levél-út a
+          Postázó hubba fut (fly-in panel), telefonon is - ott a szerkesztő van felül. */}
 
       {loadOpen && (
         <div className="ovl" onMouseDown={(e) => { if (e.target === e.currentTarget) setLoadOpen(false); }}>

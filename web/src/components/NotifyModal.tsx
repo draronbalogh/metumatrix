@@ -7,7 +7,7 @@ import { buildLetter, rerollLetter, greetingFor, isKnownGreeting, LETTER_KINDS, 
 import GrowArea from './GrowArea';
 import PlaceQuickPick from './PlaceQuickPick';
 import MeetSlots from './MeetSlots';
-import { ModalTabs, TabDef } from './AgendaModals';
+import { ModalTabs, TabDef, useTabSwipe } from './AgendaModals';
 import { editHeaders } from '@/lib/editkey';
 import { createMeet, slotLabel } from '@/lib/meet';
 import { TOPIC_TEMPLATES, TOPIC_GROUPS, TopicTemplate, autoFill, fmtDay, paraphrase, normText, LINK_STOP } from '@/lib/topics';
@@ -146,16 +146,13 @@ interface Props {
 
 // Sorozat-küldésnél időt spórol: az utolsó sablon és az aláírás-állapot megjegyzése.
 const UI_KEY = 'mm-letter-ui';
-const loadUi = (): { kind: LetterKind; sigOn: boolean } => {
-  try {
-    if (typeof window !== 'undefined') {
-      const j = JSON.parse(localStorage.getItem(UI_KEY) || '{}') as { kind?: string; sigOn?: boolean };
-      const k = LETTER_KINDS.some((x) => x.id === j.kind) ? (j.kind as LetterKind) : 'felkeres';
-      return { kind: k, sigOn: j.sigOn === true }; // titulusos aláírás ALAPBÓL KI (az Outlook adja)
-    }
-  } catch { /* privát mód */ }
-  return { kind: 'felkeres', sigOn: false };
-};
+// 2026-07-23: SEMMIT nem jegyzünk meg a korábbi levelekből.
+// - kind: MINDIG 'ures' (megszólítás + zárás, KITALÁLT tartalom nélkül) - a korábban
+//   eltárolt hangnem (pl. 'valasz') láthatatlanul "Köszönöm a megkeresést…" típusú,
+//   kamu válaszlevelet generált olyan kártyán is, ahová senki nem írt. Tartalom csak
+//   sablonból, a Titkárnőtől vagy kézzel születik.
+// - sigOn: MINDIG ki (a titulusos aláírást az Outlook teszi hozzá küldéskor).
+const loadUi = (): { kind: LetterKind; sigOn: boolean } => ({ kind: 'ures', sigOn: false });
 const saveUi = (kind: LetterKind, sigOn: boolean): void => {
   try { localStorage.setItem(UI_KEY, JSON.stringify({ kind, sigOn })); } catch { /* privát mód */ }
 };
@@ -204,7 +201,10 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const [tq, setTq] = useState(''); // keresés a jobb oldali sablonpanelben
   // multistep fülek: Címzettek → Tartalom → Szöveg és küldés → Mentett levelek;
   // beágyazva (Levelek nézet) a Szöveg fül a kiindulás, mert oda töltődik a sablon
-  const [tab, setTab] = useState(inline ? 'text' : 'to');
+  // MINDIG a Címzettek fülön nyílik (2026-07-22 user-kérés) - sablon-betöltéskor
+  // az effektek úgyis a Szöveg fülre ugranak
+  const [tab, setTab] = useState('to');
+  const tabSwipe = useTabSwipe(['to', 'about', 'text', 'saved'], tab, setTab); // mobil fül-swipe
 
   // Kártya nélküli (önálló) levélnél is legyen honnan adatot húzni: a naptár
   // eseményei / feladatai közül kapcsolható egy tétel, és a dátum, helyszín,
@@ -723,7 +723,7 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   const [tkA, setTkA] = useState('');
   const [tkIntent, setTkIntent] = useState(''); // a felhasználó szabad szándék-szövege (diktálható)
   const titkarno = async (answer?: string | null) => {
-    if (!emails.length) { setResult('⚠ Előbb válassz címzettet (Címzettek fül) - a Titkárnő nekik fogalmaz, és nekik teszi a levelet a Postába.'); return; }
+    if (!emails.length) { setResult('⚠ Előbb válassz címzettet (Kinek fül) - a Titkárnő nekik fogalmaz.'); return; }
     setTkBusy(true); setResult('🗣 Titkárnő fogalmaz…'); onBusy?.('Titkárnő fogalmaz… (postázó)');
     try {
       const res = await fetch('/api/compose', {
@@ -744,7 +744,9 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
       if (!j.body) throw new Error('üres levél érkezett');
       const subj = j.subject ?? outSubject;
       setSubject(subj); setBody(j.body); setBodyDirty(true); setTkQ(null); setTkA('');
-      sendToOutbox({ subject: subj, body: j.body });
+      // 2026-07-23: a Titkárnő NEM teszi többé magától a Postába - a szöveget megírja,
+      // a küldés EGYETLEN útja a ✉ Küldésre a Postába gomb (a user kérése: egy út legyen)
+      setResult('✓ A Titkárnő megírta - nézd át, és nyomd meg a 📮 Postázóba gombot.');
     } catch (e) { setResult(`⚠ Titkárnő-hiba: ${e instanceof Error ? e.message : String(e)}`); }
     finally { setTkBusy(false); onBusy?.(null); }
   };
@@ -802,9 +804,9 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
   // ugyanaz a szerkesztő fut modálként (feladat/esemény ✉) és beágyazva (Levelek nézet);
   // a tartalom füleken oszlik el, felül állandó összegző sorral
   const NM_TABS: TabDef[] = [
-    { id: 'to', label: 'Címzettek', cls: 'c-blue' },
-    { id: 'about', label: 'Tartalom', cls: 'c-yellow' },
-    { id: 'text', label: 'Szöveg és küldés', cls: 'c-green' },
+    { id: 'to', label: 'Kinek', cls: 'c-blue' },
+    { id: 'about', label: 'Miről', cls: 'c-yellow' },
+    { id: 'text', label: 'Levél és küldés', cls: 'c-green' },
     { id: 'saved', label: `Mentett (${letters.length})`, cls: 'c-purple' },
   ];
   const kindLabel = LETTER_KINDS.find((k) => k.id === kind)?.label ?? '';
@@ -813,12 +815,15 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
         {/* az összegző chipsor megszűnt (felhasználói kérés: csak helyet foglalt);
             a hiányzó email-címekre a Címzettek fül maga figyelmeztet */}
         <ModalTabs tabs={NM_TABS} active={tab} onPick={setTab} />
-        <div className="pm-body nm-body">
+        <div className="pm-body nm-body" {...tabSwipe}>
           {tab === 'to' && (<>
           <div className="f-sec c-blue">1 · Kinek megy a levél?</div>
-          <div className="field full">
-            <label>A levél feladója (neki egy gombbal válaszolhatsz)</label>
-            {src ? (
+          {/* a BEJÖVŐ levél feladója - CSAK akkor jelenik meg, ha a kártya levélből
+              született (2026-07-22: új levélnél az üres "Feladó" mezők megtévesztőek
+              voltak - a feladó ilyenkor magától értetődően Áron, ezt nem kérdezzük) */}
+          {src && (
+            <div className="field full">
+              <label>A bejövő levél feladója (neki egy gombbal válaszolhatsz)</label>
               <div className="nm-groups">
                 <span className="chip is-on" title={src.email}>✉ {src.name || src.email}</span>
                 <button type="button" className="chip" title="Csak a feladó lesz a címzett, és Válasz-sablon készül (Re: az eredeti tárggyal)"
@@ -828,23 +833,17 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
                 <button type="button" className="chip chip--danger" title="Feladó törlése a kártyáról"
                   onClick={() => { setSrc(null); onSourceChange?.(null); }}>✕</button>
               </div>
-            ) : (
-              <div className="nm-srcrow">
-                <input value={srcName} onChange={(e) => setSrcName(e.target.value)} placeholder="Feladó neve (pl. Rizmajer Andrea)" />
-                <input type="email" value={srcEmail} onChange={(e) => setSrcEmail(e.target.value)} placeholder="email@cim.hu" />
-                <button type="button" className="btn" disabled={!srcEmail.trim()}
-                  onClick={() => { const s = { name: srcName.trim(), email: srcEmail.trim() }; setSrc(s); onSourceChange?.(s); }}>✓ Feladó mentése</button>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
           <div className="field full">
             <label>Címzettek: {selected.length + adhoc.length} címzett · {emails.length} email{missing.length ? ` · ${missing.length} címe hiányzik` : ''}</label>
             <div className="nm-row">
               <span className="nm-hint" title="Egy koppintás lecseréli a teljes címzett-listát">Gyors:</span>
               <div className="chipradio">
-                <button type="button" className="crx c-amber" disabled={!src}
-                  title={src ? `Válasz a feladónak: ${src.email}` : 'Előbb add meg fent a feladót (név + email), utána egy koppintás a válasz'}
-                  onClick={() => { if (!src) return; setSelected([]); setAdhoc([src.email]); if (confirmIfDirty()) { regenerate('valasz'); setTab('text'); } }}>↩ A feladónak</button>
+                {src && (
+                  <button type="button" className="crx c-amber" title={`Válasz a feladónak: ${src.email}`}
+                    onClick={() => { setSelected([]); setAdhoc([src.email]); if (confirmIfDirty()) { regenerate('valasz'); setTab('text'); } }}>↩ A feladónak</button>
+                )}
                 <button type="button" className="crx c-blue" title="A kártya felelőse és résztvevői"
                   onClick={() => { setSelected([...new Set(target.names)]); setAdhoc([]); }}>Résztvevők</button>
                 {([
@@ -976,22 +975,31 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               )}
             </div>
           )}
-          <div className="field full">
-            <label>Sablon (ugyanarra újra koppintva új megfogalmazás)</label>
-            <div className="chipradio">
-              {LETTER_KINDS.map((k) => (
-                <button type="button" key={k.id} aria-pressed={kind === k.id} className={`crx c-blue${kind === k.id ? ' is-on' : ''}`} onClick={() => { if (confirmIfDirty()) { regenerate(k.id); setTab('text'); } }}>{k.label}</button>
-              ))}
+          {/* 2026-07-23 újratervezés (user-kérés): a zavaros dupla "Sablon"-sor megszűnt -
+              a 6 hangnem-gomb TÖRÖLVE (a Titkárnő és a 🎲 Átfogalmaz lefedi), a sorrend a
+              munkamenet logikája: 1. miről szóljon (kártya-lépések) → 2. sablon → 3. a
+              sablon mezőinek kitöltése → 4. helyszín → 5. Meet */}
+          {allSteps.length > 0 && (
+            <div className="field full nm-steps">
+              <label>Miről szóljon a levél? ({selSteps.length ? `${selSteps.length} lépés kiválasztva` : 'nincs lépés a levélben'})</label>
+              <div className="cat-picker pp-picker">
+                <button type="button" className="chip" onClick={() => setSteps(allSteps)}>✓ Mind</button>
+                <button type="button" className="chip" onClick={() => setSteps([])}>✕ Egyik sem</button>
+                {allSteps.map((s, i) => (
+                  <button type="button" key={i} className={`chip${selSteps.includes(s) ? ' is-on' : ''}`} title={s} onClick={() => toggleStep(s)}>
+                    {s.length > 48 ? s.slice(0, 48) + '…' : s}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="field full">
-            <label>Vagy témasablon a tavalyi leveleid mintáiból (a [szögletes] mezőket töltsd ki)</label>
+          )}
+          <div className="field full nm-topicdrop">
+            <label>Sablon a leveleid mintáiból (nem kötelező) - betöltés után lent töltheted ki a mezőit</label>
             <select value={activeTopic?.id ?? ''} onChange={(e) => {
               const t = TOPIC_TEMPLATES.find((x) => x.id === e.target.value);
               if (!t) return;
               if (typedRef.current && !confirm('A kézi módosításaid elvesznek. Betöltsem az új sablont?')) return;
               applyTopic(t);
-              setTab('text');
             }}>
               <option value="">{activeTopic ? 'Sablon nélkül (hangnem-motor)' : 'Válassz témasablont…'}</option>
               {TOPIC_GROUPS.map((g) => (
@@ -1003,6 +1011,40 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               ))}
             </select>
           </div>
+          {fillTokens.length > 0 && (
+            <div className="field full nm-fill">
+              <label>Mezők - élőben íródnak a levélbe · ✕: nincs ilyen adat, a mondat kifogalmazódik</label>
+              {fillTokens.map((tok) => {
+                const k = fillKind(tok);
+                const v = fillVals[tok] ?? '';
+                const dead = killed.includes(tok);
+                const ok = !dead && fillReadyVal(tok, v);
+                const set = (val: string) => setFillVals((f) => ({ ...f, [tok]: val }));
+                return (
+                  <div key={tok} className={`nm-fillrow${dead ? ' is-dead' : ''}${ok ? ' is-ok' : ''}`}>
+                    <span className="t" title={tok}>{tok.slice(1, -1)}</span>
+                    {dead ? (
+                      <span className="nm-filldead">kihagyva a levélből</span>
+                    ) : k === 'datetime' ? (<>
+                      <input type="date" value={v.slice(0, 10)}
+                        onChange={(e) => set(e.target.value ? `${e.target.value}${v.length >= 16 ? ` ${v.slice(11, 16)}` : ''}` : '')} />
+                      <input type="time" className="nm-filltime" title="Óra:perc - ha kell" value={v.length >= 16 ? v.slice(11, 16) : ''}
+                        disabled={v.length < 10}
+                        onChange={(e) => set(e.target.value ? `${v.slice(0, 10)} ${e.target.value}` : v.slice(0, 10))} />
+                    </>) : k === 'text' || k === 'url' ? (
+                      <input type={k === 'url' ? 'url' : 'text'} value={v} placeholder={k === 'url' ? 'https://…' : 'érték…'}
+                        onChange={(e) => set(e.target.value)} />
+                    ) : (
+                      <input type={k} value={v} onChange={(e) => set(e.target.value)} />
+                    )}
+                    <button type="button" className={`btn nm-fillgo${dead ? ' nm-fillback' : ''}`}
+                      title={dead ? 'Visszaállítás - a mező visszakerül a levélbe' : 'Nincs ilyen adat - kivesszük a levélből, a mondat értelmes marad'}
+                      onClick={() => setKilled((ks) => (dead ? ks.filter((x) => x !== tok) : [...ks, tok]))}>{dead ? '↩' : '✕'}</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
           {target.event && (
             <div className="field full">
               <label>Helyszín (a levélbe és az eseményre is bekerül)</label>
@@ -1010,24 +1052,6 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               <PlaceQuickPick value={place} onPick={(v) => applyPlace(v, true)} />
             </div>
           )}
-          </>)}
-          {tab === 'text' && (<>
-          <div className="f-sec">3 · A levél szövege és küldése</div>
-          {replyChips && replyChips.length > 0 && (
-            <div className="field full">
-              <label>A bot választervei - kattintásra betöltődik, utána szabadon átírható</label>
-              <div className="chipradio">
-                {replyChips.map((v) => (
-                  <button key={v.label} type="button" className="crx c-blue" onClick={() => applyReplyVariant(v)}>{v.label}</button>
-                ))}
-              </div>
-            </div>
-          )}
-          <div className="field full">
-            <label>Tárgy</label>
-            <input value={subject} onChange={(e) => setSubject(e.target.value)} />
-            {outSubject !== subject && <div className="nm-outprev">Kimenet: <strong>{outSubject}</strong></div>}
-          </div>
           <div className="field full">
             <label>📅 Google Meet időpont(ok) a levélbe (több is ajánlható)
               <a className="nm-bodytoggle nm-meetlink" href="https://meet.google.com/new" target="_blank" rel="noopener noreferrer"
@@ -1055,128 +1079,54 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
               </div>
             )}
           </div>
-          <div className="nm-msgrow">
-            <div className="nm-side">
-              {/* kitöltő-panel: a levélben maradt [szögletes] mezők kis inputokkal tölthetők */}
-              {fillTokens.length > 0 && (
-                <div className="field full nm-fill">
-                  <label>Mezők - élőben íródnak a levélbe · ✕: nincs ilyen adat, a mondat kifogalmazódik</label>
-                  {fillTokens.map((tok) => {
-                    const k = fillKind(tok);
-                    const v = fillVals[tok] ?? '';
-                    const dead = killed.includes(tok);
-                    const ok = !dead && fillReadyVal(tok, v);
-                    const set = (val: string) => setFillVals((f) => ({ ...f, [tok]: val }));
-                    return (
-                      <div key={tok} className={`nm-fillrow${dead ? ' is-dead' : ''}${ok ? ' is-ok' : ''}`}>
-                        <span className="t" title={tok}>{tok.slice(1, -1)}</span>
-                        {dead ? (
-                          <span className="nm-filldead">kihagyva a levélből</span>
-                        ) : k === 'datetime' ? (<>
-                          <input type="date" value={v.slice(0, 10)}
-                            onChange={(e) => set(e.target.value ? `${e.target.value}${v.length >= 16 ? ` ${v.slice(11, 16)}` : ''}` : '')} />
-                          <input type="time" className="nm-filltime" title="Óra:perc - ha kell" value={v.length >= 16 ? v.slice(11, 16) : ''}
-                            disabled={v.length < 10}
-                            onChange={(e) => set(e.target.value ? `${v.slice(0, 10)} ${e.target.value}` : v.slice(0, 10))} />
-                        </>) : k === 'text' || k === 'url' ? (
-                          <input type={k === 'url' ? 'url' : 'text'} value={v} placeholder={k === 'url' ? 'https://…' : 'érték…'}
-                            onChange={(e) => set(e.target.value)} />
-                        ) : (
-                          <input type={k} value={v} onChange={(e) => set(e.target.value)} />
-                        )}
-                        <button type="button" className={`btn nm-fillgo${dead ? ' nm-fillback' : ''}`}
-                          title={dead ? 'Visszaállítás - a mező visszakerül a levélbe' : 'Nincs ilyen adat - kivesszük a levélből, a mondat értelmes marad'}
-                          onClick={() => setKilled((ks) => (dead ? ks.filter((x) => x !== tok) : [...ks, tok]))}>{dead ? '↩' : '✕'}</button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              {allSteps.length > 0 && (
-                <div className="field full nm-steps">
-                  <label>Miről szóljon a levél? ({selSteps.length ? `${selSteps.length} lépés kiválasztva` : 'nincs lépés a levélben'})</label>
-                  <div className="cat-picker pp-picker">
-                    <button type="button" className="chip" onClick={() => setSteps(allSteps)}>✓ Mind</button>
-                    <button type="button" className="chip" onClick={() => setSteps([])}>✕ Egyik sem</button>
-                    {allSteps.map((s, i) => (
-                      <button type="button" key={i} className={`chip${selSteps.includes(s) ? ' is-on' : ''}`} title={s} onClick={() => toggleStep(s)}>
-                        {s.length > 48 ? s.slice(0, 48) + '…' : s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <aside className="field full nm-topicpanel">
-                <label>Témasablonok ({TOPIC_TEMPLATES.length}) - koppints, és betöltődik</label>
-                <input value={tq} onChange={(e) => setTq(e.target.value)} placeholder="Keresés a sablonok között…" />
-                <div className="nm-topiclist">
-                  {TOPIC_GROUPS.map((g) => {
-                    const items = TOPIC_TEMPLATES.filter((t) => t.group === g && (!tq.trim() || (topicIndex.get(t.id) as string).includes(norm(tq))));
-                    if (!items.length) return null;
-                    return (
-                      <div key={g}>
-                        <div className="nm-tgh">{g}</div>
-                        {items.map((t) => (
-                          <button key={t.id} type="button" className={`nm-titem${activeTopic?.id === t.id ? ' is-on' : ''}`} title={`Tárgy: ${t.subject({ title: '', when: null, place: null, due: null })}`}
-                            onClick={() => { if (typedRef.current && !confirm('A kézi módosításaid elvesznek. Betöltsem az új sablont?')) return; applyTopic(t); }}>{t.label}</button>
-                        ))}
-                      </div>
-                    );
-                  })}
-                </div>
-              </aside>
-            </div>
-            <div className="field full nm-msg">
-              <label>Üzenet</label>
-              <div className="nm-tools">
-                <button type="button" className="nm-reroll-big"
-                  title={activeTopic ? `A betöltött témasablon (${activeTopic.label}) újratöltése friss adatokkal - a kézi módosításokra rákérdez` : 'Teljes újrafogalmazás: tárgy + minden mondat újragenerálódik, az adatok (időpont, helyszín) maradnak'}
-                  onClick={() => {
-                    if (activeTopic) {
-                      if (typedRef.current && !confirm('A kézi módosításaid elvesznek. Újratöltsem a témasablont?')) return;
-                      applyTopic(activeTopic);
-                    } else if (confirmIfDirty()) regenerate(kind);
-                  }}>{activeTopic ? '↻ Sablon újratöltése' : '🎲 Átfogalmaz'}</button>
-                <button type="button" className="nm-bodytoggle" title="Csak a megszólítást és az elköszönést cseréli, a törzsszöveg marad" onClick={() => setBody((b) => rerollLetter(b))}>↺ Megszólítás és zárás</button>
-                <button type="button" className="nm-bodytoggle" title="A tartalom és minden adat változatlan marad, csak néhány fordulat megfogalmazása cserélődik; az egyes/többes szám nem sérül"
-                  onClick={() => {
-                    const idx = body.indexOf(SIGNATURE_SEPARATOR);
-                    const head = idx >= 0 ? body.slice(0, idx) : body;
-                    const tail = idx >= 0 ? body.slice(idx) : '';
-                    const r = paraphrase(head);
-                    if (!r.changed) { setResult('Ebben a szövegben most nincs cserélhető fordulat.'); return; }
-                    setBody(r.text + tail);
-                    setBodyDirty(true);
-                    setResult(`✓ ${r.changed} fordulat átfogalmazva; a tartalom és az adatok változatlanok.`);
-                  }}>≈ Finom átfogalmazás</button>
-                <button type="button" aria-pressed={sigOn} className={`nm-bodytoggle${sigOn ? '' : ' nm-off'}`} title="A hivatalos aláírás (név-blokk) ki-be kapcsolása" onClick={toggleSig}>✒ Aláírás: {sigOn ? 'be' : 'ki'}</button>
-                <button type="button" aria-pressed={linksOn} className={`nm-bodytoggle${linksOn ? '' : ' nm-off'}`} title="Social / szakos linkek a levél alján (Web, Facebook, Instagram, TikTok, Discord). Alapból KI - kapcsold be, ha kell." onClick={toggleLinks}>🔗 Linkek: {linksOn ? 'be' : 'ki'}</button>
-                <button type="button" className="nm-bodytoggle" onClick={() => setBodyOpen((v) => !v)}>{bodyOpen ? '▲ elrejtés' : '▼ szerkesztés'}</button>
+          </>)}
+          {tab === 'text' && (<>
+          <div className="f-sec">3 · A levél szövege és küldése</div>
+          {replyChips && replyChips.length > 0 && (
+            <div className="field full">
+              <label>A bot választervei - kattintásra betöltődik, utána szabadon átírható</label>
+              <div className="chipradio">
+                {replyChips.map((v) => (
+                  <button key={v.label} type="button" className="crx c-blue" onClick={() => applyReplyVariant(v)}>{v.label}</button>
+                ))}
               </div>
-              {bodyOpen ? (
-                <GrowArea minRows={8} autoFocus value={body} onChange={(e) => { setBody(e.target.value); setBodyDirty(true); typedRef.current = true; }} />
-              ) : (
-                <button type="button" className="nm-preview" onClick={() => setBodyOpen(true)} title="Kattints a szerkesztéshez">
-                  <span className="nm-preview-text">{outBody}</span>
-                  <span className="more">✎ koppints a szövegre a szerkesztéshez · a 3. gombbal másolható</span>
-                </button>
-              )}
             </div>
+          )}
+          <div className="field full">
+            <label>Tárgy</label>
+            <input value={subject} onChange={(e) => setSubject(e.target.value)} />
+            {outSubject !== subject && <div className="nm-outprev">Kimenet: <strong>{outSubject}</strong></div>}
           </div>
-          <div className="nm-copyrow big">
-            <button className="btn nm-copy" disabled={!emails.length} onClick={() => copy(emails.join('; '), 'Címzettek')}><b>1</b> ⧉ Címzettek<span className="nm-cnt"> ({emails.length})</span></button>
-            <button className="btn nm-copy" disabled={!outSubject.trim()} onClick={() => copy(outSubject.trim(), 'Tárgy')}><b>2</b> ⧉ Tárgy</button>
-            <button className="btn nm-copy" disabled={!outBody.trim()} onClick={() => copy(outBody, 'Üzenet')}><b>3</b> ⧉ Üzenet</button>
-            <a className="btn nm-copy nm-outlook" target="_blank" rel="noopener noreferrer"
-              href={emails.length
-                ? `https://outlook.office.com/mail/deeplink/compose?bcc=${encodeURIComponent(emails.join(';'))}&subject=${encodeURIComponent(outSubject.trim())}`
-                : 'https://outlook.cloud.microsoft/mail/'}
-              title={emails.length
-                ? 'Új Outlook-levél előtöltve: a címzettek (titkos másolatban) és a tárgy már benne vannak, csak a szöveget illeszd be a 3-as gombbal'
-                : 'Az Office 365 Outlook webmail megnyitása új lapon'}>
-              {emails.length ? `✉ Outlook: új levél előtöltve (${emails.length} címzett) ↗` : '✉ Outlook megnyitása ↗'}
-            </a>
+          {/* 2026-07-23 egyszerűsítés: a Meet-blokk, a kitöltő-mezők és a lépés-választó a
+              Miről fülre költöztek; a MÁSODIK témasablon-oldalsáv (nm-topicpanel) megszűnt;
+              az átfogalmazó-gombokból kettő maradt (🎲 Átfogalmaz itt + 🗣 Titkárnő lent) */}
+          <div className="field full nm-msg">
+            <label>Üzenet</label>
+            <div className="nm-tools">
+              <button type="button" className="nm-reroll-big"
+                title={activeTopic ? `A betöltött témasablon (${activeTopic.label}) újratöltése friss adatokkal - a kézi módosításokra rákérdez` : 'Teljes újrafogalmazás: tárgy + minden mondat újragenerálódik, az adatok (időpont, helyszín) maradnak'}
+                onClick={() => {
+                  if (activeTopic) {
+                    if (typedRef.current && !confirm('A kézi módosításaid elvesznek. Újratöltsem a témasablont?')) return;
+                    applyTopic(activeTopic);
+                  } else if (confirmIfDirty()) regenerate(kind);
+                }}>{activeTopic ? '↻ Sablon újratöltése' : '🎲 Átfogalmaz'}</button>
+              <button type="button" aria-pressed={sigOn} className={`nm-bodytoggle${sigOn ? '' : ' nm-off'}`} title="A hivatalos aláírás (név-blokk) ki-be kapcsolása" onClick={toggleSig}>✒ Aláírás: {sigOn ? 'be' : 'ki'}</button>
+              <button type="button" aria-pressed={linksOn} className={`nm-bodytoggle${linksOn ? '' : ' nm-off'}`} title="Social / szakos linkek a levél alján (Web, Facebook, Instagram, TikTok, Discord). Alapból KI - kapcsold be, ha kell." onClick={toggleLinks}>🔗 Linkek: {linksOn ? 'be' : 'ki'}</button>
+              <button type="button" className="nm-bodytoggle" onClick={() => setBodyOpen((v) => !v)}>{bodyOpen ? '▲ elrejtés' : '▼ szerkesztés'}</button>
+            </div>
+            {bodyOpen ? (
+              <GrowArea minRows={8} autoFocus value={body} onChange={(e) => { setBody(e.target.value); setBodyDirty(true); typedRef.current = true; }} />
+            ) : (
+              <button type="button" className="nm-preview" onClick={() => setBodyOpen(true)} title="Kattints a szerkesztéshez">
+                <span className="nm-preview-text">{outBody}</span>
+                <span className="more">✎ koppints a szövegre a szerkesztéshez</span>
+              </button>
+            )}
           </div>
+          {/* a régi vágólapos gombsor (1 Címzettek / 2 Tárgy / 3 Üzenet + Outlook-webmail link)
+              MEGSZŰNT (2026-07-23): a küldés EGY úton megy - Küldésre a Postába, onnan
+              Outlook (piszkozat / Küldés most); másolni a Posta Kimenőjéből lehet. */}
           </>)}
           {tab === 'saved' && (
             <div className="field full">
@@ -1209,6 +1159,9 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
         </div>
         {/* 🗣 TITKÁRNŐ-SÁV: külön, teljes szélességű blokk a gombsor FELETT - mobilon is
             elérhető, nem nyomódik össze a gombok közé */}
+        {/* Titkárnő-sáv + küldés-gombsor CSAK a "Szöveg és küldés" fülön (2026-07-23 user-dühroham,
+            jogosan: minden fül alján ott virított ugyanaz a blokk - a küldésnek EGY helye van) */}
+        {tab === 'text' && (<>
         <div className="nm-titkar">
           <textarea value={tkIntent} onChange={(e) => setTkIntent(e.target.value)} rows={2}
             placeholder="🗣 Mit szeretnél? (kulcsszavakban - diktálhatod is; a Titkárnő ezt dolgozza bele a sablonba)" />
@@ -1222,21 +1175,19 @@ export default function NotifyModal({ target, teacherNames, db, letters, onSaveL
             </div>
           )}
           <button className="btn btn--ink nm-titkar-go" disabled={tkBusy} onClick={() => { void titkarno(); }}
-            title="A Titkárnő a sablon-vázlatból kész levelet fogalmaz (ha kritikus adat hiányzik, egy kérdést feltesz), és a levelet magától a Posta Kimenő listájába teszi - a küldés ott is a te kezedben marad">{tkBusy ? '⏳ Titkárnő fogalmaz…' : '🗣 Titkárnő a Postába'}</button>
+            title="A Titkárnő a vázlatból és a kérésedből kész levelet fogalmaz a Tárgy + Üzenet mezőkbe (ha kritikus adat hiányzik, egy kérdést feltesz). A küldésről utána TE döntesz a 📮 Postázóba gombbal.">{tkBusy ? '⏳ Titkárnő fogalmaz…' : '🗣 Titkárnő írja meg'}</button>
         </div>
         <div className="mfoot">
-          <button className="btn" onClick={saveLetter} disabled={!subject.trim()}>💾 Levél mentése</button>
+          {/* EGYETLEN kimenet (2026-07-23 user-kérés): innen NEM lehet direktben küldeni -
+              a levél a Postázóba kerül, a tényleges küldés ott történik. A régi közvetlen
+              SMTP-küldés gomb (configured/send) törölve. */}
+          <button className="btn" onClick={saveLetter} disabled={!subject.trim()} title="Elteszi a levelet vázlatnak a Mentett fülre - NEM küldi sehova">💾 Vázlat</button>
           <button className="btn btn--ink" onClick={() => sendToOutbox()}
-            title="A levél a Posta „Kimenő” listájába kerül; onnan a „Küldés most”-tal küldöd el (jó ékezet + logó). Ha hiányzik címzett vagy tárgy, itt írja ki, mi kell még.">✉ Küldésre a Postába ({emails.length})</button>
+            title="A levél a Postázó Kimenő listájába kerül; a tényleges küldés OTT történik (Küldés most / ütemezés). Ha hiányzik címzett vagy tárgy, itt írja ki, mi kell még.">📮 Postázóba ({emails.length} címzett)</button>
           <span className="sp" />
           {!inline && <button className="btn" onClick={onClose}>Bezárás</button>}
-          {configured && (
-            <button className="btn btn--ink" disabled={sending || !emails.length || !subject.trim()}
-              title="Küldés a beállított email-szolgáltatón át (BCC)" onClick={send}>
-              {sending ? 'Küldés…' : `✉ Küldés (${emails.length})`}
-            </button>
-          )}
         </div>
+        </>)}
     </>
   );
 

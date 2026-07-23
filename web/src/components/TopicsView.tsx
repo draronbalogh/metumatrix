@@ -54,7 +54,7 @@ export default function TopicsView({ q, letters, composer, onUseTopic, onOpenLet
 
   return (
     <section className="wrap tpv">
-      <PageHead title="Levelek" sub="a sablonra kattintva rögtön a szerkesztőbe töltődik - csak befejezni és küldeni kell">
+      <PageHead title="Új levél" sub="a sablonra kattintva rögtön a szerkesztőbe töltődik - csak befejezni és a Postába küldeni">
         <div className="viewtoggle ag-mode">
           <button type="button" className={tab === 'sablonok' ? 'is-on' : ''}
             onClick={() => setTab('sablonok')}>Sablontár ({TOPIC_TEMPLATES.length})</button>

@@ -1,17 +1,18 @@
 'use client';
 // 📅 IDŐPONT KÜLDÉSE - a KÖZPONTI, egy mozdulatos időpont-egyeztető (2026-07-21).
-// EGY űrlap: kinek + miről + mikor(ok) + hol (személyes/online/hibrid), és a Mehet gomb
-// után MINDENT a rendszer intéz: Meet-link (ha online), tentative esemény a naptárba
-// (több javaslatnál halvány "függő" csíkok), kapcsolt feladatkártya (ha nincs, létrejön),
-// Titkárnő-levél a Posta Kimenő listájába. CSUPA meglévő alkatrészből: RecipientPicker,
-// MeetSlots, lib/meet (createMeet/meetingText/slotLabel), /api/compose, saveEvent/saveLetter.
+// EGY űrlap: kinek + miről + mikor + hol (személyes/online/hibrid), KÉT móddal (2026-07-22):
+// 📌 FIX IDŐPONT (foglalás): egy időpont, confirmed esemény, Google-naptármeghívó (.ics) a
+//    résztvevőknek + meghívó-hangú levél ("bejegyeztem, itt a link, csatlakozzatok").
+// 🕐 TÖBB JAVASLAT (egyeztetés): tentative esemény, halvány naptár-csíkok, egyeztető levél
+//    ("melyik időpont felel meg?") - Google-meghívó NEM megy, csak a véglegesítés után.
+// CSUPA meglévő alkatrészből: RecipientPicker, MeetSlots, lib/meet, lib/meetingLetter.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AgendaEvent, AgendaTask, Letter, emptyEvent, emptyTask, fmtEventWhen } from '@/data/agenda';
 import { normTitle } from '@/lib/normalize';
-import { PeopleDB } from '@/data/people';
+import { PeopleDB, buildRoster, emailOf } from '@/data/people';
 import { MeetSlot, MeetingMode } from '@/lib/letters';
-import { createMeet, meetingText, slotLabel } from '@/lib/meet';
-import { emailOf } from '@/data/people';
+import { createMeet, slotLabel } from '@/lib/meet';
+import { composeMeetingLetter } from '@/lib/meetingLetter';
 import { editHeaders } from '@/lib/editkey';
 import RecipientPicker from './RecipientPicker';
 import MeetSlots from './MeetSlots';
@@ -63,14 +64,26 @@ export default function IdopontModal({ seed, db, teacherNames, tasks, onLinkTask
   const [selected, setSelected] = useState<string[]>(seed.names ?? []);
   const [adhoc, setAdhoc] = useState<string[]>(seed.emails ?? []);
   const [mode, setMode] = useState<MeetingMode>('online');
+  // 📌 fix (foglalás) vagy 🕐 javaslat-kör - mindkettő egyenrangú, beszélgetés-függő.
+  // Fix módban TÖBB alkalom is adható: mindegyik külön bejegyzett esemény + Google-meghívó,
+  // de EGY közös levél megy róluk ("gyere, amelyik belefér") - 2026-07-22 user-példa (értekezlet).
+  const [fixed, setFixed] = useState(true);
+  const [desc, setDesc] = useState(''); // 1 mondatos leírás: levélbe + esemény-jegyzetbe (Google-ba SOHA)
+  const [extra, setExtra] = useState(''); // szabad kérés a levélbe (pl. "ha egyik sem jó, kérj alternatív időpontot")
   const [slots, setSlots] = useState<MeetSlot[]>([{ day: '', start: '', end: '' }]);
   const [place, setPlace] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
+  // név -> Névjegyzék-kategória (T/H/I/...) - a Titkárnő megszólítása ebből tudja a szerepeket
+  const rosterKind = useMemo(() => {
+    const m = new Map<string, string>();
+    buildRoster(teacherNames, db).forEach((r) => { if (!m.has(r.name)) m.set(r.name, r.kind); });
+    return m;
+  }, [teacherNames, db]);
   // nevek -> email (Névjegyzék) + egyedi címek; akinek nincs email-je, kimarad
   const recipients = [
-    ...selected.map((n) => ({ name: n, email: emailOf(db, n) ?? '', kind: 'nev' })).filter((r) => !!r.email),
+    ...selected.map((n) => ({ name: n, email: emailOf(db, n) ?? '', kind: rosterKind.get(n) ?? 'nev' })).filter((r) => !!r.email),
     ...adhoc.map((e) => ({ name: e, email: e, kind: 'egyedi' })),
   ];
   // akinek nincs email-címe a Névjegyzékben, az kimarad - ezt LÁTHATÓAN jelezzük
@@ -84,29 +97,60 @@ export default function IdopontModal({ seed, db, teacherNames, tasks, onLinkTask
     if (!topic.trim()) { setMsg('⚠ Add meg, miről egyeztetnétek (első mező) - ez lesz a levél és az esemény témája.'); return; }
     if (!recipients.length) { setMsg(unresolved.length ? `⚠ A kiválasztottaknak nincs email-címük a Névjegyzékben (${unresolved.join(', ')}) - válassz mást, vagy adj meg egyedi email-címet.` : '⚠ Válassz legalább egy címzettet.'); return; }
     if (!filled.length) { setMsg(dayOnly ? '⚠ Az időponthoz a KEZDÉS ÓRA is kell (a nap mellett) - így tud naptár-bejegyzés és Meet készülni.' : '⚠ Adj meg legalább egy időpontot (nap + kezdés).'); return; }
-    setBusy(true); onBusy?.('📅 Időpont-egyeztetés összeállítása…');
+    setBusy(true); onBusy?.(fixed ? '📌 Foglalás összeállítása…' : '📅 Időpont-egyeztetés összeállítása…');
     try {
       const first = filled[0];
       const effPlace = mode === 'online' ? PLACE_ONLINE : (place.trim() || (mode === 'hibrid' ? `${place.trim() || '[helyszín]'} + online` : place.trim() || null));
-      // 1) Meet-link (online/hibrid) - tentative Google-esemény is születik hozzá
+      // 1) Google-bejegyzés. FIX mód: alkalmanként KÜLÖN confirmed esemény + .ics naptármeghívó
+      // a résztvevőknek (user-döntés 2026-07-22: fixnél a Google mindig küld meghívót),
+      // személyesnél Meet-link nélkül. JAVASLAT mód: EGY tentative esemény, meghívó NÉLKÜL -
+      // azt majd a véglegesítés küldi.
       let link = ''; let gid = '';
-      if (mode !== 'szemelyes') {
+      const made: { slot: MeetSlot; gid: string; link: string }[] = [];
+      if (fixed) {
+        let unconfigured = false;
+        for (let i = 0; i < filled.length; i++) {
+          const s = filled[i];
+          if (unconfigured) { made.push({ slot: s, gid: '', link: '' }); continue; }
+          setMsg(filled.length > 1 ? `Naptár-bejegyzés és Google-meghívó készítése (${i + 1}/${filled.length})…` : 'Naptár-bejegyzés és Google-meghívó készítése…');
+          const r = await createMeet({
+            title: topic.trim(), slots: [s], place: effPlace,
+            attendees: recipients.map((x) => x.email), sendInvite: true, fixed: true,
+            noMeet: mode === 'szemelyes', headers: editHeaders(),
+          });
+          if (r.unconfigured) { unconfigured = true; setMsg('⚠ A Google-naptár nincs beállítva (OAuth token) - a Google-meghívó NEM megy ki, a meghívást egyedül a levél viszi.'); }
+          else if (r.error) setMsg(`⚠ ${slotLabel(s)}: Google-bejegyzés nem készült (${r.error}) - a meghívást a levél viszi.`);
+          made.push({ slot: s, gid: r.googleEventId, link: r.link });
+        }
+        link = made[0]?.link ?? ''; gid = made[0]?.gid ?? '';
+      } else if (mode !== 'szemelyes') {
         setMsg('Meet-link készítése…');
-        const r = await createMeet({ title: topic.trim(), slots, place: effPlace, attendees: recipients.map((x) => x.email), sendInvite: false, headers: editHeaders() });
+        const r = await createMeet({
+          title: topic.trim(), slots, place: effPlace,
+          attendees: recipients.map((x) => x.email), sendInvite: false, fixed: false,
+          headers: editHeaders(),
+        });
         if (r.unconfigured) setMsg('⚠ A Google-naptár nincs beállítva (OAuth token) - a levél Meet-link NÉLKÜL megy, a linket utólag pótolhatod a kártyáról.');
         else if (r.error) setMsg(`⚠ Meet-link nem készült (${r.error}) - az egyeztetés enélkül megy tovább.`);
         link = r.link; gid = r.googleEventId;
       }
-      // 2) tentative esemény a naptárba (több javaslatnál függő csíkok)
-      const ev: AgendaEvent = {
-        ...emptyEvent(), title: topic.trim(),
-        when: `${fmtEventWhen(first.day, null, first.day.slice(0, 7), first.start ?? null)} (egyeztetés alatt)`,
-        sort: first.day.slice(0, 7), day: first.day, place: typeof effPlace === 'string' ? effPlace : null,
-        people: [...selected], mstatus: 'tentative',
-        googleEventId: gid || null, meetLink: link || null,
-        meetSlots: filled.length > 1 ? filled.map((s) => ({ day: s.day, start: s.start || null, end: s.end || null })) : null,
-      };
-      onSaveEvent(ev);
+      // 2) esemény(ek) a naptárba: fix -> alkalmanként külön confirmed esemény;
+      // javaslat -> EGY tentative esemény (függő csíkok)
+      const mkEvent = (s: MeetSlot, g: string, l: string): AgendaEvent => ({
+        ...emptyEvent(), id: `e-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+        title: topic.trim(),
+        when: fixed
+          ? fmtEventWhen(s.day, null, s.day.slice(0, 7), s.start ?? null)
+          : `${fmtEventWhen(s.day, null, s.day.slice(0, 7), s.start ?? null)} (egyeztetés alatt)`,
+        sort: s.day.slice(0, 7), day: s.day, place: typeof effPlace === 'string' ? effPlace : null,
+        people: [...selected], mstatus: fixed ? 'confirmed' : 'tentative',
+        note: desc.trim() || null,
+        googleEventId: g || null, meetLink: l || null,
+        meetSlots: !fixed && filled.length > 1 ? filled.map((x) => ({ day: x.day, start: x.start || null, end: x.end || null })) : null,
+      });
+      const events = fixed ? made.map((m) => mkEvent(m.slot, m.gid, m.link)) : [mkEvent(first, gid, link)];
+      events.forEach(onSaveEvent);
+      const ev = events[0]; // az elsődleges esemény: ehhez kapcsolódik a kártya és a levél
       // 3) feladatkártya: MEGLÉVŐHÖZ kapcsolás (kártyáról nyitva vagy téma-találatnál),
       // új kártya CSAK akkor, ha az ügynek tényleg nincs még kártyája
       const targetTask = seed.taskId ?? linkTask;
@@ -116,36 +160,23 @@ export default function IdopontModal({ seed, db, teacherNames, tasks, onLinkTask
         onSaveTask({
           ...emptyTask(), title: topic.trim(), eventId: ev.id,
           dueDate: first.day, people: [...selected],
-          summary: `Időpont-egyeztetés folyamatban (${recipients.map((r) => r.name).join(', ')}). A javasolt időpontok az eseményen; visszaigazolás után a kártyán véglegesíted.`,
+          summary: fixed
+            ? `Bejegyzett időpont${made.length > 1 ? 'ok' : ''}: ${made.map((m) => slotLabel(m.slot)).join(' ; ')} (${recipients.map((r) => r.name).join(', ')}). A meghívó-levél a Posta Kimenőben; a meeting után ide jön a kimenet.`
+            : `Időpont-egyeztetés folyamatban (${recipients.map((r) => r.name).join(', ')}). A javasolt időpontok az eseményen; visszaigazolás után a kártyán véglegesíted.`,
         });
       }
-      // 4) Titkárnő-levél -> Posta Kimenő (compose-hiba esetén determinisztikus tartalék)
-      setMsg('🗣 Titkárnő fogalmazza a levelet…'); onBusy?.('🗣 Titkárnő fogalmazza az időpont-egyeztető levelet…');
-      let subject = `Időpont-egyeztetés: ${topic.trim()}`;
-      let body = '';
-      try {
-        const res = await fetch('/api/compose', {
-          method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
-          body: JSON.stringify({
-            instruction: `Rövid, barátságos időpont-egyeztető levelet írj: ${topic.trim()}. A találkozó ${mode === 'szemelyes' ? 'személyes' : mode === 'hibrid' ? 'hibrid (személyes és online is)' : 'online (Google Meet)'}. Kérd, hogy jelezzék, melyik időpont felel meg.`,
-            templates: [], recipients, sendMode: recipients.length === 1 ? 'personal' : 'bcc', cardContext: [],
-            meeting: { slots: filled.map(slotLabel), place: typeof effPlace === 'string' ? effPlace : null, meetLink: link || null },
-            askAllowed: false, question: null, questionAnswer: null,
-          }),
-        });
-        const j = await res.json() as { ok: boolean; subject?: string; body?: string };
-        if (j.ok && j.body) { body = j.body; if (j.subject) subject = j.subject; }
-      } catch { /* tartalék lentebb */ }
-      if (!body) {
-        body = `Kedves {keresztnev}!\n\n${topic.trim()} ügyében szeretnék veled egyeztetni.\n\n${meetingText(mode, slots, link)}\n\nÜdvözlettel:\nBalogh Áron`;
-      }
-      onSaveLetter({
-        id: `l-${Date.now().toString(36)}`, createdAt: new Date().toISOString(),
-        targetType: 'event', targetId: ev.id,
-        subject, body, names: [...selected, ...adhoc], recipients,
-        status: 'outbox', dir: 'out', sendMode: recipients.length === 1 ? 'personal' : 'bcc',
-        scheduledFor: null, meetLink: link || undefined,
+      // 4) Titkárnő-levél -> Posta Kimenő (a közös meetingLetter-út, determinisztikus tartalékkal)
+      setMsg('🗣 Titkárnő fogalmazza a levelet…');
+      onBusy?.(fixed ? '🗣 Titkárnő fogalmazza a meghívó-levelet…' : '🗣 Titkárnő fogalmazza az időpont-egyeztető levelet…');
+      const letter = await composeMeetingLetter({
+        kind: 'invite', topic: topic.trim(), description: desc.trim() || null,
+        mode, slots: fixed ? made.map((m) => m.slot) : filled, fixed,
+        place: typeof effPlace === 'string' ? effPlace : null, meetLink: link || null,
+        slotLinks: fixed ? made.map((m) => m.link || null) : undefined,
+        extraAsk: extra.trim() || null,
+        recipients, targetId: ev.id, names: [...selected, ...adhoc],
       });
+      onSaveLetter(letter);
       onBusy?.(null);
       onDone(true);
     } catch (e) {
@@ -186,6 +217,10 @@ export default function IdopontModal({ seed, db, teacherNames, tasks, onLinkTask
             )}
           </div>
           <div className="field full">
+            <label>Rövid leírás (1 mondat) - a levélbe és az esemény jegyzetébe kerül, a Google-naptárba nem</label>
+            <input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="pl. átbeszéljük a jövő félév tantárgyi tematikáját" />
+          </div>
+          <div className="field full">
             <label>Kinek?</label>
             <RecipientPicker teacherNames={teacherNames} db={db} selected={selected} adhoc={adhoc}
               onChange={(s, a) => { setSelected(s); setAdhoc(a); }} />
@@ -205,16 +240,40 @@ export default function IdopontModal({ seed, db, teacherNames, tasks, onLinkTask
             )}
           </div>
           <div className="field full">
-            <label>Mikor? - több javaslatot is adhatsz, a naptárban halvány csíkként jelennek meg a visszaigazolásig</label>
+            <label>Mikor?</label>
+            <div className="chipradio" style={{ marginBottom: 6 }}>
+              <button type="button" className={`crx${fixed ? ' is-on' : ''}`}
+                title="Már megbeszélt, végleges időpont(ok): bejegyzem a naptárba, a Google meghívót küld, a levél meghívó-hangú"
+                onClick={() => setFixed(true)}>📌 Fix időpont (foglalás)</button>
+              <button type="button" className={`crx${!fixed ? ' is-on' : ''}`}
+                title="Még egyeztetünk: több javaslat, halvány naptár-csíkok, a levél megkérdezi, melyik felel meg"
+                onClick={() => setFixed(false)}>🕐 Több javaslat (egyeztetés)</button>
+            </div>
+            <p style={{ margin: '0 0 6px', fontSize: '.8rem', color: 'var(--muted)' }}>
+              {fixed
+                ? 'Minden megadott időpont VÉGLEGES: alkalmanként külön bejegyzett esemény + Google-naptármeghívó, és EGY közös meghívó-levél (több alkalomnál: "gyere, amelyik belefér").'
+                : 'Több javaslatot is adhatsz, a naptárban halvány csíkként jelennek meg a visszaigazolásig - végül EGY időpont lesz belőlük.'}
+            </p>
             <MeetSlots slots={slots} onSlots={setSlots} />
           </div>
+          <div className="field full">
+            <label>Megjegyzés a levélbe (opcionális) - a Titkárnő természetesen belefogalmazza</label>
+            <input value={extra} onChange={(e) => setExtra(e.target.value)} placeholder={'pl. "ha egyik időpont sem jó, kérj alternatív időpontot személyes beszélgetésre"'} />
+          </div>
+          {fixed && recipients.length > 0 && (
+            <div className="field full">
+              <p style={{ margin: 0, fontSize: '.82rem', color: 'var(--ink-2)' }}>📨 A Mehet pillanatában a Google naptármeghívót (.ics) küld {filled.length > 1 ? `mind a ${filled.length} alkalomra ` : ''}nekik ({recipients.length}): {recipients.map((r) => r.email).join(', ')}</p>
+            </div>
+          )}
           {msg && <div className="field full"><p style={{ margin: 0, fontSize: '.88rem', color: msg.startsWith('⚠') ? 'var(--hot)' : 'var(--muted)' }}>{msg}</p></div>}
           <div className="field full">
             <button type="button" className="btn btn--ink ip-go" disabled={busy} onClick={() => { void go(); }}>{busy ? '⏳ Készül…' : '📅 Mehet - levél + naptár + kártya'}</button>
           </div>
         </form>
         <div className="mfoot">
-          <span style={{ fontSize: '.8rem', color: 'var(--muted)' }}>A Mehet után: levél a Posta Kimenőbe + naptár-esemény + feladatkártya{mode !== 'szemelyes' ? ' + Meet-link' : ''} - a küldés a Postából a te kezedben marad.</span>
+          <span style={{ fontSize: '.8rem', color: 'var(--muted)' }}>{fixed
+            ? `A Mehet után: bejegyzett esemény + Google-meghívó a résztvevőknek${mode !== 'szemelyes' ? ' + Meet-link' : ''} + meghívó-levél a Posta Kimenőbe + feladatkártya - a levél küldése a Postából a te kezedben marad.`
+            : `A Mehet után: levél a Posta Kimenőbe + naptár-esemény + feladatkártya${mode !== 'szemelyes' ? ' + Meet-link' : ''} - a küldés a Postából a te kezedben marad.`}</span>
           <span className="sp" />
           <button className="btn" disabled={busy} onClick={onClose}>Mégsem</button>
           <button className="btn btn--ink" disabled={busy} onClick={() => { void go(); }}>{busy ? '⏳ Készül…' : '📅 Mehet'}</button>

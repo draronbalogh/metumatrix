@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from 'react';
 import { AgendaEvent, AgendaMeetSlot, AgendaTask, Letter, STATUS_LABEL, TaskStar, TaskStatus, TaskStep, PRIORITY_LABEL, TaskPriority, TASK_CATEGORIES, placeIcon, taskSteps, stepsDone, fmtDueHu, fmtEventWhen } from '@/data/agenda';
 import { RosterEntry, RosterGroups, PersonKind, KIND_LABEL } from '@/data/people';
 import { suggestTemplatesFor } from '@/lib/topics';
@@ -188,8 +188,13 @@ export function PeoplePicker({ selected, roster, groups, onToggle, onSet }: { se
 // (a NotifyModal is ezt használja, ezért exportált)
 export interface TabDef { id: string; label: string; cls?: string }
 export function ModalTabs({ tabs, active, onPick }: { tabs: TabDef[]; active: string; onPick: (id: string) => void }) {
+  // az AKTÍV fül mindig ússzon be a görgethető fülsorba (swipe-váltásnál is látszódjon a címe)
+  const rowRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    rowRef.current?.querySelector('.is-on')?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+  }, [active]);
   return (
-    <div className="mt-tabs" role="tablist">
+    <div className="mt-tabs" role="tablist" ref={rowRef}>
       {tabs.map((t, i) => (
         <button key={t.id} type="button" role="tab" aria-selected={active === t.id}
           className={`mt-tab${t.cls ? ` ${t.cls}` : ''}${active === t.id ? ' is-on' : ''}`}
@@ -199,6 +204,43 @@ export function ModalTabs({ tabs, active, onPick }: { tabs: TabDef[]; active: st
       ))}
     </div>
   );
+}
+
+// MOBIL FÜL-SWIPE (2026-07-22 user-kérés): a modál-törzsön balra húzás = következő fül,
+// jobbra = előző. Nem indul gépelhető mezőről vagy vízszintesen görgethető elemről, és
+// nem buborékol tovább a nézetváltó (viewport) swipe-hoz - modál fölött nézet nem vált.
+export function useTabSwipe(order: string[], tab: string, setTab: (t: string) => void) {
+  const start = useRef<{ x: number; y: number; skip: boolean } | null>(null);
+  const skippable = (t: EventTarget | null): boolean => {
+    let el = t instanceof HTMLElement ? t : null;
+    while (el) {
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable) return true;
+      if (el.scrollWidth > el.clientWidth + 8 && /auto|scroll/.test(getComputedStyle(el).overflowX)) return true;
+      el = el.parentElement;
+    }
+    return false;
+  };
+  const onTouchStart = (e: ReactTouchEvent) => {
+    if (window.innerWidth > 720) { start.current = null; return; }
+    e.stopPropagation();
+    const t = e.touches[0];
+    start.current = { x: t.clientX, y: t.clientY, skip: skippable(e.target) };
+  };
+  const onTouchEnd = (e: ReactTouchEvent) => {
+    if (window.innerWidth > 720) return;
+    e.stopPropagation();
+    const s = start.current;
+    start.current = null;
+    if (!s || s.skip) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - s.x;
+    const dy = t.clientY - s.y;
+    if (Math.abs(dx) < 64 || Math.abs(dy) > Math.abs(dx) * 0.7) return;
+    const i = order.indexOf(tab);
+    const ni = dx < 0 ? i + 1 : i - 1;
+    if (i >= 0 && ni >= 0 && ni < order.length) setTab(order[ni]);
+  };
+  return { onTouchStart, onTouchEnd };
 }
 
 // rövid név az alfeladat-badge-hez: a titulusok nélküli első (vezeték)név
@@ -300,7 +342,7 @@ function MailTab({ letters, title, saveFirst, onOpenLetter, onLetterStatus, onNo
     <>
       <div className="f-sec c-green">Levelezés</div>
       <div className="field full">
-        <label>Kapcsolt levelek ({letters.length}){letters.length && onOpenLetter ? ' - kattintásra mentés után a levélíróban nyílik meg' : ''}</label>
+        <label>Kapcsolt levelek ({letters.length}){letters.length && onOpenLetter ? ' - kattintásra mentés után a Postázóban nyílik meg' : ''}</label>
         {letters.length === 0 && <div className="se-empty">Ehhez a tételhez még nincs mentett levél.</div>}
         {letters.length > 0 && (
           <div className="mt-letters">
@@ -328,12 +370,12 @@ function MailTab({ letters, title, saveFirst, onOpenLetter, onLetterStatus, onNo
         <div className="field full">
           <label>Új levél</label>
           <div className="nm-groups">
-            <button type="button" className="btn nm-jump" title="Ment, és megnyitja a levélírót (értesítés, meghívó, felkérés, válasz)"
-              onClick={() => { if (saveFirst()) onNotify(); }}>✉ Mentés és levélírás</button>
+            <button type="button" className="btn nm-jump" title="Ment, és megnyitja a Postázót új levéllel (értesítés, meghívó, felkérés, válasz)"
+              onClick={() => { if (saveFirst()) onNotify(); }}>📮 Mentés és Posta</button>
           </div>
           {onNotifyTopic && suggested.length > 0 && (
             <>
-              <label className="mt-sublabel">Ehhez illő sablonok - kattintásra a levélíró a sablonnal nyílik</label>
+              <label className="mt-sublabel">Ehhez illő sablonok - kattintásra a Postázó a sablonnal nyílik</label>
               <div className="nm-groups">
                 {suggested.map((t) => (
                   <button key={t.id} type="button" className="chip" title={t.group}
@@ -388,6 +430,7 @@ export function TaskModal({ task, isNew, events, roster, rosterGroups, letters, 
   const [people, setPeopleRaw] = useState<string[]>(task.people);
   const [steps, setStepsRaw] = useState<TaskStep[]>(() => taskSteps(task));
   const [tab, setTab] = useState('alap');
+  const tabSwipe = useTabSwipe(TASK_TABS.map((t) => t.id), tab, setTab); // mobil fül-swipe
   // elmentetlen módosítás követése - bezárás előtt rákérdezünk
   const dirty = useRef(false);
   const tryClose = () => { if (dirty.current && !confirm('Elmentetlen módosítások vannak. Bezárod mentés nélkül?')) return; onClose(); };
@@ -426,7 +469,6 @@ export function TaskModal({ task, isNew, events, roster, rosterGroups, letters, 
         : task.source ?? null,
     });
   };
-  const saveAndNotify = () => { if (!d.title.trim() || !onNotify) return; save(); onNotify(); };
   const doneN = steps.filter((s) => s.done).length;
   // automatikus esemény-javaslat a címek egyezése alapján, amíg nincs kapcsolat
   const eventSugg = !d.eventId ? suggestEventFor(`${d.title} ${d.summary}`, events) : null;
@@ -442,7 +484,7 @@ export function TaskModal({ task, isNew, events, roster, rosterGroups, letters, 
           <button type="button" className="mt-chip" title="Kapcsolt levelek" onClick={() => setTab('mail')}>✉ {letters?.length ?? 0} levél</button>
         </div>
         <ModalTabs tabs={TASK_TABS} active={tab} onPick={setTab} />
-        <form className="f" onSubmit={(e) => { e.preventDefault(); save(); }}>
+        <form className="f" {...tabSwipe} onSubmit={(e) => { e.preventDefault(); save(); }}>
           {tab === 'alap' && (<>
             <div className="f-sec">Alapok</div>
             <div className="field full">
@@ -532,7 +574,8 @@ export function TaskModal({ task, isNew, events, roster, rosterGroups, letters, 
         </form>
         <div className="mfoot">
           {!isNew && <button className="btn btn--danger" onClick={onDelete}>Törlés</button>}
-          {onNotify && <button className="btn" title="Menti a feladatot, és megnyitja a levélírót" onClick={saveAndNotify}>✉ Levél</button>}
+          {/* a lábléc külön ✉ Levél gombja MEGSZŰNT (2026-07-22): levél-ügy KIZÁRÓLAG a
+              Postázóban - a Levelezés fül "📮 Mentés és Posta" gombja az egyetlen út innen */}
           <span className="sp" />
           <button className="btn" onClick={tryClose}>Mégsem</button>
           <button className="btn btn--ink" onClick={save}>Mentés</button>
@@ -582,6 +625,7 @@ export function EventModal({ event, isNew, roster, rosterGroups, tasks, letters,
   const [featured, setFeaturedRaw] = useState(event.featured);
   const [people, setPeopleRaw] = useState<string[]>(event.people);
   const [tab, setTab] = useState('alap');
+  const tabSwipe = useTabSwipe(EVENT_TABS.map((t) => t.id), tab, setTab); // mobil fül-swipe
   // több javasolt Meet-időpont: mentéskor az esemény meetSlots mezőjébe kerülnek,
   // az esemény "egyeztetés alatt" (tentative) lesz, a naptár halványan jelöli őket
   const [meetSlots, setMeetSlotsRaw] = useState<MeetSlot[]>(() =>
@@ -628,7 +672,6 @@ export function EventModal({ event, isNew, roster, rosterGroups, tasks, letters,
       mstatus: cleanSlots.length ? 'tentative' : event.mstatus ?? null,
     });
   };
-  const saveAndNotify = () => { if (!d.title.trim() || !onNotify) return; save(); onNotify(); };
   const linked = tasks ?? [];
 
   return (
@@ -643,7 +686,7 @@ export function EventModal({ event, isNew, roster, rosterGroups, tasks, letters,
           <button type="button" className="mt-chip" title="Kapcsolt levelek" onClick={() => setTab('mail')}>✉ {letters?.length ?? 0} levél</button>
         </div>
         <ModalTabs tabs={EVENT_TABS} active={tab} onPick={setTab} />
-        <form className="f" onSubmit={(e) => { e.preventDefault(); save(); }}>
+        <form className="f" {...tabSwipe} onSubmit={(e) => { e.preventDefault(); save(); }}>
           {tab === 'alap' && (<>
             <div className="f-sec">Alapok</div>
             <div className="field full">
@@ -760,7 +803,8 @@ export function EventModal({ event, isNew, roster, rosterGroups, tasks, letters,
         </form>
         <div className="mfoot">
           {!isNew && <button className="btn btn--danger" onClick={onDelete}>Törlés</button>}
-          {onNotify && <button className="btn" title="Menti az eseményt, és megnyitja a levélírót" onClick={saveAndNotify}>✉ Levél</button>}
+          {/* a lábléc külön ✉ Levél gombja MEGSZŰNT (2026-07-22): levél-ügy KIZÁRÓLAG a
+              Postázóban - a Levelezés fül "📮 Mentés és Posta" gombja az egyetlen út innen */}
           <span className="sp" />
           <button className="btn" onClick={tryClose}>Mégsem</button>
           <button className="btn btn--ink" onClick={save}>Mentés</button>

@@ -17,8 +17,20 @@ export const slotLabel = (s: MeetSlot): string => {
 
 // A levelbe/valaszba beszurhato meeting-szoveg (determinisztikus, a Posta valasz-szerkesztojehez).
 // A postazo/wizard a letters.ts meetingBlock-ot hasznalja (valtozatos hangnem); itt egyszeru, stabil szoveg kell.
-export const meetingText = (mode: MeetingMode, slots: MeetSlot[], link?: string): string => {
+// fixed: BEJEGYZETT (fix) idopont - meghivo-hangnem, nincs "melyik felel meg" kerdes.
+export const meetingText = (mode: MeetingMode, slots: MeetSlot[], link?: string, fixed?: boolean): string => {
   const times = slots.map(slotLabel).filter(Boolean);
+  if (fixed) {
+    const what = mode === 'szemelyes'
+      ? 'Személyes találkozót'
+      : mode === 'hibrid'
+        ? 'Hibrid (személyes és online) találkozót'
+        : 'Online (Google Meet) találkozót';
+    const lines = [`${what} jegyeztem be: ${times[0] ?? ''}.`];
+    if (mode !== 'szemelyes') lines.push(link ? `Link: ${link}` : 'A belépési linket külön küldöm.');
+    lines.push('Kérlek, csatlakozz a megadott időpontban.');
+    return lines.join('\n');
+  }
   const lead = mode === 'szemelyes'
     ? 'Személyes egyeztetést javaslok'
     : mode === 'hibrid'
@@ -35,21 +47,31 @@ export const meetingText = (mode: MeetingMode, slots: MeetSlot[], link?: string)
 
 export interface CreatedMeet { link: string; googleEventId: string; unconfigured: boolean; error?: string }
 
-// Egy kozos Meet-link tobb javasolt idohoz: az ELSO kitoltott slot lesz a Google-esemeny
-// ideje (tentative), a tobbi a leirasban javaslatkent. Token/OAuth nelkul unconfigured:true.
+// ora:perc + 1 ora (23-nal plafon) - ures zaro idonel ne szulessen 0 perces Google-esemeny
+const plusHour = (hm: string): string => {
+  const [h, m] = hm.split(':').map((x) => parseInt(x, 10));
+  const hh = Math.min(23, (Number.isNaN(h) ? 9 : h) + 1);
+  return `${String(hh).padStart(2, '0')}:${String(Number.isNaN(m) ? 0 : m).padStart(2, '0')}`;
+};
+
+// Egy kozos Meet-link: az ELSO kitoltott slot lesz a Google-esemeny ideje.
+// fixed=false (javaslat-kor): tentative esemeny; fixed=true (foglalas): confirmed.
+// Token/OAuth nelkul unconfigured:true.
 export async function createMeet(opts: {
   title: string;
   slots: MeetSlot[];
   place?: string | null;
   attendees: string[];
   sendInvite?: boolean;
+  fixed?: boolean;
+  noMeet?: boolean; // sima naptarbejegyzes Meet-link nelkul (szemelyes fix foglalas meghivoval)
   headers?: Record<string, string>;
 }): Promise<CreatedMeet> {
   const filled = opts.slots.filter((s) => s.day && s.start);
   if (!filled.length) return { link: '', googleEventId: '', unconfigured: false, error: 'nincs kitöltött időpont (nap + kezdés)' };
   const first = filled[0];
   const startIso = `${first.day}T${first.start}:00`;
-  const endIso = `${first.day}T${first.end || first.start}:00`;
+  const endIso = `${first.day}T${(first.end && first.end !== first.start ? first.end : plusHour(first.start ?? ''))}:00`;
   try {
     const res = await fetch('/api/meet', {
       method: 'POST',
@@ -61,8 +83,10 @@ export async function createMeet(opts: {
         // eseményt, ha sendInvite false (2026-07-22 tanulság - kéretlen értesítés ment ki).
         // A meghívást a LEVÉL viszi; a Google-esemény a saját naptárad bejegyzése.
         location: opts.place || undefined, attendees: opts.sendInvite ? opts.attendees : [],
-        sendInvite: !!opts.sendInvite, tentative: true,
-        description: `METU Media Design egyeztetés. Javasolt időpontok:\n${filled.map(slotLabel).join('\n')}`,
+        sendInvite: !!opts.sendInvite, tentative: !opts.fixed, noMeet: !!opts.noMeet,
+        // a Google-esemeny leirasa MINDIG ures: a slot-lista/belso jegyzet nem kerulhet
+        // kulso feluletre (2026-07-22 privacy-szabaly)
+        description: '',
       }),
     });
     const j = await res.json() as { ok?: boolean; unconfigured?: boolean; meetLink?: string; googleEventId?: string; error?: string };

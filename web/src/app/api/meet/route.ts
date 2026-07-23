@@ -30,6 +30,8 @@ interface UpdateBody {
   timeZone?: string;
   tentative?: boolean;
   clearAttendees?: boolean; // résztvevők eltávolítása (szivárgás-takarítás)
+  attendees?: string[];     // résztvevők beállítása - CSAK sendInvite-tal együtt (fix foglalás véglegesítése)
+  sendInvite?: boolean;     // a Google .ics meghívót küld a résztvevőknek
 }
 interface DeleteBody {
   action: 'delete';

@@ -42,6 +42,10 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   if (!canWrite(req)) return writeDenied();
 
+  // melyik napra: 'today' (alap) vagy 'yesterday' (a Posta „Tegnapi levelek" gombja)
+  let scope: 'today' | 'yesterday' = 'today';
+  try { const b = await req.json() as { scope?: unknown }; if (b?.scope === 'yesterday') scope = 'yesterday'; } catch { /* nincs törzs: ma */ }
+
   // zárolás: ha < 15 perce fut egy beolvasás, ne indítsunk másikat (profil-zár)
   try {
     const st = await fs.stat(LOCK);
@@ -50,12 +54,16 @@ export async function POST(req: Request) {
     }
   } catch { /* nincs lock: mehet */ }
 
-  const today = ymdLocal(new Date());
-  // a bot-spec + MAI szűkítés (a megosztott promptot NEM módosítjuk, ide fűzzük a szűkítést)
+  const target = new Date();
+  if (scope === 'yesterday') target.setDate(target.getDate() - 1);
+  const day = ymdLocal(target);
+  const scopeWord = scope === 'yesterday' ? 'TEGNAPI' : 'MAI';
+  const btnWord = scope === 'yesterday' ? 'Tegnapi levelek' : 'Mai levelek beolvasása';
+  // a bot-spec + nap-szűkítés (a megosztott promptot NEM módosítjuk, ide fűzzük a szűkítést)
   let combined: string;
   try {
     const base = await fs.readFile(PROMPT, 'utf8');
-    combined = `${base}\n\n## MAI-SZŰKÍTÉS (a Posta „Mai levelek beolvasása" gombjáról indítva)\nCSAK a MAI napon (${today}) beérkezett ÉS elküldött leveleket nézd meg és dolgozd be; a korábbi napokat teljesen hagyd figyelmen kívül. Minden más szabály (dedup, egy folyamat = egy kártya, mezőtulajdon, backup, biztonság) változatlan.\n`;
+    combined = `${base}\n\n## ${scopeWord}-SZŰKÍTÉS (a Posta „${btnWord}" gombjáról indítva)\nCSAK a(z) ${day} napon beérkezett ÉS elküldött leveleket nézd meg és dolgozd be; a többi napot teljesen hagyd figyelmen kívül. Minden más szabály (dedup, egy folyamat = egy kártya, mezőtulajdon, backup, biztonság) változatlan.\n`;
     await fs.writeFile(TMP, combined, 'utf8');
     await fs.mkdir(LOG.replace(/[\\/][^\\/]+$/, ''), { recursive: true });
     await fs.writeFile(LOCK, new Date().toISOString(), 'utf8');
@@ -77,5 +85,5 @@ export async function POST(req: Request) {
     try { await fs.unlink(TMP); } catch { /* ignore */ }
     return NextResponse.json({ ok: false, error: `a feladat indítása sikertelen: ${(e as Error).message}` }, { status: 500 });
   }
-  return NextResponse.json({ ok: true, started: true, today, startedAtMs: Date.now() });
+  return NextResponse.json({ ok: true, started: true, day, scope, startedAtMs: Date.now() });
 }

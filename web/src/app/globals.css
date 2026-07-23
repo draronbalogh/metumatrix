@@ -343,7 +343,7 @@ body {
 .dr-foot .btn { flex: 0 0 auto; }
 /* Szerkesztes + Bezaras egy sorban a reszletezo tetejen (viewer modban csak a Bezaras latszik) -
    a gombok a tartalmukhoz mereteznek, nem nyulnak teljes szelesre */
-.dr-actrow { display: flex; gap: 8px; margin-top: 10px; }
+.dr-actrow { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .dr-actrow .btn { flex: 0 0 auto; }
 .dr-edit-top { margin-top: 0; }
 /* a sarki ✕ megszűnt - a bezárás egységesen a feliratos "✕ Bezárás" gomb (felül + alul) */
@@ -1217,8 +1217,12 @@ button.nm-preview { display: block; width: 100%; text-align: left; font: inherit
   .tpv { overflow-y: auto; overflow-x: hidden; display: block; padding: 18px var(--pad) 40px; }
   .tp-scroll { overflow: visible; border: 0; border-radius: 0; background: transparent; }
   .tp3 { grid-template-columns: 1fr; }
-  /* mobilon csak a lista látszik - a sablon/levél koppintásra MODÁLKÉNT nyíló szerkesztőbe töltődik */
-  .tp3 .tp-composer { display: none; }
+  /* mobilon a SZERKESZTO van FELUL (azert jottel, hogy irj), alatta a sablontar-lista;
+     a regi kulon szerkeszto-modal MEGSZUNT (2026-07-22) - a Postazo hub az egyetlen ut.
+     Belso gorgeto nincs: az oldal gorget (dupla scroll tilos). */
+  .tp3 .tp-composer { display: flex; order: -1; margin-bottom: 14px; }
+  .nm-inline { overflow: visible; }
+  .nm-inline .pm-body.nm-body { overflow-y: visible; min-height: 0; }
 }
 
 /* Nevjegyzek: 6 oszlopos sorok (nev, email, telefon, titulus, terulet, statusz) */
@@ -2039,3 +2043,49 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .it-doc-sum .doc-situ { list-style: none; padding: 0; margin: 6px 0; display: grid; gap: 8px; }
 .it-doc-sum .doc-situ > li { font-size: .85rem; line-height: 1.5; border-left: 2px solid var(--line); padding-left: 10px; }
 .it-doc-sum .doc-situ > li strong { color: var(--ink); }
+
+/* gyors "nem kell valasz" gomb a Posta listasoraban - lenyitas nelkul lezar (2026-07-22) */
+.po-gist .po-nvx { margin-left: 8px; font-size: .78rem; padding: 2px 8px; vertical-align: middle; white-space: nowrap; }
+
+/* POSTAZO HUB (2026-07-22): fulek (lista / uj level) + balrol beuszo fly-in panel mas nezetek felett */
+.posta-tabs { display: flex; gap: 10px; align-items: center; padding-top: 12px; flex-wrap: wrap; }
+.posta-tabs .posta-fly-close { margin-left: auto; }
+.posta-scrim { z-index: 76; }
+.posta-hub--fly { position: fixed; top: 0; left: 0; bottom: 0; right: auto; width: min(1080px, 100vw); z-index: 77; overflow-y: auto; background: var(--paper, #fff); border-right: 1px solid var(--line); box-shadow: 16px 0 50px rgba(16, 17, 20, .22); animation: postaFlyIn .24s cubic-bezier(.2, .8, .25, 1) both; padding-bottom: 48px; }
+@keyframes postaFlyIn { from { transform: translateX(-70px); opacity: 0; } to { transform: none; opacity: 1; } }
+.posta-hub--fly .posta-tabs { position: sticky; top: 0; z-index: 5; background: var(--paper, #fff); padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+
+/* a hub-fulek a PageHead ala csusznak vizualisan - a kattintast a fulek kapjak */
+.posta-tabs { position: relative; z-index: 6; justify-content: flex-end; }
+
+/* MOBIL, Postazo hub "Uj level" ful (2026-07-23): a .tpv asztali, abszolut-pozicios
+   fix-magassagu modellje a hubon belul 0 magassagot orokolt, es osszenyomta az of also
+   Titkarno-savot (egymasra csuszo textarea/gombok). Mobilon sima, termeszetes folyam:
+   az oldal gorget, semmi nem nyomodik ossze. */
+@media (max-width: 720px) {
+  .posta-hub .tpv { position: static; overflow: visible; height: auto; }
+  .posta-hub .tp3 { min-height: 0; }
+  .posta-hub .nm-inline { overflow: visible; height: auto; }
+  .posta-hub .nm-titkar textarea { min-height: 84px; }
+}
+
+/* SABLONVALASZTO egy helyen (2026-07-23): asztali hubon a bal oszlop a sablontar, a
+   legordulo rejtve; MOBILON forditva - a lista nem virit minden ful alatt, helyette a
+   Tartalom ful legorduloja az egyetlen sablonvalaszto. */
+.nm-inline .nm-topicdrop { display: none; }
+@media (max-width: 720px) {
+  .nm-inline .nm-topicdrop { display: block; }
+  .posta-hub .tp-listcol { display: none; }
+}
+
+/* mobilon a Sablontar/Mentett lista-valto halott gomb lenne (a lista rejtve) - eltuntetjuk */
+@media (max-width: 720px) { .posta-hub .tpv > .cat-block-head .viewtoggle { display: none; } }
+
+/* GORGETES-JAVITAS (2026-07-23): a .posta-hub (view-pane) abszolut, sajat gorgeto nelkul -
+   a lista-fulon a .catalog belso gorgetoje visz, de az Uj level fulon (mobilon statikus .tpv)
+   SENKI nem birtokolta a gorgetest, ezert "beragadt". Mobilon a hub maga gorget (fulenkent
+   pontosan egy aktiv gorgeto van), a fly-in nem engedi tovabb a gorgetest a hatternek. */
+@media (max-width: 720px) {
+  .posta-hub { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+}
+.posta-hub--fly { overscroll-behavior: contain; }

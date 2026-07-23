@@ -39,7 +39,6 @@ interface Props {
   footer: string;            // aláírás-blokk a másoláshoz (a levélíró is ezt teszi a levél aljára)
   senderRules: Record<string, SenderRule>;
   onSenderRule: (email: string, rule: SenderRule) => void;
-  onReply: (sel: string, draft: ReplyDraft, drafts: ReplyDraft[]) => void;
   onState: (sel: string, patch: Partial<AgendaSource>, label: string) => void;
   onBusy?: (msg: string | null) => void;   // app-szintű „Titkárnő fogalmaz" jelző (nézetváltáskor is látszik)
   onSaveEvent?: (e: AgendaEvent) => void;  // a Meet-időpont tükör-eseménye a saját naptárba
@@ -62,7 +61,7 @@ const ymdTs = (d?: string | null): number | null =>
 
 const DAY = 86400000;
 
-export default function PostaView({ agenda, footer, senderRules, onSenderRule, onReply, onBusy, onState, onSaveEvent, onLinkTaskEvent, onConfirmMeetSlot, onEditInComposer, undo, onUndo, onOpenCard, onSaveLetter, onDeleteLetter, onRefresh, focusSel, onFocusConsumed }: Props) {
+export default function PostaView({ agenda, footer, senderRules, onSenderRule, onBusy, onState, onSaveEvent, onLinkTaskEvent, onConfirmMeetSlot, onEditInComposer, undo, onUndo, onOpenCard, onSaveLetter, onDeleteLetter, onRefresh, focusSel, onFocusConsumed }: Props) {
   const [bank, setBank] = useState<StyleBank | null>(null);
   useEffect(() => {
     fetch('/api/style', { headers: editHeaders() }).then((r) => r.json())
@@ -681,7 +680,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
         done++;
       });
       const missed = items.length - done;
-      setBatchProg(`Kész: ${done} megfogalmazva${missed > 0 ? `, ${missed} kimaradt (a jegyzetük megvan, nyomd újra)` : ''}. A „📋 Másolható válaszok" blokkban vannak.`);
+      setBatchProg(`Kész: ${done} megfogalmazva${missed > 0 ? `, ${missed} kimaradt (a jegyzetük megvan, nyomd újra)` : ''}. A „📮 Postázó - kész válaszok" blokkban vannak.`);
     } catch {
       setBatchProg('⚠ Nem sikerült elindítani a megfogalmazást. A jegyzeteid megmaradtak - próbáld újra.');
     } finally { setBatchBusy(false); onBusy?.(null); }
@@ -772,6 +771,11 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
               ? 'A levélből készült FELADAT megnyitása: itt vannak a lépések, a határidő és a jegyzetek'
               : 'A levélhez tartozó ESEMÉNY megnyitása: időpont, helyszín, jegyzetek'}
             onClick={() => onOpenCard(r.sel)}>▤ {r.sel.startsWith('t:') ? 'Feladat' : 'Esemény'}: {r.title}</button>
+          {/* GYORS lezárás lenyitás nélkül: erre a levélre nem kell válaszolni (2026-07-22 kérés);
+              a Visszavonás-buborékkal 6 mp-ig visszahozható, új bejövőre a szál magától újranyílik */}
+          <button type="button" className="btn po-nvx"
+            title="Erre a levélre nem kell válaszolni - azonnali lezárás. 6 mp-ig visszavonható; ha új levél jön a szálban, magától újranyílik."
+            onClick={() => { setOpen((v) => (v === r.sel ? null : v)); onState(r.sel, { status: 'noreply', returned: null, followUpAt: null }, 'Lezárva (nem kell válasz)'); }}>✕ Nem kell válasz</button>
         </div>
         {isOpen && (
           <div className="po-drafts">
@@ -800,7 +804,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                   <span className="l">{d.label}</span>
                   <span className="sp" />
                   <button type="button" className="btn" onClick={() => copyDraft(`${r.sel}-${i}`, r.sel, d)}>{copied === `${r.sel}-${i}` ? '✓ Másolva' : '⧉ Másolás'}</button>
-                  <button type="button" className="btn btn--ink" title="Megnyitás a levélíróban: címzettek és tárgy előtöltve, ott küldhető vagy finomítható" onClick={() => onReply(r.sel, d, r.drafts)}>✉ Levélíróba</button>
+                  <button type="button" className="btn btn--ink" title="EZT a tervet egy kattintással kész válasszá teszi a Postázóban - ott szerkeszthető (✎), meeting adható hozzá, és onnan küldöd" onClick={() => draftToPosta(r, d)}>✉ Postázóba</button>
                 </div>
                 <div className="po-draft-b">{d.body}</div>
               </div>
@@ -853,6 +857,28 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     setGen((g) => { const n = { ...g }; delete n[sel]; return n; }); // a mentett Letter megmarad!
     setTitkarFocus((f) => (f === sel ? null : f)); // a fókusz feloldódik, ha erről döntöttünk
     onState(sel, patch, label);
+  };
+  // ✉ POSTÁZÓBA egy kattintással (2026-07-22 user-kérés): a kiválasztott terv AZONNAL kész
+  // válasz lesz a Postázó blokkban - Levélíró-kitérő nélkül. Pontosan azt csinálja, amit a
+  // titkárnő-út vége: letter mentés (a korábbi kész válasz cserélődik) + status 'drafted' +
+  // választás-napló; a feladat/esemény frissítések (küldéskor replied + szál) változatlanok.
+  // Szerkesztés/meeting: a Postázóban (👁 Elolvasás → ✎ Szerkesztés, Meet-blokk).
+  const draftToPosta = (r: Row, d: ReplyDraft, viaWizard = false) => {
+    const prev = draftBySel.get(r.sel);
+    onSaveLetter?.({
+      id: `l-${Date.now().toString(36)}`, createdAt: new Date().toISOString(),
+      targetType: r.sel.startsWith('t:') ? 'task' : 'event', targetId: r.sel.slice(2),
+      subject: d.subject, body: d.body, names: [r.src.name], status: 'draft',
+    });
+    if (prev && onDeleteLetter) onDeleteLetter(prev.id);
+    setOpen(null); setShowDrafted(true); setReadDraft(r.sel);
+    if (viaWizard) advance(r.sel, { status: 'drafted', rawReply: null, returned: null }, 'Kész válasz a Postázóban');
+    else onState(r.sel, { status: 'drafted', returned: null }, 'Kész válasz a Postázóban');
+    fetch('/api/replylog', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...editHeaders() },
+      body: JSON.stringify({ at: new Date().toISOString(), sel: r.sel, label: d.label, action: 'postazo' }),
+    }).catch(() => { /* a napló nem kritikus */ });
+    window.setTimeout(() => document.getElementById(`po-${r.sel}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200);
   };
   const skipCur = (sel: string) => { stopSpeak(); setDecideSkip((s) => new Set([...s, sel])); };
   const pickMode = (m: 'voice' | 'write') => {
@@ -910,7 +936,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     const batchBar = (noted.length > 0 || (batchProg && !batchBusy)) ? (
       <div className="po-batch">
         {noted.length > 0 && <span className="po-batch-c">📝 {noted.length} jegyzet gyűjtve</span>}
-        {noted.length > 0 && <button type="button" className="btn btn--ink" disabled={batchBusy} title="Az összes gyűjtött jegyzetet egyben megfogalmazza (annyi fél perc, ahány levél, de nem kell tételenként várnod). Az eredmény a Másolható blokkba kerül." onClick={generateAll}>{batchBusy ? `⏳ ${batchProg ?? 'Fogalmazás…'}` : `✍ Fogalmazd meg mind (${noted.length})`}</button>}
+        {noted.length > 0 && <button type="button" className="btn btn--ink" disabled={batchBusy} title="Az összes gyűjtött jegyzetet egyben megfogalmazza (annyi fél perc, ahány levél, de nem kell tételenként várnod). Az eredmény a Postázó blokkba kerül." onClick={generateAll}>{batchBusy ? `⏳ ${batchProg ?? 'Fogalmazás…'}` : `✍ Fogalmazd meg mind (${noted.length})`}</button>}
         {batchProg && <span className="po-batch-msg">{batchProg}</span>}
       </div>
     ) : null;
@@ -1066,14 +1092,14 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
               <span className="l">📝 {g.draft.label}</span>
               <span className="sp" />
               <button type="button" className="btn" onClick={() => copyDraft(`${r.sel}-gen`, r.sel, g.draft)}>{copied === `${r.sel}-gen` ? '✓ Másolva' : '⧉ Másolás'}</button>
-              <button type="button" className="btn btn--ink" title="Megnyitás a levélíróban: címzettek és tárgy előtöltve, ott küldhető vagy finomítható" onClick={() => onReply(r.sel, g.draft, r.drafts)}>✉ Levélíróba</button>
+              <button type="button" className="btn btn--ink" title="A kész levél a Postázó blokkba kerül - ott szerkeszthető, meeting adható hozzá, és onnan küldöd" onClick={() => advance(r.sel, { status: 'drafted', returned: null }, 'Kész válasz a Postázóban')}>✉ Postázóba</button>
             </div>
             <div className="po-draft-b">{g.draft.body}</div>
           </div>
           <div className="po-dictbtns">
             <button type="button" className="btn" title="Vissza a nyers döntéshez - módosítsd, és fogalmazd újra" onClick={() => setWizStep('answer')}>🔁 Újrafogalmazás</button>
           </div>
-          <div className="po-wiz-hint">A kész levél a Posta alján a <b>„📋 Másolható válaszok"</b> blokkba kerül. Onnan másolod az Outlookba (küldeni ott kell), és utána zárod le.</div>
+          <div className="po-wiz-hint">A kész levél a Posta alján a <b>„📮 Postázó"</b> blokkba kerül - ott szerkeszthető, meeting adható hozzá, és onnan küldöd (vagy másolod az Outlookba).</div>
         </div>
         <details className="po-wiz-tpl">
           <summary>A szinkron {r.drafts.length} választerve (minta, önmagában is használható)</summary>
@@ -1084,14 +1110,14 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                 <span className="l">{d.label}</span>
                 <span className="sp" />
                 <button type="button" className="btn" onClick={() => copyDraft(`${r.sel}-${i}`, r.sel, d)}>{copied === `${r.sel}-${i}` ? '✓ Másolva' : '⧉ Másolás'}</button>
-                <button type="button" className="btn btn--ink" onClick={() => onReply(r.sel, d, r.drafts)}>✉ Levélíróba</button>
+                <button type="button" className="btn btn--ink" title="EZT a tervet teszi kész válasszá a Postázóban" onClick={() => draftToPosta(r, d, true)}>✉ Postázóba</button>
               </div>
               <div className="po-draft-b">{d.body}</div>
             </div>
           ))}
         </details>
         <div className="po-wiz-foot">
-          <button type="button" className="btn btn--ink" title="A kész levél a Posta alján a Másolható válaszok blokkba kerül (még NEM ment el); onnan másolod az Outlookba, és utána zárod le" onClick={() => advance(r.sel, { status: 'drafted', returned: null }, 'Másolható listába')}>📋 Kész, másolható listába</button>
+          <button type="button" className="btn btn--ink" title="A kész levél a Posta alján a Postázó blokkba kerül (még NEM ment el); ott szerkeszthető és onnan küldöd" onClick={() => advance(r.sel, { status: 'drafted', returned: null }, 'Kész válasz a Postázóban')}>📮 Kész - a Postázóba</button>
           <button type="button" className="btn" title="Már el is küldtem (pl. Outlookból) - lezárom és jön a következő" onClick={() => advance(r.sel, { status: 'replied', repliedAt: nowIso(), returned: null, thread: withOutEntry(r.src, 'megválaszolva (titkárnő-mód)') }, 'Elküldve, lezárva')}>✓ Már elküldtem</button>
           {closeBtn}
           <span className="sp" />
@@ -1159,7 +1185,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
         <section className="po-fold po-fold--note">
           <div className="po-notehead">
             <span className="po-batch-c">📝 Megfogalmazásra vár: {noted.length} jegyzet</span>
-            <button type="button" className="btn btn--ink" disabled={batchBusy} title="Az összes gyűjtött jegyzetet egyben megfogalmazza; az eredmény a Másolható blokkba kerül. Ha félbeszakadt, ez folytatja a hátralévőket." onClick={generateAll}>{batchBusy ? `⏳ ${batchProg ?? 'Fogalmazás…'}` : `✍ Fogalmazd meg mind (${noted.length})`}</button>
+            <button type="button" className="btn btn--ink" disabled={batchBusy} title="Az összes gyűjtött jegyzetet egyben megfogalmazza; az eredmény a Postázó blokkba kerül. Ha félbeszakadt, ez folytatja a hátralévőket." onClick={generateAll}>{batchBusy ? `⏳ ${batchProg ?? 'Fogalmazás…'}` : `✍ Fogalmazd meg mind (${noted.length})`}</button>
           </div>
           <div className="po-fold-hint">Ezeket a Titkárnőben megírtad; a szerveren biztonságban vannak, nem vesznek el. A gombbal egyben elkészülnek. (Ha közben elnavigálsz, a böngésző leállíthatja a folyamatot - visszatérve nyomd meg újra, a hátralévőket folytatja.)</div>
           {batchProg && !batchBusy && <div className="po-fold-hint">{batchProg}</div>}
@@ -1177,7 +1203,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
       )}
       {!decide && plainDrafts.length > 0 && (
         <section className="po-fold po-fold--draft">
-          <button type="button" className="po-fold-h" onClick={() => setShowDrafted((v) => !v)}>📋 Másolható válaszok ({plainDrafts.length}) {showDrafted ? '▴' : '▾'}</button>
+          <button type="button" className="po-fold-h" onClick={() => setShowDrafted((v) => !v)}>📮 Postázó - kész válaszok ({plainDrafts.length}) {showDrafted ? '▴' : '▾'}</button>
           {showDrafted && <div className="po-fold-hint">Ezek a válaszaid MEGvannak írva, de még NEM mentek el. Kiküldheted őket most, piszkozatként az Outlookba teheted, vagy a vágólapra másolod. VAGY egy gombbal HAJNALRA ütemezed (05:40–06:40, szórtan) - akkor a helyi hajnali feladat küldi ki őket valódi levélként.</div>}
           {showDrafted && (
             <div className="po-draftpush">
@@ -1384,7 +1410,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                 <span className="s">„{r.src.subject ?? r.title}"</span>
                 <span className={`po-schedtime${overdue ? ' is-over' : ''}`} title={overdue ? 'A tervezett idő elmúlt - ha a hajnali feladat nem futott, küldd ki kézzel vagy ütemezd újra' : 'A tervezett küldési idő'}>⏰ {fmtDawn(r.src.scheduledFor)}{overdue ? ' (lejárt?)' : ''}</span>
                 <button type="button" className="btn btn--hot" disabled={sendingSel === r.sel} title="Mégis most küldöm (nem várok hajnalig)" onClick={() => sendNow(r)}>{sendingSel === r.sel ? '⏳ Küldés…' : '✉ Küldés most'}</button>
-                <button type="button" className="btn" title="Ütemezés visszavonása - a válasz visszakerül a Másolható közé" onClick={() => unschedule(r)}>✕ Visszavonás</button>
+                <button type="button" className="btn" title="Ütemezés visszavonása - a válasz visszakerül a Postázó kész válaszai közé" onClick={() => unschedule(r)}>✕ Visszavonás</button>
               </div>
             );
           })}

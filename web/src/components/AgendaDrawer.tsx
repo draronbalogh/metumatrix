@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Agenda, AgendaEvent, AgendaMeetSlot, AgendaTask, Letter, PRIORITY_LABEL, STATUS_LABEL, TaskStar, TaskStatus, fmtDayHu, fmtDueHu, nextStarFor, placeIcon, taskSteps, stepsDone, urgencyRank } from '@/data/agenda';
 import { PersonKind } from '@/data/people';
 import { suggestEventFor } from '@/lib/linkSuggest';
@@ -29,11 +29,14 @@ interface Props {
   onSetDue: (taskId: string, d: string) => void; // az esemény napjának átvétele határidőnek (tengely-szinkron)
   onPerson: (name: string) => void;        // név-szűrő (bezárja a részletezőt a hívó)
   onNotify: () => void;                    // ✉ új levél ehhez a tételhez
+  onPosta?: () => void;                    // 📮 Posta: okos útvonal (válaszra váró -> Posta lista; különben új levél)
   onOpenLetter: (l: Letter) => void;
   onAddTaskFor: (eventId: string) => void;
   emailFor: (name: string) => string | null; // a Névjegyzékből - a Meet-meghívó vendégeihez
   onCreateMeet?: (eventId: string) => void;   // automatikus Google Meet-link (API) az eseményhez
   onConfirmMeet?: (eventId: string) => void;  // időpont-egyeztetés lezárása (tentative -> confirmed)
+  onInviteLetter?: (eventId: string) => void; // ✉ Titkárnő-meghívó erről az eseményről a Posta Kimenőbe
+  onOutcome?: (taskId: string, text: string, close: boolean) => void; // 📝 meeting-kimenet a kártyára (+ opcionális lezárás)
   meetMsg?: string | null;                     // a Meet-készítés visszajelzése
   onTaskStatus?: (id: string, s: TaskStatus) => void; // kész / folyamatban / újranyitás a részletezőből
   onDelete?: () => void; // a tétel törlése innen (a hívó erősít meg)
@@ -73,7 +76,10 @@ function Sec({ cls, children }: { cls?: string; children: ReactNode }) {
 // egy kiosztott lépés a személy-kártyán - a taskId+ix révén innen is pipálható
 interface PStep { taskId: string; taskTitle: string | null; ix: number; text: string; done: boolean; due: string | null }
 
-export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onOpenLetter, onAddTaskFor, emailFor, onCreateMeet, onConfirmMeet, meetMsg, onTaskStatus, onDelete, onSetStar, onAddEventFor, onIdopont, onConfirmMeetSlot }: Props) {
+export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, onClose, onEdit, onOpenTask, onOpenEvent, onToggleStep, onLinkEvent, onSetDue, onPerson, onNotify, onPosta, onOpenLetter, onAddTaskFor, emailFor, onCreateMeet, onConfirmMeet, onInviteLetter, onOutcome, meetMsg, onTaskStatus, onDelete, onSetStar, onAddEventFor, onIdopont, onConfirmMeetSlot }: Props) {
+  // 📝 Kimenet + lezárás panel (feladatnál): diktált eredmény -> Titkárnő-összefoglaló a kártyára
+  const [outcomeOpen, setOutcomeOpen] = useState(false);
+  const [outcomeText, setOutcomeText] = useState('');
   const task = det.kind === 'task' ? agenda.tasks.find((t) => t.id === det.id) ?? null : null;
   const event = det.kind === 'event' ? agenda.events.find((e) => e.id === det.id) ?? null : null;
   if (!task && !event) return null;
@@ -149,9 +155,22 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                   onClick={() => onSetStar(task.id, nextStarFor(task, soon))}>{inBand ? '⭐ Legfontosabb' : '☆ Kiemelés'}</button>
               );
             })()}
+            {canEdit && onPosta && (() => {
+              const src = task?.source ?? event?.source;
+              const waiting = !!src && src.status !== 'replied' && src.status !== 'noreply';
+              return (
+                <button className={`btn${waiting ? ' btn--ink' : ''}`}
+                  title={waiting ? 'A Postázó megnyitása: ennek a tételnek válaszra váró levele / kész válasza van' : 'A Postázó megnyitása: új levél ehhez a tételhez (címzettek előtöltve, sablonokkal)'}
+                  onClick={onPosta}>📮 Posta{waiting ? ' · ✉' : ''}</button>
+              );
+            })()}
             {canEdit && task && onIdopont && (
               <button className="btn" title="Időpont küldése ehhez az ügyhöz: kinek + mikor + hol, egy űrlapon - levél, naptár, Meet automatikusan"
                 onClick={() => onIdopont(task.id)}>📅 Időpont</button>
+            )}
+            {canEdit && task && task.status !== 'done' && onOutcome && (
+              <button className={`btn${outcomeOpen ? ' btn--ink' : ''}`} title="A meeting/ügy kimenetének rögzítése a kártyára (Titkárnő-összefoglalóval), opcionális lezárással"
+                onClick={() => setOutcomeOpen((v) => !v)}>📝 Kimenet</button>
             )}
             {canEdit && <button className="btn btn--ink" onClick={onEdit}>✎ Szerkesztés</button>}
             {canEdit && onDelete && <button className="btn btn--danger" onClick={onDelete}>Törlés</button>}
@@ -159,6 +178,24 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
           </div>
         </div>
         <div className="dr-scroll">
+          {/* 📝 KIMENET + LEZÁRÁS: diktált eredmény -> Titkárnő 1-2 mondatos összefoglalója a kártyára */}
+          {task && outcomeOpen && onOutcome && (
+            <div className="dr-field">
+              <h4>📝 Meeting-kimenet a kártyára</h4>
+              <textarea value={outcomeText} onChange={(e) => setOutcomeText(e.target.value)} rows={4}
+                placeholder="Diktáld az eredményt: mi dőlt el, ki mit vállal, mi a következő lépés. A Titkárnő 1-2 mondatos összefoglalót ír belőle a kártya összefoglalójához."
+                style={{ width: '100%', font: 'inherit', padding: 8, borderRadius: 8, border: '1px solid var(--line)', background: 'var(--paper, #fff)', color: 'var(--ink)' }} />
+              <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+                <button className="btn btn--ink" disabled={!outcomeText.trim()}
+                  onClick={() => { onOutcome(task.id, outcomeText, false); setOutcomeOpen(false); setOutcomeText(''); }}>📝 Rögzítés</button>
+                <button className="btn btn--ink" disabled={!outcomeText.trim()}
+                  title="A kimenet a kártyára kerül, és a feladat a Kész listába"
+                  onClick={() => { onOutcome(task.id, outcomeText, true); setOutcomeOpen(false); setOutcomeText(''); }}>📝 Rögzítés + ✓ Lezárás</button>
+                <button className="btn" onClick={() => setOutcomeOpen(false)}>Mégsem</button>
+              </div>
+              <p style={{ margin: '4px 0 0', fontSize: '.78rem', color: 'var(--muted)' }}>Ha az összefoglaló nem készül el, a diktált szöveg változatlanul kerül a kártyára - nem vész el.</p>
+            </div>
+          )}
           {/* ALAP: dátumok, helyszín, kapcsolt esemény, összefoglaló */}
           {task && (
             <>
@@ -269,6 +306,10 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                     <button className="btn btn--ink" title="Az időpont-egyeztetés lezárása: az esemény véglegessé válik (a dátumot a szerkesztőben állítod, a Google-naptár követi)"
                       onClick={() => onConfirmMeet(event.id)}>✔ Időpont véglegesítése</button>
                   )}
+                  {onInviteLetter && (
+                    <button className="btn" title="Titkárnő-meghívó erről az eseményről a Posta Kimenőbe: időpont + hely + Meet-link a résztvevőknek (a küldés a Postából a te kezedben marad)"
+                      onClick={() => onInviteLetter(event.id)}>✉ Meghívó-levél</button>
+                  )}
                   {onConfirmMeetSlot && (
                     <SlotConfirm event={event} onConfirm={(s) => onConfirmMeetSlot(event.id, s)} />
                   )}
@@ -346,7 +387,7 @@ export default function AgendaDrawer({ det, agenda, letters, kindOf, canEdit, on
                   </button>
                 );
               })}
-              <button className="btn dr-addtask" onClick={onNotify}>✉ Új levél ehhez a tételhez</button>
+              <button className="btn dr-addtask" onClick={onNotify}>📮 Új levél a Postázóban</button>
             </>
           )}
         </div>

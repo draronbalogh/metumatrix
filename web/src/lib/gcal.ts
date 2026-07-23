@@ -111,6 +111,8 @@ export interface UpdateMeetPatch {
   timeZone?: string;
   tentative?: boolean;
   clearAttendees?: boolean; // a resztvevok ELTAVOLITASA a Google-esemenyrol (szivargas-takaritas)
+  attendees?: string[];     // resztvevok BEALLITASA - csak kifejezett meghivo-kuldesnel (fix foglalas)
+  sendInvite?: boolean;     // true: a Google .ics meghivot/frissitest kuld a resztvevoknek (sendUpdates=all)
 }
 
 // atutemezes/veglegesites: a conferenceData-t NEM irjuk felul, igy a Meet-link marad
@@ -129,7 +131,10 @@ export const updateMeetEvent = async (
   if (patch.endIso) body.end = { dateTime: patch.endIso, timeZone: tz };
   if (patch.tentative !== undefined) body.status = patch.tentative ? 'tentative' : 'confirmed';
   if (patch.clearAttendees) body.attendees = [];
-  const url = `${API_BASE}/calendars/${encodeURIComponent(c.calendarId)}/events/${encodeURIComponent(googleEventId)}?conferenceDataVersion=1`;
+  // resztvevoket CSAK kifejezett meghivo-kuldessel egyutt allitunk be (privacy-szabaly)
+  if (patch.attendees && patch.sendInvite) body.attendees = patch.attendees.map((email) => ({ email }));
+  const sendUpdates = patch.sendInvite ? 'all' : 'none';
+  const url = `${API_BASE}/calendars/${encodeURIComponent(c.calendarId)}/events/${encodeURIComponent(googleEventId)}?conferenceDataVersion=1&sendUpdates=${sendUpdates}`;
   const r = await fetch(url, {
     method: 'PATCH',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },

@@ -12,7 +12,12 @@ export const dynamic = 'force-dynamic';
 
 const CLAUDE_BIN = process.env.CLAUDE_BIN || 'C:\\Users\\User\\.local\\bin\\claude.exe';
 const STYLE_FILE = process.env.STYLE_FILE || 'C:/node/metu_tanterv/grid/valasz-stilus.md';
+const PELDABANK_FILE = process.env.PELDABANK_FILE || 'C:/node/metu_tanterv/grid/valasz-peldabank.json';
 
+// a kártya (feladat/esemény) konkrét tartalma és az illeszkedő levéltár-sablonok - a
+// kliens állítja elő, a megfogalmazó ezekből ír teljes levelet (nem a nyers szavakból)
+interface CardCtxT { kind?: string; lines?: string[] }
+interface TemplateT { label?: string; group?: string; subject?: string; body?: string }
 interface RephraseReq {
   senderName: string;
   senderEmail: string;
@@ -20,11 +25,40 @@ interface RephraseReq {
   gist: string | null;
   thread: string[];      // "dátum · irány · ki: mit" sorok
   drafts: { label: string; subject: string; body: string }[]; // a bot 3 terve: regiszter-minta
+  card?: CardCtxT | null;        // a kapcsolt feladat/esemény tartalma (konkrétumok)
+  templates?: TemplateT[] | null; // a címhez illő levéltár-sablonok (felépítés-minta)
   instruction: string;   // a felhasználó nyers döntése/diktátuma
   askAllowed?: boolean;  // 1. kör: a modell EGY kritikus kérdést tehet fel a levél helyett
   question?: string | null;        // 2. kör: az 1. körben feltett kérdés
   questionAnswer?: string | null;  // 2. kör: a felhasználó válasza (null = nem tudja, kihagyta)
 }
+
+// ---- példabank: Áron korábbi VALÓS válaszai (hangnem/tömörség/felépítés mintái) ----
+interface Example { to?: string; name?: string; type?: string; subject?: string; body?: string; date?: string }
+// a feladó címéhez, majd a címzett-típusához illő korábbi válaszok (max 3)
+const loadExamples = async (email: string): Promise<{ items: Example[]; matched: boolean }> => {
+  try {
+    const j = JSON.parse(await fs.readFile(PELDABANK_FILE, 'utf8')) as { examples?: Example[] };
+    const all = j.examples ?? [];
+    const em = (email || '').trim().toLowerCase();
+    const mine = em ? all.filter((e) => (e.to || '').trim().toLowerCase() === em) : [];
+    const type = mine[0]?.type ?? null;
+    const sameType = type ? all.filter((e) => e.type === type && !mine.includes(e)) : [];
+    let items = [...mine, ...sameType];
+    const matched = items.length > 0;
+    if (items.length === 0) items = all.slice(0, 3); // nincs találat: általános stílusminta
+    return { items: items.slice(0, 3), matched };
+  } catch { return { items: [], matched: false }; }
+};
+const exBlock = (items: Example[], matched: boolean): string => items.length === 0 ? '' :
+  `${matched ? 'ÁRON KORÁBBI VALÓS VÁLASZAI ehhez a címzetthez / címzett-típushoz' : 'ÁRON néhány korábbi valós válasza (általános stílusminta)'} (a HANGNEM, a TÖMÖRSÉG és a FELÉPÍTÉS mintái - a TARTALMUKAT NE vedd át, csak a stílust kövesd):
+${items.map((e) => `--- (${e.type ?? '?'}) tárgy: ${e.subject ?? ''}\n${(e.body ?? '').slice(0, 500)}`).join('\n\n')}`;
+const tplBlock = (tpls?: TemplateT[] | null): string => !tpls?.length ? '' :
+  `ILLESZKEDŐ SABLONOK a levéltárból (a FELÉPÍTÉS és a bevett fordulatok mintái; a [szögletes] helyeket a kártya adataiból töltsd ki, amit nem tudsz, azt HAGYD KI - sose írj ki [ilyet]):
+${tpls.slice(0, 2).map((t) => `--- ${t.label ?? ''}${t.group ? ` (${t.group})` : ''} · tárgy: ${t.subject ?? ''}\n${(t.body ?? '').slice(0, 1200)}`).join('\n\n')}`;
+const cardBlock = (card?: CardCtxT | null): string => !card?.lines?.length ? '' :
+  `A KÁRTYA TARTALMA (${card.kind ?? 'tétel'} - ebből meríts KONKRÉTUMOT: időpont, határidő, helyszín, résztvevők, lépések; ne találj ki mást):
+${card.lines.map((l) => `- ${l}`).join('\n')}`;
 
 // a CLI kimenetét akkor is visszaadjuk, ha nem-nulla kóddal lép ki (pl. keret-limit
 // üzenetet a stdout-ra írja) - a hívó dönti el, használható-e
@@ -50,47 +84,54 @@ export async function POST(req: Request) {
   const draftsTxt = (b.drafts ?? []).slice(0, 3).map((d, i) =>
     `--- ${i + 1}. terv (${d.label}) · tárgy: ${d.subject}\n${d.body}`).join('\n\n');
 
-  const prompt = `Te Balogh Áron (METU Média Design szakvezető) titkárságát viszed: az alábbi
-bejövő levélre írsz VÉGLEGES magyar választ Áron nevében.
+  const { items: exItems, matched: exMatched } = await loadExamples(b.senderEmail);
 
-A LEVÉL, AMIRE VÁLASZOLUNK:
+  const sections = [
+    `A LEVÉL, AMIRE VÁLASZOLUNK:
 - Feladó: ${b.senderName} <${b.senderEmail}>
 - Tárgy: ${b.subject ?? '(nincs)'}
-- Összefoglaló: ${b.gist ?? '(nincs)'}
-${b.thread?.length ? `- A szál idővonala:\n${b.thread.map((t) => `  ${t}`).join('\n')}` : ''}
-
-ÁRON NYERS DÖNTÉSE (diktálva, kapkodva - CSAK a tartalma számít, a megfogalmazása nem):
+- Összefoglaló: ${b.gist ?? '(nincs)'}${b.thread?.length ? `\n- A szál idővonala:\n${b.thread.map((t) => `  ${t}`).join('\n')}` : ''}`,
+    `ÁRON DÖNTÉSE (gyorsan, tőmondatokban diktálva - CSAK az IRÁNY, NEM a levél szövege):
 """
 ${b.instruction.trim()}
-"""
-${b.question ? `
-TISZTÁZÓ KÖR (már lezajlott): a kérdésedre ("${b.question}") ${b.questionAnswer
-    ? `Áron válasza: "${b.questionAnswer}" - ezt is építsd be.`
-    : 'Áron NEM tud válaszolni. Írd meg a levelet enélkül, óvatos fogalmazással (ne találj ki adatot, hagyd nyitva vagy kérdezz rá a levélben, ha az természetes).'}
-` : ''}
-REGISZTER-MINTA - a szinkron által erre a levélre írt tervek (a megszólítás,
-tegeződés/magázódás és hangnem EZEKHEZ igazodjon):
-${draftsTxt || '(nincs terv - a stílusfájl megszólalásaiból dolgozz)'}
-
-ÁRON STÍLUSFÁJLJA (fordulat-készlet):
-${style || '(nem elérhető)'}
-
-SZABÁLYOK:
+"""`,
+    `>>> HOGYAN DOLGOZZ A DÖNTÉSSEL <<<
+A fenti diktátum nem a levél szövege, hanem csak az irány: mit akar Áron. A dolgod, hogy
+EBBŐL írj egy teljes, kész, igényes levelet Áron hangján - rendes megszólítás, folyó,
+jól megfogalmazott mondatok, a szükséges udvariassági keret, tiszta lezárás.
+- NE a diktált szavakat másold a levélbe, NE idézd, NE ismételd a nyers fogalmazást.
+- Értsd meg a szándékot, és fogalmazd meg RENDESEN, a lenti sablonok, korábbi valós
+  válaszok és a kártya tartalma alapján.
+- Ha a döntés tőmondatos, hiányos vagy félszavas, akkor is teljes, kerek, azonnal
+  elküldhető levél legyen az eredmény.
+- A döntés MINDEN tartalmi elemét vidd bele, de az ő nyers megfogalmazását ne - azt te adod.`,
+    b.question ? `TISZTÁZÓ KÖR (már lezajlott): a kérdésedre ("${b.question}") ${b.questionAnswer
+      ? `Áron válasza: "${b.questionAnswer}" - ezt is építsd be.`
+      : 'Áron NEM tud válaszolni. Írd meg a levelet enélkül, óvatos fogalmazással (ne találj ki adatot, hagyd nyitva vagy kérdezz rá a levélben, ha az természetes).'}` : '',
+    tplBlock(b.templates),
+    exBlock(exItems, exMatched),
+    cardBlock(b.card),
+    `REGISZTER-MINTA - a szinkron által erre a levélre írt tervek (a megszólítás, tegeződés/magázódás és hangnem EZEKHEZ igazodjon):
+${draftsTxt || '(nincs terv - a stílusfájl megszólalásaiból dolgozz)'}`,
+    `ÁRON STÍLUSFÁJLJA (fordulat-készlet):
+${style || '(nem elérhető)'}`,
+    `SZABÁLYOK:
 - NYELV: állapítsd meg a bejövő levél nyelvét (magyar vagy angol) a feladó és a levél alapján, és VÉGIG azon a nyelven válaszolj. Magyar megszólítás: "Kedves <keresztnév>!"; angol: "Dear <firstname>,".
-- A nyers döntés MINDEN tartalmi elemét építsd be; amit Áron eldöntött, azt nem írhatod felül.
-- Ha a diktátum szerint kérdezni kell, kérdezz; ha igent/nemet mondott, azt közöld udvariasan.
 - Hangnem: korrekt, kollegiális, tényszerű - semmi érzelgősség, semmi túlzó udvariaskodás.
 - TILOS a hosszú gondolatjel (—) karakter; helyette vessző, pont vagy sima kötőjel.
 - ZÁRÁS: a levelet zárd rövid elköszönéssel és Áron KERESZTNEVÉVEL, külön sorokban - magyarul "Köszönöm," VAGY "Üdvözlettel," új sor "Áron"; angolul "Thank you," VAGY "Best regards," új sor "Áron". NE írj titulusos aláírás-blokkot (teljes név, beosztás, telefonszám, cím, linkek) - azt az Outlook teszi hozzá.
-- Ne találj ki tényt, dátumot, nevet, ami se a levélben, se a diktátumban nincs benne.
-
-${b.askAllowed && !b.question ? `HA HIÁNYZIK EGY KRITIKUS INFORMÁCIÓ: ha a levél megírásához egyetlen konkrét
-adat hiányzik (pl. pontos dátum, igen/nem döntés, összeg, név), akkor NE írd meg
-a levelet, hanem a válaszod KIZÁRÓLAG ez a JSON legyen:
+- Ne találj ki tényt, dátumot, nevet, ami se a levélben, se a döntésben, se a kártyában nincs.`,
+    b.askAllowed && !b.question ? `HA HIÁNYZIK EGY KRITIKUS INFORMÁCIÓ: ha a levél megírásához egyetlen konkrét adat hiányzik (pl. pontos dátum, igen/nem döntés, összeg, név), akkor NE írd meg a levelet, hanem a válaszod KIZÁRÓLAG ez a JSON legyen:
 {"question": "egyetlen rövid, konkrét magyar kérdés Áronnak"}
-Csak akkor kérdezz, ha tényleg megakadnál nélküle - különben írd meg a levelet.
+Csak akkor kérdezz, ha tényleg megakadnál nélküle - különben írd meg a levelet.` : '',
+  ].filter(Boolean);
 
-` : ''}A VÁLASZOD KIZÁRÓLAG ez a JSON legyen, más szöveg nélkül:
+  const prompt = `Te Balogh Áron (METU Média Design szakvezető) titkárságát viszed: az alábbi
+bejövő levélre írsz VÉGLEGES választ Áron nevében.
+
+${sections.join('\n\n')}
+
+A VÁLASZOD KIZÁRÓLAG ez a JSON legyen, más szöveg nélkül:
 {"subject": "a válasz tárgysora (Re: ...)", "body": "a levél teljes szövege"}`;
 
   try {

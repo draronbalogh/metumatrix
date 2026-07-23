@@ -17,7 +17,13 @@ const PELDABANK_FILE = process.env.PELDABANK_FILE || 'C:/node/metu_tanterv/grid/
 interface RecipientT { name: string; email: string; kind: string }
 interface TemplateT { id: string; label: string; group: string; sampleSubject: string; sampleBody: string }
 interface CardCtxT { title: string; lines: string[] }
-interface MeetingT { slots: string[]; place: string | null; meetLink: string | null }
+interface MeetingT {
+  slots: string[];
+  place: string | null;
+  meetLink: string | null;
+  fixed?: boolean;   // BEJEGYZETT (fix) időpont: meghívó-hangnem, nincs "melyik felel meg" kérdés
+  online?: boolean;  // online/hibrid mód - link nélkül a "linket külön küldöm" degradáció kell
+}
 interface ComposeReq {
   instruction: string;                 // a felhasználó nyers diktált szándéka (csak irány)
   templates: TemplateT[];              // az illeszkedő sablon-jelöltek (felépítés-minta)
@@ -54,12 +60,27 @@ ${tpls.slice(0, 2).map((t) => `--- ${t.label} (${t.group}) · id: ${t.id} · tá
 const ctxBlock = (cards?: CardCtxT[] | null): string => !cards?.length ? '' :
   `A RELEVÁNS FELADATOK / ESEMÉNYEK (ebből meríts KONKRÉTUMOT: időpont, határidő, helyszín; ne találj ki mást):
 ${cards.map((c) => `- ${c.title}${c.lines?.length ? `\n  ${c.lines.join('\n  ')}` : ''}`).join('\n')}`;
-const meetBlock = (m?: MeetingT | null): string => !m ? '' :
-  `IDŐPONT-EGYEZTETÉS - ezeket SZÓ SZERINT írd a levélbe (ne alakítsd át a dátumokat):
+const meetBlock = (m?: MeetingT | null): string => {
+  if (!m) return '';
+  if (m.fixed && m.slots.length > 1) {
+    return `BEJEGYZETT IDŐPONTOK (fix foglalás, TÖBB ALKALOM - MINDEGYIK él, ez NEM választás!) - ezeket SZÓ SZERINT írd a levélbe (ne alakítsd át a dátumokat):
+${m.slots.map((s) => `- ${s}`).join('\n')}${m.place ? `\n- Helyszín: ${m.place}` : ''}
+Sorold fel az alkalmakat "- " jelekkel külön sorokban; ha egy sorban Meet-link is van, azt hagyd az adott alkalom sorában.
+MINDEGYIK alkalom MÁR BE VAN JEGYEZVE a naptárba: közöld ezt, és kérd, hogy mindenki azon az alkalmon vegyen részt, amelyik belefér neki.
+TILOS megkérdezni, hogy melyik időpont felel meg (nem szavazás - mindegyik alkalom megvan), és TILOS azt sugallni, hogy csak az egyik valósul meg.${m.online && !m.slots.some((s) => /https?:\/\//.test(s)) && !m.meetLink ? '\nOnline alkalmak, de MÉG NINCS link: írd a levélbe, hogy a belépési linke(ke)t külön küldöd.' : ''}`;
+  }
+  if (m.fixed) {
+    return `BEJEGYZETT IDŐPONT (fix foglalás) - ezeket SZÓ SZERINT írd a levélbe (ne alakítsd át a dátumokat):
+- Időpont: ${m.slots[0] ?? '(nincs megadva)'}${m.place ? `\n- Helyszín: ${m.place}` : ''}${m.meetLink ? `\n- Online belépés (Google Meet): ${m.meetLink} - ezt a linket KÜLÖN SORBAN, önállóan írd a levélbe (a küldő kattintható hivatkozássá alakítja)` : ''}
+Az időpont MÁR BE VAN JEGYEZVE a naptárba: közöld ezt, és hívd a címzette(ke)t, hogy csatlakozzanak / jöjjenek el.
+TILOS megkérdezni, hogy megfelel-e az időpont, TILOS alternatívákat felsorolni - ez nem egyeztetés, hanem meghívó.${m.online && !m.meetLink ? '\nOnline találkozó, de MÉG NINCS link: írd a levélbe, hogy a belépési linket külön küldöd. NE ígérj linket "alább" vagy "itt".' : ''}`;
+  }
+  return `IDŐPONT-EGYEZTETÉS - ezeket SZÓ SZERINT írd a levélbe (ne alakítsd át a dátumokat):
 - Javasolt időpont(ok): ${m.slots.length ? m.slots.join(' ; ') : '(nincs megadva)'}${m.place ? `\n- Helyszín: ${m.place}` : ''}${m.meetLink ? `\n- Online belépés (Google Meet): ${m.meetLink} - ezt a linket KÜLÖN SORBAN, önállóan írd a levélbe (a küldő kattintható hivatkozássá alakítja)` : ''}
 ${m.slots.length === 1
     ? 'EGYETLEN időpont van: EGYES SZÁMBAN írd ("a javasolt időpont: …, kérlek, jelezd, megfelel-e") - TILOS többes számban időpontokról beszélni vagy listát írni.'
     : 'Több időpont van: sorold fel őket "- " jelekkel külön sorokban, és kérd meg a címzetteket, hogy jelezzék, melyik felel meg nekik.'}`;
+};
 
 const runClaude = (prompt: string): Promise<{ out: string; err: string; failed: boolean }> => new Promise((resolve) => {
   const child = execFile(CLAUDE_BIN, ['-p', '--max-turns', '1'], {
@@ -70,13 +91,36 @@ const runClaude = (prompt: string): Promise<{ out: string; err: string; failed: 
 });
 const isQuota = (s: string): boolean => /limit|usage-?credit|rate.?limit|quota|Run \/login|not (?:logged|authenticated)/i.test(s);
 
-// a címzett-körből a megszólítás iránymutatása a modellnek
+// a címzett-körből a megszólítás iránymutatása a modellnek.
+// A kind a Névjegyzék PersonKind kódja: T=tanár, H=hallgató, I=intézményi, A=alumni,
+// O=opponens, P=piaci; 'nev'/'egyedi' = feloldatlan (kézi email). Vegyes tanár+hallgató
+// körnél SZEREP SZERINTI kettős megszólítás kell (2026-07-22 user-példa).
 const greetingHint = (recipients: RecipientT[], sendMode: 'personal' | 'bcc'): string => {
   if (sendMode === 'personal') {
     return 'SZEMÉLYRE SZABOTT mód: a megszólítás PONTOSAN "Kedves {keresztnev}!" legyen (a {keresztnev} helyőrzőt HAGYD BENNE, a küldő tölti ki címzettenként). A levél egyes szám második személyű (tegeződő), ha oktató/hallgató a címzett.';
   }
-  const kinds = new Set(recipients.map((r) => r.kind));
-  const who = kinds.size === 1 && kinds.has('hallgato') ? 'Kedves Hallgatók!' : 'Kedves Kollégák!';
+  // KIS kör (2-4 fő): a megszólítás mindig "Kedves Mind," (user-döntés 2026-07-22) -
+  // se szerep-cím, se névsor; nagy körnél marad a szerep szerinti közös megszólítás
+  if (recipients.length >= 2 && recipients.length <= 4) {
+    return 'KÖZÖS (BCC) mód, KIS kör: a megszólítás PONTOSAN "Kedves Mind," legyen (külön sorban, vesszővel a végén). Ne szólíts meg senkit néven, és ne használj szerep-címet (Tanár Úr, Hallgatók stb.).';
+  }
+  const kinds = new Set(recipients.map((r) => r.kind).filter((k) => ['T', 'H', 'I', 'A', 'O', 'P'].includes(k)));
+  const teachers = recipients.filter((r) => r.kind === 'T');
+  let who = 'Kedves Mindenki!';
+  if (kinds.size === 1) {
+    const k = [...kinds][0];
+    who = k === 'H' ? 'Kedves Hallgatók!'
+      : k === 'T' ? 'Kedves Kollégák!'
+      : k === 'A' ? 'Kedves Alumnusaink!'
+      : k === 'O' ? 'Kedves Opponensek!'
+      : k === 'P' ? 'Kedves Partnereink!'
+      : 'Kedves Kollégák!';
+  } else if (kinds.size === 2 && kinds.has('T') && kinds.has('H')) {
+    if (teachers.length === 1) {
+      return `KÖZÖS (BCC) mód, VEGYES kör (1 oktató + hallgatók): kettős, szerep szerinti megszólítás legyen: "Kedves Tanár Úr, kedves Hallgatók!" vagy "Kedves Tanárnő, kedves Hallgatók!" - az oktató (${teachers[0].name}) keresztneve alapján válaszd a helyeset. Ne szólíts meg senkit néven.`;
+    }
+    who = 'Kedves Oktatók, kedves Hallgatók!';
+  }
   return `KÖZÖS (BCC) mód: közös, többes megszólítás, javasolt: "${who}". Ne szólíts meg senkit néven.`;
 };
 

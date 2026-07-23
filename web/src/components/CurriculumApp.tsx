@@ -37,10 +37,12 @@ const MapView = dynamic(() => import('./MapView'), {
   loading: () => <div style={{ height: 'calc(100vh - 132px)', display: 'grid', placeItems: 'center', color: 'var(--muted)', fontWeight: 700 }}>Térkép betöltése…</div>,
 });
 
-// nézet-sorrend a főmenü szerint - a mobil swipe-váltás és a vissza-gomb (history) is ezt használja
-const VIEW_ORDER = ['map', 'catalog', 'tasks', 'events', 'posta', 'topics', 'people', 'it', 'docs', 'orarend'] as const;
+// nézet-sorrend a főmenü szerint - a mobil swipe-váltás és a vissza-gomb (history) is ezt
+// használja. 2026-07-23 user-döntés: NAPI MUNKA ELÖL (az app a Feladatokon indul), a nehéz
+// Mátrix hátrébb került; a 'topics' (Levelek) nézet megszűnt (a Postázó hub része lett).
+const VIEW_ORDER = ['tasks', 'posta', 'events', 'orarend', 'map', 'catalog', 'people', 'it', 'docs'] as const;
 type ViewId = (typeof VIEW_ORDER)[number];
-const EDITONLY_VIEWS: readonly ViewId[] = ['posta', 'topics', 'people', 'docs'];
+const EDITONLY_VIEWS: readonly ViewId[] = ['posta', 'people', 'docs'];
 
 const LS_KEY = 'mediadesign-2026-27-v9';
 const AGENDA_LS_KEY = 'md-agenda-v1';
@@ -130,7 +132,10 @@ export default function CurriculumApp() {
   const agendaFileOk = useRef(false);
   const peopleFileOk = useRef(false);
 
-  const [view, setView] = useState<ViewId>('map');
+  const [view, setView] = useState<ViewId>('tasks'); // az app a FELADATOKON indul (2026-07-23)
+  // a nehéz Mátrix-térkép lusta mountolása: az első map-nézetig be sem töltődik
+  const [mapMounted, setMapMounted] = useState(false);
+  useEffect(() => { if (view === 'map') setMapMounted(true); }, [view]);
   // app-szintű „Titkárnő fogalmaz" jelző: a nézetváltás/wizard-zárás NE tüntesse el
   const [titkarBusy, setTitkarBusy] = useState<string | null>(null);
   // név -> Névjegyzék-kategória (T/H/...) ref-tükre: a korai callbackek (eventLetterRecipients)
@@ -324,9 +329,8 @@ export default function CurriculumApp() {
       const dq = sp.get('q');
       if (dq) setQ(dq);
     } catch { /* ignore */ }
+    // mélylink nélkül az alapértelmezett kezdőnézet a Feladatok (useState) - minden eszközön
     if (deepView && !EDITONLY_VIEWS.includes(deepView)) { histReplaceNext.current = true; setView(deepView); }
-    // mobilon (mélylink nélkül) a Feladatok nézet a kezdőlap - nem a térkép
-    else if (!deepView && window.innerWidth <= 720) { histReplaceNext.current = true; setView('tasks'); }
     fetch('/api/auth', { headers: editHeaders(), cache: 'no-store' })
       .then((r) => r.json())
       .then((j) => {
@@ -386,9 +390,9 @@ export default function CurriculumApp() {
       else if (o.details) setDetails(null);
       else {
         const st = e.state as { v?: string } | null;
-        let v = st?.v ?? new URLSearchParams(window.location.search).get('view') ?? 'map';
-        if (!(VIEW_ORDER as readonly string[]).includes(v)) v = 'map';
-        if (EDITONLY_VIEWS.includes(v as ViewId) && !canEditRef.current) v = 'map';
+        let v = st?.v ?? new URLSearchParams(window.location.search).get('view') ?? 'tasks';
+        if (!(VIEW_ORDER as readonly string[]).includes(v)) v = 'tasks';
+        if (EDITONLY_VIEWS.includes(v as ViewId) && !canEditRef.current) v = 'tasks';
         if (v !== viewRef.current) {
           histFromPop.current = true;
           setView(v as ViewId);
@@ -1754,19 +1758,20 @@ export default function CurriculumApp() {
       <div className="toolbar">
         <div className="wrap toolbar__inner">
           <div className="viewtoggle viewtoggle--nav" ref={navRef}>
-            {/* tiszta, ikon nélküli menü - az emoji-ikonok a felhasználó szerint gyerekesek voltak */}
-            <button className={view === 'map' ? 'is-on' : ''} onClick={() => setView('map')}>Mátrix</button>
-            <button className={view === 'catalog' ? 'is-on' : ''} onClick={() => setView('catalog')}>Katalógus</button>
+            {/* tiszta, ikon nélküli menü - az emoji-ikonok a felhasználó szerint gyerekesek voltak.
+                Sorrend (2026-07-23 user-döntés): napi munka elöl, a nehéz Mátrix hátrébb. */}
             <button className={view === 'tasks' ? 'is-on' : ''} onClick={() => setView('tasks')}>Feladatok</button>
-            <button className={view === 'events' ? 'is-on' : ''} onClick={() => setView('events')}>Események</button>
             <button className={`editonly${view === 'posta' ? ' is-on' : ''}`} title="A Postázó: bejövő levelek választervekkel + új levél írása sablontárral - minden levél-ügy egy helyen"
               onClick={() => { if (!canEdit) return; setPostaPanel(false); setView('posta'); }}>Posta{postaCount > 0 ? ` · ${postaCount}` : ''}</button>
+            <button className={view === 'events' ? 'is-on' : ''} onClick={() => setView('events')}>Események</button>
+            <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>Órarend</button>
+            <button className={view === 'map' ? 'is-on' : ''} onClick={() => setView('map')}>Mátrix</button>
+            <button className={view === 'catalog' ? 'is-on' : ''} onClick={() => setView('catalog')}>Katalógus</button>
             <button className={`editonly${view === 'people' ? ' is-on' : ''}`} title="Elérhetőségek: oktatók, hallgatók, intézményi / alumni / opponens / piaci kapcsolatok"
               onClick={() => { if (!canEdit) return; setView('people'); }}>Névjegyzék</button>
             <button className={view === 'it' ? 'is-on' : ''} title="IT és szoftverek: az Infopark termeiben telepített szoftverek" onClick={() => setView('it')}>IT</button>
             <button className={`editonly${view === 'docs' ? ' is-on' : ''}`} title="Belső útmutatók: Zoom, oktatói segédletek, tréning - csak szerkesztő módban"
               onClick={() => { if (!canEdit) return; setView('docs'); }}>Segédletek</button>
-            <button className={view === 'orarend' ? 'is-on' : ''} onClick={() => setView('orarend')}>Órarend</button>
             <button className="editonly" title="Időpont küldése EGY űrlapon: kinek + miről + mikor + hol - a rendszer intézi a levelet (Posta), a naptárat, a feladatkártyát és a Meet-linket"
               onClick={() => { if (canEdit) setIdopont({}); }}>📅 Időpont</button>
           </div>
@@ -1857,11 +1862,14 @@ export default function CurriculumApp() {
               <button type="button" className="btn" onClick={() => setLoadN((n) => n + 1)}>↻ Újrapróbálás</button>
             </div>
           )}
-          {/* A Mátrix mindig mountolva marad (csak elrejtjük), hogy nézetváltáskor a zoom/pásztázás
-              megőrződjön és ne igazítson újra - csak betöltéskor / ver-prog váltáskor illesztünk. */}
+          {/* A Mátrix LUSTÁN töltődik (2026-07-23): az app a Feladatokon indul, a nehéz térkép
+              CSAK az első Mátrix-megnyitáskor mountol - utána bent marad (csak elrejtjük),
+              hogy a zoom/pásztázás megőrződjön és ne igazítson újra. */}
+          {mapMounted && (
           <div className="view-pane" style={{ display: view === 'map' ? 'block' : 'none' }}>
             <MapView data={data} filter={filter} handlers={mapHandlers} persist={persist} theme={theme} view={vp} locked={locked || !canEdit} onToggleLock={canEdit ? toggleLock : () => { /* bemutató mód */ }} active={view === 'map'} focusId={details ? `c-${details.ci}-${details.xi}` : null} />
           </div>
+          )}
           {view === 'catalog' ? (
             <CatalogView data={data} filter={filter} view={vp} onDetails={onDetails} onEdit={onEdit} onAdd={onAdd} onInstructor={onInstructor} onCategory={onCategory} onCatEdit={onCatEdit} displayName={canonName} />
           ) : view === 'tasks' ? (

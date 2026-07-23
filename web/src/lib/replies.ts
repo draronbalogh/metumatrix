@@ -3,7 +3,7 @@
 // válaszlevelet állítunk elő a felhasználó stílusában. A fordulatok a
 // grid/valasz-stilus.md tanuló fájlból jönnek (/api/style), így a stílus a
 // sablonok és a korábbi levelezés alapján folyamatosan bővíthető.
-import { AgendaEvent, AgendaSource, AgendaTask, fmtDueHu, taskSteps } from '@/data/agenda';
+import { AgendaEvent, AgendaSource, AgendaTask } from '@/data/agenda';
 
 export interface StyleBank {
   greet: string[];
@@ -50,31 +50,24 @@ const pick = (arr: string[], seed: number): string => arr[seed % arr.length] ?? 
 
 export interface ReplyVariant { id: string; label: string; subject: string; body: string }
 
-// A három javaslat: 1) rövid nyugtázás 2) érdemi válasz a kapcsolt tétel adataival
-// 3) egyeztetést kérő. A {keresztnév} helyére a feladó keresztneve kerül; a dátum,
-// helyszín, határidő és a következő lépés a kapcsolt feladatból/eseményből jön.
+// A három javaslat (2026-07-23 user-döntés): MINDHÁROM NYUGTÁZÓ - kérdést nem tesz
+// fel, időpontot/menetrendet nem erősít meg, vállalást nem talál ki. Az érdemi választ
+// Áron a Titkárnővel diktálja; a terv gyors "köszönöm, megkaptam, láttam" nyugta.
+// A három változat hosszban és melegségben tér el.
 export function replyVariants(src: AgendaSource, task: AgendaTask | null, event: AgendaEvent | null, bank: StyleBank, seed = 0): ReplyVariant[] {
   const greet = pick(bank.greet, seed).split('{keresztnév}').join(givenNameHu(src.name || ''));
   const subject = src.subject?.trim() ? (src.subject.trim().toLowerCase().startsWith('re:') ? src.subject.trim() : `Re: ${src.subject.trim()}`) : `Re: ${task?.title ?? event?.title ?? ''}`;
   const title = task?.title ?? event?.title ?? '';
-  const due = task?.dueDate ? fmtDueHu(task.dueDate) : '';
-  const when = event ? (event.when || (event.day ? fmtDueHu(event.day) : '')) : '';
-  const place = event?.place ?? '';
-  const nextStep = task ? taskSteps(task).find((s) => !s.done)?.text ?? '' : '';
 
-  const facts: string[] = [];
-  if (when) facts.push(`Az időpont a naptárunkban: ${when}${place ? ` (${place})` : ''}.`);
-  else if (place) facts.push(`Helyszín: ${place}.`);
-  if (due) facts.push(`A határidőt ${due} dátummal jegyeztem elő.`);
-  if (nextStep) facts.push(`A következő lépés nálunk: ${nextStep.toLowerCase().startsWith('a ') ? nextStep : nextStep.charAt(0).toLowerCase() + nextStep.slice(1)}.`);
-
-  const v1 = [greet, '', `${pick(bank.ack, seed)}${due ? ` A határidőt (${due}) előjegyeztem.` : ''}`, pick(bank.promise, seed), '', pick(bank.close, seed)].join('\n');
-  const v2 = [greet, '', `Köszönöm a leveled${title ? ` a(z) „${title}" ügyében` : ''}.`, ...(facts.length ? [facts.join(' ')] : ['Átnéztem, és beütemeztük a teendőt.']), pick(bank.promise, (seed + 1)), '', pick(bank.close, (seed + 1))].join('\n');
-  const v3 = [greet, '', `Köszönöm a leveled${title ? ` a(z) „${title}" kapcsán` : ''}. ${pick(bank.meet, seed)}`, when ? `Jó lenne még ${when} előtt sort keríteni rá.` : '', '', pick(bank.close, (seed + 2))].filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\n');
+  // 1) rövid: köszönöm + zárás; 2) + feltételes visszajelzés-ígéret ("megnézem és
+  // jelzek" jellegű, a stílusbankból); 3) bővebb, melegebb nyugta a levélre utalva
+  const v1 = [greet, '', pick(bank.ack, seed), '', pick(bank.close, seed)].join('\n');
+  const v2 = [greet, '', pick(bank.ack, seed + 1), pick(bank.promise, seed), '', pick(bank.close, seed + 1)].join('\n');
+  const v3 = [greet, '', `Köszönöm a leveled${title ? ` a(z) „${title}" ügyében` : ''} - megkaptam, és köszönöm, hogy foglalkoztál vele.`, pick(bank.promise, seed + 1), '', pick(bank.close, seed + 2)].join('\n');
 
   return [
-    { id: 'ack', label: 'Nyugtázó', subject, body: v1 },
-    { id: 'full', label: 'Érdemi', subject, body: v2 },
-    { id: 'meet', label: 'Egyeztető', subject, body: v3 },
+    { id: 'ack', label: 'Nyugtázom (rövid)', subject, body: v1 },
+    { id: 'ack2', label: 'Nyugtázom + jelzek', subject, body: v2 },
+    { id: 'ack3', label: 'Nyugtázom (bővebb)', subject, body: v3 },
   ];
 }

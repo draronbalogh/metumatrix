@@ -2089,3 +2089,10 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
   .posta-hub { overflow-y: auto; -webkit-overflow-scrolling: touch; }
 }
 .posta-hub--fly { overscroll-behavior: contain; }
+
+/* PRELOADER (2026-07-23): porgo gyuru + felirat az indulasi es a Matrix-betoltesi
+   allapothoz - a statikus "betoltese..." szoveg helyett eloven jelzi, hogy dolgozunk */
+.load-box { display: flex; align-items: center; gap: 12px; font-weight: 700; color: var(--muted); font-size: 1rem; animation: loadFade .3s ease both; }
+.load-spin { width: 26px; height: 26px; flex: none; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--hot); animation: loadSpin .8s linear infinite; }
+@keyframes loadSpin { to { transform: rotate(360deg); } }
+@keyframes loadFade { from { opacity: 0; } to { opacity: 1; } }

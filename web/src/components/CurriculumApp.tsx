@@ -34,7 +34,11 @@ import type { Persist } from './MapView';
 
 const MapView = dynamic(() => import('./MapView'), {
   ssr: false,
-  loading: () => <div style={{ height: 'calc(100vh - 132px)', display: 'grid', placeItems: 'center', color: 'var(--muted)', fontWeight: 700 }}>Térkép betöltése…</div>,
+  loading: () => (
+    <div style={{ height: 'calc(100vh - 132px)', display: 'grid', placeItems: 'center' }}>
+      <div className="load-box"><span className="load-spin" aria-hidden />Térkép betöltése…</div>
+    </div>
+  ),
 });
 
 // nézet-sorrend a főmenü szerint - a mobil swipe-váltás és a vissza-gomb (history) is ezt
@@ -1846,7 +1850,7 @@ export default function CurriculumApp() {
         {loadState === 'loading' ? (
           // amíg a szerverfájl nem jött meg, SEMMIT nem renderelünk a beépített DEFAULT-ból -
           // így nem villan fel a régi/pozíció nélküli térkép
-          <div className="viewport"><div className="load-pane">Tanterv betöltése…</div></div>
+          <div className="viewport"><div className="load-pane"><div className="load-box"><span className="load-spin" aria-hidden />Betöltés…</div></div></div>
         ) : loadState === 'error' ? (
           <div className="viewport">
             <div className="load-pane load-pane--err">

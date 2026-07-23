@@ -28,7 +28,7 @@ interface ComposeReq {
   instruction: string;                 // a felhasználó nyers diktált szándéka (csak irány)
   templates: TemplateT[];              // az illeszkedő sablon-jelöltek (felépítés-minta)
   recipients: RecipientT[];            // feloldott címzettek
-  sendMode: 'personal' | 'bcc';        // személyre szabott / közös BCC
+  sendMode: 'personal' | 'bcc';        // személyre szabott / közös levél (2026-07-23: a közös levél MINDEN címzettet láthatóan visz, nem rejtett BCC)
   cardContext?: CardCtxT[] | null;     // releváns feladatok/események rövidlistája (konkrétumok)
   meeting?: MeetingT | null;           // időpont-szervezés: a javasolt slotok + hely + Meet-link
   askAllowed?: boolean;                // 1. kör: a modell EGY tisztázó kérdést tehet fel
@@ -102,7 +102,7 @@ const greetingHint = (recipients: RecipientT[], sendMode: 'personal' | 'bcc'): s
   // KIS kör (2-4 fő): a megszólítás mindig "Kedves Mind," (user-döntés 2026-07-22) -
   // se szerep-cím, se névsor; nagy körnél marad a szerep szerinti közös megszólítás
   if (recipients.length >= 2 && recipients.length <= 4) {
-    return 'KÖZÖS (BCC) mód, KIS kör: a megszólítás PONTOSAN "Kedves Mind," legyen (külön sorban, vesszővel a végén). Ne szólíts meg senkit néven, és ne használj szerep-címet (Tanár Úr, Hallgatók stb.).';
+    return 'KÖZÖS levél, KIS kör (a címzettek látják egymást): a megszólítás PONTOSAN "Kedves Mind," legyen (külön sorban, vesszővel a végén). Ne szólíts meg senkit néven, és ne használj szerep-címet (Tanár Úr, Hallgatók stb.).';
   }
   const kinds = new Set(recipients.map((r) => r.kind).filter((k) => ['T', 'H', 'I', 'A', 'O', 'P'].includes(k)));
   const teachers = recipients.filter((r) => r.kind === 'T');
@@ -117,11 +117,11 @@ const greetingHint = (recipients: RecipientT[], sendMode: 'personal' | 'bcc'): s
       : 'Kedves Kollégák!';
   } else if (kinds.size === 2 && kinds.has('T') && kinds.has('H')) {
     if (teachers.length === 1) {
-      return `KÖZÖS (BCC) mód, VEGYES kör (1 oktató + hallgatók): kettős, szerep szerinti megszólítás legyen: "Kedves Tanár Úr, kedves Hallgatók!" vagy "Kedves Tanárnő, kedves Hallgatók!" - az oktató (${teachers[0].name}) keresztneve alapján válaszd a helyeset. Ne szólíts meg senkit néven.`;
+      return `KÖZÖS levél, VEGYES kör (1 oktató + hallgatók, a címzettek látják egymást): kettős, szerep szerinti megszólítás legyen: "Kedves Tanár Úr, kedves Hallgatók!" vagy "Kedves Tanárnő, kedves Hallgatók!" - az oktató (${teachers[0].name}) keresztneve alapján válaszd a helyeset. Ne szólíts meg senkit néven.`;
     }
     who = 'Kedves Oktatók, kedves Hallgatók!';
   }
-  return `KÖZÖS (BCC) mód: közös, többes megszólítás, javasolt: "${who}". Ne szólíts meg senkit néven.`;
+  return `KÖZÖS levél (a címzettek látják egymást): közös, többes megszólítás, javasolt: "${who}". Ne szólíts meg senkit néven.`;
 };
 
 export async function POST(req: Request) {

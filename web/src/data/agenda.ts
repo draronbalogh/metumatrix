@@ -175,7 +175,7 @@ export interface Letter {
   status?: 'draft' | 'sent' | 'outbox'; // vázlat / kiküldve / kimenő (küldésre kész)
   dir?: 'out';                     // Levelek-kezdeményezett kimenő levél
   recipients?: LetterRecipient[];  // feloldott címzettek (név + email + típus)
-  sendMode?: 'personal' | 'bcc';   // személyre szabott egyenként / közös BCC
+  sendMode?: 'personal' | 'bcc';   // személyre szabott egyenként / közös levél ('bcc' örökölt név - 2026-07-23 óta a közös levél MINDEN címzettet láthatóan a To-ba tesz, rejtett BCC nincs)
   sendGoogleInvite?: boolean;      // a Google is küldjön .ics naptár-meghívót
   scheduledFor?: string | null;    // hajnali ütemezett küldés (helyi ISO)
   templateId?: string;             // a scaffold sablon id-je

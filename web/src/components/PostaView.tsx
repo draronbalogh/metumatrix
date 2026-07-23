@@ -697,7 +697,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
     const rs = l.recipients ?? [];
     if (rs.length === 0) return l.names.join(', ') || '(nincs címzett)';
     if (rs.length === 1) return rs[0].name;
-    return `${rs.length} címzett${l.sendMode === 'bcc' ? ' · BCC' : ' · egyenként'}`;
+    return `${rs.length} címzett${l.sendMode === 'bcc' ? ' · közös levél (mindenki látható)' : ' · egyenként'}`;
   };
   const [readOut, setReadOut] = useState<string | null>(null);
   const [editOut, setEditOut] = useState<{ id: string; subject: string; body: string } | null>(null);
@@ -1321,7 +1321,7 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
       {!decide && outboxLetters.length > 0 && (
         <section className="po-fold po-fold--draft">
           <div className="po-fold-h" style={{ cursor: 'default' }}>📤 Kimenő - Titkárnő levelek ({outboxLetters.length})</div>
-          <div className="po-fold-hint">Ezeket a Levelek Titkárnőben írtad (kezdeményezett, nem válasz), még NEM mentek el. Kiküldheted most, piszkozatként az Outlookba teheted, vagy a vágólapra másolod. Több címzettnél a személyre szabott mód címzettenként külön levelet küld, a BCC egy közöset.</div>
+          <div className="po-fold-hint">Ezeket a Levelek Titkárnőben írtad (kezdeményezett, nem válasz), még NEM mentek el. Kiküldheted most, piszkozatként az Outlookba teheted, vagy a vágólapra másolod. Több címzettnél a személyre szabott mód címzettenként külön levelet küld; a közös mód EGY levelet, amiben minden címzett láthatóan a To-ban van.</div>
           {outboxLetters.map((l) => {
             const isRead = readOut === l.id;
             const editing = editOut?.id === l.id;

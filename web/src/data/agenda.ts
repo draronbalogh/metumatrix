@@ -70,7 +70,10 @@ export interface AgendaAttachment {
 }
 
 // A tételt kiváltó bejövő email feladója - neki külön válasz-levél írható.
+// bodyFile: a legutóbbi bejövő levél TELJES szövege a mail-attachments archívumban
+// ("ÉÉÉÉ-HH-NN/<kártya-id>-level.txt") - a Posta ebből mutatja/olvassa fel az eredetit.
 export interface AgendaSource {
+  bodyFile?: string | null;
   name: string;
   email: string;
   subject?: string | null; // az eredeti levél tárgya (a Re: válaszhoz)

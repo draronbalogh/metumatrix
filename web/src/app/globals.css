@@ -2096,3 +2096,7 @@ html[data-theme='dark'] .ev-task.meet:hover { background: #0e7f4f; color: #fff; 
 .load-spin { width: 26px; height: 26px; flex: none; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--hot); animation: loadSpin .8s linear infinite; }
 @keyframes loadSpin { to { transform: rotate(360deg); } }
 @keyframes loadFade { from { opacity: 0; } to { opacity: 1; } }
+
+/* TELJES eredeti level a Postaban (2026-07-23): a gist melletti lenyithato teljes szoveg */
+.po-fullmail { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
+.po-fullbody { flex-basis: 100%; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: .88rem; line-height: 1.55; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 4px 0 0; }

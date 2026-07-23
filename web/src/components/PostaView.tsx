@@ -179,6 +179,23 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   const draftLetters = useMemo(() => new Set(draftBySel.keys()), [draftBySel]);
   const [showDrafted, setShowDrafted] = useState(true); // a másolható blokk alapból NYITVA (aktív teendő)
   const [readDraft, setReadDraft] = useState<string | null>(null); // melyik kész válasz TELJES szövege van kinyitva (mobil olvasás)
+  // a TELJES eredeti bejövő levél (source.bodyFile a mail-attachments archívumból) -
+  // a zanzásított gist mellett kérésre elolvasható / felolvastatható (2026-07-23 user-kérés)
+  const [fullBody, setFullBody] = useState<{ sel: string; text: string } | null>(null);
+  const loadFullBody = async (r: Row): Promise<string | null> => {
+    const bf = (r.src.bodyFile ?? '').trim();
+    if (!bf) return null;
+    const i = bf.indexOf('/');
+    const day = i > 0 ? bf.slice(0, i) : '';
+    const name = i > 0 ? bf.slice(i + 1) : bf;
+    let text: string;
+    try {
+      const res = await fetch(`/api/attachment?day=${encodeURIComponent(day)}&name=${encodeURIComponent(name)}`, { headers: editHeaders() });
+      text = res.ok ? (await res.text()).trim() : '⚠ A teljes levél még nincs archiválva - a következő szinkron menti el.';
+    } catch { text = '⚠ Nem sikerült betölteni a teljes levelet.'; }
+    setFullBody({ sel: r.sel, text });
+    return text.startsWith('⚠') ? null : text;
+  };
   const [editDraft, setEditDraft] = useState<{ sel: string; subject: string; body: string; cc: string } | null>(null); // kész válasz helyben szerkesztése (cc: vesszős email-lista)
   // Outlook-vázlatok készítése a klasszikus Outlookon át (COM), a nem-emelt dev-szerverről
   const [pushBusy, setPushBusy] = useState(false);
@@ -795,6 +812,16 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
             {/* kinek megy a válasz - másolás előtt ellenőrizhető */}
             <div className="po-tocc">Címzett: <strong>{r.src.name}</strong> &lt;{r.src.email}&gt;{(r.src.cc?.length ?? 0) > 0 && <> · Másolat: {r.src.cc?.join(', ')}</>}</div>
             {attachList(r.src)}
+            {/* TELJES eredeti levél: a gist mellett kérésre a teljes szöveg is olvasható/hallgatható */}
+            {r.src.bodyFile && (
+              <div className="po-fullmail">
+                <button type="button" className="btn" title="A bejövő levél teljes, eredeti szövege (nem a zanzásított összefoglaló)"
+                  onClick={() => { if (fullBody?.sel === r.sel) setFullBody(null); else void loadFullBody(r); }}>{fullBody?.sel === r.sel ? '▴ Teljes levél elrejtése' : '📄 Teljes eredeti levél'}</button>
+                <button type="button" className="btn" title="A teljes eredeti levél felolvasása"
+                  onClick={() => { void (async () => { if (speaking) { stopSpeak(); return; } const t = fullBody?.sel === r.sel && !fullBody.text.startsWith('⚠') ? fullBody.text : await loadFullBody(r); if (t) { setSpeakKind('full'); speakText(t); } })(); }}>{speaking && speakKind === 'full' ? '⏹ Állj' : '🔊 Eredeti felolvasása'}</button>
+                {fullBody?.sel === r.sel && <pre className="po-fullbody">{fullBody.text}</pre>}
+              </div>
+            )}
             {r.src.draftMode === 'ping' && <div className="po-note">Követő tervek: a követési határidőig nem érkezett válasz - az alábbiak udvarias emlékeztetők.</div>}
             {stale && <div className="po-note">⚠ A tervek egy korábbi levélhez készültek, azóta új bejövő érkezett. A következő szinkron frissíti őket - a szál tartalmát ellenőrizd küldés előtt.</div>}
             {!r.botMade && lane !== 'waiting' && <div className="po-note">Gyors tervek a levélből készült feladat adataiból - a személyre szabott terveket a következő szinkron írja meg a levél teljes szövege alapján.</div>}
@@ -1028,6 +1055,13 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
                   {speaking && speakKind === 'full' ? '⏹ Állj' : '🧵 Teljes szál felolvasása'}
                 </button>
               )}
+              {r.src.bodyFile && (
+                <button type="button" className="btn" title="A bejövő levél TELJES, eredeti szövegének felolvasása (nem a zanzásított)"
+                  onClick={() => { void (async () => { if (speaking) { stopSpeak(); return; } const t = fullBody?.sel === r.sel && !fullBody.text.startsWith('⚠') ? fullBody.text : await loadFullBody(r); if (t) { setSpeakKind('full'); speakText(t); } })(); }}>
+                  📄 Eredeti levél felolvasása
+                </button>
+              )}
+              {r.src.bodyFile && fullBody?.sel === r.sel && <pre className="po-fullbody">{fullBody.text}</pre>}
               <button type="button" className="po-card" title={r.sel.startsWith('t:') ? 'A levélből készült FELADAT megnyitása' : 'A levélhez tartozó ESEMÉNY megnyitása'} onClick={() => onOpenCard(r.sel)}>▤ {r.sel.startsWith('t:') ? 'Feladat' : 'Esemény'}: {r.title}</button>
             </div>
             {titkarMode === 'voice' && speaking && <div className="po-wiz-hint">🔊 Felolvasás megy - a végén magától jön a válasz-lépés. A Tovább gombbal átugorhatod.</div>}

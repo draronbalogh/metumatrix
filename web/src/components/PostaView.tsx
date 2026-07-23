@@ -516,19 +516,41 @@ export default function PostaView({ agenda, footer, senderRules, onSenderRule, o
   };
 
   // beszéd-réteg (ingyenes böngésző-TTS, hu-HU) - a seq-számláló kiszűri a cancel
-  // által kilőtt elavult onend-eket, így a kézi leállítás nem léptet tovább
+  // által kilőtt elavult onend-eket, így a kézi leállítás nem léptet tovább.
+  // 2026-07-23: DARABOLVA olvasunk - a Chrome (főleg Androidon) a hosszú szöveget
+  // némán elejti (a teljes eredeti levél felolvasása ezért "nem működött"); mondat-
+  // határokon ~220 karakteres részekre bontunk és sorban küldjük. A cancel() utáni
+  // azonnali speak() ismert versenyét egy rövid késleltetés kerüli el.
   const speakText = (txt: string, onDone?: () => void) => {
     const synth = window.speechSynthesis;
     if (!synth) { onDone?.(); return; }
     const seq = ++speakSeq.current;
-    const u = new SpeechSynthesisUtterance(txt);
-    u.lang = 'hu-HU';
-    u.rate = 1.5; // a felhasználó kérése: másfeles tempó
-    const hu = synth.getVoices().find((v) => v.lang?.toLowerCase().startsWith('hu'));
-    if (hu) u.voice = hu;
-    u.onend = () => { if (seq !== speakSeq.current) return; setSpeaking(false); onDone?.(); };
-    u.onerror = () => { if (seq !== speakSeq.current) return; setSpeaking(false); onDone?.(); };
-    synth.cancel(); synth.speak(u); setSpeaking(true);
+    synth.cancel();
+    const parts: string[] = [];
+    let buf = '';
+    txt.split(/(?<=[.!?…:])\s+|\n+/).forEach((s) => {
+      const t = s.trim();
+      if (!t) return;
+      if (buf && (buf.length + t.length + 1) > 220) { parts.push(buf); buf = t; }
+      else buf = buf ? `${buf} ${t}` : t;
+    });
+    if (buf) parts.push(buf);
+    if (!parts.length) { onDone?.(); return; }
+    setSpeaking(true);
+    window.setTimeout(() => {
+      if (seq !== speakSeq.current) { return; }
+      const hu = synth.getVoices().find((v) => v.lang?.toLowerCase().startsWith('hu'));
+      parts.forEach((p, i) => {
+        const u = new SpeechSynthesisUtterance(p);
+        u.lang = 'hu-HU';
+        u.rate = 1.5; // a felhasználó kérése: másfeles tempó
+        if (hu) u.voice = hu;
+        const finish = () => { if (seq !== speakSeq.current) return; if (i === parts.length - 1) { setSpeaking(false); onDone?.(); } };
+        u.onend = finish;
+        u.onerror = finish;
+        synth.speak(u);
+      });
+    }, 80);
   };
   const stopSpeak = () => { speakSeq.current++; window.speechSynthesis?.cancel(); setSpeaking(false); };
   // rövid felolvasás: CSAK a lényeg (feladó, tárgy, összegzés) - a szál külön gombra megy
